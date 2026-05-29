@@ -4,11 +4,15 @@ import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 
 export default async function Home() {
-  const [ytRes, soopRes, noticeRes] = await Promise.all([
-    fetch('http://localhost:3000/api/youtube', { next: { revalidate: 0 } }),
-    fetch('http://localhost:3000/api/soop', { next: { revalidate: 0 } }),
-    fetch('http://localhost:3000/api/notices', { next: { revalidate: 300 } }),
-  ]);
+  const baseUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : 'http://localhost:3000';
+
+const [ytRes, soopRes, noticeRes] = await Promise.all([
+  fetch(`${baseUrl}/api/youtube`, { next: { revalidate: 0 } }),
+  fetch(`${baseUrl}/api/soop`, { next: { revalidate: 0 } }),
+  fetch(`${baseUrl}/api/notices`, { next: { revalidate: 300 } }),
+]);
 
   const videosRaw = await ytRes.json();
   const videos = Array.isArray(videosRaw) ? videosRaw : [];
