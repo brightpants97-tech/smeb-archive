@@ -1,10 +1,12 @@
-﻿import CalendarSection from './calendar-section';
+import CalendarSection from './calendar-section';
 import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 
 export default async function Home() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : 'http://localhost:3000';
 
 const [ytRes, soopRes, noticeRes] = await Promise.all([
   fetch(`${baseUrl}/api/youtube`, { next: { revalidate: 0 } }),
@@ -151,7 +153,7 @@ const [ytRes, soopRes, noticeRes] = await Promise.all([
 
       <ScrollObserver />
 
-      {/* ?? HEADER ?? */}
+      {/* ── HEADER ── */}
       <header className="site-header" style={{
         position: 'sticky', top: 0, zIndex: 200,
         height: '60px',
@@ -164,46 +166,48 @@ const [ytRes, soopRes, noticeRes] = await Promise.all([
         </div>
         <nav style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
           <a href="#top3"    className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>BEST 3</a>
-          <a href="#videos"  className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>?좏뒠釉?/a>
-          <a href="#soopcal" className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>?ㅼ떆蹂닿린</a>
+          <a href="#videos"  className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>유튜브</a>
+          <a href="#soopcal" className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>다시보기</a>
           <ThemeToggle />
           <a href="https://www.youtube.com/@smeb2774/videos" target="_blank"
             style={{ background: 'linear-gradient(135deg,#EB701A,#ff8c3a)', color: '#fff', padding: '0.4rem 1.1rem', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 700, boxShadow: '0 4px 14px rgba(235,112,26,0.35)' }}>
-            YouTube ??          </a>
+            YouTube ↗
+          </a>
           <a href="https://cafe.naver.com/smebsmeb" target="_blank"
             style={{ background: 'linear-gradient(135deg,#03C75A,#02b351)', color: '#fff', padding: '0.4rem 1.1rem', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 700, boxShadow: '0 4px 14px rgba(3,199,90,0.35)' }}>
-            ?ъ뭅????          </a>
+            팬카페 ↗
+          </a>
         </nav>
       </header>
 
-    {/* ?? HERO ?? */}
+    {/* ── HERO ── */}
 <section className="sec-main" style={{ padding: 'clamp(60px,10vw,120px) clamp(1.5rem,5vw,3rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
 
-  {/* ?덉씠?대뱶 諛곌꼍 ??寃⑹옄 ?⑦꽩 */}
+  {/* 레이어드 배경 — 격자 패턴 */}
   <div style={{
     position: 'absolute', inset: 0, pointerEvents: 'none',
     backgroundImage: `linear-gradient(rgba(235,112,26,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(235,112,26,0.06) 1px, transparent 1px)`,
     backgroundSize: '40px 40px',
   }} />
 
-  {/* 以묒븰 湲濡쒖슦 */}
+  {/* 중앙 글로우 */}
   <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'800px', height:'400px', background:'radial-gradient(ellipse, rgba(235,112,26,0.12) 0%, transparent 65%)', pointerEvents:'none' }} />
 
-  {/* ?곷떒 ?쇱씤 */}
+  {/* 상단 라인 */}
   <div style={{ position:'absolute', top:0, left:0, right:0, height:'2px', background:'linear-gradient(to right, transparent 0%, #EB701A 40%, #ff8c3a 60%, transparent 100%)' }} />
 
-  {/* 醫뚯륫 ?μ떇 ??*/}
+  {/* 좌측 장식 원 */}
   <div style={{ position:'absolute', left:'-80px', top:'50%', transform:'translateY(-50%)', width:'240px', height:'240px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.15)', pointerEvents:'none' }} />
   <div style={{ position:'absolute', left:'-120px', top:'50%', transform:'translateY(-50%)', width:'320px', height:'320px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.08)', pointerEvents:'none' }} />
 
-  {/* ?곗륫 ?μ떇 ??*/}
+  {/* 우측 장식 원 */}
   <div style={{ position:'absolute', right:'-80px', top:'50%', transform:'translateY(-50%)', width:'240px', height:'240px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.15)', pointerEvents:'none' }} />
   <div style={{ position:'absolute', right:'-120px', top:'50%', transform:'translateY(-50%)', width:'320px', height:'320px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.08)', pointerEvents:'none' }} />
 
 
 
   <div className="fade-in-up" style={{ position: 'relative', zIndex: 1 }}>
-    {/* 湲?섏뒪 諭껋? */}
+    {/* 글래스 뱃지 */}
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: '8px',
       background: 'rgba(235,112,26,0.08)',
@@ -215,7 +219,7 @@ const [ytRes, soopRes, noticeRes] = await Promise.all([
       marginBottom: '1.5rem',
     }}>
       <span style={{ width:'6px', height:'6px', borderRadius:'50%', background:'#EB701A', display:'inline-block', animation:'pulse 2s infinite' }} />
-      SOOP ?ㅽ듃由щ㉧ 쨌 ???꾩뭅?대툕
+      SOOP 스트리머 · 팬 아카이브
     </div>
 
     <h1 className="sec-title" style={{ fontSize:'clamp(3rem,7vw,5.5rem)', fontWeight:900, letterSpacing:'-0.05em', lineHeight:1, marginBottom:'1.2rem' }}>
@@ -227,7 +231,7 @@ const [ytRes, soopRes, noticeRes] = await Promise.all([
     </h1>
 
     <p className="sec-sub-text" style={{ fontSize:'1rem', marginBottom:'2rem' }}>
-      ???꾨줈寃뚯씠癒??ㅻ㏊ ?↔꼍?몄쓽 ?좏뒠釉?쨌 SOOP ?ㅼ떆蹂닿린
+      전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기
     </p>
 
   
@@ -241,39 +245,39 @@ const [ytRes, soopRes, noticeRes] = await Promise.all([
   `}</style>
 </section>
 
-      {/* ?? TOP 3 + ?꾩껜?곸긽 ?? */}
+      {/* ── TOP 3 + 전체영상 ── */}
       <section id="top3" className="sec-main" style={{ padding:'0 clamp(1.5rem,5vw,3rem) 0' }}>
         <div style={{ maxWidth:'1400px', margin:'0 auto', paddingBottom:'40px' }} className="fade-in-up">
-          <div className="eyebrow">?대떖??BEST</div>
-          <h2 className="section-title sec-title" style={{ marginBottom:'28px' }}>?좏뒠釉?TOP 3</h2>
+          <div className="eyebrow">이달의 BEST</div>
+          <h2 className="section-title sec-title" style={{ marginBottom:'28px' }}>유튜브 TOP 3</h2>
          <YoutubeSection videos={thisMonthVideos} top3={top3} notices={notices} />
         </div>
       </section>
 
-      {/* ?? SOOP ?ㅼ떆蹂닿린 ?? */}
+      {/* ── SOOP 다시보기 ── */}
       <section id="soopcal" className="sec-main" style={{ padding:'40px clamp(1.5rem,5vw,3rem) 60px', position:'relative' }}>
         <div style={{ position:'absolute', bottom:'10%', right:'5%', width:'500px', height:'400px', background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)', pointerEvents:'none' }} />
         <div style={{ maxWidth:'1600px', margin:'0 auto', position:'relative', zIndex:1 }} className="fade-in-up">
-          <div className="eyebrow">SOOP ?ㅼ떆蹂닿린</div>
-          <h2 className="section-title sec-title" style={{ marginBottom:'40px' }}>?ㅼ떆蹂닿린 罹섎┛??/h2>
+          <div className="eyebrow">SOOP 다시보기</div>
+          <h2 className="section-title sec-title" style={{ marginBottom:'40px' }}>다시보기 캘린더</h2>
           <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} today={today.toISOString()} />
         </div>
       </section>
 
-      {/* ?? FOOTER ?? */}
+      {/* ── FOOTER ── */}
       <footer className="sec-footer" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'2.5rem clamp(1.5rem,5vw,3rem)', textAlign:'center' }}>
         <p style={{ fontSize:'1.3rem', fontWeight:900, letterSpacing:'-0.03em', color:'#fff', marginBottom:'10px' }}>
           SMEB<span style={{ color:'#EB701A' }}>.</span>
         </p>
         <p style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.3)', marginBottom:'14px' }}>
-          濡????꾨줈寃뚯씠癒??ㅻ㏊ ?↔꼍??쨌 {today.getFullYear()}??{today.getMonth()+1}??        </p>
+          롤 전 프로게이머 스맵 송경호 · {today.getFullYear()}년 {today.getMonth()+1}월
+        </p>
         <div style={{ display:'flex', gap:'1.5rem', justifyContent:'center' }}>
-          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>YouTube ??/a>
-          <a href="https://www.sooplive.com/station/townboy" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>SOOP 諛⑹넚援???/a>
-          <a href="https://cafe.naver.com/smebsmeb" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>?ъ뭅????/a>
+          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>YouTube ↗</a>
+          <a href="https://www.sooplive.com/station/townboy" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>SOOP 방송국 ↗</a>
+          <a href="https://cafe.naver.com/smebsmeb" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>팬카페 ↗</a>
         </div>
       </footer>
     </>
   );
 }
-
