@@ -1,0 +1,279 @@
+import CalendarSection from './calendar-section';
+import ScrollObserver from './scroll-observer';
+import YoutubeSection from './youtube-modal';
+import ThemeToggle from './theme-toggle';
+
+export default async function Home() {
+  const [ytRes, soopRes, noticeRes] = await Promise.all([
+    fetch('http://localhost:3000/api/youtube', { next: { revalidate: 0 } }),
+    fetch('http://localhost:3000/api/soop', { next: { revalidate: 0 } }),
+    fetch('http://localhost:3000/api/notices', { next: { revalidate: 300 } }),
+  ]);
+
+  const videosRaw = await ytRes.json();
+  const videos = Array.isArray(videosRaw) ? videosRaw : [];
+  const soopData = await soopRes.json();
+  const vods: any[] = soopData.vods || [];
+  const noticeData = await noticeRes.json();
+  const notices: any[] = noticeData.notices || [];
+
+  const today = new Date();
+  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const thisMonthVideos = videos.filter((v: any) => v.publishedAt.startsWith(currentMonth));
+  const top3 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 3);
+
+  const soopByDate: Record<string, any[]> = {};
+  vods.forEach((v: any) => {
+    if (!soopByDate[v.date]) soopByDate[v.date] = [];
+    soopByDate[v.date].push(v);
+  });
+
+  const monthMap: Record<string, Record<number, any[]>> = {};
+  Object.keys(soopByDate).forEach(date => {
+    const mk = date.substring(0, 7);
+    if (!monthMap[mk]) monthMap[mk] = {};
+    const day = parseInt(date.split('-')[2], 10);
+    monthMap[mk][day] = soopByDate[date];
+  });
+  const sortedMonths = Object.keys(monthMap).sort();
+
+  return (
+    <>
+      <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Pretendard', sans-serif; transition: background 0.3s, color 0.3s; }
+        a { text-decoration: none; color: inherit; }
+
+        :root {
+          --bg:           #ffffff;
+          --bg-section:   #ffffff;
+          --bg-deeper:    #F0F0F0;
+          --card:         #ffffff;
+          --card-border:  rgba(0,0,0,0.08);
+          --text:         #1A1A1A;
+          --text-inv:     #1A1A1A;
+          --text-muted:   #888888;
+          --text-sub:     rgba(0,0,0,0.45);
+          --accent:       #EB701A;
+          --header-bg:    rgba(255,255,255,0.85);
+          --header-border:rgba(0,0,0,0.08);
+          --nav-text:     rgba(0,0,0,0.55);
+          --footer-bg:    #1A1A1A;
+        }
+        [data-theme="dark"] {
+          --bg:           #111111;
+          --bg-section:   #1A1A1A;
+          --bg-deeper:    #0d0d0d;
+          --card:         #1e1e1e;
+          --card-border:  rgba(255,255,255,0.08);
+          --text:         #F0F0F0;
+          --text-inv:     #ffffff;
+          --text-muted:   #555555;
+          --text-sub:     rgba(255,255,255,0.4);
+          --accent:       #EB701A;
+          --header-bg:    rgba(15,15,15,0.85);
+          --header-border:rgba(255,255,255,0.08);
+          --nav-text:     rgba(255,255,255,0.55);
+          --footer-bg:    #080808;
+        }
+
+        body { background: var(--bg); color: var(--text); }
+        .sec-main   { background: var(--bg-section); transition: background 0.3s; }
+        .sec-sub    { background: var(--bg-deeper);  transition: background 0.3s; }
+        .sec-footer { background: var(--footer-bg);  transition: background 0.3s; }
+
+        .card {
+          background: var(--card);
+          border-radius: 16px; overflow: hidden;
+          border: 1px solid var(--card-border);
+          transition: transform 0.2s, box-shadow 0.2s, background 0.3s, border-color 0.3s;
+        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+        .card:active { transform: translateY(-1px) scale(0.98); }
+
+        .notice-card {
+          display: flex; align-items: center; gap: 16px;
+          padding: 16px 20px;
+          background: var(--card);
+          border-radius: 14px;
+          border: 1px solid var(--card-border);
+          text-decoration: none;
+          transition: transform 0.15s, box-shadow 0.15s, background 0.3s;
+          color: inherit;
+        }
+        .notice-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .site-header {
+          background: var(--header-bg);
+          border-bottom: 1px solid var(--header-border);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          transition: background 0.3s, border-color 0.3s;
+        }
+
+        .sec-title { color: var(--text-inv); transition: color 0.3s; }
+        .sec-sub-text { color: var(--text-sub); transition: color 0.3s; }
+
+        .eyebrow {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-size: 0.72rem; font-weight: 700;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: var(--accent); margin-bottom: 10px;
+        }
+        .eyebrow::before {
+          content: ''; display: block;
+          width: 24px; height: 2px;
+          background: var(--accent); border-radius: 2px;
+        }
+        .section-title {
+          font-size: clamp(1.8rem, 3vw, 2.4rem);
+          font-weight: 900; letter-spacing: -0.04em; line-height: 1.1;
+        }
+
+        .fade-in-up {
+          opacity: 0; transform: translateY(32px);
+          transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
+        }
+        .fade-in-up.visible { opacity: 1; transform: translateY(0); }
+        .fade-in-up.delay-1 { transition-delay: 0.1s; }
+        .fade-in-up.delay-2 { transition-delay: 0.2s; }
+
+        .logo-text { color: var(--text-inv); transition: color 0.3s; }
+        .nav-link  { color: var(--nav-text);  transition: color 0.3s; }
+      `}</style>
+
+      <ScrollObserver />
+
+      {/* ── HEADER ── */}
+      <header className="site-header" style={{
+        position: 'sticky', top: 0, zIndex: 200,
+        height: '60px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 clamp(1.5rem, 4vw, 3rem)',
+        boxShadow: '0 1px 20px rgba(0,0,0,0.08)',
+      }}>
+        <div className="logo-text" style={{ fontSize: '1.1rem', fontWeight: 900, letterSpacing: '-0.03em' }}>
+          SMEB<span style={{ color: '#EB701A' }}>.</span>
+        </div>
+        <nav style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+          <a href="#top3"    className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>BEST 3</a>
+          <a href="#videos"  className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>유튜브</a>
+          <a href="#soopcal" className="nav-link" style={{ fontSize: '0.8rem', fontWeight: 500 }}>다시보기</a>
+          <ThemeToggle />
+          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank"
+            style={{ background: 'linear-gradient(135deg,#EB701A,#ff8c3a)', color: '#fff', padding: '0.4rem 1.1rem', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 700, boxShadow: '0 4px 14px rgba(235,112,26,0.35)' }}>
+            YouTube ↗
+          </a>
+          <a href="https://cafe.naver.com/smebsmeb" target="_blank"
+            style={{ background: 'linear-gradient(135deg,#03C75A,#02b351)', color: '#fff', padding: '0.4rem 1.1rem', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 700, boxShadow: '0 4px 14px rgba(3,199,90,0.35)' }}>
+            팬카페 ↗
+          </a>
+        </nav>
+      </header>
+
+    {/* ── HERO ── */}
+<section className="sec-main" style={{ padding: 'clamp(60px,10vw,120px) clamp(1.5rem,5vw,3rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+
+  {/* 레이어드 배경 — 격자 패턴 */}
+  <div style={{
+    position: 'absolute', inset: 0, pointerEvents: 'none',
+    backgroundImage: `linear-gradient(rgba(235,112,26,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(235,112,26,0.06) 1px, transparent 1px)`,
+    backgroundSize: '40px 40px',
+  }} />
+
+  {/* 중앙 글로우 */}
+  <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'800px', height:'400px', background:'radial-gradient(ellipse, rgba(235,112,26,0.12) 0%, transparent 65%)', pointerEvents:'none' }} />
+
+  {/* 상단 라인 */}
+  <div style={{ position:'absolute', top:0, left:0, right:0, height:'2px', background:'linear-gradient(to right, transparent 0%, #EB701A 40%, #ff8c3a 60%, transparent 100%)' }} />
+
+  {/* 좌측 장식 원 */}
+  <div style={{ position:'absolute', left:'-80px', top:'50%', transform:'translateY(-50%)', width:'240px', height:'240px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.15)', pointerEvents:'none' }} />
+  <div style={{ position:'absolute', left:'-120px', top:'50%', transform:'translateY(-50%)', width:'320px', height:'320px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.08)', pointerEvents:'none' }} />
+
+  {/* 우측 장식 원 */}
+  <div style={{ position:'absolute', right:'-80px', top:'50%', transform:'translateY(-50%)', width:'240px', height:'240px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.15)', pointerEvents:'none' }} />
+  <div style={{ position:'absolute', right:'-120px', top:'50%', transform:'translateY(-50%)', width:'320px', height:'320px', borderRadius:'50%', border:'1px solid rgba(235,112,26,0.08)', pointerEvents:'none' }} />
+
+
+
+  <div className="fade-in-up" style={{ position: 'relative', zIndex: 1 }}>
+    {/* 글래스 뱃지 */}
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: '8px',
+      background: 'rgba(235,112,26,0.08)',
+      border: '1px solid rgba(235,112,26,0.2)',
+      backdropFilter: 'blur(12px)',
+      color: '#EB701A', fontSize: '0.72rem', fontWeight: 700,
+      padding: '0.4rem 1rem', borderRadius: '100px',
+      letterSpacing: '0.1em', textTransform: 'uppercase',
+      marginBottom: '1.5rem',
+    }}>
+      <span style={{ width:'6px', height:'6px', borderRadius:'50%', background:'#EB701A', display:'inline-block', animation:'pulse 2s infinite' }} />
+      SOOP 스트리머 · 팬 아카이브
+    </div>
+
+    <h1 className="sec-title" style={{ fontSize:'clamp(3rem,7vw,5.5rem)', fontWeight:900, letterSpacing:'-0.05em', lineHeight:1, marginBottom:'1.2rem' }}>
+      <span style={{ color:'#EB701A' }}>SMEB</span>{' '}
+      <span style={{ position:'relative', display:'inline-block' }}>
+        ARCHIVE
+        <span style={{ position:'absolute', bottom:'-4px', left:0, right:0, height:'3px', background:'linear-gradient(to right, #EB701A, transparent)', borderRadius:'2px' }} />
+      </span>
+    </h1>
+
+    <p className="sec-sub-text" style={{ fontSize:'1rem', marginBottom:'2rem' }}>
+      전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기
+    </p>
+
+  
+  </div>
+
+  <style>{`
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  `}</style>
+</section>
+
+      {/* ── TOP 3 + 전체영상 ── */}
+      <section id="top3" className="sec-main" style={{ padding:'0 clamp(1.5rem,5vw,3rem) 0' }}>
+        <div style={{ maxWidth:'1400px', margin:'0 auto', paddingBottom:'40px' }} className="fade-in-up">
+          <div className="eyebrow">이달의 BEST</div>
+          <h2 className="section-title sec-title" style={{ marginBottom:'28px' }}>유튜브 TOP 3</h2>
+         <YoutubeSection videos={thisMonthVideos} top3={top3} notices={notices} />
+        </div>
+      </section>
+
+      {/* ── SOOP 다시보기 ── */}
+      <section id="soopcal" className="sec-main" style={{ padding:'40px clamp(1.5rem,5vw,3rem) 60px', position:'relative' }}>
+        <div style={{ position:'absolute', bottom:'10%', right:'5%', width:'500px', height:'400px', background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)', pointerEvents:'none' }} />
+        <div style={{ maxWidth:'1600px', margin:'0 auto', position:'relative', zIndex:1 }} className="fade-in-up">
+          <div className="eyebrow">SOOP 다시보기</div>
+          <h2 className="section-title sec-title" style={{ marginBottom:'40px' }}>다시보기 캘린더</h2>
+          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} today={today.toISOString()} />
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="sec-footer" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'2.5rem clamp(1.5rem,5vw,3rem)', textAlign:'center' }}>
+        <p style={{ fontSize:'1.3rem', fontWeight:900, letterSpacing:'-0.03em', color:'#fff', marginBottom:'10px' }}>
+          SMEB<span style={{ color:'#EB701A' }}>.</span>
+        </p>
+        <p style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.3)', marginBottom:'14px' }}>
+          롤 전 프로게이머 스맵 송경호 · {today.getFullYear()}년 {today.getMonth()+1}월
+        </p>
+        <div style={{ display:'flex', gap:'1.5rem', justifyContent:'center' }}>
+          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>YouTube ↗</a>
+          <a href="https://www.sooplive.com/station/townboy" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>SOOP 방송국 ↗</a>
+          <a href="https://cafe.naver.com/smebsmeb" target="_blank" style={{ fontSize:'0.82rem', color:'#EB701A', fontWeight:600 }}>팬카페 ↗</a>
+        </div>
+      </footer>
+    </>
+  );
+}
