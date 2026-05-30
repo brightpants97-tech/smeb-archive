@@ -31,10 +31,7 @@ function VideoModal({ activeId, onClose }: { activeId: string, onClose: () => vo
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
-    };
+    return () => { document.removeEventListener('keydown', handleKey); document.body.style.overflow = ''; };
   }, [onClose]);
 
   return createPortal(
@@ -70,10 +67,8 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
     <>
       {activeId && <VideoModal activeId={activeId} onClose={() => setActiveId(null)} />}
 
-      {/* TOP 3 + 라이브 */}
       <div style={{ display:'grid', gridTemplateColumns:'1.4fr 0.9fr 0.9fr', gap:'20px', alignItems:'start' }}>
 
-        {/* 1위 */}
         {top3[0] && (
           <div onClick={() => setActiveId(top3[0].id)}
             style={{ cursor:'pointer', borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', transition:'transform 0.2s, box-shadow 0.2s', background:'var(--card)' }}
@@ -100,7 +95,6 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
           </div>
         )}
 
-        {/* 2위 / 3위 */}
         <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
           {top3.slice(1).map((video, i) => (
             <div key={video.id} onClick={() => setActiveId(video.id)}
@@ -125,28 +119,27 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
           ))}
         </div>
 
-        {/* 라이브 섹션 */}
         <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
           <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
-            <div style={{
-              width:'8px', height:'8px', borderRadius:'50%',
-              background: liveData?.isLive ? '#ff4040' : 'var(--text-muted)',
-              boxShadow: liveData?.isLive ? '0 0 0 3px rgba(255,64,64,0.25)' : 'none',
-            }} />
+            <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: liveData?.isLive ? '#ff4040' : 'var(--text-muted)', boxShadow: liveData?.isLive ? '0 0 0 3px rgba(255,64,64,0.25)' : 'none' }} />
             <span style={{ fontSize:'0.75rem', fontWeight:800, color:'var(--text)', letterSpacing:'0.08em' }}>LIVE NOW</span>
-            {liveData?.isLive && (
-              <span style={{ marginLeft:'auto', fontSize:'0.68rem', fontWeight:700, background:'rgba(255,64,64,0.12)', color:'#ff4040', padding:'2px 8px', borderRadius:'100px' }}>
-                방송 중
-              </span>
-            )}
+            {liveData?.isLive && <span style={{ marginLeft:'auto', fontSize:'0.68rem', fontWeight:700, background:'rgba(255,64,64,0.12)', color:'#ff4040', padding:'2px 8px', borderRadius:'100px' }}>방송 중</span>}
           </div>
 
-          <a href={liveData?.isLive ? liveData.liveUrl : 'https://www.sooplive.com/station/townboy'}
+          <a href={liveData?.isLive ? (liveData.liveUrl || 'https://www.sooplive.com/station/townboy') : 'https://www.sooplive.com/station/townboy'}
              target="_blank" rel="noopener noreferrer"
              style={{ display:'block', position:'relative', textDecoration:'none' }}>
             {liveData?.isLive ? (
-              <img src={liveData.thumbnail} alt="라이브 방송"
-                style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
+              liveData.thumbnail ? (
+                <img src={liveData.thumbnail + '?t=' + Date.now()} alt="라이브 방송"
+                  style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
+              ) : (
+                <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #0f0505 0%, #2d0808 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
+                  <div style={{ position:'absolute', inset:0, background:'radial-gradient(circle at center, rgba(255,60,60,0.3) 0%, transparent 70%)' }} />
+                  <img src={liveData.profileImage || 'https://profile.img.sooplive.com/LOGO/to/townboy/townboy.jpg'} alt="스맵"
+                    style={{ width:'80px', height:'80px', borderRadius:'50%', border:'3px solid rgba(255,60,60,0.6)', objectFit:'cover', position:'relative', zIndex:1 }} />
+                </div>
+              )
             ) : (
               <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
                 <img src="https://profile.img.sooplive.com/LOGO/to/townboy/townboy.jpg" alt="스맵"
@@ -163,15 +156,13 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
 
           <div style={{ padding:'12px 14px', flex:1 }}>
             {liveData?.isLive ? (
-              <a href={liveData.liveUrl} target="_blank" rel="noopener noreferrer"
+              <a href={liveData.liveUrl || 'https://www.sooplive.com/station/townboy'} target="_blank" rel="noopener noreferrer"
                 style={{ display:'block', textAlign:'center', background:'#ff4040', color:'#fff', fontSize:'0.8rem', fontWeight:700, padding:'8px', borderRadius:'10px', textDecoration:'none' }}>
                 지금 시청하기 →
               </a>
             ) : (
               <>
-                <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', marginBottom:'6px' }}>
-                  현재 방송 중이 아니에요
-                </p>
+                <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', marginBottom:'6px' }}>현재 방송 중이 아니에요</p>
                 {liveData?.broadStart && (
                   <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', marginBottom:'8px' }}>
                     마지막 방송: {new Date(liveData.broadStart).toLocaleDateString('ko-KR', { month:'long', day:'numeric' })}
@@ -188,11 +179,9 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
 
       </div>
 
-      {/* 최신 영상 + 공지 나란히 */}
       <div id="videos" className="sec-light" style={{ margin:'40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding:'40px clamp(1.5rem, 5vw, 3rem)' }}>
         <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'40px', alignItems:'start' }}>
 
-          {/* 최신 영상 */}
           <div>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
@@ -228,7 +217,6 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
             </div>
           </div>
 
-          {/* 최신 공지 */}
           <div>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
