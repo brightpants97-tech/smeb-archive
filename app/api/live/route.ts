@@ -15,44 +15,18 @@ export async function GET() {
     });
     const data = await res.json();
     const station = data.station;
-    const isLive = !!station?.activeNo && station.activeNo !== 0;
 
-    if (!isLive) {
-      return NextResponse.json({
-        isLive: false,
-        broadcastNo: null,
-        thumbnail: null,
-        liveUrl: null,
-        broadStart: station?.broadStart || null,
-        profileImage: `https://profile.img.sooplive.com/LOGO/to/${BJID}/${BJID}.jpg`,
-      });
-    }
-
-    // 방송 중이면 stbbs API로 broadcastNo 가져오기
-    let broadcastNo: string | null = null;
-    try {
-      const broadRes = await fetch(
-        `https://stbbs.sooplive.com/api/get_broadcast_list.php?szBjId=${BJID}&nLimit=1`,
-        {
-          headers: {
-            'Referer': 'https://www.sooplive.com/',
-            'Origin': 'https://www.sooplive.com',
-            'User-Agent': 'Mozilla/5.0',
-          },
-          cache: 'no-store'
-        }
-      );
-      const broadData = await broadRes.json();
-      const broadList = broadData?.data?.broad_list || broadData?.broad_list || [];
-      if (broadList.length > 0) {
-        broadcastNo = String(broadList[0].broad_no || broadList[0].broadNo || '');
-      }
-    } catch {}
+    // activeNo가 0이 아닌 값이면 방송 중 (= activeNo 자체가 broadcastNo)
+    const activeNo = station?.activeNo;
+    const isLive = !!activeNo && activeNo !== 0;
+    const broadcastNo = isLive ? String(activeNo) : null;
 
     return NextResponse.json({
-      isLive: true,
+      isLive,
       broadcastNo,
-      thumbnail: broadcastNo ? `https://liveimg.sooplive.co.kr/m/${broadcastNo}` : null,
+      thumbnail: broadcastNo
+        ? `https://liveimg.sooplive.co.kr/m/${broadcastNo}`
+        : null,
       liveUrl: broadcastNo
         ? `https://play.sooplive.com/${BJID}/${broadcastNo}`
         : `https://www.sooplive.com/station/${BJID}`,
