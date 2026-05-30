@@ -55,53 +55,65 @@ function VideoModal({ activeId, onClose }: { activeId: string, onClose: () => vo
   );
 }
 
-// 라이브 상태 타입
-interface LiveInfo {
-  broadcastNo: string | null;
-  broadStart: string | null;
-  profileImage: string;
-  liveUrl: string;
-}
-
-// liveimg URL로 실제 방송 여부를 클라이언트에서 검증하는 컴포넌트
-function LiveSection({ liveInfo }: { liveInfo: LiveInfo | null }) {
+// LIVE NOW 섹션
+// 전략: 클라이언트에서 방송국 페이지를 직접 fetch → liveimg URL 파싱 → 이미지 로드 검증
+function LiveSection() {
   const BJID = 'townboy';
-  const [isLive, setIsLive] = useState<boolean | null>(null); // null = 확인 중
-  const imgRef = useRef<HTMLImageElement>(null);
+  const PROFILE = `https://profile.img.sooplive.com/LOGO/to/${BJID}/${BJID}.jpg`;
+
+  const [broadcastNo, setBroadcastNo] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState<boolean | null>(null);
+  const [broadStart, setBroadStart] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const thumbnailUrl = liveInfo?.broadcastNo
-    ? `https://liveimg.sooplive.co.kr/m/${liveInfo.broadcastNo}`
-    : null;
+  const check = async () => {
+    try {
+      // broadStart는 route.ts에서 가져옴 (station API는 여전히 접근 가능)
+      const apiRes = await fetch('/api/live').then(r => r.json()).catch(() => ({}));
+      if (apiRes.broadStart) setBroadStart(apiRes.broadStart);
 
-  const checkLive = () => {
-    if (!thumbnailUrl) { setIsLive(false); return; }
-    // 캐시 우회를 위해 타임스탬프 쿼리 붙이기
-    const img = new Image();
-    img.onload = () => setIsLive(true);
-    img.onerror = () => setIsLive(false);
-    img.src = thumbnailUrl + '?t=' + Date.now();
+      // 방송국 페이지 HTML에서 liveimg URL 파싱 (클라이언트 → CORS 없음)
+      const html = await fetch(`https://www.sooplive.com/station/${BJID}`, { cache: 'no-store' }).then(r => r.text());
+      const m = html.match(/liveimg\.sooplive\.com\/[a-z]+\/(\d{8,})/) ||
+                html.match(/play\.sooplive\.com\/${BJID}\/(\d{8,})/);
+      const no = m?.[1] ?? null;
+
+      if (!no) {
+        setBroadcastNo(null);
+        setIsLive(false);
+        return;
+      }
+
+      // liveimg 실제 로드 시도 → 성공이면 방송 중 확정
+      await new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => { setBroadcastNo(no); setIsLive(true); resolve(); };
+        img.onerror = () => { setBroadcastNo(null); setIsLive(false); resolve(); };
+        img.src = `https://liveimg.sooplive.co.kr/m/${no}?t=${Date.now()}`;
+      });
+    } catch {
+      setIsLive(false);
+    }
   };
 
   useEffect(() => {
-    checkLive();
-    // 30초마다 재확인
-    timerRef.current = setInterval(checkLive, 30000);
+    check();
+    timerRef.current = setInterval(check, 60000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [thumbnailUrl]);
+  }, []);
 
-  const liveUrl = liveInfo?.liveUrl || `https://www.sooplive.com/station/${BJID}`;
-  const profileImage = liveInfo?.profileImage || `https://profile.img.sooplive.com/LOGO/to/${BJID}/${BJID}.jpg`;
+  const thumbnailUrl = broadcastNo ? `https://liveimg.sooplive.co.kr/m/${broadcastNo}` : null;
+  const liveUrl = broadcastNo
+    ? `https://play.sooplive.com/${BJID}/${broadcastNo}`
+    : `https://www.sooplive.com/station/${BJID}`;
 
   return (
     <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
-      {/* 헤더 */}
       <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
         <div style={{
           width:'8px', height:'8px', borderRadius:'50%',
           background: isLive ? '#ff4040' : 'var(--text-muted)',
           boxShadow: isLive ? '0 0 0 3px rgba(255,64,64,0.25)' : 'none',
-          // 확인 중일 땐 깜빡임
           animation: isLive === null ? 'pulse 1.2s ease-in-out infinite' : 'none',
         }} />
         <span style={{ fontSize:'0.75rem', fontWeight:800, color:'var(--text)', letterSpacing:'0.08em' }}>LIVE NOW</span>
@@ -112,30 +124,21 @@ function LiveSection({ liveInfo }: { liveInfo: LiveInfo | null }) {
         )}
       </div>
 
-      {/* 썸네일 영역 */}
       <a href={liveUrl} target="_blank" rel="noopener noreferrer"
         style={{ display:'block', position:'relative', textDecoration:'none' }}>
         {isLive && thumbnailUrl ? (
-          // 방송 중 + 썸네일 확인됨
-          <img
-            ref={imgRef}
-            src={thumbnailUrl + '?t=' + Date.now()}
-            alt="라이브 방송"
-            style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }}
-          />
+          <img src={thumbnailUrl + '?t=' + Date.now()} alt="라이브 방송"
+            style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
         ) : isLive === false ? (
-          // 방송 중 아님
-          <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-            <img src={profileImage} alt="스맵"
-              style={{ width:'68px', height:'68px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.6)', objectFit:'cover', position:'relative', zIndex:1 }} />
+          <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <img src={PROFILE} alt="스맵"
+              style={{ width:'68px', height:'68px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.6)', objectFit:'cover' }} />
           </div>
         ) : (
-          // 확인 중 (skeleton)
           <div style={{ width:'100%', aspectRatio:'16/9', background:'var(--bg-deeper)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <div style={{ width:'32px', height:'32px', borderRadius:'50%', border:'3px solid var(--card-border)', borderTopColor:'#EB701A', animation:'spin 0.8s linear infinite' }} />
           </div>
         )}
-
         {isLive && (
           <div style={{ position:'absolute', top:'10px', left:'10px', display:'flex', alignItems:'center', gap:'4px', background:'rgba(255,40,40,0.92)', color:'#fff', fontSize:'0.68rem', fontWeight:800, padding:'3px 8px', borderRadius:'4px' }}>
             <div style={{ width:'5px', height:'5px', borderRadius:'50%', background:'#fff' }} />
@@ -144,7 +147,6 @@ function LiveSection({ liveInfo }: { liveInfo: LiveInfo | null }) {
         )}
       </a>
 
-      {/* 하단 버튼 */}
       <div style={{ padding:'12px 14px', flex:1 }}>
         {isLive ? (
           <a href={liveUrl} target="_blank" rel="noopener noreferrer"
@@ -156,9 +158,9 @@ function LiveSection({ liveInfo }: { liveInfo: LiveInfo | null }) {
             <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', marginBottom:'6px' }}>
               {isLive === null ? '방송 상태 확인 중...' : '현재 방송 중이 아니에요'}
             </p>
-            {liveInfo?.broadStart && isLive === false && (
+            {broadStart && isLive === false && (
               <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', marginBottom:'8px' }}>
-                마지막 방송: {new Date(liveInfo.broadStart).toLocaleDateString('ko-KR', { month:'long', day:'numeric' })}
+                마지막 방송: {new Date(broadStart).toLocaleDateString('ko-KR', { month:'long', day:'numeric' })}
               </p>
             )}
             <a href={`https://www.sooplive.com/station/${BJID}`} target="_blank" rel="noopener noreferrer"
@@ -179,16 +181,6 @@ function LiveSection({ liveInfo }: { liveInfo: LiveInfo | null }) {
 
 export default function YoutubeSection({ videos, top3, notices }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [liveInfo, setLiveInfo] = useState<LiveInfo | null>(null);
-
-  useEffect(() => {
-    fetch('/api/live').then(r => r.json()).then(setLiveInfo).catch(() => {});
-    // 2분마다 api/live 재요청 (새 방송 시작 시 broadcastNo 갱신)
-    const t = setInterval(() => {
-      fetch('/api/live').then(r => r.json()).then(setLiveInfo).catch(() => {});
-    }, 120000);
-    return () => clearInterval(t);
-  }, []);
 
   return (
     <>
@@ -246,7 +238,7 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
           ))}
         </div>
 
-        <LiveSection liveInfo={liveInfo} />
+        <LiveSection />
 
       </div>
 
@@ -317,4 +309,4 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
       </div>
     </>
   );
-}
+                  }
