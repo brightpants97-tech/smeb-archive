@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Video {
@@ -55,12 +55,139 @@ function VideoModal({ activeId, onClose }: { activeId: string, onClose: () => vo
   );
 }
 
-export default function YoutubeSection({ videos, top3, notices }: Props) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [liveData, setLiveData] = useState<any>(null);
+// 라이브 상태 타입
+interface LiveInfo {
+  broadcastNo: string | null;
+  broadStart: string | null;
+  profileImage: string;
+  liveUrl: string;
+}
+
+// liveimg URL로 실제 방송 여부를 클라이언트에서 검증하는 컴포넌트
+function LiveSection({ liveInfo }: { liveInfo: LiveInfo | null }) {
+  const BJID = 'townboy';
+  const [isLive, setIsLive] = useState<boolean | null>(null); // null = 확인 중
+  const imgRef = useRef<HTMLImageElement>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const thumbnailUrl = liveInfo?.broadcastNo
+    ? `https://liveimg.sooplive.co.kr/m/${liveInfo.broadcastNo}`
+    : null;
+
+  const checkLive = () => {
+    if (!thumbnailUrl) { setIsLive(false); return; }
+    // 캐시 우회를 위해 타임스탬프 쿼리 붙이기
+    const img = new Image();
+    img.onload = () => setIsLive(true);
+    img.onerror = () => setIsLive(false);
+    img.src = thumbnailUrl + '?t=' + Date.now();
+  };
 
   useEffect(() => {
-    fetch('/api/live').then(r => r.json()).then(setLiveData).catch(() => {});
+    checkLive();
+    // 30초마다 재확인
+    timerRef.current = setInterval(checkLive, 30000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [thumbnailUrl]);
+
+  const liveUrl = liveInfo?.liveUrl || `https://www.sooplive.com/station/${BJID}`;
+  const profileImage = liveInfo?.profileImage || `https://profile.img.sooplive.com/LOGO/to/${BJID}/${BJID}.jpg`;
+
+  return (
+    <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
+      {/* 헤더 */}
+      <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
+        <div style={{
+          width:'8px', height:'8px', borderRadius:'50%',
+          background: isLive ? '#ff4040' : 'var(--text-muted)',
+          boxShadow: isLive ? '0 0 0 3px rgba(255,64,64,0.25)' : 'none',
+          // 확인 중일 땐 깜빡임
+          animation: isLive === null ? 'pulse 1.2s ease-in-out infinite' : 'none',
+        }} />
+        <span style={{ fontSize:'0.75rem', fontWeight:800, color:'var(--text)', letterSpacing:'0.08em' }}>LIVE NOW</span>
+        {isLive && (
+          <span style={{ marginLeft:'auto', fontSize:'0.68rem', fontWeight:700, background:'rgba(255,64,64,0.12)', color:'#ff4040', padding:'2px 8px', borderRadius:'100px' }}>
+            방송 중
+          </span>
+        )}
+      </div>
+
+      {/* 썸네일 영역 */}
+      <a href={liveUrl} target="_blank" rel="noopener noreferrer"
+        style={{ display:'block', position:'relative', textDecoration:'none' }}>
+        {isLive && thumbnailUrl ? (
+          // 방송 중 + 썸네일 확인됨
+          <img
+            ref={imgRef}
+            src={thumbnailUrl + '?t=' + Date.now()}
+            alt="라이브 방송"
+            style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }}
+          />
+        ) : isLive === false ? (
+          // 방송 중 아님
+          <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+            <img src={profileImage} alt="스맵"
+              style={{ width:'68px', height:'68px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.6)', objectFit:'cover', position:'relative', zIndex:1 }} />
+          </div>
+        ) : (
+          // 확인 중 (skeleton)
+          <div style={{ width:'100%', aspectRatio:'16/9', background:'var(--bg-deeper)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ width:'32px', height:'32px', borderRadius:'50%', border:'3px solid var(--card-border)', borderTopColor:'#EB701A', animation:'spin 0.8s linear infinite' }} />
+          </div>
+        )}
+
+        {isLive && (
+          <div style={{ position:'absolute', top:'10px', left:'10px', display:'flex', alignItems:'center', gap:'4px', background:'rgba(255,40,40,0.92)', color:'#fff', fontSize:'0.68rem', fontWeight:800, padding:'3px 8px', borderRadius:'4px' }}>
+            <div style={{ width:'5px', height:'5px', borderRadius:'50%', background:'#fff' }} />
+            LIVE
+          </div>
+        )}
+      </a>
+
+      {/* 하단 버튼 */}
+      <div style={{ padding:'12px 14px', flex:1 }}>
+        {isLive ? (
+          <a href={liveUrl} target="_blank" rel="noopener noreferrer"
+            style={{ display:'block', textAlign:'center', background:'#ff4040', color:'#fff', fontSize:'0.8rem', fontWeight:700, padding:'8px', borderRadius:'10px', textDecoration:'none' }}>
+            지금 시청하기 →
+          </a>
+        ) : (
+          <>
+            <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', marginBottom:'6px' }}>
+              {isLive === null ? '방송 상태 확인 중...' : '현재 방송 중이 아니에요'}
+            </p>
+            {liveInfo?.broadStart && isLive === false && (
+              <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', marginBottom:'8px' }}>
+                마지막 방송: {new Date(liveInfo.broadStart).toLocaleDateString('ko-KR', { month:'long', day:'numeric' })}
+              </p>
+            )}
+            <a href={`https://www.sooplive.com/station/${BJID}`} target="_blank" rel="noopener noreferrer"
+              style={{ display:'block', textAlign:'center', background:'var(--bg-deeper)', color:'var(--text)', fontSize:'0.75rem', fontWeight:700, padding:'7px', borderRadius:'10px', textDecoration:'none', border:'1px solid var(--card-border)' }}>
+              채널 방문하기 →
+            </a>
+          </>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+      `}</style>
+    </div>
+  );
+}
+
+export default function YoutubeSection({ videos, top3, notices }: Props) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [liveInfo, setLiveInfo] = useState<LiveInfo | null>(null);
+
+  useEffect(() => {
+    fetch('/api/live').then(r => r.json()).then(setLiveInfo).catch(() => {});
+    // 2분마다 api/live 재요청 (새 방송 시작 시 broadcastNo 갱신)
+    const t = setInterval(() => {
+      fetch('/api/live').then(r => r.json()).then(setLiveInfo).catch(() => {});
+    }, 120000);
+    return () => clearInterval(t);
   }, []);
 
   return (
@@ -119,63 +246,7 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
           ))}
         </div>
 
-        <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
-          <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
-            <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: liveData?.isLive ? '#ff4040' : 'var(--text-muted)', boxShadow: liveData?.isLive ? '0 0 0 3px rgba(255,64,64,0.25)' : 'none' }} />
-            <span style={{ fontSize:'0.75rem', fontWeight:800, color:'var(--text)', letterSpacing:'0.08em' }}>LIVE NOW</span>
-            {liveData?.isLive && <span style={{ marginLeft:'auto', fontSize:'0.68rem', fontWeight:700, background:'rgba(255,64,64,0.12)', color:'#ff4040', padding:'2px 8px', borderRadius:'100px' }}>방송 중</span>}
-          </div>
-
-          <a href={liveData?.isLive ? (liveData.liveUrl || 'https://www.sooplive.com/station/townboy') : 'https://www.sooplive.com/station/townboy'}
-             target="_blank" rel="noopener noreferrer"
-             style={{ display:'block', position:'relative', textDecoration:'none' }}>
-            {liveData?.isLive ? (
-              liveData.thumbnail ? (
-                <img src={liveData.thumbnail + '?t=' + Date.now()} alt="라이브 방송"
-                  style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
-              ) : (
-                <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #0f0505 0%, #2d0808 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
-                  <div style={{ position:'absolute', inset:0, background:'radial-gradient(circle at center, rgba(255,60,60,0.3) 0%, transparent 70%)' }} />
-                  <img src={liveData.profileImage || 'https://profile.img.sooplive.com/LOGO/to/townboy/townboy.jpg'} alt="스맵"
-                    style={{ width:'80px', height:'80px', borderRadius:'50%', border:'3px solid rgba(255,60,60,0.6)', objectFit:'cover', position:'relative', zIndex:1 }} />
-                </div>
-              )
-            ) : (
-              <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-                <img src="https://profile.img.sooplive.com/LOGO/to/townboy/townboy.jpg" alt="스맵"
-                  style={{ width:'68px', height:'68px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.6)', objectFit:'cover', position:'relative', zIndex:1 }} />
-              </div>
-            )}
-            {liveData?.isLive && (
-              <div style={{ position:'absolute', top:'10px', left:'10px', display:'flex', alignItems:'center', gap:'4px', background:'rgba(255,40,40,0.92)', color:'#fff', fontSize:'0.68rem', fontWeight:800, padding:'3px 8px', borderRadius:'4px' }}>
-                <div style={{ width:'5px', height:'5px', borderRadius:'50%', background:'#fff' }} />
-                LIVE
-              </div>
-            )}
-          </a>
-
-          <div style={{ padding:'12px 14px', flex:1 }}>
-            {liveData?.isLive ? (
-              <a href={liveData.liveUrl || 'https://www.sooplive.com/station/townboy'} target="_blank" rel="noopener noreferrer"
-                style={{ display:'block', textAlign:'center', background:'#ff4040', color:'#fff', fontSize:'0.8rem', fontWeight:700, padding:'8px', borderRadius:'10px', textDecoration:'none' }}>
-                지금 시청하기 →
-              </a>
-            ) : (
-              <>
-                <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', marginBottom:'6px' }}>현재 방송 중이 아니에요</p>
-                {liveData?.broadStart && (
-                  <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', marginBottom:'8px' }}>
-                    마지막 방송: {new Date(liveData.broadStart).toLocaleDateString('ko-KR', { month:'long', day:'numeric' })}
-                  </p>
-                )}
-                <a href="https://www.sooplive.com/station/townboy" target="_blank" rel="noopener noreferrer"
-                  style={{ display:'block', textAlign:'center', background:'var(--bg-deeper)', color:'var(--text)', fontSize:'0.75rem', fontWeight:700, padding:'7px', borderRadius:'10px', textDecoration:'none', border:'1px solid var(--card-border)' }}>
-                  채널 방문하기 →
-                </a>
-              </>
-            )}
-          </div>
-        </div>
+        <LiveSection liveInfo={liveInfo} />
 
       </div>
 
