@@ -60,10 +60,10 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
   };
 
   const BORDER = '1px solid var(--card-border)';
+  const GRID = 'repeat(7, minmax(0, 1fr))';
 
   return (
     <div>
-      {/* 검색 */}
       <div style={{ marginBottom: '24px', position: 'relative' }}>
         <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem' }}>🔍</span>
         <input value={search} onChange={e => setSearch(e.target.value)}
@@ -96,7 +96,6 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
         </div>
       ) : (
         <>
-          {/* 연도 탭 */}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: '4px' }}>연도</span>
             {years.map(y => (
@@ -117,7 +116,6 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
             ))}
           </div>
 
-          {/* 월 탭 */}
           <div style={{ display: 'flex', gap: '6px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center', padding: '14px 16px', background: 'var(--bg-deeper)', borderRadius: '14px' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: '4px' }}>월</span>
             {monthsInYear.map(ym => {
@@ -142,7 +140,6 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
             })}
           </div>
 
-          {/* 헤더 */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>
               {year}년 <span style={{ color: '#EB701A' }}>{month}월</span>
@@ -152,39 +149,37 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
             </span>
           </div>
 
-          {/* 달력 - border 직접 적용 방식 */}
-          <div style={{ borderRadius: '16px', overflow: 'hidden', border: BORDER }}>
+          <div style={{ borderRadius: '16px', overflow: 'hidden', border: BORDER, width: '100%' }}>
             {/* 요일 헤더 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: 'var(--bg-deeper)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--bg-deeper)' }}>
               {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
                 <div key={d} style={{
                   textAlign: 'center', padding: '10px 0', fontSize: '0.75rem', fontWeight: 700,
                   color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)',
                   borderRight: i < 6 ? BORDER : 'none',
                   borderBottom: BORDER,
+                  overflow: 'hidden',
                 }}>{d}</div>
               ))}
             </div>
 
             {/* 날짜 그리드 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: 'var(--card)' }}>
-              {/* 빈 셀 */}
+            <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--card)' }}>
               {Array.from({ length: firstDay }).map((_, i) => {
                 const col = i % 7;
                 return (
                   <div key={`e${i}`} style={{
-                    minHeight: '90px', background: 'var(--bg-deeper)',
+                    minHeight: '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
                     borderRight: col < 6 ? BORDER : 'none',
                     borderBottom: BORDER,
                   }} />
                 );
               })}
-              {/* 날짜 셀 */}
+
               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                 const vods = calData[day] || [];
                 const isToday = todayDate.getFullYear() === year && todayDate.getMonth() + 1 === month && todayDate.getDate() === day;
                 const col = (firstDay + day - 1) % 7;
-                // 마지막 줄 여부: 다음 달에 셀이 없으면 마지막 행
                 const totalCells = firstDay + daysInMonth;
                 const lastRowStart = Math.floor((totalCells - 1) / 7) * 7;
                 const cellIndex = firstDay + day - 1;
@@ -192,29 +187,30 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
                 return (
                   <div key={day} style={{
                     background: 'var(--card)', minHeight: '90px', padding: '8px',
+                    overflow: 'hidden', minWidth: 0,
                     borderRight: col < 6 ? BORDER : 'none',
                     borderBottom: isLastRow ? 'none' : BORDER,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
                       <span style={{
                         fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, lineHeight: 1,
-                        minWidth: '22px', height: '22px',
+                        minWidth: '22px', width: '22px', height: '22px', flexShrink: 0,
                         borderRadius: '50%',
                         background: isToday ? '#EB701A' : 'transparent',
                         color: isToday ? '#fff' : col === 0 ? '#ef4444' : col === 6 ? '#3b82f6' : 'var(--text-muted)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>{day}</span>
                       {vods.length > 0 && (
-                        <span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(235,112,26,0.15)', color: '#EB701A', padding: '1px 5px', borderRadius: '100px' }}>
+                        <span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(235,112,26,0.15)', color: '#EB701A', padding: '1px 5px', borderRadius: '100px', flexShrink: 0 }}>
                           {vods.length}
                         </span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
                       {vods.slice(0, 2).map((vod: any, vi: number) => (
                         <a key={vi} href={`https://vod.sooplive.com/player/${vod.id}`} target="_blank" rel="noopener noreferrer"
                           title={vod.title}
-                          style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none' }}
+                          style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none', minWidth: 0 }}
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.2)'}
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.08)'}>
                           {vod.title}
@@ -227,7 +223,7 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
                   </div>
                 );
               })}
-              {/* 마지막 줄 빈 셀 채우기 */}
+
               {(() => {
                 const totalCells = firstDay + daysInMonth;
                 const remainder = totalCells % 7;
@@ -235,7 +231,7 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
                 const trailing = 7 - remainder;
                 return Array.from({ length: trailing }).map((_, i) => (
                   <div key={`t${i}`} style={{
-                    minHeight: '90px', background: 'var(--bg-deeper)',
+                    minHeight: '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
                     borderRight: (remainder + i) < 6 ? BORDER : 'none',
                     borderBottom: 'none',
                   }} />
