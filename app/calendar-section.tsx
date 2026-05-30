@@ -1,10 +1,141 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Props {
   sortedMonths: string[];
   monthMap: Record<string, Record<number, any[]>>;
   today: string;
+}
+
+// 슬라이드오버 패널
+function DayPanel({
+  date, vods, onClose, fmtDuration,
+}: {
+  date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
+}) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+
+  const handleClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 280);
+  };
+
+  const label = (() => {
+    const d = new Date(date + 'T00:00:00');
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+  })();
+
+  return createPortal(
+    <div
+      onClick={handleClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 99998,
+        background: visible ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0)',
+        backdropFilter: visible ? 'blur(4px)' : 'none',
+        WebkitBackdropFilter: visible ? 'blur(4px)' : 'none',
+        transition: 'background 0.28s, backdrop-filter 0.28s',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'absolute', top: 0, right: 0, bottom: 0,
+          width: '100%', maxWidth: '420px',
+          background: 'var(--card)',
+          boxShadow: '-8px 0 48px rgba(0,0,0,0.28)',
+          display: 'flex', flexDirection: 'column',
+          transform: visible ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
+        {/* 헤더 */}
+        <div style={{
+          padding: '20px 20px 16px', borderBottom: '1px solid var(--card-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+        }}>
+          <div>
+            <p style={{ fontSize: '0.72rem', color: '#EB701A', fontWeight: 700, marginBottom: '2px', letterSpacing: '0.04em' }}>다시보기</p>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>{label}</h3>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: 'rgba(235,112,26,0.12)', color: '#EB701A', padding: '4px 10px', borderRadius: '100px' }}>
+              총 {vods.length}개
+            </span>
+            <button
+              onClick={handleClose}
+              style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                border: '1px solid var(--card-border)', background: 'var(--bg-deeper)',
+                color: 'var(--text)', cursor: 'pointer', fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.15)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg-deeper)'}
+            >✕</button>
+          </div>
+        </div>
+
+        {/* 목록 */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {vods.map((vod: any, i: number) => (
+            <a
+              key={i}
+              href={`https://vod.sooplive.com/player/${vod.id}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                display: 'flex', gap: '12px', alignItems: 'flex-start',
+                padding: '12px', borderRadius: '12px',
+                border: '1px solid var(--card-border)',
+                background: 'var(--bg-deeper)',
+                textDecoration: 'none', color: 'var(--text)',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = '';
+                (e.currentTarget as HTMLElement).style.boxShadow = '';
+              }}
+            >
+              {vod.thumb && (
+                <img
+                  src={vod.thumb} alt=""
+                  style={{ width: '96px', aspectRatio: '16/9', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{
+                  display: 'inline-block', fontSize: '0.62rem', fontWeight: 700,
+                  background: 'rgba(235,112,26,0.12)', color: '#EB701A',
+                  padding: '1px 6px', borderRadius: '4px', marginBottom: '4px',
+                }}>{i + 1}</span>
+                <p style={{ fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>{vod.title}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  {vod.views != null && <span>👁 {Number(vod.views).toLocaleString()}회</span>}
+                  {vod.duration ? <span>🕐 {fmtDuration(vod.duration)}</span> : null}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 export default function CalendarSection({ sortedMonths, monthMap, today }: Props) {
@@ -22,6 +153,7 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
   const [selectedYear, setSelectedYear] = useState(defaultYear);
   const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const [search, setSearch] = useState('');
+  const [panelDay, setPanelDay] = useState<{ date: string; vods: any[] } | null>(null);
 
   const monthsInYear = useMemo(() => {
     return sortedMonths.filter(m => m.startsWith(selectedYear));
@@ -59,11 +191,26 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
     return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
   };
 
+  const openPanel = (day: number, vods: any[]) => {
+    if (vods.length === 0) return;
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setPanelDay({ date: dateStr, vods });
+  };
+
   const BORDER = '1px solid var(--card-border)';
   const GRID = 'repeat(7, minmax(0, 1fr))';
 
   return (
     <div>
+      {panelDay && (
+        <DayPanel
+          date={panelDay.date}
+          vods={panelDay.vods}
+          onClose={() => setPanelDay(null)}
+          fmtDuration={fmtDuration}
+        />
+      )}
+
       <div style={{ marginBottom: '24px', position: 'relative' }}>
         <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem' }}>🔍</span>
         <input value={search} onChange={e => setSearch(e.target.value)}
@@ -184,13 +331,22 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
                 const lastRowStart = Math.floor((totalCells - 1) / 7) * 7;
                 const cellIndex = firstDay + day - 1;
                 const isLastRow = cellIndex >= lastRowStart;
+                const hasVods = vods.length > 0;
                 return (
-                  <div key={day} style={{
-                    background: 'var(--card)', minHeight: '90px', padding: '8px',
-                    overflow: 'hidden', minWidth: 0,
-                    borderRight: col < 6 ? BORDER : 'none',
-                    borderBottom: isLastRow ? 'none' : BORDER,
-                  }}>
+                  <div
+                    key={day}
+                    onClick={() => openPanel(day, vods)}
+                    style={{
+                      background: 'var(--card)', minHeight: '90px', padding: '8px',
+                      overflow: 'hidden', minWidth: 0,
+                      borderRight: col < 6 ? BORDER : 'none',
+                      borderBottom: isLastRow ? 'none' : BORDER,
+                      cursor: hasVods ? 'pointer' : 'default',
+                      transition: hasVods ? 'background 0.15s' : undefined,
+                    }}
+                    onMouseEnter={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.05)'; }}
+                    onMouseLeave={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background = 'var(--card)'; }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
                       <span style={{
                         fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, lineHeight: 1,
@@ -208,16 +364,18 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
                       {vods.slice(0, 2).map((vod: any, vi: number) => (
-                        <a key={vi} href={`https://vod.sooplive.com/player/${vod.id}`} target="_blank" rel="noopener noreferrer"
+                        <span
+                          key={vi}
                           title={vod.title}
-                          style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'none', minWidth: 0 }}
-                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.2)'}
-                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.08)'}>
+                          style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}
+                        >
                           {vod.title}
-                        </a>
+                        </span>
                       ))}
                       {vods.length > 2 && (
-                        <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 700, padding: '1px 5px' }}>+{vods.length - 2}개 더</span>
+                        <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 700, padding: '1px 5px' }}>
+                          +{vods.length - 2}개 더 →
+                        </span>
                       )}
                     </div>
                   </div>
