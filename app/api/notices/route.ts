@@ -20,7 +20,6 @@ export async function GET() {
 
     const data = await res.json();
     const notices = (data.notice_data || []).slice(0, 3).map((n: any) => {
-      // 실제 공지 내용에서 텍스트 추출
       const rawText = (n.content?.summary || n.title_name || '')
         .replace(/<[^>]+>/g, '')
         .replace(/\s+/g, ' ')
@@ -28,9 +27,8 @@ export async function GET() {
 
       // title_name이 '공지' 같은 카테고리명이면 내용 첫 문장을 제목으로
       const isGenericTitle = !n.title_name || n.title_name === '공지' || n.title_name.length <= 2;
-      const title = isGenericTitle
-        ? rawText.split(/(?<=[.!?])|\n/)[0].trim().slice(0, 50) || n.title_name
-        : n.title_name;
+      const firstSentence = rawText.split(/[.!?\n]/)[0].trim().slice(0, 50);
+      const title = isGenericTitle ? (firstSentence || n.title_name) : n.title_name;
 
       return {
         id: n.title_no,
