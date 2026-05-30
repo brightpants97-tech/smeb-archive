@@ -55,11 +55,11 @@ function VideoModal({ activeId, onClose }: { activeId: string, onClose: () => vo
   );
 }
 
-// LIVE NOW 섹션
-// 전략: 클라이언트에서 방송국 페이지를 직접 fetch → liveimg URL 파싱 → 이미지 로드 검증
 function LiveSection() {
   const BJID = 'townboy';
   const PROFILE = `https://profile.img.sooplive.com/LOGO/to/${BJID}/${BJID}.jpg`;
+  // play.sooplive.com/townboy → 방송중이면 방송으로, 꺼지면 오프라인으로 자동 연결
+  const LIVE_URL = `https://play.sooplive.com/${BJID}`;
 
   const [broadcastNo, setBroadcastNo] = useState<string | null>(null);
   const [isLive, setIsLive] = useState<boolean | null>(null);
@@ -68,27 +68,22 @@ function LiveSection() {
 
   const check = async () => {
     try {
-      // broadStart는 route.ts에서 가져옴 (station API는 여전히 접근 가능)
-      const apiRes = await fetch('/api/live').then(r => r.json()).catch(() => ({}));
-      if (apiRes.broadStart) setBroadStart(apiRes.broadStart);
+      const data = await fetch('/api/live', { cache: 'no-store' }).then(r => r.json());
+      if (data.broadStart) setBroadStart(data.broadStart);
 
-      // 방송국 페이지 HTML에서 liveimg URL 파싱 (클라이언트 → CORS 없음)
-      const html = await fetch(`https://www.sooplive.com/station/${BJID}`, { cache: 'no-store' }).then(r => r.text());
-      const m = html.match(/liveimg\.sooplive\.com\/[a-z]+\/(\d{8,})/) ||
-                html.match(/play\.sooplive\.com\/${BJID}\/(\d{8,})/);
-      const no = m?.[1] ?? null;
+      const no: string | null = data.broadcastNo ?? null;
+      setBroadcastNo(no);
 
       if (!no) {
-        setBroadcastNo(null);
         setIsLive(false);
         return;
       }
 
-      // liveimg 실제 로드 시도 → 성공이면 방송 중 확정
+      // broadcastNo가 있으면 liveimg 이미지로 실제 방송 중 최종 확인
       await new Promise<void>((resolve) => {
         const img = new Image();
-        img.onload = () => { setBroadcastNo(no); setIsLive(true); resolve(); };
-        img.onerror = () => { setBroadcastNo(null); setIsLive(false); resolve(); };
+        img.onload = () => { setIsLive(true); resolve(); };
+        img.onerror = () => { setIsLive(false); resolve(); };
         img.src = `https://liveimg.sooplive.co.kr/m/${no}?t=${Date.now()}`;
       });
     } catch {
@@ -103,9 +98,6 @@ function LiveSection() {
   }, []);
 
   const thumbnailUrl = broadcastNo ? `https://liveimg.sooplive.co.kr/m/${broadcastNo}` : null;
-  const liveUrl = broadcastNo
-    ? `https://play.sooplive.com/${BJID}/${broadcastNo}`
-    : `https://www.sooplive.com/station/${BJID}`;
 
   return (
     <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
@@ -124,7 +116,7 @@ function LiveSection() {
         )}
       </div>
 
-      <a href={liveUrl} target="_blank" rel="noopener noreferrer"
+      <a href={LIVE_URL} target="_blank" rel="noopener noreferrer"
         style={{ display:'block', position:'relative', textDecoration:'none' }}>
         {isLive && thumbnailUrl ? (
           <img src={thumbnailUrl + '?t=' + Date.now()} alt="라이브 방송"
@@ -149,7 +141,7 @@ function LiveSection() {
 
       <div style={{ padding:'12px 14px', flex:1 }}>
         {isLive ? (
-          <a href={liveUrl} target="_blank" rel="noopener noreferrer"
+          <a href={LIVE_URL} target="_blank" rel="noopener noreferrer"
             style={{ display:'block', textAlign:'center', background:'#ff4040', color:'#fff', fontSize:'0.8rem', fontWeight:700, padding:'8px', borderRadius:'10px', textDecoration:'none' }}>
             지금 시청하기 →
           </a>
@@ -163,7 +155,7 @@ function LiveSection() {
                 마지막 방송: {new Date(broadStart).toLocaleDateString('ko-KR', { month:'long', day:'numeric' })}
               </p>
             )}
-            <a href={`https://www.sooplive.com/station/${BJID}`} target="_blank" rel="noopener noreferrer"
+            <a href={LIVE_URL} target="_blank" rel="noopener noreferrer"
               style={{ display:'block', textAlign:'center', background:'var(--bg-deeper)', color:'var(--text)', fontSize:'0.75rem', fontWeight:700, padding:'7px', borderRadius:'10px', textDecoration:'none', border:'1px solid var(--card-border)' }}>
               채널 방문하기 →
             </a>
@@ -252,15 +244,13 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
             <h2 style={{ fontSize:'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 영상</h2>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'14px' }}>
               {videos.slice(0, 6).map((video, i) => (
-                <div key={video.id}
-                  onClick={() => setActiveId(video.id)}
+                <div key={video.id} onClick={() => setActiveId(video.id)}
                   className="card fade-in-up"
                   style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s` } as React.CSSProperties}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.15)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
                   <div style={{ position:'relative' }}>
                     <img src={video.thumbnail} alt={video.title} style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
-                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0)', transition:'background 0.2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0.25)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='1'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='0'; }}>
                       <div className="play-btn" style={{ width:'44px', height:'44px', borderRadius:'50%', background:'rgba(235,112,26,0.9)', display:'flex', alignItems:'center', justifyContent:'center', opacity:0, transition:'opacity 0.2s' }}>
@@ -280,13 +270,12 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
             </div>
           </div>
 
+
           <div>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
             </p>
             <h2 style={{ fontSize:'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 공지</h2>
-            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {notices.map((n) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
                   style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'16px', background:'var(--card)', borderRadius:'14px', border:'1px solid var(--card-border)', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -305,8 +294,9 @@ export default function YoutubeSection({ videos, top3, notices }: Props) {
             </div>
           </div>
 
+
         </div>
       </div>
     </>
   );
-                  }
+}
