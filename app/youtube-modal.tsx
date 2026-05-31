@@ -120,7 +120,7 @@ function MonthPicker({
         {years.map(y => (
           <button key={y} onClick={() => {
             setSelectedYear(y);
-            const first = months.filter(m => m.startsWith(y)).sort().reverse()[0];
+            const first = months.filter(m => m.startsWith(y)).sort()[0];
             if (first) onSelect(first);
           }}
             style={{
@@ -137,7 +137,7 @@ function MonthPicker({
       {/* 월 탭 */}
       <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'10px 14px', background:'var(--bg-deeper)', borderRadius:'12px' }}>
         <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px' }}>월</span>
-        {monthsInYear.sort().reverse().map(ym => {
+        {monthsInYear.sort().map(ym => {
           const mo = parseInt(ym.split('-')[1]);
           const isSelected = ym === selectedMonth;
           return (
@@ -386,3 +386,4 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
