@@ -21,7 +21,7 @@ const getYoutubeVideos = unstable_cache(async () => {
       views: parseInt(item.statistics?.viewCount || '0'),
     }));
   } catch { return []; }
-}, ['yt-videos-v1'], { revalidate: 3600 });
+}, ['yt-videos-v2'], { revalidate: 3600 });
 
 async function fetchSoopPage(bjid: string, page: number) {
   try {
