@@ -100,7 +100,7 @@ export default async function Home() {
   const today = new Date();
   const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const thisMonthVideos = videos.filter((v: any) => v.publishedAt?.startsWith(currentMonth));
-  const top3 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 3);
+  const top10 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
 
   // ── 날짜별 VOD 맵 ──────────────────────────────────────────────────────────
   const soopByDate: Record<string, any[]> = {};
@@ -158,7 +158,7 @@ export default async function Home() {
       <header className="site-header" style={{position:'sticky',top:0,zIndex:200,height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1.5rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
         <div className="logo-text" style={{fontSize:'1.1rem',fontWeight:900,letterSpacing:'-0.03em'}}>SMEB<span style={{color:'#EB701A'}}>.</span></div>
         <nav style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
-          <a href="#top3" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>BEST 3</a>
+          <a href="#top3" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>BEST 10</a>
           <a href="#videos" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>유튜브</a>
           <a href="#soopcal" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>다시보기</a>
           <ThemeToggle />
@@ -188,8 +188,8 @@ export default async function Home() {
       <section id="top3" className="sec-main" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
           <div className="eyebrow">이달의 BEST</div>
-          <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 3</h2>
-          <YoutubeSection videos={thisMonthVideos} top3={top3} notices={notices} />
+          <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
+          <YoutubeSection videos={thisMonthVideos} top10={top10} notices={notices} />
         </div>
       </section>
       <section id="soopcal" className="sec-main" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
