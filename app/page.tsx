@@ -236,7 +236,23 @@ export default async function Home() {
       `}</style>
       <ScrollObserver />
       <header className="site-header" style={{position:'sticky',top:0,zIndex:200,height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1.5rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
-        <div className="logo-text" style={{fontSize:'1.1rem',fontWeight:900,letterSpacing:'-0.03em'}}>SMEB<span style={{color:'#EB701A'}}>.</span></div>
+        <a href="/" style={{textDecoration:'none',display:'flex',alignItems:'center'}}>
+          <svg width="120" height="32" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-label="SMEB Archive">
+            <text x="0" y="76"
+              fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif"
+              fontWeight="900" fontSize="84" letterSpacing="-3"
+              fill="var(--text-inv)">SME</text>
+            <text x="192" y="76"
+              fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif"
+              fontWeight="900" fontSize="84"
+              fill="#EB701A">B</text>
+            <rect x="0" y="80" width="248" height="2.5" fill="var(--text-inv)" rx="1.5"/>
+            <text x="2" y="93"
+              fontFamily="'Helvetica Neue',Arial,sans-serif"
+              fontWeight="400" fontSize="11" letterSpacing="4"
+              fill="var(--text-muted)">ARCHIVE</text>
+          </svg>
+        </a>
         <nav style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
           <a href="#top3" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>BEST 10</a>
           <a href="#videos" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>유튜브</a>
