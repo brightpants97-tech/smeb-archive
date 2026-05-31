@@ -458,14 +458,28 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>
               {year}년 <span style={{ color: '#EB701A' }}>{month}월</span>
             </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {fmtMonthTotal(monthTotalSec) && (
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  🕐 총 {fmtMonthTotal(monthTotalSec)}
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  fontSize: '0.78rem', fontWeight: 700,
+                  color: '#EB701A',
+                  background: 'rgba(235,112,26,0.1)',
+                  border: '1px solid rgba(235,112,26,0.25)',
+                  padding: '4px 10px', borderRadius: '100px',
+                }}>
+                  🕐 {fmtMonthTotal(monthTotalSec)}
                 </span>
               )}
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                짱 {totalCount}개 다시보기
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                fontSize: '0.78rem', fontWeight: 700,
+                color: 'var(--text-muted)',
+                background: 'var(--bg-deeper)',
+                border: '1px solid var(--card-border)',
+                padding: '4px 10px', borderRadius: '100px',
+              }}>
+                📺 {totalCount}개
               </span>
             </div>
           </div>
