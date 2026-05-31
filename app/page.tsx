@@ -4,101 +4,54 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 
-// ── YouTube: 채널 업로드 플레이리스트로 올해+작년 전체 수집 ─────────────────
 const getYoutubeVideos = unstable_cache(async () => {
   try {
     const KEY = process.env.YOUTUBE_API_KEY!;
     const CH  = process.env.YOUTUBE_CHANNEL_ID!;
-
-    // 올해 1월 1일, 작년 1월 1일 기준
     const now       = new Date();
     const thisYear  = now.getFullYear();
-    const cutoffISO = `${thisYear - 1}-01-01T00:00:00Z`; // 작년 이전은 제외
-
-    // 1) 채널 업로드 플레이리스트 ID 가져오기
+    const cutoffISO = `${thisYear - 1}-01-01T00:00:00Z`;
     const chRes = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${CH}&key=${KEY}`,
       { cache: 'no-store' }
     );
     const chData = await chRes.json();
-    const uploadPlaylistId =
-      chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    const uploadPlaylistId = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!uploadPlaylistId) return [];
-
-    // 2) playlistItems로 videoId 수집 (50개씩, pageToken 반복)
-    //    작년 1월 1일보다 오래된 영상이 나오면 중단
     const allVideoIds: string[] = [];
     let pageToken: string | undefined;
     let reachedCutoff = false;
-
     do {
-      const params = new URLSearchParams({
-        part: 'contentDetails',
-        playlistId: uploadPlaylistId,
-        maxResults: '50',
-        key: KEY,
-        ...(pageToken ? { pageToken } : {}),
-      });
-      const res  = await fetch(
-        `https://www.googleapis.com/youtube/v3/playlistItems?${params}`,
-        { cache: 'no-store' }
-      );
+      const params = new URLSearchParams({ part: 'contentDetails', playlistId: uploadPlaylistId, maxResults: '50', key: KEY, ...(pageToken ? { pageToken } : {}) });
+      const res  = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.error) { console.error('YT playlistItems error:', data.error); break; }
-
       for (const item of data.items || []) {
-        const videoId      = item.contentDetails?.videoId;
-        const publishedAt  = item.contentDetails?.videoPublishedAt || '';
+        const videoId = item.contentDetails?.videoId;
+        const publishedAt = item.contentDetails?.videoPublishedAt || '';
         if (!videoId) continue;
-        // 작년 1월 1일보다 오래된 영상 → 수집 중단
-        if (publishedAt && publishedAt < cutoffISO) {
-          reachedCutoff = true;
-          break;
-        }
+        if (publishedAt && publishedAt < cutoffISO) { reachedCutoff = true; break; }
         allVideoIds.push(videoId);
       }
-
       pageToken = reachedCutoff ? undefined : data.nextPageToken;
     } while (pageToken);
-
     if (!allVideoIds.length) return [];
-
-    // 3) videos API로 통계+snippet 가져오기 (50개씩 배치)
     const allVideos: any[] = [];
     for (let i = 0; i < allVideoIds.length; i += 50) {
       const ids = allVideoIds.slice(i, i + 50).join(',');
-      const res  = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${KEY}`,
-        { cache: 'no-store' }
-      );
+      const res  = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${KEY}`, { cache: 'no-store' });
       const data = await res.json();
       for (const item of data.items || []) {
-        allVideos.push({
-          id:          item.id,
-          title:       item.snippet.title,
-          thumbnail:   item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
-          publishedAt: item.snippet.publishedAt,
-          views:       parseInt(item.statistics?.viewCount || '0'),
-        });
+        allVideos.push({ id: item.id, title: item.snippet.title, thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '', publishedAt: item.snippet.publishedAt, views: parseInt(item.statistics?.viewCount || '0') });
       }
     }
-
-    // 최신순 정렬
-    return allVideos.sort(
-      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
-  } catch (e) {
-    console.error('getYoutubeVideos error:', e);
-    return [];
-  }
+    return allVideos.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  } catch (e) { console.error('getYoutubeVideos error:', e); return []; }
 }, ['yt-videos-playlist-v1'], { revalidate: 3600 });
 
 async function fetchSoopPage(bjid: string, page: number) {
   try {
-    const res = await fetch(
-      `https://api-channel.sooplive.com/v1.1/channel/${bjid}/vod/all/streamer?startDate=&endDate=&keyword=&orderBy=regDate&perPage=60&page=${page}&field=title,contents,userNick,userId`,
-      { headers: { 'Referer': 'https://www.sooplive.com/', 'Origin': 'https://www.sooplive.com', 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store' }
-    );
+    const res = await fetch(`https://api-channel.sooplive.com/v1.1/channel/${bjid}/vod/all/streamer?startDate=&endDate=&keyword=&orderBy=regDate&perPage=60&page=${page}&field=title,contents,userNick,userId`, { headers: { 'Referer': 'https://www.sooplive.com/', 'Origin': 'https://www.sooplive.com', 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store' });
     const data = await res.json();
     return { contents: data.contents || [], totalPages: data.meta?.totalPages || 1 };
   } catch { return { contents: [], totalPages: 1 }; }
@@ -114,8 +67,7 @@ const getAllVods = unstable_cache(async () => {
     if (v.ucc?.fileType !== 'REVIEW') continue;
     allReviews.push({ id: v.titleNo, title: v.titleName, thumb: v.ucc?.thumb || '', date: v.regDate?.split(' ')[0] || '', views: v.count?.readCnt || 0, duration: v.ucc?.totalFileDuration || 0 });
   }
-  const CHUNK = 10;
-  let p = 2;
+  const CHUNK = 10; let p = 2;
   while (p <= totalPages) {
     const pages = Array.from({ length: Math.min(CHUNK, totalPages - p + 1) }, (_, i) => p + i);
     const results = await Promise.all(pages.map(pg => fetchSoopPage(BJID, pg)));
@@ -138,28 +90,14 @@ const getNotices = unstable_cache(async () => {
     const BJID = process.env.SOOP_BJID || 'townboy';
     const BOARD_ID = '76988470';
     const url = `https://chapi.sooplive.com/api/${BJID}/board/${BOARD_ID}?per_page=3&start_date=&end_date=&field=title,contents,user_nick,user_id,hashtags&keyword=&type=all&order_by=reg_date&board_number=${BOARD_ID}&page=1`;
-    const res = await fetch(url, {
-      headers: {
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': `https://www.sooplive.com/station/${BJID}/board/${BOARD_ID}`,
-        'Origin': 'https://www.sooplive.com',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
-      },
-      cache: 'no-store',
-    });
+    const res = await fetch(url, { headers: { 'Accept': 'application/json, text/plain, */*', 'Referer': `https://www.sooplive.com/station/${BJID}/board/${BOARD_ID}`, 'Origin': 'https://www.sooplive.com', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36' }, cache: 'no-store' });
     const data = await res.json();
     return (data.notice_data || []).slice(0, 3).map((n: any) => {
       const rawText = (n.content?.summary || n.title_name || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       const isGenericTitle = !n.title_name || n.title_name === '공지' || n.title_name.length <= 2;
       const firstSentence = rawText.split(/[.!?\n]/)[0].trim().slice(0, 50);
       const title = isGenericTitle ? (firstSentence || n.title_name) : n.title_name;
-      return {
-        id: n.title_no, title,
-        summary: rawText.slice(0, 120),
-        date: n.reg_date?.split(' ')[0] || '',
-        likes: n.count?.like_cnt || 0, comments: n.count?.comment_cnt || 0,
-        url: `https://www.sooplive.com/station/${BJID}/post/${n.title_no}`,
-      };
+      return { id: n.title_no, title, summary: rawText.slice(0, 120), date: n.reg_date?.split(' ')[0] || '', likes: n.count?.like_cnt || 0, comments: n.count?.comment_cnt || 0, url: `https://www.sooplive.com/station/${BJID}/post/${n.title_no}` };
     });
   } catch { return []; }
 }, ['notices-v3'], { revalidate: 300 });
@@ -172,37 +110,20 @@ export default async function Home() {
   const thisMonthVideos = videos.filter((v: any) => v.publishedAt?.startsWith(currentMonth));
   const top10 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
 
-  // ── 월별 유튜브 TOP 10 (올해+작년) ─────────────────────────────────────────
   const monthlyTop10: Record<string, any[]> = {};
   videos.forEach((v: any) => {
-    const mk = v.publishedAt?.slice(0, 7);
-    if (!mk) return;
+    const mk = v.publishedAt?.slice(0, 7); if (!mk) return;
     if (!monthlyTop10[mk]) monthlyTop10[mk] = [];
     monthlyTop10[mk].push(v);
   });
-  Object.keys(monthlyTop10).forEach(mk => {
-    monthlyTop10[mk] = [...monthlyTop10[mk]]
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 10);
-  });
+  Object.keys(monthlyTop10).forEach(mk => { monthlyTop10[mk] = [...monthlyTop10[mk]].sort((a, b) => b.views - a.views).slice(0, 10); });
 
-  // ── SOOP 날짜별 VOD 맵 ────────────────────────────────────────────────────
   const soopByDate: Record<string, any[]> = {};
   vods.forEach((v: any) => { if (!soopByDate[v.date]) soopByDate[v.date] = []; soopByDate[v.date].push(v); });
   const monthMap: Record<string, Record<number, any[]>> = {};
-  Object.keys(soopByDate).forEach(date => {
-    const mk = date.substring(0, 7);
-    if (!monthMap[mk]) monthMap[mk] = {};
-    monthMap[mk][parseInt(date.split('-')[2], 10)] = soopByDate[date];
-  });
-
-  // ── SOOP 월별 TOP 5 ───────────────────────────────────────────────────────
+  Object.keys(soopByDate).forEach(date => { const mk = date.substring(0, 7); if (!monthMap[mk]) monthMap[mk] = {}; monthMap[mk][parseInt(date.split('-')[2], 10)] = soopByDate[date]; });
   const monthTop5: Record<string, any[]> = {};
-  [...new Set(vods.map((v: any) => v.date.substring(0, 7)))].forEach(mk => {
-    const monthVods = vods.filter((v: any) => v.date.startsWith(mk));
-    monthTop5[mk] = [...monthVods].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
-  });
-
+  [...new Set(vods.map((v: any) => v.date.substring(0, 7)))].forEach(mk => { const mv = vods.filter((v: any) => v.date.startsWith(mk)); monthTop5[mk] = [...mv].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5); });
   const sortedMonths = Object.keys(monthMap).sort();
 
   return (
@@ -233,36 +154,39 @@ export default async function Home() {
         .logo-text{color:var(--text-inv);transition:color 0.3s;}
         .nav-link{color:var(--nav-text);transition:color 0.3s;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+        /* ── 모바일 반응형 ── */
+        @media (max-width: 768px) {
+          .mob-hide { display: none !important; }
+          .mob-nav { gap: 0.6rem !important; }
+          .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
+          .mob-hero { padding: clamp(40px,8vw,80px) 1.2rem !important; }
+          .mob-hero h1 { font-size: clamp(2.2rem,11vw,3.5rem) !important; }
+          .mob-section { padding: 0 1.2rem !important; }
+          .mob-cal-section { padding: 24px 1.2rem 40px !important; }
+        }
       `}</style>
       <ScrollObserver />
-      <header className="site-header" style={{position:'sticky',top:0,zIndex:200,height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1.5rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
+      <header className="site-header" style={{position:'sticky',top:0,zIndex:200,height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
         <a href="/" style={{textDecoration:'none',display:'flex',alignItems:'center'}}>
           <svg width="120" height="32" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-label="SMEB Archive">
-            <text x="0" y="76"
-              fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif"
-              fontWeight="900" fontSize="84" letterSpacing="-3"
-              fill="var(--text-inv)">SME</text>
-            <text x="192" y="76"
-              fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif"
-              fontWeight="900" fontSize="84"
-              fill="#EB701A">B</text>
+            <text x="0" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="var(--text-inv)">SME</text>
+            <text x="192" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
             <rect x="0" y="80" width="248" height="2.5" fill="var(--text-inv)" rx="1.5"/>
-            <text x="2" y="93"
-              fontFamily="'Helvetica Neue',Arial,sans-serif"
-              fontWeight="400" fontSize="11" letterSpacing="4"
-              fill="var(--text-muted)">ARCHIVE</text>
+            <text x="2" y="93" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="var(--text-muted)">ARCHIVE</text>
           </svg>
         </a>
-        <nav style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
-          <a href="#top3" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>BEST 10</a>
-          <a href="#videos" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>유튜브</a>
-          <a href="#soopcal" className="nav-link" style={{fontSize:'0.8rem',fontWeight:500}}>다시보기</a>
+        <nav className="mob-nav" style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
+          <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.8rem',fontWeight:500}}>BEST 10</a>
+          <a href="#videos" className="nav-link mob-hide" style={{fontSize:'0.8rem',fontWeight:500}}>유튜브</a>
+          <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.8rem',fontWeight:500}}>다시보기</a>
           <ThemeToggle />
-          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'linear-gradient(135deg,#EB701A,#ff8c3a)',color:'#fff',padding:'0.4rem 1.1rem',borderRadius:'100px',fontSize:'0.78rem',fontWeight:700,boxShadow:'0 4px 14px rgba(235,112,26,0.35)'}}>YouTube ↗</a>
-          <a href="https://cafe.naver.com/smebsmeb" target="_blank" style={{background:'linear-gradient(135deg,#03C75A,#02b351)',color:'#fff',padding:'0.4rem 1.1rem',borderRadius:'100px',fontSize:'0.78rem',fontWeight:700,boxShadow:'0 4px 14px rgba(3,199,90,0.35)'}}>판카페 ↗</a>
+          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'linear-gradient(135deg,#EB701A,#ff8c3a)',color:'#fff',padding:'0.4rem 1rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:700,boxShadow:'0 4px 14px rgba(235,112,26,0.35)'}}>YouTube ↗</a>
+          <a href="https://cafe.naver.com/smebsmeb" target="_blank" className="mob-hide" style={{background:'linear-gradient(135deg,#03C75A,#02b351)',color:'#fff',padding:'0.4rem 1.1rem',borderRadius:'100px',fontSize:'0.78rem',fontWeight:700,boxShadow:'0 4px 14px rgba(3,199,90,0.35)'}}>판카페 ↗</a>
         </nav>
       </header>
-      <section className="sec-main" style={{padding:'clamp(60px,10vw,120px) clamp(1.5rem,5vw,3rem)',textAlign:'center',position:'relative',overflow:'hidden'}}>
+
+      <section className="sec-main mob-hero" style={{padding:'clamp(60px,10vw,120px) clamp(1.5rem,5vw,3rem)',textAlign:'center',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'linear-gradient(rgba(235,112,26,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(235,112,26,0.06) 1px, transparent 1px)',backgroundSize:'40px 40px'}} />
         <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'800px',height:'400px',background:'radial-gradient(ellipse, rgba(235,112,26,0.12) 0%, transparent 65%)',pointerEvents:'none'}} />
         <div style={{position:'absolute',top:0,left:0,right:0,height:'2px',background:'linear-gradient(to right, transparent 0%, #EB701A 40%, #ff8c3a 60%, transparent 100%)'}} />
@@ -281,14 +205,16 @@ export default async function Home() {
           <p className="sec-sub-text" style={{fontSize:'1rem',marginBottom:'2rem'}}>전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기</p>
         </div>
       </section>
-      <section id="top3" className="sec-main" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
+
+      <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
           <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
           <YoutubeSection videos={thisMonthVideos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
         </div>
       </section>
-      <section id="soopcal" className="sec-main" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
+
+      <section id="soopcal" className="sec-main mob-cal-section" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
         <div style={{position:'absolute',bottom:'10%',right:'5%',width:'500px',height:'400px',background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)',pointerEvents:'none'}} />
         <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
           <div className="eyebrow">SOOP 다시보기</div>
@@ -296,10 +222,11 @@ export default async function Home() {
           <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
-      <footer className="sec-footer" style={{borderTop:'1px solid rgba(255,255,255,0.06)',padding:'2.5rem clamp(1.5rem,5vw,3rem)',textAlign:'center'}}>
+
+      <footer className="sec-footer" style={{borderTop:'1px solid rgba(255,255,255,0.06)',padding:'2.5rem clamp(1.2rem,5vw,3rem)',textAlign:'center'}}>
         <p style={{fontSize:'1.3rem',fontWeight:900,letterSpacing:'-0.03em',color:'#fff',marginBottom:'10px'}}>SMEB<span style={{color:'#EB701A'}}>.</span></p>
         <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.3)',marginBottom:'14px'}}>롤 전 프로게이머 스맵 송경호 · {today.getFullYear()}년 {today.getMonth()+1}월</p>
-        <div style={{display:'flex',gap:'1.5rem',justifyContent:'center'}}>
+        <div style={{display:'flex',gap:'1.5rem',justifyContent:'center',flexWrap:'wrap'}}>
           <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{fontSize:'0.82rem',color:'#EB701A',fontWeight:600}}>YouTube ↗</a>
           <a href="https://www.sooplive.com/station/townboy" target="_blank" style={{fontSize:'0.82rem',color:'#EB701A',fontWeight:600}}>SOOP 방송국 ↗</a>
           <a href="https://cafe.naver.com/smebsmeb" target="_blank" style={{fontSize:'0.82rem',color:'#EB701A',fontWeight:600}}>팬카페 ↗</a>
