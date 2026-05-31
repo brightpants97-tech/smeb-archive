@@ -4,69 +4,94 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 
-// ── YouTube 전체 영상 가져오기 (pageToken 페이지네이션) ──────────────────────
+// ── YouTube: 채널 업로드 플레이리스트로 올해+작년 전체 수집 ─────────────────
 const getYoutubeVideos = unstable_cache(async () => {
   try {
-    const KEY = process.env.YOUTUBE_API_KEY;
-    const CH  = process.env.YOUTUBE_CHANNEL_ID;
+    const KEY = process.env.YOUTUBE_API_KEY!;
+    const CH  = process.env.YOUTUBE_CHANNEL_ID!;
 
-    // 1단계: search API로 전체 videoId 수집 (50개씩, pageToken 반복)
+    // 올해 1월 1일, 작년 1월 1일 기준
+    const now       = new Date();
+    const thisYear  = now.getFullYear();
+    const cutoffISO = `${thisYear - 1}-01-01T00:00:00Z`; // 작년 이전은 제외
+
+    // 1) 채널 업로드 플레이리스트 ID 가져오기
+    const chRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${CH}&key=${KEY}`,
+      { cache: 'no-store' }
+    );
+    const chData = await chRes.json();
+    const uploadPlaylistId =
+      chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadPlaylistId) return [];
+
+    // 2) playlistItems로 videoId 수집 (50개씩, pageToken 반복)
+    //    작년 1월 1일보다 오래된 영상이 나오면 중단
     const allVideoIds: string[] = [];
-    let pageToken: string | undefined = undefined;
+    let pageToken: string | undefined;
+    let reachedCutoff = false;
 
     do {
       const params = new URLSearchParams({
-        part: 'id',
-        channelId: CH!,
+        part: 'contentDetails',
+        playlistId: uploadPlaylistId,
         maxResults: '50',
-        order: 'date',
-        type: 'video',
-        key: KEY!,
+        key: KEY,
         ...(pageToken ? { pageToken } : {}),
       });
-      const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?${params}`,
+      const res  = await fetch(
+        `https://www.googleapis.com/youtube/v3/playlistItems?${params}`,
         { cache: 'no-store' }
       );
       const data = await res.json();
-      if (data.error) { console.error('YT search error:', data.error); break; }
-      (data.items || []).forEach((i: any) => {
-        if (i.id?.videoId) allVideoIds.push(i.id.videoId);
-      });
-      pageToken = data.nextPageToken;
+      if (data.error) { console.error('YT playlistItems error:', data.error); break; }
+
+      for (const item of data.items || []) {
+        const videoId      = item.contentDetails?.videoId;
+        const publishedAt  = item.contentDetails?.videoPublishedAt || '';
+        if (!videoId) continue;
+        // 작년 1월 1일보다 오래된 영상 → 수집 중단
+        if (publishedAt && publishedAt < cutoffISO) {
+          reachedCutoff = true;
+          break;
+        }
+        allVideoIds.push(videoId);
+      }
+
+      pageToken = reachedCutoff ? undefined : data.nextPageToken;
     } while (pageToken);
 
     if (!allVideoIds.length) return [];
 
-    // 2단계: videos API로 통계 가져오기 (50개씩 배치)
+    // 3) videos API로 통계+snippet 가져오기 (50개씩 배치)
     const allVideos: any[] = [];
     for (let i = 0; i < allVideoIds.length; i += 50) {
       const ids = allVideoIds.slice(i, i + 50).join(',');
-      const res = await fetch(
+      const res  = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${KEY}`,
         { cache: 'no-store' }
       );
       const data = await res.json();
-      (data.items || []).forEach((item: any) => {
+      for (const item of data.items || []) {
         allVideos.push({
-          id: item.id,
-          title: item.snippet.title,
-          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+          id:          item.id,
+          title:       item.snippet.title,
+          thumbnail:   item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
           publishedAt: item.snippet.publishedAt,
-          views: parseInt(item.statistics?.viewCount || '0'),
+          views:       parseInt(item.statistics?.viewCount || '0'),
         });
-      });
+      }
     }
 
     // 최신순 정렬
-    return allVideos.sort((a, b) =>
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    return allVideos.sort(
+      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     );
   } catch (e) {
     console.error('getYoutubeVideos error:', e);
     return [];
   }
-}, ['yt-videos-all-v1'], { revalidate: 3600 });
+}, ['yt-videos-playlist-v1'], { revalidate: 3600 });
 
 async function fetchSoopPage(bjid: string, page: number) {
   try {
@@ -147,7 +172,7 @@ export default async function Home() {
   const thisMonthVideos = videos.filter((v: any) => v.publishedAt?.startsWith(currentMonth));
   const top10 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
 
-  // ── 월별 유튜브 TOP 10 계산 (전체 영상 기반) ─────────────────────────────
+  // ── 월별 유튜브 TOP 10 (올해+작년) ─────────────────────────────────────────
   const monthlyTop10: Record<string, any[]> = {};
   videos.forEach((v: any) => {
     const mk = v.publishedAt?.slice(0, 7);
@@ -164,7 +189,6 @@ export default async function Home() {
   // ── SOOP 날짜별 VOD 맵 ────────────────────────────────────────────────────
   const soopByDate: Record<string, any[]> = {};
   vods.forEach((v: any) => { if (!soopByDate[v.date]) soopByDate[v.date] = []; soopByDate[v.date].push(v); });
-
   const monthMap: Record<string, Record<number, any[]>> = {};
   Object.keys(soopByDate).forEach(date => {
     const mk = date.substring(0, 7);
@@ -174,8 +198,7 @@ export default async function Home() {
 
   // ── SOOP 월별 TOP 5 ───────────────────────────────────────────────────────
   const monthTop5: Record<string, any[]> = {};
-  const allMonthKeys = [...new Set(vods.map((v: any) => v.date.substring(0, 7)))];
-  allMonthKeys.forEach(mk => {
+  [...new Set(vods.map((v: any) => v.date.substring(0, 7)))].forEach(mk => {
     const monthVods = vods.filter((v: any) => v.date.startsWith(mk));
     monthTop5[mk] = [...monthVods].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
   });
@@ -254,12 +277,7 @@ export default async function Home() {
         <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
           <div className="eyebrow">SOOP 다시보기</div>
           <h2 className="section-title sec-title" style={{marginBottom:'40px'}}>다시보기 캘린더</h2>
-          <CalendarSection
-            sortedMonths={sortedMonths}
-            monthMap={monthMap}
-            monthTop5={monthTop5}
-            today={today.toISOString()}
-          />
+          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
       <footer className="sec-footer" style={{borderTop:'1px solid rgba(255,255,255,0.06)',padding:'2.5rem clamp(1.5rem,5vw,3rem)',textAlign:'center'}}>
