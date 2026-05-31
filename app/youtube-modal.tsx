@@ -69,10 +69,6 @@ function LiveSection() {
 
   return (
     <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
-      <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
-        <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#EB701A' }} />
-        <span style={{ fontSize:'0.75rem', fontWeight:800, color:'var(--text)', letterSpacing:'0.08em' }}>LIVE NOW</span>
-      </div>
       <a href={PLAY_URL} target="_blank" rel="noopener noreferrer" style={{ display:'block', textDecoration:'none' }}>
         <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
           <img src={PROFILE} alt="스맵" style={{ width:'72px', height:'72px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.7)', objectFit:'cover' }} />
@@ -88,7 +84,7 @@ function LiveSection() {
           style={{ display:'block', textAlign:'center', background:'#EB701A', color:'#fff', fontSize:'0.8rem', fontWeight:700, padding:'8px', borderRadius:'10px', textDecoration:'none' }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity='0.85'}
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity='1'}>
-          방송국 바로가기 →
+          생방송 바로가기 →
         </a>
       </div>
     </div>
