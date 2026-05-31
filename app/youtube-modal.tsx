@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Video {
@@ -105,6 +105,12 @@ function MonthPicker({
 }) {
   const years = useMemo(() => [...new Set(months.map(m => m.slice(0, 4)))].sort(), [months]);
   const [selectedYear, setSelectedYear] = useState(() => selectedMonth.slice(0, 4));
+  const [isMob, setIsMob] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMob(window.innerWidth < 768);
+    check(); window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const BORDER = '1px solid var(--card-border)';
 
   const monthsInYear = useMemo(
@@ -124,7 +130,7 @@ function MonthPicker({
             if (first) onSelect(first);
           }}
             style={{
-              padding:'5px 16px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize:'0.85rem', transition:'all 0.15s',
+              padding: isMob ? '4px 12px' : '5px 16px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize: isMob ? '0.78rem' : '0.85rem', transition:'all 0.15s',
               background: selectedYear === y ? '#EB701A' : 'var(--card)',
               color: selectedYear === y ? '#fff' : 'var(--text-muted)',
               border: selectedYear === y ? '1px solid #EB701A' : BORDER,
@@ -159,7 +165,7 @@ function MonthPicker({
 }
 
 // ── TOP 10 렌더러 ──────────────────────────────────────────────────────────
-function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => void }) {
+function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: string) => void; isMobile: boolean }) {
   const [hovered, setHovered] = useState<number | null>(null);
 
   if (top10.length === 0) {
@@ -177,7 +183,7 @@ function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => 
   return (
     <>
       {/* 1~4위 + LIVE */}
-      <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 0.75fr', gap:'20px', alignItems:'start' }}>
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr 0.75fr', gap: isMobile ? '12px' : '20px', alignItems:'start' }}>
         {/* 1위 */}
         <div onClick={() => onPlay(top1.id)}
           style={{ cursor:'pointer', borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', transition:'transform 0.2s, box-shadow 0.2s', background:'var(--card)' }}
@@ -204,7 +210,7 @@ function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => 
         </div>
 
         {/* 2~4위 */}
-        <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+        <div style={{ display:'flex', flexDirection: isMobile ? 'row' : 'column', gap:'12px', overflowX: isMobile ? 'auto' : 'visible' }}>
           {top2to4.map((video, i) => {
             const rank = i + 2;
             return (
@@ -241,7 +247,7 @@ function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => 
           <div style={{ padding:'10px 18px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
             <span style={{ fontSize:'0.72rem', fontWeight:800, color:'#EB701A', letterSpacing:'0.08em', textTransform:'uppercase' }}>🏅 5위 ~ 10위</span>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)' }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)' }}>
             {top5to10.map((video, i) => {
               const rank = i + 5;
               const isHov = hovered === rank;
@@ -255,7 +261,7 @@ function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => 
                     display:'flex', gap:'14px', alignItems:'center',
                     padding:'14px 18px', cursor:'pointer',
                     background: isHov ? 'rgba(235,112,26,0.04)' : 'transparent',
-                    borderRight: borderRight ? '1px solid var(--card-border)' : 'none',
+                    borderRight: (!isMobile && borderRight) ? '1px solid var(--card-border)' : 'none',
                     borderBottom: !isLast ? '1px solid var(--card-border)' : 'none',
                     transition:'background 0.15s',
                   }}>
@@ -277,6 +283,13 @@ function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => 
 
 export default function YoutubeSection({ videos, top10, notices, monthlyTop10, today }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const todayDate = new Date(today);
   const currentMonth = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
@@ -318,17 +331,17 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
         <span style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>조회수 기준</span>
       </div>
 
-      <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} />
+      <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} isMobile={isMobile} />
 
       {/* ── 최신 영상 + 공지 ── */}
       <div id="videos" className="sec-light" style={{ margin:'40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding:'40px clamp(1.5rem, 5vw, 3rem)' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'40px', alignItems:'start' }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: isMobile ? '28px' : '40px', alignItems:'start' }}>
           <div>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
             </p>
             <h2 style={{ fontSize:'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 영상</h2>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'14px' }}>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(3, 1fr)', gap:'14px' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
                   className="card fade-in-up"
@@ -386,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
