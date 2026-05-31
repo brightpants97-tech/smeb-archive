@@ -329,18 +329,20 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     return result;
   }, [search, monthMap]);
 
-  const fmtDuration = (sec: number) => {
-    if (!sec) return '';
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = sec % 60;
+  // duration은 ms 단위 → 초로 변환
+  const fmtDuration = (ms: number) => {
+    if (!ms) return '';
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
     if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     return `${m}:${String(s).padStart(2, '0')}`;
   };
 
-  // 해당 월 전체 방송시간 합계
+  // 해당 월 전체 방송시간 합계 (ms → 초 변환)
   const monthTotalSec = useMemo(() => {
-    return Object.values(calData).flat().reduce((acc: number, v: any) => acc + (v.duration || 0), 0);
+    return Object.values(calData).flat().reduce((acc: number, v: any) => acc + Math.floor((v.duration || 0) / 1000), 0);
   }, [calData]);
 
   const fmtMonthTotal = (sec: number) => {
