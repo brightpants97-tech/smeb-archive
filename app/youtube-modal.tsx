@@ -334,22 +334,22 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
       <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} isMobile={isMobile} />
 
       {/* ── 최신 영상 + 공지 ── */}
-      <div id="videos" className="sec-light" style={{ margin:'40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding:'40px clamp(1.5rem, 5vw, 3rem)' }}>
+      <div id="videos" className="sec-light" style={{ margin: isMobile ? '32px 0 0' : '40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding: isMobile ? '0' : '40px clamp(1.5rem, 5vw, 3rem)' }}>
         <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: isMobile ? '28px' : '40px', alignItems:'start' }}>
           <div>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
             </p>
-            <h2 style={{ fontSize:'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 영상</h2>
+            <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 영상</h2>
             <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(3, 1fr)', gap:'14px' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
                   className="card fade-in-up"
-                  style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s` } as React.CSSProperties}
+                  style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s`, display: isMobile ? 'flex' : 'block', flexDirection: 'row', overflow:'hidden' } as React.CSSProperties}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.15)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
-                  <div style={{ position:'relative' }}>
-                    <img src={video.thumbnail} alt={video.title} style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
+                  <div style={{ position:'relative', flexShrink: 0, width: isMobile ? '120px' : '100%' }}>
+                    <img src={video.thumbnail} alt={video.title} style={{ width: isMobile ? '120px' : '100%', height: isMobile ? '100%' : 'auto', aspectRatio: isMobile ? 'unset' : '16/9', objectFit:'cover', display:'block' }} />
                     <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0)', transition:'background 0.2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0.25)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='1'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='0'; }}>
@@ -358,7 +358,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                       </div>
                     </div>
                   </div>
-                  <div style={{ padding:'10px 12px 12px' }}>
+                  <div style={{ padding: isMobile ? '8px 10px' : '10px 12px 12px', flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight:700, fontSize:'0.88rem', lineHeight:1.4, marginBottom:'6px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                       <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A' }}>👁 {video.views.toLocaleString()}회</span>
@@ -374,9 +374,9 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
             </p>
-            <h2 style={{ fontSize:'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 공지</h2>
+            <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom:'16px' }}>최신 공지</h2>
             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {notices.map((n) => (
+              {(isMobile ? notices.slice(0, 2) : notices).map((n) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
                   style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'16px', background:'var(--card)', borderRadius:'14px', border:'1px solid var(--card-border)', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -399,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
