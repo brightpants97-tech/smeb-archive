@@ -102,6 +102,20 @@ export default async function Home() {
   const thisMonthVideos = videos.filter((v: any) => v.publishedAt?.startsWith(currentMonth));
   const top10 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
 
+  // ── 월별 유튜브 TOP 10 계산 ──────────────────────────────────────────────
+  const monthlyTop10: Record<string, any[]> = {};
+  videos.forEach((v: any) => {
+    const mk = v.publishedAt?.slice(0, 7);
+    if (!mk) return;
+    if (!monthlyTop10[mk]) monthlyTop10[mk] = [];
+    monthlyTop10[mk].push(v);
+  });
+  Object.keys(monthlyTop10).forEach(mk => {
+    monthlyTop10[mk] = [...monthlyTop10[mk]]
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+  });
+
   // ── 날짜별 VOD 맵 ──────────────────────────────────────────────────────────
   const soopByDate: Record<string, any[]> = {};
   vods.forEach((v: any) => { if (!soopByDate[v.date]) soopByDate[v.date] = []; soopByDate[v.date].push(v); });
@@ -187,9 +201,9 @@ export default async function Home() {
       </section>
       <section id="top3" className="sec-main" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
-          <div className="eyebrow">이달의 BEST</div>
+          <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
-          <YoutubeSection videos={thisMonthVideos} top10={top10} notices={notices} />
+          <YoutubeSection videos={thisMonthVideos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
         </div>
       </section>
       <section id="soopcal" className="sec-main" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
