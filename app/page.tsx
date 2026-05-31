@@ -61,7 +61,7 @@ const getAllVods = unstable_cache(async () => {
   const months: string[] = [];
   years.forEach(y => { for (let mo = 1; mo <= 12; mo++) months.push(`${y}-${String(mo).padStart(2, '0')}`); });
   return { vods: allReviews, months };
-}, ['soop-vods-v2'], { revalidate: 3600 });
+}, ['soop-vods-v3'], { revalidate: 3600 });
 
 const getNotices = unstable_cache(async () => {
   try {
