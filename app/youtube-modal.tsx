@@ -210,7 +210,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         </div>
 
         {/* 2~4위 */}
-        <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+        <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
           {top2to4.map((video, i) => {
             const rank = i + 2;
             return (
@@ -341,7 +341,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 영상</h2>
-            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap:'6px', width:'100%', overflow:'hidden' }}>
+            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap:'6px', width:'100%', overflow:'hidden' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
                   className="card fade-in-up"
@@ -375,7 +375,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 공지</h2>
-            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
               {notices.map((n, ni) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
                   style={{ display: isMobile && ni >= 2 ? 'none' : 'flex', flexDirection:'column', gap:'6px', padding: isMobile ? '12px' : '16px', background:'var(--card)', borderRadius:'14px', border:'1px solid var(--card-border)', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
@@ -399,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
