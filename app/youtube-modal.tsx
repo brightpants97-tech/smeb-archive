@@ -241,29 +241,29 @@ function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => 
           <div style={{ padding:'10px 18px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
             <span style={{ fontSize:'0.72rem', fontWeight:800, color:'#EB701A', letterSpacing:'0.08em', textTransform:'uppercase' }}>🏅 5위 ~ 10위</span>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)' }}>
             {top5to10.map((video, i) => {
               const rank = i + 5;
               const isHov = hovered === rank;
-              const isLast = i >= 3;
-              const borderRight = (i % 3) < 2;
+              const isLast = i >= 4;
+              const borderRight = (i % 2) === 0;
               return (
                 <div key={video.id} onClick={() => onPlay(video.id)}
                   onMouseEnter={() => setHovered(rank)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
-                    display:'flex', gap:'12px', alignItems:'center',
-                    padding:'12px 16px', cursor:'pointer',
+                    display:'flex', gap:'14px', alignItems:'center',
+                    padding:'14px 18px', cursor:'pointer',
                     background: isHov ? 'rgba(235,112,26,0.04)' : 'transparent',
                     borderRight: borderRight ? '1px solid var(--card-border)' : 'none',
                     borderBottom: !isLast ? '1px solid var(--card-border)' : 'none',
                     transition:'background 0.15s',
                   }}>
-                  <span style={{ fontSize:'1.1rem', fontWeight:900, color:'var(--text-muted)', width:'24px', flexShrink:0, textAlign:'center' }}>{rank}</span>
-                  <img src={video.thumbnail} alt="" style={{ width:'80px', aspectRatio:'16/9', objectFit:'cover', borderRadius:'8px', flexShrink:0 }} />
+                  <span style={{ fontSize:'1.3rem', fontWeight:900, color: rank <= 6 ? 'var(--text-muted)' : 'var(--text-muted)', width:'28px', flexShrink:0, textAlign:'center' }}>{rank}</span>
+                  <img src={video.thumbnail} alt="" style={{ width:'110px', aspectRatio:'16/9', objectFit:'cover', borderRadius:'8px', flexShrink:0 }} />
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ fontSize:'0.8rem', fontWeight:700, color:'var(--text)', lineHeight:1.35, marginBottom:'4px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{video.title}</p>
-                    <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', margin:0 }}>👁 {video.views.toLocaleString()}회</p>
+                    <p style={{ fontSize:'0.88rem', fontWeight:700, color:'var(--text)', lineHeight:1.4, marginBottom:'5px', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
+                    <p style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A', margin:0 }}>👁 {video.views.toLocaleString()}회</p>
                   </div>
                 </div>
               );
@@ -386,5 +386,6 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
