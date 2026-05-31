@@ -285,6 +285,13 @@ function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; f
 // ─── 메인 캘린더 섹션 ──────────────────────────────────────────────────────────
 export default function CalendarSection({ sortedMonths, monthMap, monthTop5, today }: Props) {
   const todayDate = new Date(today);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const currentYM = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
 
   const years = useMemo(() => {
@@ -489,7 +496,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--bg-deeper)' }}>
               {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
                 <div key={d} style={{
-                  textAlign: 'center', padding: '10px 0', fontSize: '0.75rem', fontWeight: 700,
+                  textAlign: 'center', padding: isMobile ? '6px 0' : '10px 0', fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 700,
                   color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)',
                   borderRight: i < 6 ? BORDER : 'none',
                   borderBottom: BORDER,
@@ -504,7 +511,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                 const col = i % 7;
                 return (
                   <div key={`e${i}`} style={{
-                    minHeight: '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
+                    minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
                     borderRight: col < 6 ? BORDER : 'none',
                     borderBottom: BORDER,
                   }} />
@@ -525,7 +532,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                     key={day}
                     onClick={() => openPanel(day, vods)}
                     style={{
-                      background: 'var(--card)', minHeight: '90px', padding: '8px',
+                      background: 'var(--card)', minHeight: isMobile ? '52px' : '90px', padding: isMobile ? '4px' : '8px',
                       overflow: 'hidden', minWidth: 0,
                       borderRight: col < 6 ? BORDER : 'none',
                       borderBottom: isLastRow ? 'none' : BORDER,
@@ -555,12 +562,12 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                         <span
                           key={vi}
                           title={vod.title}
-                          style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}
+                          style={{ display: isMobile ? 'none' : 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}
                         >
                           {vod.title}
                         </span>
                       ))}
-                      {vods.length > 2 && (
+                      {vods.length > 2 && !isMobile && (
                         <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 700, padding: '1px 5px' }}>
                           +{vods.length - 2}개 더 →
                         </span>
@@ -577,7 +584,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                 const trailing = 7 - remainder;
                 return Array.from({ length: trailing }).map((_, i) => (
                   <div key={`t${i}`} style={{
-                    minHeight: '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
+                    minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
                     borderRight: (remainder + i) < 6 ? BORDER : 'none',
                     borderBottom: 'none',
                   }} />
@@ -590,4 +597,5 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     </div>
   );
 }
+
 
