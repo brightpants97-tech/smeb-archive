@@ -210,7 +210,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         </div>
 
         {/* 2~4위 */}
-        <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+        <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap: isMobile ? '0' : '10px', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', overflow: 'hidden', background: isMobile ? 'var(--card)' : 'transparent' }}>
           {top2to4.map((video, i) => {
             const rank = i + 2;
             return (
@@ -229,8 +229,8 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                 </div>
                 <div style={{ flex:1, minWidth:0, padding:'12px 14px', display:'flex', flexDirection:'column', justifyContent:'center', gap:'5px' }}>
                   <p style={{ fontWeight:700, fontSize:'0.85rem', lineHeight:1.4, color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                  <p style={{ fontSize: isMobile ? '0.72rem' : '0.78rem', fontWeight:700, color:'#EB701A', margin:0 }}>👁 {video.views.toLocaleString()}회</p>
-                  {!isMobile && <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', margin:0 }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</p>}
+                  <p style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A', margin:0 }}>👁 {video.views.toLocaleString()}회</p>
+                  <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', margin:0 }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</p>
                 </div>
               </div>
             );
@@ -341,15 +341,15 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 영상</h2>
-            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap:'6px', width:'100%', overflow:'hidden' }}>
+            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '0' : '14px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
                   className="card fade-in-up"
-                  style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s`, display: isMobile && i >= 3 ? 'none' : (isMobile ? 'flex' : 'block'), flexDirection: 'row', overflow:'hidden', width:'100%', minWidth:0, boxSizing:'border-box', maxHeight: isMobile ? '80px' : 'none' } as React.CSSProperties}
+                  style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s`, display: isMobile ? 'flex' : 'block', flexDirection: 'row', overflow:'hidden', width:'100%', minWidth:0, boxSizing:'border-box', borderRadius: isMobile ? '0' : '16px', border: isMobile ? 'none' : '1px solid var(--card-border)', borderBottom: isMobile && i < 5 ? '1px solid var(--card-border)' : 'none' } as React.CSSProperties}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.15)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
-                  <div style={{ position:'relative', flexShrink: 0, width: isMobile ? '96px' : '100%' }}>
-                    <img src={video.thumbnail} alt={video.title} style={{ width: isMobile ? '96px' : '100%', height: isMobile ? '72px' : 'auto', aspectRatio: isMobile ? 'unset' : '16/9', objectFit:'cover', display:'block' }} />
+                  <div style={{ position:'relative', flexShrink: 0, width: isMobile ? '110px' : '100%', flexShrink: 0 }}>
+                    <img src={video.thumbnail} alt={video.title} style={{ width: isMobile ? '110px' : '100%', height: isMobile ? '100%' : 'auto', aspectRatio: isMobile ? '16/9' : '16/9', objectFit:'cover', display:'block' }} />
                     <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0)', transition:'background 0.2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0.25)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='1'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='0'; }}>
@@ -358,8 +358,8 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                       </div>
                     </div>
                   </div>
-                  <div style={{ padding: isMobile ? '4px 10px' : '10px 12px 12px', flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
-                    <p style={{ fontWeight:700, fontSize: isMobile ? '0.8rem' : '0.88rem', lineHeight:1.35, marginBottom: isMobile ? '2px' : '4px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp: isMobile ? 1 : 2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
+                  <div style={{ padding: isMobile ? '14px 18px' : '10px 12px 12px', flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px' }}>
+                    <p style={{ fontWeight:700, fontSize:'0.88rem', lineHeight:1.35, marginBottom:'4px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
                     <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'flex-start' : 'space-between', gap:'6px' }}>
                       <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A' }}>👁 {video.views.toLocaleString()}회</span>
                       <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
@@ -375,10 +375,10 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 공지</h2>
-            <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap: isMobile ? '0' : '10px', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', overflow: 'hidden', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {notices.map((n, ni) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
-                  style={{ display: isMobile && ni >= 2 ? 'none' : 'flex', flexDirection:'column', gap:'6px', padding: isMobile ? '12px' : '16px', background:'var(--card)', borderRadius:'14px', border:'1px solid var(--card-border)', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
+                  style={{ display:'flex', flexDirection:'column', gap:'6px', padding: isMobile ? '14px 18px' : '16px', background:'var(--card)', borderRadius: isMobile ? '0' : '14px', border: isMobile ? 'none' : '1px solid var(--card-border)', borderBottom: isMobile ? '1px solid var(--card-border)' : 'none', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'flex-start' : 'space-between', gap:'6px' }}>
                     <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A' }}>
                       {n.date.split('-')[1]}월 {n.date.split('-')[2]}일
@@ -399,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
