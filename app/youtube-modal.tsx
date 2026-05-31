@@ -105,7 +105,7 @@ function MonthPicker({
 }) {
   const years = useMemo(() => [...new Set(months.map(m => m.slice(0, 4)))].sort(), [months]);
   const [selectedYear, setSelectedYear] = useState(() => selectedMonth.slice(0, 4));
-  const [isMob, setIsMob] = useState(false);
+  const [isMob, setIsMob] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
     const check = () => setIsMob(window.innerWidth < 768);
     check(); window.addEventListener('resize', check);
@@ -283,7 +283,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
 
 export default function YoutubeSection({ videos, top10, notices, monthlyTop10, today }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -399,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
