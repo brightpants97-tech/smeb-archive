@@ -333,6 +333,20 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     if (!sec) return '';
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
+  // 해당 월 전체 방송시간 합계
+  const monthTotalSec = useMemo(() => {
+    return Object.values(calData).flat().reduce((acc: number, v: any) => acc + (v.duration || 0), 0);
+  }, [calData]);
+
+  const fmtMonthTotal = (sec: number) => {
+    if (!sec) return null;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
     return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
   };
 
@@ -442,9 +456,16 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>
               {year}년 <span style={{ color: '#EB701A' }}>{month}월</span>
             </h3>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-              짱 {totalCount}개 다시보기
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {fmtMonthTotal(monthTotalSec) && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  🕐 총 {fmtMonthTotal(monthTotalSec)}
+                </span>
+              )}
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                짱 {totalCount}개 다시보기
+              </span>
+            </div>
           </div>
 
           <div style={{ borderRadius: '16px', overflow: 'hidden', border: BORDER, width: '100%' }}>
@@ -553,3 +574,4 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     </div>
   );
 }
+
