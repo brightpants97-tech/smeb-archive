@@ -158,6 +158,7 @@ export default async function Home() {
         /* ── 모바일 반응형 ── */
         @media (max-width: 768px) {
           .mob-hide { display: none !important; }
+          .mob-hide-card { display: none !important; }
           .mob-nav { gap: 0.6rem !important; }
           .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
           .mob-hero { padding: clamp(40px,8vw,80px) 1.2rem !important; }
