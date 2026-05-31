@@ -4,24 +4,69 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 
+// ── YouTube 전체 영상 가져오기 (pageToken 페이지네이션) ──────────────────────
 const getYoutubeVideos = unstable_cache(async () => {
   try {
     const KEY = process.env.YOUTUBE_API_KEY;
-    const CH = process.env.YOUTUBE_CHANNEL_ID;
-    const searchRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CH}&maxResults=50&order=date&type=video&key=${KEY}`, { cache: 'no-store' });
-    const searchData = await searchRes.json();
-    if (!searchData.items?.length) return [];
-    const ids = searchData.items.map((i: any) => i.id.videoId).join(',');
-    const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${KEY}`, { cache: 'no-store' });
-    const statsData = await statsRes.json();
-    return (statsData.items || []).map((item: any) => ({
-      id: item.id, title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
-      publishedAt: item.snippet.publishedAt,
-      views: parseInt(item.statistics?.viewCount || '0'),
-    }));
-  } catch { return []; }
-}, ['yt-videos-v2'], { revalidate: 3600 });
+    const CH  = process.env.YOUTUBE_CHANNEL_ID;
+
+    // 1단계: search API로 전체 videoId 수집 (50개씩, pageToken 반복)
+    const allVideoIds: string[] = [];
+    let pageToken: string | undefined = undefined;
+
+    do {
+      const params = new URLSearchParams({
+        part: 'id',
+        channelId: CH!,
+        maxResults: '50',
+        order: 'date',
+        type: 'video',
+        key: KEY!,
+        ...(pageToken ? { pageToken } : {}),
+      });
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?${params}`,
+        { cache: 'no-store' }
+      );
+      const data = await res.json();
+      if (data.error) { console.error('YT search error:', data.error); break; }
+      (data.items || []).forEach((i: any) => {
+        if (i.id?.videoId) allVideoIds.push(i.id.videoId);
+      });
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+
+    if (!allVideoIds.length) return [];
+
+    // 2단계: videos API로 통계 가져오기 (50개씩 배치)
+    const allVideos: any[] = [];
+    for (let i = 0; i < allVideoIds.length; i += 50) {
+      const ids = allVideoIds.slice(i, i + 50).join(',');
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${KEY}`,
+        { cache: 'no-store' }
+      );
+      const data = await res.json();
+      (data.items || []).forEach((item: any) => {
+        allVideos.push({
+          id: item.id,
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+          publishedAt: item.snippet.publishedAt,
+          views: parseInt(item.statistics?.viewCount || '0'),
+        });
+      });
+    }
+
+    // 최신순 정렬
+    return allVideos.sort((a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+  } catch (e) {
+    console.error('getYoutubeVideos error:', e);
+    return [];
+  }
+}, ['yt-videos-all-v1'], { revalidate: 3600 });
 
 async function fetchSoopPage(bjid: string, page: number) {
   try {
@@ -102,7 +147,7 @@ export default async function Home() {
   const thisMonthVideos = videos.filter((v: any) => v.publishedAt?.startsWith(currentMonth));
   const top10 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
 
-  // ── 월별 유튜브 TOP 10 계산 ──────────────────────────────────────────────
+  // ── 월별 유튜브 TOP 10 계산 (전체 영상 기반) ─────────────────────────────
   const monthlyTop10: Record<string, any[]> = {};
   videos.forEach((v: any) => {
     const mk = v.publishedAt?.slice(0, 7);
@@ -116,7 +161,7 @@ export default async function Home() {
       .slice(0, 10);
   });
 
-  // ── 날짜별 VOD 맵 ──────────────────────────────────────────────────────────
+  // ── SOOP 날짜별 VOD 맵 ────────────────────────────────────────────────────
   const soopByDate: Record<string, any[]> = {};
   vods.forEach((v: any) => { if (!soopByDate[v.date]) soopByDate[v.date] = []; soopByDate[v.date].push(v); });
 
@@ -127,14 +172,12 @@ export default async function Home() {
     monthMap[mk][parseInt(date.split('-')[2], 10)] = soopByDate[date];
   });
 
-  // ── 월별 TOP 5 계산 ────────────────────────────────────────────────────────
+  // ── SOOP 월별 TOP 5 ───────────────────────────────────────────────────────
   const monthTop5: Record<string, any[]> = {};
   const allMonthKeys = [...new Set(vods.map((v: any) => v.date.substring(0, 7)))];
   allMonthKeys.forEach(mk => {
     const monthVods = vods.filter((v: any) => v.date.startsWith(mk));
-    monthTop5[mk] = [...monthVods]
-      .sort((a, b) => (b.views || 0) - (a.views || 0))
-      .slice(0, 5);
+    monthTop5[mk] = [...monthVods].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
   });
 
   const sortedMonths = Object.keys(monthMap).sort();
