@@ -131,8 +131,8 @@ export default async function Home() {
       <style>{`
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-        html{scroll-behavior:smooth;}
-        body{font-family:'Pretendard',sans-serif;transition:background 0.3s,color 0.3s;}
+        html{scroll-behavior:smooth;overflow-x:hidden;}
+        body{font-family:'Pretendard',sans-serif;transition:background 0.3s,color 0.3s;overflow-x:hidden;}
         a{text-decoration:none;color:inherit;}
         :root{--bg:#ffffff;--bg-section:#ffffff;--bg-deeper:#F0F0F0;--card:#ffffff;--card-border:rgba(0,0,0,0.08);--text:#1A1A1A;--text-inv:#1A1A1A;--text-muted:#888888;--text-sub:rgba(0,0,0,0.45);--accent:#EB701A;--header-bg:rgba(255,255,255,0.85);--header-border:rgba(0,0,0,0.08);--nav-text:rgba(0,0,0,0.55);--footer-bg:#1A1A1A;}
         [data-theme="dark"]{--bg:#111111;--bg-section:#1A1A1A;--bg-deeper:#0d0d0d;--card:#1e1e1e;--card-border:rgba(255,255,255,0.08);--text:#F0F0F0;--text-inv:#ffffff;--text-muted:#555555;--text-sub:rgba(255,255,255,0.4);--accent:#EB701A;--header-bg:rgba(15,15,15,0.85);--header-border:rgba(255,255,255,0.08);--nav-text:rgba(255,255,255,0.55);--footer-bg:#080808;}
@@ -235,3 +235,4 @@ export default async function Home() {
     </>
   );
 }
+
