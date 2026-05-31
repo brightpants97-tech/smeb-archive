@@ -141,7 +141,7 @@ function MonthPicker({
         ))}
       </div>
       {/* 월 탭 */}
-      <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'10px 14px', background:'var(--bg-deeper)', borderRadius:'12px' }}>
+      <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'10px 14px', background:'var(--bg-deeper)', borderRadius:'12px', overflowX:'auto' }}>
         <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px' }}>월</span>
         {monthsInYear.sort().map(ym => {
           const mo = parseInt(ym.split('-')[1]);
@@ -210,7 +210,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         </div>
 
         {/* 2~4위 */}
-        <div style={{ display:'flex', flexDirection: isMobile ? 'row' : 'column', gap:'12px', overflowX: isMobile ? 'auto' : 'visible' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
           {top2to4.map((video, i) => {
             const rank = i + 2;
             return (
@@ -399,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
