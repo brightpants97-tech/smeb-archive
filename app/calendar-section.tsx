@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 interface Props {
   sortedMonths: string[];
   monthMap: Record<string, Record<number, any[]>>;
+  monthTop5: Record<string, any[]>; // ← 추가
   today: string;
 }
 
@@ -138,7 +139,151 @@ function DayPanel({
   );
 }
 
-export default function CalendarSection({ sortedMonths, monthMap, today }: Props) {
+// ─── 이달의 TOP 5 컴포넌트 ─────────────────────────────────────────────────────
+function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; fmtDuration: (s: number) => string }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  if (!vods || vods.length === 0) return null;
+
+  const [y, m] = month.split('-');
+  const label = `${y}년 ${parseInt(m)}월`;
+
+  const RANK_COLORS = ['#EB701A', '#C0C0C0', '#CD7F32', 'var(--text-muted)', 'var(--text-muted)'];
+  const RANK_BG = [
+    'linear-gradient(135deg,rgba(235,112,26,0.18),rgba(235,112,26,0.06))',
+    'linear-gradient(135deg,rgba(192,192,192,0.14),rgba(192,192,192,0.04))',
+    'linear-gradient(135deg,rgba(205,127,50,0.14),rgba(205,127,50,0.04))',
+    'rgba(0,0,0,0)',
+    'rgba(0,0,0,0)',
+  ];
+
+  const top1 = vods[0];
+  const rest = vods.slice(1);
+
+  return (
+    <div style={{ marginBottom: '36px' }}>
+      {/* 섹션 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          background: 'rgba(235,112,26,0.1)', border: '1px solid rgba(235,112,26,0.25)',
+          color: '#EB701A', fontSize: '0.7rem', fontWeight: 800,
+          padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.08em', textTransform: 'uppercase',
+        }}>
+          🏆 {label} TOP 5
+        </div>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+          조회수 기준
+        </span>
+      </div>
+
+      {/* 1위 카드 (크게) */}
+      <a
+        href={`https://vod.sooplive.com/player/${top1.id}`}
+        target="_blank" rel="noopener noreferrer"
+        style={{
+          display: 'flex', gap: '16px', alignItems: 'stretch',
+          padding: '16px', borderRadius: '16px', marginBottom: '10px',
+          border: '1.5px solid rgba(235,112,26,0.35)',
+          background: 'linear-gradient(135deg,rgba(235,112,26,0.12),rgba(235,112,26,0.04))',
+          textDecoration: 'none', color: 'var(--text)',
+          transition: 'transform 0.18s, box-shadow 0.18s',
+          transform: hovered === 0 ? 'translateY(-3px)' : 'none',
+          boxShadow: hovered === 0 ? '0 12px 32px rgba(235,112,26,0.2)' : '0 4px 16px rgba(235,112,26,0.08)',
+        }}
+        onMouseEnter={() => setHovered(0)}
+        onMouseLeave={() => setHovered(null)}
+      >
+        {/* 순위 */}
+        <div style={{
+          flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          width: '40px',
+        }}>
+          <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#EB701A', lineHeight: 1 }}>1</span>
+          <span style={{ fontSize: '0.55rem', fontWeight: 700, color: '#EB701A', letterSpacing: '0.06em' }}>위</span>
+        </div>
+        {/* 썸네일 */}
+        {top1.thumb && (
+          <img
+            src={top1.thumb} alt=""
+            style={{ width: '140px', aspectRatio: '16/9', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
+          />
+        )}
+        {/* 텍스트 */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{
+            fontSize: '1rem', fontWeight: 800, lineHeight: 1.4,
+            color: 'var(--text)', marginBottom: '8px',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>{top1.title}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <span style={{
+              fontSize: '0.82rem', fontWeight: 700, color: '#EB701A',
+            }}>👁 {Number(top1.views).toLocaleString()}회</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{top1.date}</span>
+            {top1.duration ? <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🕐 {fmtDuration(top1.duration)}</span> : null}
+          </div>
+        </div>
+        {/* 왕관 */}
+        <div style={{ fontSize: '1.6rem', alignSelf: 'flex-start', marginTop: '-4px', opacity: 0.9 }}>👑</div>
+      </a>
+
+      {/* 2~5위 리스트 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {rest.map((vod, idx) => {
+          const rank = idx + 2;
+          const isHov = hovered === rank;
+          return (
+            <a
+              key={vod.id}
+              href={`https://vod.sooplive.com/player/${vod.id}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                display: 'flex', gap: '12px', alignItems: 'center',
+                padding: '10px 14px', borderRadius: '12px',
+                border: `1px solid ${rank <= 3 ? 'rgba(192,192,192,0.25)' : 'var(--card-border)'}`,
+                background: RANK_BG[idx + 1],
+                textDecoration: 'none', color: 'var(--text)',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+                transform: isHov ? 'translateX(4px)' : 'none',
+                boxShadow: isHov ? '0 4px 16px rgba(0,0,0,0.1)' : 'none',
+              }}
+              onMouseEnter={() => setHovered(rank)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {/* 순위 숫자 */}
+              <span style={{
+                fontSize: '1.1rem', fontWeight: 900, color: RANK_COLORS[idx + 1],
+                width: '28px', textAlign: 'center', flexShrink: 0,
+              }}>{rank}</span>
+              {/* 썸네일 */}
+              {vod.thumb && (
+                <img
+                  src={vod.thumb} alt=""
+                  style={{ width: '72px', aspectRatio: '16/9', borderRadius: '7px', objectFit: 'cover', flexShrink: 0 }}
+                />
+              )}
+              {/* 텍스트 */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)',
+                  marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{vod.title}</p>
+                <div style={{ display: 'flex', gap: '10px', fontSize: '0.71rem', color: 'var(--text-muted)' }}>
+                  <span>👁 {Number(vod.views).toLocaleString()}회</span>
+                  <span>{vod.date}</span>
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── 메인 캘린더 섹션 ──────────────────────────────────────────────────────────
+export default function CalendarSection({ sortedMonths, monthMap, monthTop5, today }: Props) {
   const todayDate = new Date(today);
   const currentYM = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
 
@@ -200,6 +345,9 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
   const BORDER = '1px solid var(--card-border)';
   const GRID = 'repeat(7, minmax(0, 1fr))';
 
+  // 현재 선택된 달의 top5
+  const top5 = monthTop5[validSelectedMonth] || [];
+
   return (
     <div>
       {panelDay && (
@@ -221,7 +369,7 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
       {search ? (
         <div>
           <p style={{ marginBottom: '16px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            "{search}" 검색 결과: {filteredBySearch?.length || 0}개
+            &ldquo;{search}&rdquo; 검색 결과: {filteredBySearch?.length || 0}개
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {filteredBySearch?.map(({ date, vod }, i) => (
@@ -286,6 +434,9 @@ export default function CalendarSection({ sortedMonths, monthMap, today }: Props
               );
             })}
           </div>
+
+          {/* ─── 이달의 TOP 5 ─── */}
+          <MonthTop5 vods={top5} month={validSelectedMonth} fmtDuration={fmtDuration} />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>
