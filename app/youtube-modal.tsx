@@ -342,9 +342,9 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 영상</h2>
             <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap:'6px', width:'100%', overflow:'hidden' }}>
-              {(isMobile ? videos.slice(0, 3) : videos.slice(0, 6)).map((video, i) => (
+              {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
-                  className="card fade-in-up"
+                  className={`card fade-in-up${i >= 3 ? ' mob-hide-card' : ''}`}
                   style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s`, display: isMobile ? 'flex' : 'block', flexDirection: 'row', overflow:'hidden', width:'100%', minWidth:0, boxSizing:'border-box', maxHeight: isMobile ? '80px' : 'none' } as React.CSSProperties}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.15)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
@@ -376,8 +376,8 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 공지</h2>
             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-              {(isMobile ? notices.slice(0, 2) : notices).map((n) => (
-                <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
+              {notices.map((n, ni) => (
+                <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className={`notice-card${ni >= 2 ? ' mob-hide-card' : ''}`}
                   style={{ display:'flex', flexDirection:'column', gap:'6px', padding: isMobile ? '12px' : '16px', background:'var(--card)', borderRadius:'14px', border:'1px solid var(--card-border)', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'flex-start' : 'space-between', gap:'6px' }}>
                     <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A' }}>
@@ -399,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
