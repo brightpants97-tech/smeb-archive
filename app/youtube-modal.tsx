@@ -103,7 +103,7 @@ function MonthPicker({
   selectedMonth: string;
   onSelect: (m: string) => void;
 }) {
-  const years = useMemo(() => [...new Set(months.map(m => m.slice(0, 4)))].sort().reverse(), [months]);
+  const years = useMemo(() => [...new Set(months.map(m => m.slice(0, 4)))].sort(), [months]);
   const [selectedYear, setSelectedYear] = useState(() => selectedMonth.slice(0, 4));
   const BORDER = '1px solid var(--card-border)';
 
@@ -386,4 +386,5 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
