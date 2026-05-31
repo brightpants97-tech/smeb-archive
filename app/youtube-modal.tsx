@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Video {
@@ -24,6 +24,8 @@ interface Props {
   videos: Video[];
   top10: Video[];
   notices: Notice[];
+  monthlyTop10: Record<string, Video[]>; // "YYYY-MM" → 상위 10개
+  today: string;
 }
 
 function VideoModal({ activeId, onClose }: { activeId: string; onClose: () => void }) {
@@ -70,7 +72,7 @@ function LiveSection() {
   return (
     <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
       <a href={PLAY_URL} target="_blank" rel="noopener noreferrer" style={{ display:'block', textDecoration:'none' }}>
-        <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+        <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
           <img src={PROFILE} alt="스맵" style={{ width:'72px', height:'72px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.7)', objectFit:'cover' }} />
         </div>
       </a>
@@ -93,9 +95,80 @@ function LiveSection() {
 
 const RANK_BADGE: Record<number, string> = { 1:'#EB701A', 2:'#C0C0C0', 3:'#CD7F32' };
 
-export default function YoutubeSection({ videos, top10, notices }: Props) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+// ── 월 선택기 ──────────────────────────────────────────────────────────────
+function MonthPicker({
+  months, selectedMonth, onSelect,
+}: {
+  months: string[];
+  selectedMonth: string;
+  onSelect: (m: string) => void;
+}) {
+  const years = useMemo(() => [...new Set(months.map(m => m.slice(0, 4)))].sort().reverse(), [months]);
+  const [selectedYear, setSelectedYear] = useState(() => selectedMonth.slice(0, 4));
+  const BORDER = '1px solid var(--card-border)';
+
+  const monthsInYear = useMemo(
+    () => months.filter(m => m.startsWith(selectedYear)),
+    [months, selectedYear]
+  );
+
+  return (
+    <div style={{ marginBottom: '20px' }}>
+      {/* 연도 탭 */}
+      <div style={{ display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap', alignItems:'center' }}>
+        <span style={{ fontSize:'0.75rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px' }}>연도</span>
+        {years.map(y => (
+          <button key={y} onClick={() => {
+            setSelectedYear(y);
+            const first = months.filter(m => m.startsWith(y)).sort().reverse()[0];
+            if (first) onSelect(first);
+          }}
+            style={{
+              padding:'5px 16px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize:'0.85rem', transition:'all 0.15s',
+              background: selectedYear === y ? '#EB701A' : 'var(--card)',
+              color: selectedYear === y ? '#fff' : 'var(--text-muted)',
+              border: selectedYear === y ? '1px solid #EB701A' : BORDER,
+              boxShadow: selectedYear === y ? '0 4px 14px rgba(235,112,26,0.3)' : 'none',
+            }}>
+            {y}년
+          </button>
+        ))}
+      </div>
+      {/* 월 탭 */}
+      <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'10px 14px', background:'var(--bg-deeper)', borderRadius:'12px' }}>
+        <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px' }}>월</span>
+        {monthsInYear.sort().reverse().map(ym => {
+          const mo = parseInt(ym.split('-')[1]);
+          const isSelected = ym === selectedMonth;
+          return (
+            <button key={ym} onClick={() => onSelect(ym)}
+              style={{
+                padding:'4px 12px', borderRadius:'100px', cursor:'pointer',
+                fontWeight: isSelected ? 700 : 500, fontSize:'0.8rem', transition:'all 0.15s',
+                background: isSelected ? '#1A1A1A' : 'var(--card)',
+                color: isSelected ? '#fff' : 'var(--text)',
+                border: isSelected ? '1px solid #1A1A1A' : BORDER,
+              }}>
+              {mo}월
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── TOP 10 렌더러 ──────────────────────────────────────────────────────────
+function Top10Grid({ top10, onPlay }: { top10: Video[]; onPlay: (id: string) => void }) {
   const [hovered, setHovered] = useState<number | null>(null);
+
+  if (top10.length === 0) {
+    return (
+      <div style={{ textAlign:'center', padding:'60px 0', color:'var(--text-muted)', fontSize:'0.9rem' }}>
+        해당 월에 업로드된 영상이 없어요
+      </div>
+    );
+  }
 
   const top1 = top10[0];
   const top2to4 = top10.slice(1, 4);
@@ -103,44 +176,39 @@ export default function YoutubeSection({ videos, top10, notices }: Props) {
 
   return (
     <>
-      {activeId && <VideoModal activeId={activeId} onClose={() => setActiveId(null)} />}
-
-      {/* ── TOP 10 메인 그리드 ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 0.75fr', gap:'20px', alignItems:'start', marginBottom:'0' }}>
-
+      {/* 1~4위 + LIVE */}
+      <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 0.75fr', gap:'20px', alignItems:'start' }}>
         {/* 1위 */}
-        {top1 && (
-          <div onClick={() => setActiveId(top1.id)}
-            style={{ cursor:'pointer', borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', transition:'transform 0.2s, box-shadow 0.2s', background:'var(--card)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.2)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
-            <div style={{ position:'relative' }}>
-              <img src={top1.thumbnail} alt={top1.title} style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
-              <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)' }} />
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <div style={{ width:'60px', height:'60px', borderRadius:'50%', background:'rgba(235,112,26,0.92)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 10px rgba(235,112,26,0.18)' }}>
-                  <span style={{ fontSize:'1.4rem', marginLeft:'5px', color:'#fff' }}>▶</span>
-                </div>
+        <div onClick={() => onPlay(top1.id)}
+          style={{ cursor:'pointer', borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', transition:'transform 0.2s, box-shadow 0.2s', background:'var(--card)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
+          <div style={{ position:'relative' }}>
+            <img src={top1.thumbnail} alt={top1.title} style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)' }} />
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:'60px', height:'60px', borderRadius:'50%', background:'rgba(235,112,26,0.92)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 10px rgba(235,112,26,0.18)' }}>
+                <span style={{ fontSize:'1.4rem', marginLeft:'5px', color:'#fff' }}>▶</span>
               </div>
-              <div style={{ position:'absolute', top:'14px', left:'14px', background:'#EB701A', color:'#fff', fontWeight:900, fontSize:'0.85rem', width:'38px', height:'38px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 3px rgba(235,112,26,0.35)' }}>1</div>
-              <div style={{ position:'absolute', top:'14px', right:'14px', background:'rgba(235,112,26,0.85)', backdropFilter:'blur(8px)', color:'#fff', fontSize:'0.62rem', fontWeight:800, padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.08em' }}>BEST</div>
-              <div style={{ position:'absolute', bottom:'16px', left:'16px', right:'16px' }}>
-                <p style={{ fontWeight:800, fontSize:'1.05rem', lineHeight:1.35, color:'#fff', marginBottom:'10px' }}>{top1.title}</p>
-                <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                  <span style={{ fontSize:'0.8rem', fontWeight:700, color:'#fff', background:'rgba(235,112,26,0.85)', backdropFilter:'blur(8px)', padding:'3px 10px', borderRadius:'100px' }}>👁 {top1.views.toLocaleString()}회</span>
-                  <span style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.55)' }}>{new Date(top1.publishedAt).toLocaleDateString('ko-KR')}</span>
-                </div>
+            </div>
+            <div style={{ position:'absolute', top:'14px', left:'14px', background:'#EB701A', color:'#fff', fontWeight:900, fontSize:'0.85rem', width:'38px', height:'38px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 3px rgba(235,112,26,0.35)' }}>1</div>
+            <div style={{ position:'absolute', top:'14px', right:'14px', background:'rgba(235,112,26,0.85)', backdropFilter:'blur(8px)', color:'#fff', fontSize:'0.62rem', fontWeight:800, padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.08em' }}>BEST</div>
+            <div style={{ position:'absolute', bottom:'16px', left:'16px', right:'16px' }}>
+              <p style={{ fontWeight:800, fontSize:'1.05rem', lineHeight:1.35, color:'#fff', marginBottom:'10px' }}>{top1.title}</p>
+              <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                <span style={{ fontSize:'0.8rem', fontWeight:700, color:'#fff', background:'rgba(235,112,26,0.85)', backdropFilter:'blur(8px)', padding:'3px 10px', borderRadius:'100px' }}>👁 {top1.views.toLocaleString()}회</span>
+                <span style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.55)' }}>{new Date(top1.publishedAt).toLocaleDateString('ko-KR')}</span>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* 2~4위 */}
         <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
           {top2to4.map((video, i) => {
             const rank = i + 2;
             return (
-              <div key={video.id} onClick={() => setActiveId(video.id)}
+              <div key={video.id} onClick={() => onPlay(video.id)}
                 style={{ display:'flex', overflow:'hidden', borderRadius:'14px', border:'1px solid var(--card-border)', background:'var(--card)', cursor:'pointer', transition:'transform 0.18s, box-shadow 0.18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 10px 28px rgba(0,0,0,0.15)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
@@ -167,7 +235,7 @@ export default function YoutubeSection({ videos, top10, notices }: Props) {
         <LiveSection />
       </div>
 
-      {/* ── 5~10위 리스트 ── */}
+      {/* 5~10위 */}
       {top5to10.length > 0 && (
         <div style={{ marginTop:'16px', borderRadius:'16px', border:'1px solid var(--card-border)', background:'var(--card)', overflow:'hidden' }}>
           <div style={{ padding:'10px 18px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
@@ -180,7 +248,7 @@ export default function YoutubeSection({ videos, top10, notices }: Props) {
               const isLast = i >= 3;
               const borderRight = (i % 3) < 2;
               return (
-                <div key={video.id} onClick={() => setActiveId(video.id)}
+                <div key={video.id} onClick={() => onPlay(video.id)}
                   onMouseEnter={() => setHovered(rank)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
@@ -191,7 +259,7 @@ export default function YoutubeSection({ videos, top10, notices }: Props) {
                     borderBottom: !isLast ? '1px solid var(--card-border)' : 'none',
                     transition:'background 0.15s',
                   }}>
-                  <span style={{ fontSize:'1.1rem', fontWeight:900, color: rank <= 3 ? RANK_BADGE[rank] : 'var(--text-muted)', width:'24px', flexShrink:0, textAlign:'center' }}>{rank}</span>
+                  <span style={{ fontSize:'1.1rem', fontWeight:900, color:'var(--text-muted)', width:'24px', flexShrink:0, textAlign:'center' }}>{rank}</span>
                   <img src={video.thumbnail} alt="" style={{ width:'80px', aspectRatio:'16/9', objectFit:'cover', borderRadius:'8px', flexShrink:0 }} />
                   <div style={{ flex:1, minWidth:0 }}>
                     <p style={{ fontSize:'0.8rem', fontWeight:700, color:'var(--text)', lineHeight:1.35, marginBottom:'4px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{video.title}</p>
@@ -203,6 +271,54 @@ export default function YoutubeSection({ videos, top10, notices }: Props) {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export default function YoutubeSection({ videos, top10, notices, monthlyTop10, today }: Props) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const todayDate = new Date(today);
+  const currentMonth = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+
+  // 월별 탭에 표시할 달 목록 (데이터 있는 달만)
+  const availableMonths = useMemo(
+    () => Object.keys(monthlyTop10).filter(m => monthlyTop10[m].length > 0).sort().reverse(),
+    [monthlyTop10]
+  );
+
+  const [selectedMonth, setSelectedMonth] = useState(
+    availableMonths.includes(currentMonth) ? currentMonth : (availableMonths[0] || currentMonth)
+  );
+
+  const selectedTop10 = monthlyTop10[selectedMonth] || [];
+  const [y, m] = selectedMonth.split('-');
+  const monthLabel = `${y}년 ${parseInt(m)}월`;
+
+  return (
+    <>
+      {activeId && <VideoModal activeId={activeId} onClose={() => setActiveId(null)} />}
+
+      {/* ── 월 선택기 ── */}
+      <MonthPicker
+        months={availableMonths}
+        selectedMonth={selectedMonth}
+        onSelect={setSelectedMonth}
+      />
+
+      {/* ── 선택된 달 TOP 10 ── */}
+      <div style={{ marginBottom:'8px', display:'flex', alignItems:'center', gap:'10px' }}>
+        <span style={{
+          fontSize:'0.72rem', fontWeight:800, color:'#EB701A',
+          background:'rgba(235,112,26,0.1)', border:'1px solid rgba(235,112,26,0.25)',
+          padding:'4px 12px', borderRadius:'100px', letterSpacing:'0.06em',
+        }}>
+          🏆 {monthLabel} TOP {selectedTop10.length}
+        </span>
+        <span style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>조회수 기준</span>
+      </div>
+
+      <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} />
 
       {/* ── 최신 영상 + 공지 ── */}
       <div id="videos" className="sec-light" style={{ margin:'40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding:'40px clamp(1.5rem, 5vw, 3rem)' }}>
