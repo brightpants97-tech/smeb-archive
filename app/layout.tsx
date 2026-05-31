@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-icon.png",
   },
+  verification: {
+    google: "mzp7BA37u1o_a1oD6NVDWR1IYvyzMnTK4x_02KycWUo",
+  },
   robots: {
     index: true,
     follow: true,
