@@ -108,7 +108,9 @@ export default async function Home() {
   const today = new Date();
   const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const thisMonthVideos = videos.filter((v: any) => v.publishedAt?.startsWith(currentMonth));
-  const top10 = [...thisMonthVideos].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
+  // 이번 달 영상 없으면 최근 영상으로 대체
+  const recentVideos = thisMonthVideos.length > 0 ? thisMonthVideos : videos.slice(0, 6);
+  const top10 = [...(thisMonthVideos.length > 0 ? thisMonthVideos : videos)].sort((a: any, b: any) => b.views - a.views).slice(0, 10);
 
   const monthlyTop10: Record<string, any[]> = {};
   videos.forEach((v: any) => {
@@ -215,7 +217,7 @@ export default async function Home() {
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
           <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
-          <YoutubeSection videos={thisMonthVideos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
+          <YoutubeSection videos={recentVideos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
         </div>
       </section>
 
@@ -240,5 +242,6 @@ export default async function Home() {
     </>
   );
 }
+
 
 
