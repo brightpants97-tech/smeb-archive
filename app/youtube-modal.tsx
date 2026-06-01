@@ -389,7 +389,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                     </div>
                   </div>
                   <p style={{ fontWeight:700, fontSize: isMobile ? '0.82rem' : '0.9rem', color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', margin:0 }}>{n.title}</p>
-                  <p style={{ fontSize:'0.78rem', color:'var(--text-muted)', display:'-webkit-box', WebkitLineClamp: isMobile ? 1 : 2, WebkitBoxOrient:'vertical', overflow:'hidden', margin:0, lineHeight:1.5, fontSize: isMobile ? '0.72rem' : '0.78rem' } as React.CSSProperties}>{n.summary}</p>
+                  <p style={{ color:'var(--text-muted)', display:'-webkit-box', WebkitLineClamp: isMobile ? 1 : 2, WebkitBoxOrient:'vertical', overflow:'hidden', margin:0, lineHeight:1.5, fontSize: isMobile ? '0.72rem' : '0.78rem' } as React.CSSProperties}>{n.summary}</p>
                 </a>
               ))}
             </div>
