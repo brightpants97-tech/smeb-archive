@@ -24,7 +24,7 @@ function DayPanel({
       document.body.style.overflow = '';
     };
   }, [onClose]);
-
+h
   const [visible, setVisible] = useState(false);
   useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
 
@@ -90,7 +90,7 @@ function DayPanel({
 
         {/* 목록 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {vods.map((vod: any, i: number) => (
+          {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
             <a
               key={i}
               href={`https://vod.sooplive.com/player/${vod.id}`}
