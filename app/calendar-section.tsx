@@ -24,7 +24,6 @@ function DayPanel({
       document.body.style.overflow = '';
     };
   }, [onClose]);
-h
   const [visible, setVisible] = useState(false);
   useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
 
