@@ -277,9 +277,10 @@ export default async function Home() {
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
           <AnalysisSection
-            month={currentMonth}
-            ytVideos={top10.map((v: any) => ({ title: v.title, views: v.views }))}
-            soopVods={(monthTop5[currentMonth] || []).map((v: any) => ({ title: v.title, views: v.views || 0 }))}
+            monthlyTop10={monthlyTop10}
+            monthTop5={monthTop5}
+            sortedMonths={sortedMonths}
+            currentMonth={currentMonth}
           />
         </div>
       </section>
