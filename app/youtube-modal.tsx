@@ -26,7 +26,6 @@ interface Props {
   notices: Notice[];
   monthlyTop10: Record<string, Video[]>; // "YYYY-MM" → 상위 10개
   today: string;
-  videoMonth: string; // 현재 표시 중인 영상의 달 (예: "2026-05")
 }
 
 function VideoModal({ activeId, onClose }: { activeId: string; onClose: () => void }) {
@@ -282,7 +281,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
   );
 }
 
-export default function YoutubeSection({ videos, top10, notices, monthlyTop10, today, videoMonth }: Props) {
+export default function YoutubeSection({ videos, top10, notices, monthlyTop10, today }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
@@ -341,7 +340,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom: isMobile ? '4px' : '8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
             </p>
-            <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>{parseInt(videoMonth.split('-')[1])}월 최신 영상</h2>
+            <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 영상</h2>
             <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '0' : '14px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
@@ -400,6 +399,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     </>
   );
 }
+
 
 
 
