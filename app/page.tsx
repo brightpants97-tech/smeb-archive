@@ -113,6 +113,18 @@ export default async function Home() {
       const data = await res.json();
       const info = data?.CHANNEL?.BROAD_INFOS?.[0]?.list?.[0];
       const isLive = info && info.nState !== -2 && info.nState !== undefined && info.nState !== '';
+      return { isLive: !!isLive, title: info?.szBroadTitle || '', viewers: info?.nCurrentView || 0 };
+    } catch { return { isLive: false, title: '', viewers: 0 }; }
+  };
+  const getLiveStatus = async () => {
+    try {
+      const res = await fetch(
+        `https://live.sooplive.com/api/get_broad_state_list.php?szBjId=${process.env.SOOP_BJID || 'townboy'}`,
+        { headers: { 'Referer': 'https://www.sooplive.com/', 'Origin': 'https://www.sooplive.com', 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store' }
+      );
+      const data = await res.json();
+      const info = data?.CHANNEL?.BROAD_INFOS?.[0]?.list?.[0];
+      const isLive = info && info.nState !== -2 && info.nState !== undefined && info.nState !== '';
       return { isLive: !!isLive, title: info?.szBroadTitle || '', viewers: info?.nCurrentView || 0, broadNo: info?.nBroadNo || '' };
     } catch { return { isLive: false, title: '', viewers: 0, broadNo: '' }; }
   };
@@ -238,6 +250,19 @@ export default async function Home() {
         </a>
       )}
 
+      {liveStatus.isLive && (
+        <a href={`https://www.sooplive.com/${process.env.SOOP_BJID || 'townboy'}`} target="_blank" rel="noopener noreferrer"
+          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', background:'linear-gradient(90deg,#e8000a,#c0000a)', color:'#fff', padding:'10px 20px', textDecoration:'none', position:'sticky', top:'60px', zIndex:199 }}>
+          <span style={{ display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(255,255,255,0.2)', borderRadius:'100px', padding:'3px 10px', fontSize:'0.72rem', fontWeight:800 }}>
+            <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#fff', display:'inline-block', animation:'pulse 1.2s infinite' }} />
+            LIVE
+          </span>
+          <span style={{ fontSize:'0.88rem', fontWeight:600, maxWidth:'60vw', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{liveStatus.title || '스맵임 방송 중'}</span>
+          {liveStatus.viewers > 0 && <span style={{ fontSize:'0.78rem', opacity:0.85 }}>👁 {Number(liveStatus.viewers).toLocaleString()}명 시청 중</span>}
+          <span style={{ fontSize:'0.78rem', opacity:0.75 }}>→ 바로가기</span>
+        </a>
+      )}
+
       <section className="sec-main mob-hero" style={{padding:'clamp(60px,10vw,120px) clamp(1.5rem,5vw,3rem)',textAlign:'center',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'linear-gradient(rgba(235,112,26,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(235,112,26,0.06) 1px, transparent 1px)',backgroundSize:'40px 40px'}} />
         <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'800px',height:'400px',background:'radial-gradient(ellipse, rgba(235,112,26,0.12) 0%, transparent 65%)',pointerEvents:'none'}} />
@@ -255,14 +280,18 @@ export default async function Home() {
             </span>
           </h1>
           <p className="sec-sub-text" style={{fontSize:'1rem',marginBottom:'2rem'}}>전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기</p>
-        </div>
-      </section>
+feat: Gemini AI 분석 + 라이브 배너 완성      </section>
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
           <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
-          <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />          <AnalysisSection            month={currentMonth}            ytVideos={top10.map((v: any) => ({ title: v.title, views: v.views }))}            soopVods={(monthTop5[currentMonth] || []).map((v: any) => ({ title: v.title, views: v.views || 0 }))}          />          <AnalysisSection            month={currentMonth}            ytVideos={top10.map((v: any) => ({ title: v.title, views: v.views }))}          <AnalysisSection
+          <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
+          <AnalysisSection
+            month={currentMonth}
+            ytVideos={top10.map((v: any) => ({ title: v.title, views: v.views }))}
+            soopVods={(monthTop5[currentMonth] || []).map((v: any) => ({ title: v.title, views: v.views || 0 }))}
+          />
         </div>
       </section>
 
