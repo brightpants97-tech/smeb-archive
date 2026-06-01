@@ -312,7 +312,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
 
   const validSelectedMonth = monthsInYear.includes(selectedMonth)
     ? selectedMonth
-    : (monthsInYear[0] || selectedMonth);
+    : (monthsInYear[monthsInYear.length - 1] || selectedMonth);
 
   const calData = monthMap[validSelectedMonth] || {};
   const [year, month] = validSelectedMonth.split('-').map(Number);
@@ -418,9 +418,14 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             {years.map(y => (
               <button key={y} onClick={() => {
                 setSelectedYear(y);
-                const firstInYear = sortedMonths.find(m => m.startsWith(y));
-                if (firstInYear) setSelectedMonth(firstInYear);
-              }}
+                                const currentYear = String(todayDate.getFullYear());
+                                if (y === currentYear && sortedMonths.includes(currentYM)) {
+                                                    setSelectedMonth(currentYM);
+                                } else {
+                                                    const lastInYear = [...sortedMonths].filter(m => m.startsWith(y)).pop();
+                                                    if (lastInYear) setSelectedMonth(lastInYear);
+                                }
+                
                 style={{
                   padding: '7px 20px', borderRadius: '100px', cursor: 'pointer', fontWeight: 700, fontSize: '0.92rem', transition: 'all 0.15s',
                   background: selectedYear === y ? '#EB701A' : 'var(--card)',
