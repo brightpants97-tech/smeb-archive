@@ -104,19 +104,7 @@ const getNotices = unstable_cache(async () => {
 }, ['notices-v3'], { revalidate: 300 });
 
 export default async function Home() {
-  const getLiveStatus = async () => {
-    try {
-      const res = await fetch(
-        `https://live.sooplive.com/api/get_broad_state_list.php?szBjId=${process.env.SOOP_BJID || 'townboy'}`,
-        { headers: { 'Referer': 'https://www.sooplive.com/', 'Origin': 'https://www.sooplive.com', 'User-Agent': 'Mozilla/5.0' }, cache: 'no-store' }
-      );
-      const data = await res.json();
-      const info = data?.CHANNEL?.BROAD_INFOS?.[0]?.list?.[0];
-      const isLive = info && info.nState !== -2 && info.nState !== undefined && info.nState !== '';
-      return { isLive: !!isLive, title: info?.szBroadTitle || '', viewers: info?.nCurrentView || 0 };
-    } catch { return { isLive: false, title: '', viewers: 0 }; }
-  };
-  const getLiveStatus = async () => {
+    const getLiveStatus = async () => {
     try {
       const res = await fetch(
         `https://live.sooplive.com/api/get_broad_state_list.php?szBjId=${process.env.SOOP_BJID || 'townboy'}`,
@@ -280,7 +268,8 @@ export default async function Home() {
             </span>
           </h1>
           <p className="sec-sub-text" style={{fontSize:'1rem',marginBottom:'2rem'}}>전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기</p>
-feat: Gemini AI 분석 + 라이브 배너 완성      </section>
+        </div>
+      </section>
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
