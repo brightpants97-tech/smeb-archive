@@ -47,7 +47,7 @@ const getYoutubeVideos = unstable_cache(async () => {
     }
     return allVideos.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
   } catch (e) { console.error('getYoutubeVideos error:', e); return []; }
-}, ['yt-videos-playlist-v1'], { revalidate: 3600 });
+}, ['yt-videos-playlist-v2'], { revalidate: 3600 });
 
 async function fetchSoopPage(bjid: string, page: number) {
   try {
