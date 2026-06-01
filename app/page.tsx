@@ -278,7 +278,6 @@ export default async function Home() {
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
           <AnalysisSection
             monthlyTop10={monthlyTop10}
-            monthTop5={monthTop5}
             sortedMonths={sortedMonths}
             currentMonth={currentMonth}
           />
@@ -290,7 +289,7 @@ export default async function Home() {
         <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
           <div className="eyebrow">SOOP 다시보기</div>
           <h2 className="section-title sec-title" style={{marginBottom:'40px'}}>다시보기 캘린더</h2>
-          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
+          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap}  today={today.toISOString()} />
         </div>
       </section>
 
