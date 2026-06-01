@@ -320,3 +320,7 @@ export default function AnalysisSection({ monthlyTop10, monthTop5, sortedMonths,
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>유튜브 {ytVideos.length}개 · SOOP {soopVods.length}개 데이터 기준</p>
         </div>
       )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
