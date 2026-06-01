@@ -193,81 +193,35 @@ function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; f
         onMouseEnter={() => setHovered(0)}
         onMouseLeave={() => setHovered(null)}
       >
-        {/* 순위 */}
-        <div style={{
-          flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          width: '40px',
-        }}>
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px' }}>
           <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#EB701A', lineHeight: 1 }}>1</span>
           <span style={{ fontSize: '0.55rem', fontWeight: 700, color: '#EB701A', letterSpacing: '0.06em' }}>위</span>
         </div>
-        {/* 썸네일 */}
-        {top1.thumb && (
-          <img
-            src={top1.thumb} alt=""
-            style={{ width: '140px', aspectRatio: '16/9', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
-          />
-        )}
-        {/* 텍스트 */}
+        {top1.thumb && (<img src={top1.thumb} alt="" style={{ width: '140px', aspectRatio: '16/9', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} />)}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{
-            fontSize: '1rem', fontWeight: 800, lineHeight: 1.4,
-            color: 'var(--text)', marginBottom: '8px',
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}>{top1.title}</p>
+          <p style={{ fontSize: '1rem', fontWeight: 800, lineHeight: 1.4, color: 'var(--text)', marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top1.title}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            <span style={{
-              fontSize: '0.82rem', fontWeight: 700, color: '#EB701A',
-            }}>👁 {Number(top1.views).toLocaleString()}회</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EB701A' }}>👁 {Number(top1.views).toLocaleString()}회</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{top1.date}</span>
             {top1.duration ? <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🕐 {fmtDuration(top1.duration)}</span> : null}
           </div>
         </div>
-        {/* 왕관 */}
         <div style={{ fontSize: '1.6rem', alignSelf: 'flex-start', marginTop: '-4px', opacity: 0.9 }}>👑</div>
       </a>
 
-      {/* 2~5위 리스트 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {rest.map((vod, idx) => {
           const rank = idx + 2;
           const isHov = hovered === rank;
           return (
-            <a
-              key={vod.id}
-              href={`https://vod.sooplive.com/player/${vod.id}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{
-                display: 'flex', gap: '12px', alignItems: 'center',
-                padding: '10px 14px', borderRadius: '12px',
-                border: `1px solid ${rank <= 3 ? 'rgba(192,192,192,0.25)' : 'var(--card-border)'}`,
-                background: RANK_BG[idx + 1],
-                textDecoration: 'none', color: 'var(--text)',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-                transform: isHov ? 'translateX(4px)' : 'none',
-                boxShadow: isHov ? '0 4px 16px rgba(0,0,0,0.1)' : 'none',
-              }}
-              onMouseEnter={() => setHovered(rank)}
-              onMouseLeave={() => setHovered(null)}
+            <a key={vod.id} href={`https://vod.sooplive.com/player/${vod.id}`} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${rank <= 3 ? 'rgba(192,192,192,0.25)' : 'var(--card-border)'}`, background: RANK_BG[idx + 1], textDecoration: 'none', color: 'var(--text)', transition: 'transform 0.15s, box-shadow 0.15s', transform: isHov ? 'translateX(4px)' : 'none', boxShadow: isHov ? '0 4px 16px rgba(0,0,0,0.1)' : 'none' }}
+              onMouseEnter={() => setHovered(rank)} onMouseLeave={() => setHovered(null)}
             >
-              {/* 순위 숫자 */}
-              <span style={{
-                fontSize: '1.1rem', fontWeight: 900, color: RANK_COLORS[idx + 1],
-                width: '28px', textAlign: 'center', flexShrink: 0,
-              }}>{rank}</span>
-              {/* 썸네일 */}
-              {vod.thumb && (
-                <img
-                  src={vod.thumb} alt=""
-                  style={{ width: '72px', aspectRatio: '16/9', borderRadius: '7px', objectFit: 'cover', flexShrink: 0 }}
-                />
-              )}
-              {/* 텍스트 */}
+              <span style={{ fontSize: '1.1rem', fontWeight: 900, color: RANK_COLORS[idx + 1], width: '28px', textAlign: 'center', flexShrink: 0 }}>{rank}</span>
+              {vod.thumb && (<img src={vod.thumb} alt="" style={{ width: '72px', aspectRatio: '16/9', borderRadius: '7px', objectFit: 'cover', flexShrink: 0 }} />)}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)',
-                  marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>{vod.title}</p>
+                <p style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vod.title}</p>
                 <div style={{ display: 'flex', gap: '10px', fontSize: '0.71rem', color: 'var(--text-muted)' }}>
                   <span>👁 {Number(vod.views).toLocaleString()}회</span>
                   <span>{vod.date}</span>
@@ -335,7 +289,6 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     return result;
   }, [search, monthMap]);
 
-  // duration은 ms 단위 → 초로 변환
   const fmtDuration = (ms: number) => {
     if (!ms) return '';
     const total = Math.floor(ms / 1000);
@@ -346,7 +299,6 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     return `${m}:${String(s).padStart(2, '0')}`;
   };
 
-  // 해당 월 전체 방송시간 합계 (ms → 초 변환)
   const monthTotalSec = useMemo(() => {
     return Object.values(calData).flat().reduce((acc: number, v: any) => acc + Math.floor((v.duration || 0) / 1000), 0);
   }, [calData]);
@@ -367,7 +319,6 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
   const BORDER = '1px solid var(--card-border)';
   const GRID = 'repeat(7, minmax(0, 1fr))';
 
-  // 현재 선택된 달의 top5
   const top5 = monthTop5[validSelectedMonth] || [];
 
   return (
@@ -418,14 +369,14 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             {years.map(y => (
               <button key={y} onClick={() => {
                 setSelectedYear(y);
-                                const currentYear = String(todayDate.getFullYear());
-                                if (y === currentYear && sortedMonths.includes(currentYM)) {
-                                                    setSelectedMonth(currentYM);
-                                } else {
-                                                    const lastInYear = [...sortedMonths].filter(m => m.startsWith(y)).pop();
-                                                    if (lastInYear) setSelectedMonth(lastInYear);
-                                }
-                
+                const currentYear = String(todayDate.getFullYear());
+                if (y === currentYear && sortedMonths.includes(currentYM)) {
+                  setSelectedMonth(currentYM);
+                } else {
+                  const lastInYear = [...sortedMonths].filter(m => m.startsWith(y)).pop();
+                  if (lastInYear) setSelectedMonth(lastInYear);
+                }
+              }}
                 style={{
                   padding: '7px 20px', borderRadius: '100px', cursor: 'pointer', fontWeight: 700, fontSize: '0.92rem', transition: 'all 0.15s',
                   background: selectedYear === y ? '#EB701A' : 'var(--card)',
@@ -462,7 +413,6 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             })}
           </div>
 
-          {/* ─── 이달의 TOP 5 ─── */}
           <MonthTop5 vods={top5} month={validSelectedMonth} fmtDuration={fmtDuration} />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -471,57 +421,27 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {fmtMonthTotal(monthTotalSec) && (
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '5px',
-                  fontSize: '0.78rem', fontWeight: 700,
-                  color: '#EB701A',
-                  background: 'rgba(235,112,26,0.1)',
-                  border: '1px solid rgba(235,112,26,0.25)',
-                  padding: '4px 10px', borderRadius: '100px',
-                }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: '#EB701A', background: 'rgba(235,112,26,0.1)', border: '1px solid rgba(235,112,26,0.25)', padding: '4px 10px', borderRadius: '100px' }}>
                   🕐 {fmtMonthTotal(monthTotalSec)}
                 </span>
               )}
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: '5px',
-                fontSize: '0.78rem', fontWeight: 700,
-                color: 'var(--text-muted)',
-                background: 'var(--bg-deeper)',
-                border: '1px solid var(--card-border)',
-                padding: '4px 10px', borderRadius: '100px',
-              }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-deeper)', border: '1px solid var(--card-border)', padding: '4px 10px', borderRadius: '100px' }}>
                 📺 {totalCount}개
               </span>
             </div>
           </div>
 
           <div style={{ borderRadius: '16px', overflow: 'hidden', border: BORDER, width: '100%' }}>
-            {/* 요일 헤더 */}
             <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--bg-deeper)' }}>
               {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
-                <div key={d} style={{
-                  textAlign: 'center', padding: isMobile ? '6px 0' : '10px 0', fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 700,
-                  color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)',
-                  borderRight: i < 6 ? BORDER : 'none',
-                  borderBottom: BORDER,
-                  overflow: 'hidden',
-                }}>{d}</div>
+                <div key={d} style={{ textAlign: 'center', padding: isMobile ? '6px 0' : '10px 0', fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 700, color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)', borderRight: i < 6 ? BORDER : 'none', borderBottom: BORDER, overflow: 'hidden' }}>{d}</div>
               ))}
             </div>
-
-            {/* 날짜 그리드 */}
             <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--card)' }}>
               {Array.from({ length: firstDay }).map((_, i) => {
                 const col = i % 7;
-                return (
-                  <div key={`e${i}`} style={{
-                    minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
-                    borderRight: col < 6 ? BORDER : 'none',
-                    borderBottom: BORDER,
-                  }} />
-                );
+                return (<div key={`e${i}`} style={{ minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden', borderRight: col < 6 ? BORDER : 'none', borderBottom: BORDER }} />);
               })}
-
               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                 const vods = calData[day] || [];
                 const isToday = todayDate.getFullYear() === year && todayDate.getMonth() + 1 === month && todayDate.getDate() === day;
@@ -532,66 +452,35 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                 const isLastRow = cellIndex >= lastRowStart;
                 const hasVods = vods.length > 0;
                 return (
-                  <div
-                    key={day}
-                    onClick={() => openPanel(day, vods)}
-                    style={{
-                      background: 'var(--card)', minHeight: isMobile ? '52px' : '90px', padding: isMobile ? '4px' : '8px',
-                      overflow: 'hidden', minWidth: 0,
-                      borderRight: col < 6 ? BORDER : 'none',
-                      borderBottom: isLastRow ? 'none' : BORDER,
-                      cursor: hasVods ? 'pointer' : 'default',
-                      transition: hasVods ? 'background 0.15s' : undefined,
-                    }}
+                  <div key={day} onClick={() => openPanel(day, vods)}
+                    style={{ background: 'var(--card)', minHeight: isMobile ? '52px' : '90px', padding: isMobile ? '4px' : '8px', overflow: 'hidden', minWidth: 0, borderRight: col < 6 ? BORDER : 'none', borderBottom: isLastRow ? 'none' : BORDER, cursor: hasVods ? 'pointer' : 'default', transition: hasVods ? 'background 0.15s' : undefined }}
                     onMouseEnter={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.05)'; }}
                     onMouseLeave={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background = 'var(--card)'; }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                      <span style={{
-                        fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, lineHeight: 1,
-                        minWidth: '22px', width: '22px', height: '22px', flexShrink: 0,
-                        borderRadius: '50%',
-                        background: isToday ? '#EB701A' : 'transparent',
-                        color: isToday ? '#fff' : col === 0 ? '#ef4444' : col === 6 ? '#3b82f6' : 'var(--text-muted)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>{day}</span>
-                      {vods.length > 0 && (
-                        <span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(235,112,26,0.15)', color: '#EB701A', padding: '1px 5px', borderRadius: '100px', flexShrink: 0 }}>
-                          {vods.length}
-                        </span>
-                      )}
+                      <span style={{ fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, lineHeight: 1, minWidth: '22px', width: '22px', height: '22px', flexShrink: 0, borderRadius: '50%', background: isToday ? '#EB701A' : 'transparent', color: isToday ? '#fff' : col === 0 ? '#ef4444' : col === 6 ? '#3b82f6' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{day}</span>
+                      {vods.length > 0 && (<span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(235,112,26,0.15)', color: '#EB701A', padding: '1px 5px', borderRadius: '100px', flexShrink: 0 }}>{vods.length}</span>)}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
                       {vods.slice(0, 2).map((vod: any, vi: number) => (
-                        <span
-                          key={vi}
-                          title={vod.title}
-                          style={{ display: isMobile ? 'none' : 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}
-                        >
+                        <span key={vi} title={vod.title} style={{ display: isMobile ? 'none' : 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                           {vod.title}
                         </span>
                       ))}
                       {vods.length > 2 && !isMobile && (
-                        <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 700, padding: '1px 5px' }}>
-                          +{vods.length - 2}개 더 →
-                        </span>
+                        <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 700, padding: '1px 5px' }}>+{vods.length - 2}개 더 →</span>
                       )}
                     </div>
                   </div>
                 );
               })}
-
               {(() => {
                 const totalCells = firstDay + daysInMonth;
                 const remainder = totalCells % 7;
                 if (remainder === 0) return null;
                 const trailing = 7 - remainder;
                 return Array.from({ length: trailing }).map((_, i) => (
-                  <div key={`t${i}`} style={{
-                    minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden',
-                    borderRight: (remainder + i) < 6 ? BORDER : 'none',
-                    borderBottom: 'none',
-                  }} />
+                  <div key={`t${i}`} style={{ minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden', borderRight: (remainder + i) < 6 ? BORDER : 'none', borderBottom: 'none' }} />
                 ));
               })()}
             </div>
