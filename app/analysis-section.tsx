@@ -161,4 +161,4 @@ export default function AnalysisSection({ month, ytVideos, soopVods }: Props) {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
-}분석결과컴포넌트추가
+}
