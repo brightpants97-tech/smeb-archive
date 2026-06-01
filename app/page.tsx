@@ -3,6 +3,7 @@ import CalendarSection from './calendar-section';
 import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
+import AnalysisSection from './analysis-section';
 
 const getYoutubeVideos = unstable_cache(async () => {
   try {
@@ -261,7 +262,7 @@ export default async function Home() {
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
           <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
-          <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
+          <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />          <AnalysisSection            month={currentMonth}            ytVideos={top10.map((v: any) => ({ title: v.title, views: v.views }))}            soopVods={(monthTop5[currentMonth] || []).map((v: any) => ({ title: v.title, views: v.views || 0 }))}          />          <AnalysisSection            month={currentMonth}            ytVideos={top10.map((v: any) => ({ title: v.title, views: v.views }))}          <AnalysisSection
         </div>
       </section>
 
