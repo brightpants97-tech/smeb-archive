@@ -342,6 +342,19 @@ export default async function Home() {
                   </a>
                   {'에서 붙여넣기'}
                 </p>
+              {/* Pro 팁 */}
+              <div style={{height:'1px',background:'var(--card-border)',margin:'0 0 0 36px'}} />
+              <div style={{display:'flex',alignItems:'center',gap:'10px',paddingLeft:'36px',flexWrap:'wrap' as const}}>
+                <span style={{
+                  fontSize:'0.72rem',fontWeight:800,letterSpacing:'0.06em',
+                  color:'#fff',background:'linear-gradient(135deg,#4285f4,#a855f7)',
+                  borderRadius:'100px',padding:'2px 10px',whiteSpace:'nowrap' as const,
+                }}>PRO</span>
+                <p style={{fontSize:'0.82rem',color:'var(--text-muted)',lineHeight:1.5}}>
+                  구글 로그인 후 <span style={{color:'var(--text)',fontWeight:600}}>Flash으로도 답변은 나오지만</span>{' '}
+                  <span style={{color:'#a855f7',fontWeight:700}}>Pro 모드</span>로 변경하면 더 구체적인 분석을 받을 수 있어요
+                </p>
+              </div>
               </div>
             </div>
           </div>
