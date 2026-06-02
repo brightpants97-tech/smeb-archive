@@ -260,6 +260,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             ))}
           </div>
         </div>
+      </div>
 
       {/* 5~10위 */}
       {top5to10.length > 0 && (
