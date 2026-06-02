@@ -3,7 +3,6 @@ import CalendarSection from './calendar-section';
 import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
-import AnalysisSection from './analysis-section';
 
 const getYoutubeVideos = unstable_cache(async () => {
   try {
@@ -276,11 +275,49 @@ export default async function Home() {
           <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
-          <AnalysisSection
-            monthlyTop10={monthlyTop10}
-            sortedMonths={sortedMonths}
-            currentMonth={currentMonth}
-          />
+          <a
+            href="https://gemini.google.com/app"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              marginTop:'40px', padding:'24px 28px',
+              background:'linear-gradient(135deg,rgba(66,133,244,0.08) 0%,rgba(52,168,83,0.06) 50%,rgba(251,188,5,0.06) 100%)',
+              border:'1px solid rgba(66,133,244,0.2)',
+              borderRadius:'16px', textDecoration:'none',
+              transition:'all 0.2s', cursor:'pointer',
+              flexWrap:'wrap' as const, gap:'16px',
+            }}
+          >
+            <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
+              <div style={{
+                width:'48px', height:'48px', borderRadius:'12px', flexShrink:0,
+                background:'linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:'1.5rem',
+              }}>✨</div>
+              <div>
+                <div style={{fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'#4285f4', marginBottom:'4px'}}>
+                  AI 분석
+                </div>
+                <p style={{fontSize:'1rem', fontWeight:800, color:'var(--text)', letterSpacing:'-0.02em', lineHeight:1.2}}>
+                  Gemini로 콘텐츠 분석하기
+                </p>
+                <p style={{fontSize:'0.8rem', color:'var(--text-muted)', marginTop:'4px'}}>
+                  gemini.google.com/app → 영상 제목 붙여넣기로 직접 분석
+                </p>
+              </div>
+            </div>
+            <div style={{
+              display:'inline-flex', alignItems:'center', gap:'6px',
+              background:'linear-gradient(135deg,#4285f4,#34a853)',
+              color:'#fff', borderRadius:'100px',
+              padding:'10px 20px', fontSize:'0.85rem', fontWeight:700,
+              flexShrink:0,
+            }}>
+              Gemini 열기 ↗
+            </div>
+          </a>
         </div>
       </section>
 
