@@ -183,11 +183,11 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
   const avgViews   = Math.round(totalViews / top10.length);
   const RANK_COLOR: Record<number, string> = { 1:'#EB701A', 2:'#C0C0C0', 3:'#CD7F32', 4:'rgba(255,255,255,0.5)' };
 
+  const fmt = (n: number) => n >= 10000 ? `${(n/10000).toFixed(1)}만` : n.toLocaleString();
   const stats = [
-    { label: '이번달 영상', value: `${top10.length}개` },
-    { label: '요 조회수', value: totalViews >= 10000 ? `${(totalViews/10000).toFixed(1)}만` : totalViews.toLocaleString() },
-    { label: '1위 조회수', value: top10[0].views >= 10000 ? `${(top10[0].views/10000).toFixed(1)}만` : top10[0].views.toLocaleString() },
-    { label: '평균 조회수', value: avgViews >= 10000 ? `${(avgViews/10000).toFixed(1)}만` : avgViews.toLocaleString() },
+    { label: '총 조회수',   value: fmt(totalViews) },
+    { label: '1위 조회수',  value: fmt(top10[0].views) },
+    { label: '평균 조회수', value: fmt(avgViews) },
   ];
 
   return (
@@ -250,12 +250,12 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             <span style={{ display:'block', width:'18px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />
             <span style={{ fontSize:'0.68rem', fontWeight:800, letterSpacing:'0.14em', textTransform:'uppercase' as const, color:'#EB701A' }}>BY THE NUMBERS</span>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
             {stats.map((s, i) => (
               <div key={i} style={{ paddingRight: i < 3 ? '20px' : '0', paddingLeft: i > 0 ? '20px' : '0',
                 borderRight: i < 3 ? '1px dashed var(--card-border)' : 'none' }}>
-                <p style={{ fontSize:'clamp(1.4rem,2.5vw,2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'6px' }}>{s.value}</p>
-                <p style={{ fontSize:'0.72rem', color:'var(--text-muted)', fontWeight:500, lineHeight:1.4 }}>{s.label}</p>
+                <p style={{ fontSize:'clamp(2rem,3.5vw,3rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'6px' }}>{s.value}</p>
+                <p style={{ fontSize:'0.82rem', color:'var(--text-muted)', fontWeight:500, lineHeight:1.4 }}>{s.label}</p>
               </div>
             ))}
           </div>
