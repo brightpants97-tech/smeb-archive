@@ -140,6 +140,12 @@ export default async function Home() {
   [...new Set(vods.map((v: any) => v.date.substring(0, 7)))].forEach(mk => { const mv = vods.filter((v: any) => v.date.startsWith(mk)); monthTop5[mk] = [...mv].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5); });
   const sortedMonths = Object.keys(monthMap).sort();
 
+  // 프롬프트 카드용: 데이터가 있는 가장 최근 달 선택
+  const allMonthsWithData = [...new Set([...Object.keys(monthlyTop10), ...sortedMonths])].sort().reverse();
+  const promptMonth = allMonthsWithData.find(m => (monthlyTop10[m]?.length || 0) > 0 || (monthTop5[m]?.length || 0) > 0) || currentMonth;
+  const promptYtVideos = (monthlyTop10[promptMonth] || []).slice(0, 10);
+  const promptSoopVods = (monthTop5[promptMonth] || []).slice(0, 5);
+
   return (
     <>
       <style>{`
@@ -321,9 +327,9 @@ export default async function Home() {
               </div>
             </a>
             <PromptCopyCard
-              ytVideos={monthlyTop10[currentMonth] || []}
-              soopVods={monthTop5[currentMonth] || []}
-              currentMonth={currentMonth}
+              ytVideos={promptYtVideos}
+              soopVods={promptSoopVods}
+              currentMonth={promptMonth}
             />
           </div>
         </div>
