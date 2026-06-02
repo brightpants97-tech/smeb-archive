@@ -27,6 +27,7 @@ export default function PromptCopyCard({ ytVideos, soopVods, currentMonth }: Pro
   ).join('\n');
 
   const prompt = `아래는 스맵(SMEB) 스트리머의 ${monthLabel} 콘텐츠 데이터야.
+(사이트: https://www.smebarchive.xyz/)
 
 [유튜브 TOP${ytVideos.length || 10}]
 ${ytList || '(데이터 없음)'}
