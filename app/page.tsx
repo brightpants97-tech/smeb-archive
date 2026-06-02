@@ -253,8 +253,8 @@ export default async function Home() {
       )}
 
       <section className="mob-hero" style={{padding:'clamp(3rem,8vw,6rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
-        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(2rem,5vw,6rem)'}}>
-          <div style={{flex:1,minWidth:0}}>
+        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(2rem,4vw,4rem)'}}>
+          <div style={{flexShrink:0,width:'40%',minWidth:0}}>
             <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
               <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
               <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
