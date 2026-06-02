@@ -148,7 +148,7 @@ export default async function Home() {
         html{scroll-behavior:smooth;overflow-x:hidden;}
         body{font-family:'Pretendard',sans-serif;transition:background 0.3s,color 0.3s;overflow-x:hidden;}
         a{text-decoration:none;color:inherit;}
-        :root{--bg:#ffffff;--bg-section:#ffffff;--bg-deeper:#F0F0F0;--card:#ffffff;--card-border:rgba(0,0,0,0.08);--text:#1A1A1A;--text-inv:#1A1A1A;--text-muted:#888888;--text-sub:rgba(0,0,0,0.45);--accent:#EB701A;--header-bg:rgba(255,255,255,0.85);--header-border:rgba(0,0,0,0.08);--nav-text:rgba(0,0,0,0.55);--footer-bg:#1A1A1A;}
+        :root{--bg:#FAF4E8;--bg-section:#FAF4E8;--bg-deeper:#EDE3D3;--card:#FFFBF4;--card-border:rgba(0,0,0,0.08);--text:#1A1A1A;--text-inv:#1A1A1A;--text-muted:#888888;--text-sub:rgba(0,0,0,0.45);--accent:#EB701A;--header-bg:rgba(250,244,232,0.9);--header-border:rgba(0,0,0,0.08);--nav-text:rgba(0,0,0,0.55);--footer-bg:#1A1A1A;}
         [data-theme="dark"]{--bg:#111111;--bg-section:#1A1A1A;--bg-deeper:#0d0d0d;--card:#1e1e1e;--card-border:rgba(255,255,255,0.08);--text:#F0F0F0;--text-inv:#ffffff;--text-muted:#555555;--text-sub:rgba(255,255,255,0.4);--accent:#EB701A;--header-bg:rgba(15,15,15,0.85);--header-border:rgba(255,255,255,0.08);--nav-text:rgba(255,255,255,0.55);--footer-bg:#080808;}
         body{background:var(--bg);color:var(--text);}
         .sec-main{background:var(--bg-section);transition:background 0.3s;}
@@ -162,7 +162,7 @@ export default async function Home() {
         .sec-sub-text{color:var(--text-sub);transition:color 0.3s;}
         .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
         .eyebrow::before{content:'';display:block;width:24px;height:2px;background:var(--accent);border-radius:2px;}
-        .section-title{font-size:clamp(1.8rem,3vw,2.4rem);font-weight:900;letter-spacing:-0.04em;line-height:1.1;}
+        .section-title{font-size:clamp(2rem,3.5vw,2.8rem);font-weight:900;letter-spacing:-0.06em;line-height:1;font-stretch:condensed;}
         .fade-in-up{opacity:0;transform:translateY(32px);transition:opacity 0.65s cubic-bezier(0.22,1,0.36,1),transform 0.65s cubic-bezier(0.22,1,0.36,1);}
         .fade-in-up.visible{opacity:1;transform:translateY(0);}
         .logo-text{color:var(--text-inv);transition:color 0.3s;}
