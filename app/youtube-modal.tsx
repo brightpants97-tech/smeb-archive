@@ -167,6 +167,7 @@ function MonthPicker({
 // ── TOP 10 렌더러 ──────────────────────────────────────────────────────────
 function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: string) => void; isMobile: boolean }) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const [imgHov, setImgHov] = useState<number | null>(null);
 
   if (top10.length === 0) {
     return (
@@ -176,68 +177,89 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
     );
   }
 
-  const top1 = top10[0];
-  const top2to4 = top10.slice(1, 4);
+  const top4     = top10.slice(0, 4);
   const top5to10 = top10.slice(4, 10);
+  const totalViews = top10.reduce((s, v) => s + v.views, 0);
+  const avgViews   = Math.round(totalViews / top10.length);
+  const RANK_COLOR: Record<number, string> = { 1:'#EB701A', 2:'#C0C0C0', 3:'#CD7F32', 4:'rgba(255,255,255,0.5)' };
+
+  const stats = [
+    { label: '이번달 영상', value: `${top10.length}개` },
+    { label: '요 조회수', value: totalViews >= 10000 ? `${(totalViews/10000).toFixed(1)}만` : totalViews.toLocaleString() },
+    { label: '1위 조회수', value: top10[0].views >= 10000 ? `${(top10[0].views/10000).toFixed(1)}만` : top10[0].views.toLocaleString() },
+    { label: '평균 조회수', value: avgViews >= 10000 ? `${(avgViews/10000).toFixed(1)}만` : avgViews.toLocaleString() },
+  ];
 
   return (
     <>
-      {/* 1~4위 + LIVE */}
-      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr 0.75fr', gap: isMobile ? '12px' : '20px', alignItems:'start' }}>
-        {/* 1위 */}
-        <div onClick={() => onPlay(top1.id)}
-          style={{ cursor:'pointer', borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', transition:'transform 0.2s, box-shadow 0.2s', background:'var(--card)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.2)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
-          <div style={{ position:'relative' }}>
-            <img src={top1.thumbnail} alt={top1.title} style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
-            <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)' }} />
-            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <div style={{ width:'60px', height:'60px', borderRadius:'50%', background:'rgba(235,112,26,0.92)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 10px rgba(235,112,26,0.18)' }}>
-                <span style={{ fontSize:'1.4rem', marginLeft:'5px', color:'#fff' }}>▶</span>
+      {/* 근일 갤러리 그리드 (1~4위) */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:'12px' }}>
+        {top4.map((video, i) => {
+          const rank = i + 1;
+          const isHov = imgHov === rank;
+          return (
+            <div key={video.id} onClick={() => onPlay(video.id)}
+              onMouseEnter={() => setImgHov(rank)}
+              onMouseLeave={() => setImgHov(null)}
+              style={{ position:'relative', cursor:'pointer', borderRadius:'16px', overflow:'hidden', background:'#111',
+                boxShadow: isHov ? '0 20px 48px rgba(0,0,0,0.35)' : '0 2px 12px rgba(0,0,0,0.15)',
+                transform: isHov ? 'translateY(-6px)' : 'none',
+                transition:'transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s',
+              }}>
+              <img src={video.thumbnail} alt={video.title}
+                style={{ width:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block',
+                  transform: isHov ? 'scale(1.06)' : 'scale(1)',
+                  transition:'transform 0.4s cubic-bezier(0.22,1,0.36,1)',
+                }} />
+              <div style={{ position:'absolute', inset:0,
+                background: isHov
+                  ? 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%)'
+                  : 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)',
+                transition:'background 0.3s',
+              }} />
+              <div style={{ position:'absolute', top:'12px', left:'12px',
+                background: rank === 1 ? '#EB701A' : 'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)',
+                color: rank === 1 ? '#fff' : (RANK_COLOR[rank] || '#fff'),
+                fontWeight:900, fontSize: rank === 1 ? '0.9rem' : '0.82rem',
+                width:'32px', height:'32px', borderRadius:'50%',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                border: rank <= 3 ? `2px solid ${RANK_COLOR[rank]}` : '2px solid rgba(255,255,255,0.2)',
+                boxShadow: rank === 1 ? '0 0 0 3px rgba(235,112,26,0.3)' : 'none',
+              }}>{rank}</div>
+              {rank === 1 && (
+                <div style={{ position:'absolute', top:'12px', right:'12px',
+                  background:'#EB701A', color:'#fff', fontSize:'0.6rem', fontWeight:800,
+                  padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.08em',
+                }}>BEST</div>
+              )}
+              <div style={{ position:'absolute', bottom:'12px', left:'12px', right:'12px' }}>
+                <p style={{ fontWeight:700, fontSize: isMobile ? '0.78rem' : '0.82rem', lineHeight:1.35, color:'#fff', marginBottom:'6px',
+                  display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden',
+                } as React.CSSProperties}>{video.title}</p>
+                <span style={{ fontSize:'0.72rem', fontWeight:700, color:'rgba(255,255,255,0.75)' }}>👁 {video.views.toLocaleString()}회</span>
               </div>
             </div>
-            <div style={{ position:'absolute', top:'14px', left:'14px', background:'#EB701A', color:'#fff', fontWeight:900, fontSize:'0.85rem', width:'38px', height:'38px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 3px rgba(235,112,26,0.35)' }}>1</div>
-            <div style={{ position:'absolute', top:'14px', right:'14px', background:'rgba(235,112,26,0.85)', backdropFilter:'blur(8px)', color:'#fff', fontSize:'0.62rem', fontWeight:800, padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.08em' }}>BEST</div>
-            <div style={{ position:'absolute', bottom:'16px', left:'16px', right:'16px' }}>
-              <p style={{ fontWeight:800, fontSize:'1.05rem', lineHeight:1.35, color:'#fff', marginBottom:'10px' }}>{top1.title}</p>
-              <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                <span style={{ fontSize:'0.8rem', fontWeight:700, color:'#fff', background:'rgba(235,112,26,0.85)', backdropFilter:'blur(8px)', padding:'3px 10px', borderRadius:'100px' }}>👁 {top1.views.toLocaleString()}회</span>
-                <span style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.55)' }}>{new Date(top1.publishedAt).toLocaleDateString('ko-KR')}</span>
+          );
+        })}
+      </div>
+
+      {/* 통계 바 + LIVE */}
+      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '3fr 1fr', gap:'16px', marginTop:'20px', alignItems:'stretch' }}>
+        <div style={{ borderRadius:'16px', border:'1px solid var(--card-border)', background:'var(--card)', padding:'20px 24px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'18px' }}>
+            <span style={{ display:'block', width:'18px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />
+            <span style={{ fontSize:'0.68rem', fontWeight:800, letterSpacing:'0.14em', textTransform:'uppercase' as const, color:'#EB701A' }}>BY THE NUMBERS</span>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>
+            {stats.map((s, i) => (
+              <div key={i} style={{ paddingRight: i < 3 ? '20px' : '0', paddingLeft: i > 0 ? '20px' : '0',
+                borderRight: i < 3 ? '1px dashed var(--card-border)' : 'none' }}>
+                <p style={{ fontSize:'clamp(1.4rem,2.5vw,2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'6px' }}>{s.value}</p>
+                <p style={{ fontSize:'0.72rem', color:'var(--text-muted)', fontWeight:500, lineHeight:1.4 }}>{s.label}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
-
-        {/* 2~4위 */}
-        <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap: isMobile ? '0' : '10px', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', overflow: 'hidden', background: isMobile ? 'var(--card)' : 'transparent' }}>
-          {top2to4.map((video, i) => {
-            const rank = i + 2;
-            return (
-              <div key={video.id} onClick={() => onPlay(video.id)}
-                style={{ display:'flex', overflow:'hidden', borderRadius:'14px', border:'1px solid var(--card-border)', background:'var(--card)', cursor:'pointer', transition:'transform 0.18s, box-shadow 0.18s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 10px 28px rgba(0,0,0,0.15)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
-                <div style={{ position:'relative', flexShrink:0, width:'140px' }}>
-                  <img src={video.thumbnail} alt={video.title} style={{ width:'140px', height:'100%', objectFit:'cover', display:'block' }} />
-                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.15)' }}>
-                    <div style={{ width:'32px', height:'32px', borderRadius:'50%', background:'rgba(235,112,26,0.9)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <span style={{ fontSize:'0.8rem', marginLeft:'3px', color:'#fff' }}>▶</span>
-                    </div>
-                  </div>
-                  <div style={{ position:'absolute', top:'8px', left:'8px', background: RANK_BADGE[rank] || '#3C3C3C', color:'#fff', fontWeight:900, fontSize:'0.75rem', width:'26px', height:'26px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>{rank}</div>
-                </div>
-                <div style={{ flex:1, minWidth:0, padding:'12px 14px', display:'flex', flexDirection:'column', justifyContent:'center', gap:'5px' }}>
-                  <p style={{ fontWeight:700, fontSize:'0.85rem', lineHeight:1.4, color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                  <p style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A', margin:0 }}>👁 {video.views.toLocaleString()}회</p>
-                  <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', margin:0 }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* LIVE NOW */}
         <LiveSection />
       </div>
 
@@ -245,27 +267,24 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
       {top5to10.length > 0 && (
         <div style={{ marginTop:'16px', borderRadius:'16px', border:'1px solid var(--card-border)', background:'var(--card)', overflow:'hidden' }}>
           <div style={{ padding:'10px 18px', borderBottom:'1px solid var(--card-border)', display:'flex', alignItems:'center', gap:'8px' }}>
-            <span style={{ fontSize:'0.72rem', fontWeight:800, color:'#EB701A', letterSpacing:'0.08em', textTransform:'uppercase' }}>🏅 5위 ~ 10위</span>
+            <span style={{ fontSize:'0.72rem', fontWeight:800, color:'#EB701A', letterSpacing:'0.08em', textTransform:'uppercase' as const }}>🎖 5위 ~ 10위</span>
           </div>
           <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)' }}>
-            {top5to10.map((video, i) => {
-              const rank = i + 5;
+            {top5to10.map((video, idx) => {
+              const rank = idx + 5;
               const isHov = hovered === rank;
-              const isLast = i >= 4;
-              const borderRight = (i % 2) === 0;
+              const isLast = idx >= 4;
+              const borderRight = (idx % 2) === 0;
               return (
                 <div key={video.id} onClick={() => onPlay(video.id)}
                   onMouseEnter={() => setHovered(rank)}
                   onMouseLeave={() => setHovered(null)}
-                  style={{
-                    display:'flex', gap:'14px', alignItems:'center',
-                    padding:'14px 18px', cursor:'pointer',
+                  style={{ display:'flex', gap:'14px', alignItems:'center', padding:'14px 18px', cursor:'pointer',
                     background: isHov ? 'rgba(235,112,26,0.04)' : 'transparent',
                     borderRight: (!isMobile && borderRight) ? '1px solid var(--card-border)' : 'none',
                     borderBottom: !isLast ? '1px solid var(--card-border)' : 'none',
-                    transition:'background 0.15s',
-                  }}>
-                  <span style={{ fontSize:'1.3rem', fontWeight:900, color: rank <= 6 ? 'var(--text-muted)' : 'var(--text-muted)', width:'28px', flexShrink:0, textAlign:'center' }}>{rank}</span>
+                    transition:'background 0.15s' }}>
+                  <span style={{ fontSize:'1.3rem', fontWeight:900, color:'var(--text-muted)', width:'28px', flexShrink:0, textAlign:'center' }}>{rank}</span>
                   <img src={video.thumbnail} alt="" style={{ width:'110px', aspectRatio:'16/9', objectFit:'cover', borderRadius:'8px', flexShrink:0 }} />
                   <div style={{ flex:1, minWidth:0 }}>
                     <p style={{ fontSize:'0.88rem', fontWeight:700, color:'var(--text)', lineHeight:1.4, marginBottom:'5px', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
@@ -280,6 +299,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
     </>
   );
 }
+
 
 export default function YoutubeSection({ videos, top10, notices, monthlyTop10, today }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
