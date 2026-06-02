@@ -243,8 +243,8 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         })}
       </div>
 
-      {/* 통계 바 + LIVE */}
-      <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '3fr 1fr', gap:'16px', marginTop:'20px', alignItems:'stretch' }}>
+      {/* 통계 바 */}
+      <div style={{ marginTop:'20px' }}>
         <div style={{ borderRadius:'16px', border:'1px solid var(--card-border)', background:'var(--card)', padding:'20px 24px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'18px' }}>
             <span style={{ display:'block', width:'18px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />
@@ -260,8 +260,6 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             ))}
           </div>
         </div>
-        <LiveSection />
-      </div>
 
       {/* 5~10위 */}
       {top5to10.length > 0 && (
