@@ -180,7 +180,7 @@ export default async function Home() {
           .mob-nav { gap: 0.6rem !important; }
           .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
           .mob-hero { padding: clamp(40px,8vw,80px) 1.2rem !important; }
-          .mob-hero h1 { font-size: clamp(2.2rem,11vw,3.5rem) !important; }
+          .mob-hero h1 span { font-size: clamp(3.5rem,22vw,8rem) !important; } .mob-hero h1 em { font-size: clamp(2rem,13vw,5rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
         }
@@ -251,34 +251,13 @@ export default async function Home() {
         </a>
       )}
 
-      <section className="sec-main mob-hero" style={{padding:'clamp(60px,10vw,120px) clamp(1.5rem,5vw,3rem)',textAlign:'center',position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'linear-gradient(rgba(235,112,26,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(235,112,26,0.06) 1px, transparent 1px)',backgroundSize:'40px 40px'}} />
-        <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'800px',height:'400px',background:'radial-gradient(ellipse, rgba(235,112,26,0.12) 0%, transparent 65%)',pointerEvents:'none'}} />
-        <div style={{position:'absolute',top:0,left:0,right:0,height:'2px',background:'linear-gradient(to right, transparent 0%, #EB701A 40%, #ff8c3a 60%, transparent 100%)'}} />
-        <div className="fade-in-up" style={{position:'relative',zIndex:1}}>
-          <div style={{display:'inline-flex',alignItems:'center',gap:'8px',background:'rgba(235,112,26,0.08)',border:'1px solid rgba(235,112,26,0.2)',backdropFilter:'blur(12px)',color:'#EB701A',fontSize:'0.72rem',fontWeight:700,padding:'0.4rem 1rem',borderRadius:'100px',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:'1.5rem'}}>
-            <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#EB701A',display:'inline-block',animation:'pulse 2s infinite'}} />
-            SOOP 스트리머 · 팬 아카이브
-          </div>
-          {/* 이미지 인터리브 히어로 */}
-          <div style={{position:'relative',width:'100%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:'1.2rem',minHeight:'clamp(80px,10vw,130px)'}}>
-            <div className="mob-hide" style={{position:'absolute',left:'clamp(0px,3vw,80px)',top:'50%',transform:'translateY(-50%)',width:'clamp(80px,10vw,140px)',zIndex:2}}>
-              <img src="https://profile.img.sooplive.com/LOGO/to/townboy/townboy.jpg" alt="스맵" style={{width:'100%',aspectRatio:'1/1',objectFit:'cover',borderRadius:'14px',border:'3px solid rgba(235,112,26,0.5)',boxShadow:'0 12px 36px rgba(0,0,0,0.18)'}} />
-            </div>
-            {videos[0]?.thumbnail && (
-              <div className="mob-hide" style={{position:'absolute',right:'clamp(0px,3vw,80px)',top:'50%',transform:'translateY(-50%)',width:'clamp(100px,13vw,180px)',zIndex:2}}>
-                <img src={videos[0].thumbnail} alt={videos[0].title} style={{width:'100%',aspectRatio:'16/9',objectFit:'cover',borderRadius:'14px',border:'3px solid rgba(235,112,26,0.25)',boxShadow:'0 12px 36px rgba(0,0,0,0.18)'}} />
-              </div>
-            )}
-            <h1 className="sec-title" style={{fontSize:'clamp(3rem,7vw,5.5rem)',fontWeight:900,letterSpacing:'-0.05em',lineHeight:1,textAlign:'center'}}>
-              <span style={{color:'#EB701A'}}>SMEB</span>{' '}
-              <em style={{fontStyle:'italic',position:'relative',display:'inline-block'}}>
-                ARCHIVE
-                <span style={{position:'absolute',bottom:'-4px',left:0,right:0,height:'3px',background:'linear-gradient(to right, #EB701A, transparent)',borderRadius:'2px'}} />
-              </em>
-            </h1>
-          </div>
-          <p className="sec-sub-text" style={{fontSize:'1rem',marginBottom:'2rem'}}>전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기</p>
+      <section className="mob-hero" style={{padding:'clamp(3rem,8vw,6rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
+        <div className="fade-in-up">
+          <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
+            <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
+            <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
+          </h1>
+          <p style={{fontSize:'0.82rem',color:'rgba(255,255,255,0.3)',marginTop:'2rem',letterSpacing:'0.1em',textTransform:'uppercase' as const}}>전 프로게이머 스맵 송경호 · 유튜브 · SOOP 다시보기</p>
         </div>
       </section>
 
