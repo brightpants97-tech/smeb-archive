@@ -149,7 +149,7 @@ export default async function Home() {
         body{font-family:'Pretendard',sans-serif;transition:background 0.3s,color 0.3s;overflow-x:hidden;}
         a{text-decoration:none;color:inherit;}
         :root{--bg:#FAF4E8;--bg-section:#FAF4E8;--bg-deeper:#EDE3D3;--card:#FFFBF4;--card-border:rgba(0,0,0,0.08);--text:#1A1A1A;--text-inv:#1A1A1A;--text-muted:#888888;--text-sub:rgba(0,0,0,0.45);--accent:#EB701A;--header-bg:rgba(250,244,232,0.9);--header-border:rgba(0,0,0,0.08);--nav-text:rgba(0,0,0,0.55);--footer-bg:#1A1A1A;}
-        [data-theme="dark"]{--bg:#111111;--bg-section:#1A1A1A;--bg-deeper:#0d0d0d;--card:#1e1e1e;--card-border:rgba(255,255,255,0.08);--text:#F0F0F0;--text-inv:#ffffff;--text-muted:#555555;--text-sub:rgba(255,255,255,0.4);--accent:#EB701A;--header-bg:rgba(15,15,15,0.85);--header-border:rgba(255,255,255,0.08);--nav-text:rgba(255,255,255,0.55);--footer-bg:#080808;}
+        [data-theme="dark"]{--bg:#0a0a0a;--bg-section:#111111;--bg-deeper:#080808;--card:#161616;--card-border:rgba(255,255,255,0.06);--text:#EDEDED;--text-inv:#ffffff;--text-muted:#666666;--text-sub:rgba(255,255,255,0.35);--accent:#EB701A;--header-bg:rgba(8,8,8,0.92);--header-border:rgba(255,255,255,0.05);--nav-text:rgba(255,255,255,0.5);--footer-bg:#050505;}
         body{background:var(--bg);color:var(--text);}
         .sec-main{background:var(--bg-section);transition:background 0.3s;}
         .sec-footer{background:var(--footer-bg);transition:background 0.3s;}
@@ -260,13 +260,24 @@ export default async function Home() {
             <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#EB701A',display:'inline-block',animation:'pulse 2s infinite'}} />
             SOOP 스트리머 · 팬 아카이브
           </div>
-          <h1 className="sec-title" style={{fontSize:'clamp(3rem,7vw,5.5rem)',fontWeight:900,letterSpacing:'-0.05em',lineHeight:1,marginBottom:'1.2rem'}}>
-            <span style={{color:'#EB701A'}}>SMEB</span>{' '}
-            <span style={{position:'relative',display:'inline-block'}}>
-              ARCHIVE
-              <span style={{position:'absolute',bottom:'-4px',left:0,right:0,height:'3px',background:'linear-gradient(to right, #EB701A, transparent)',borderRadius:'2px'}} />
-            </span>
-          </h1>
+          {/* 이미지 인터리브 히어로 */}
+          <div style={{position:'relative',width:'100%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:'1.2rem',minHeight:'clamp(80px,10vw,130px)'}}>
+            <div className="mob-hide" style={{position:'absolute',left:'clamp(0px,3vw,80px)',top:'50%',transform:'translateY(-50%)',width:'clamp(80px,10vw,140px)',zIndex:2}}>
+              <img src="https://profile.img.sooplive.com/LOGO/to/townboy/townboy.jpg" alt="스맵" style={{width:'100%',aspectRatio:'1/1',objectFit:'cover',borderRadius:'14px',border:'3px solid rgba(235,112,26,0.5)',boxShadow:'0 12px 36px rgba(0,0,0,0.18)'}} />
+            </div>
+            {videos[0]?.thumbnail && (
+              <div className="mob-hide" style={{position:'absolute',right:'clamp(0px,3vw,80px)',top:'50%',transform:'translateY(-50%)',width:'clamp(100px,13vw,180px)',zIndex:2}}>
+                <img src={videos[0].thumbnail} alt={videos[0].title} style={{width:'100%',aspectRatio:'16/9',objectFit:'cover',borderRadius:'14px',border:'3px solid rgba(235,112,26,0.25)',boxShadow:'0 12px 36px rgba(0,0,0,0.18)'}} />
+              </div>
+            )}
+            <h1 className="sec-title" style={{fontSize:'clamp(3rem,7vw,5.5rem)',fontWeight:900,letterSpacing:'-0.05em',lineHeight:1,textAlign:'center'}}>
+              <span style={{color:'#EB701A'}}>SMEB</span>{' '}
+              <em style={{fontStyle:'italic',position:'relative',display:'inline-block'}}>
+                ARCHIVE
+                <span style={{position:'absolute',bottom:'-4px',left:0,right:0,height:'3px',background:'linear-gradient(to right, #EB701A, transparent)',borderRadius:'2px'}} />
+              </em>
+            </h1>
+          </div>
           <p className="sec-sub-text" style={{fontSize:'1rem',marginBottom:'2rem'}}>전 프로게이머 스맵 송경호의 유튜브 · SOOP 다시보기</p>
         </div>
       </section>
@@ -274,7 +285,7 @@ export default async function Home() {
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
           <div className="eyebrow">월별 BEST</div>
-          <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
+          <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 <em style={{fontStyle:'italic'}}>TOP 10</em></h2>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
           {/* 제미나이 사용 안내 카드 */}
           <div style={{
@@ -406,11 +417,23 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* 오렌지 풀블리드 구분 섹션 */}
+      <section style={{background:'#EB701A',padding:'36px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative'}}>
+        <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px)',backgroundSize:'40px 40px',pointerEvents:'none'}} />
+        <div style={{maxWidth:'1400px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'2rem',flexWrap:'wrap' as const,position:'relative',zIndex:1}}>
+          <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A'}}>
+            SOOP <em style={{fontStyle:'italic'}}>다시보기</em>
+          </h2>
+          <p style={{fontSize:'0.92rem',color:'rgba(0,0,0,0.5)',maxWidth:'260px',lineHeight:1.6,fontWeight:500}}>
+            방송별 다시보기를 월별 캘린더로 정리했어요
+          </p>
+        </div>
+      </section>
       <section id="soopcal" className="sec-main mob-cal-section" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
         <div style={{position:'absolute',bottom:'10%',right:'5%',width:'500px',height:'400px',background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)',pointerEvents:'none'}} />
         <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
           <div className="eyebrow">SOOP 다시보기</div>
-          <h2 className="section-title sec-title" style={{marginBottom:'40px'}}>다시보기 캘린더</h2>
+          <h2 className="section-title sec-title" style={{marginBottom:'40px'}}>다시보기 <em style={{fontStyle:'italic'}}>캘린더</em></h2>
           <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
