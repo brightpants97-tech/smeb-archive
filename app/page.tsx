@@ -4,6 +4,7 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 import PromptCopyCard from './prompt-copy-card';
+import HeroLiveCard from './hero-live-card';
 
 const getYoutubeVideos = unstable_cache(async () => {
   try {
@@ -252,12 +253,17 @@ export default async function Home() {
       )}
 
       <section className="mob-hero" style={{padding:'clamp(3rem,8vw,6rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
-        <div className="fade-in-up">
-          <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
-            <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
-            <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
-          </h1>
-          <p style={{fontSize:'0.82rem',color:'rgba(255,255,255,0.3)',marginTop:'2rem',letterSpacing:'0.1em',textTransform:'uppercase' as const}}>전 프로게이머 스맵 송경호 · 유튜브 · SOOP 다시보기</p>
+        <div className="fade-in-up" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'clamp(2rem,4vw,5rem)'}}>
+          <div style={{flex:1,minWidth:0}}>
+            <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
+              <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
+              <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
+            </h1>
+            <p style={{fontSize:'0.82rem',color:'rgba(255,255,255,0.3)',marginTop:'2rem',letterSpacing:'0.1em',textTransform:'uppercase' as const}}>전 프로게이머 스맵 송경호 · 유튜브 · SOOP 다시보기</p>
+          </div>
+          <div className="mob-hide" style={{flexShrink:0,width:'clamp(180px,18vw,240px)'}}>
+            <HeroLiveCard />
+          </div>
         </div>
       </section>
 
