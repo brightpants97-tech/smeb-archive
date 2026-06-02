@@ -18,32 +18,30 @@ export default function PromptCopyCard({ ytVideos, soopVods, currentMonth }: Pro
   const [yr, mo] = currentMonth.split('-');
   const monthLabel = `${yr}년 ${parseInt(mo)}월`;
 
-  const ytList = ytVideos.slice(0, 10).map((v, i) =>
+  const ytList = ytVideos.map((v, i) =>
     `${i + 1}. ${v.title} (조회수: ${Number(v.views).toLocaleString('ko-KR')})`
   ).join('\n');
 
-  const soopList = soopVods.slice(0, 5).map((v, i) =>
+  const soopList = soopVods.map((v, i) =>
     `${i + 1}. ${v.title} (조회수: ${Number(v.views).toLocaleString('ko-KR')})`
   ).join('\n');
 
   const prompt = `아래는 스맵(SMEB) 스트리머의 ${monthLabel} 콘텐츠 데이터야.
 
-[유튜브 TOP10]
+[유튜브 TOP${ytVideos.length || 10}]
 ${ytList || '(데이터 없음)'}
 
-[SOOP 다시보기 TOP5]
+[SOOP 다시보기 TOP${soopVods.length || 5}]
 ${soopList || '(데이터 없음)'}
 
 위 데이터를 기반으로 아래 6가지를 분석해줘:
 
-1. 유튜브 TOP10 키워드 10가지: 각 영상의 주요 상황을 키워드로 설명
-2. SOOP 다시보기 TOP5 키워드 5가지: 각 영상의 주요 상황을 키워드로 설명
-3. 유튜브와 SOOP에서 이번달 주된 콘텐츠 방향성 분석
-4. SWOT 분석 (강점/약점/기회/위협 각 2~3가지씩)
-5. SWOT을 참고한 콘텐츠 5가지 추천 (생방송에서 가능한 현실적이고 구체적인 내용으로)
-6. 이번 달을 한 문장으로 정리하는 명언
-
-분석 결과는 한국어로 작성해줘.`;
+1. 유튜브 TOP10 키워드 10가지: 영상 주요상황 설명
+2. SOOP 다시보기 캘린더 TOP5의 키워드 5가지: 영상 주요상황 설명
+3. 유튜브와 SOOP에서 이번달 주된 콘텐츠
+4. swot 분석
+5. swot을 참고한 콘텐츠 5가지 추천(생방송에서 가능한 현실성 있는 콘텐츠, 구체적으로)
+6. 한 문장으로 정리하는 이번 달(명언)`;
 
   const handleCopy = async () => {
     try {
@@ -97,7 +95,7 @@ ${soopList || '(데이터 없음)'}
             {monthLabel} 분석 질문 복사
           </p>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            {copied ? '제미나이에 붙여넣기 하세요!' : `유튜브 ${ytVideos.slice(0,10).length}개 · SOOP ${soopVods.slice(0,5).length}개 데이터 포함`}
+            {copied ? '제미나이에 붙여넣기 하세요!' : `유튜브 ${ytVideos.length}개 · SOOP ${soopVods.length}개 데이터 포함`}
           </p>
         </div>
       </div>
