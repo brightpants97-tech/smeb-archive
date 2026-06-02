@@ -282,6 +282,69 @@ export default async function Home() {
           <div className="eyebrow">월별 BEST</div>
           <h2 className="section-title sec-title" style={{marginBottom:'28px'}}>유튜브 TOP 10</h2>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
+          {/* 제미나이 사용 안내 카드 */}
+          <div style={{
+            marginTop:'40px', padding:'20px 24px',
+            background:'linear-gradient(135deg,rgba(66,133,244,0.06) 0%,rgba(52,168,83,0.04) 100%)',
+            border:'1px solid rgba(66,133,244,0.15)',
+            borderRadius:'16px',
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'16px'}}>
+              <span style={{fontSize:'1rem'}}>&#128161;</span>
+              <span style={{fontSize:'0.72rem',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase' as const,color:'#4285f4'}}>
+                Gemini 사용 방법
+              </span>
+            </div>
+            <div style={{display:'flex',flexDirection:'column' as const,gap:'12px'}}>
+              {/* STEP 1 */}
+              <div style={{display:'flex',alignItems:'flex-start',gap:'12px'}}>
+                <div style={{
+                  flexShrink:0,width:'24px',height:'24px',borderRadius:'50%',
+                  background:'linear-gradient(135deg,#4285f4,#34a853)',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  fontSize:'0.72rem',fontWeight:800,color:'#fff',marginTop:'1px',
+                }}>1</div>
+                <div>
+                  <div style={{display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap' as const}}>
+                    <span style={{fontSize:'0.72rem',fontWeight:700,color:'#4285f4',background:'rgba(66,133,244,0.1)',borderRadius:'100px',padding:'2px 8px',whiteSpace:'nowrap' as const}}>
+                      최초 1회만
+                    </span>
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:'6px',marginTop:'6px',flexWrap:'wrap' as const}}>
+                    {['설정','개인 인텔리전스','연결된 앱','Google Workspace 활성화'].map((step, i, arr) => (
+                      <span key={i} style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                        <span style={{
+                          fontSize:'0.8rem',fontWeight:600,color:'var(--text)',
+                          background:'var(--bg-deeper)',borderRadius:'8px',padding:'3px 10px',
+                          whiteSpace:'nowrap' as const,
+                        }}>{step}</span>
+                        {i < arr.length - 1 && <span style={{color:'var(--text-muted)',fontSize:'0.8rem',fontWeight:700}}>›</span>}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* divider */}
+              <div style={{height:'1px',background:'var(--card-border)',margin:'0 0 0 36px'}} />
+              {/* STEP 2 */}
+              <div style={{display:'flex',alignItems:'flex-start',gap:'12px'}}>
+                <div style={{
+                  flexShrink:0,width:'24px',height:'24px',borderRadius:'50%',
+                  background:'linear-gradient(135deg,#EB701A,#ff8c3a)',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  fontSize:'0.72rem',fontWeight:800,color:'#fff',marginTop:'1px',
+                }}>2</div>
+                <p style={{fontSize:'0.85rem',color:'var(--text)',lineHeight:1.6,marginTop:'2px'}}>
+                  <span style={{fontWeight:700}}>분석 질문 카드</span>를 클릭해서 복사 →{' '}
+                  <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer"
+                    style={{color:'#4285f4',fontWeight:700,textDecoration:'underline',textUnderlineOffset:'3px'}}>
+                    gemini.google.com/app
+                  </a>
+                  {'에서 붙여넣기'}
+                </p>
+              </div>
+            </div>
+          </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginTop:'40px'}}>
             <a
               href="https://gemini.google.com/app"
