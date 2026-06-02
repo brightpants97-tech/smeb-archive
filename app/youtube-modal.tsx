@@ -358,13 +358,25 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                       </div>
                     </div>
                   </div>
-                  <div style={{ padding: isMobile ? '14px 18px' : '10px 12px 12px', flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px' }}>
-                    <p style={{ fontWeight:700, fontSize:'0.88rem', lineHeight:1.35, marginBottom:'4px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'flex-start' : 'space-between', gap:'6px' }}>
-                      <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A' }}>👁 {video.views.toLocaleString()}회</span>
-                      <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
+                  {isMobile ? (
+                    <div style={{ padding:'14px 18px', flex:1, minWidth:0, overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center', gap:'4px' }}>
+                      <p style={{ fontWeight:700, fontSize:'0.88rem', lineHeight:1.35, marginBottom:'4px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
+                      <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                        <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A' }}>👁 {video.views.toLocaleString()}회</span>
+                        <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div style={{ padding:'10px 12px 8px', flex:1, minWidth:0, overflow:'hidden' }}>
+                        <p style={{ fontWeight:700, fontSize:'0.85rem', lineHeight:1.35, color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
+                      </div>
+                      <div style={{ background:'#EB701A', padding:'8px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'6px', flexShrink:0 }}>
+                        <span style={{ fontSize:'0.78rem', fontWeight:800, color:'#fff' }}>👁 {video.views.toLocaleString()}회</span>
+                        <span style={{ fontSize:'0.70rem', color:'rgba(255,255,255,0.8)', fontWeight:500 }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
