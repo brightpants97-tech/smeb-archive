@@ -85,10 +85,15 @@ ${soopList || '(데이터 없음)'}
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
-      {/* 월 선택 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', flexShrink: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px', height: '100%' }}>
+
+      {/* 월 선택 드롭다운 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{
+          fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em',
+          textTransform: 'uppercase' as const, color: 'var(--text-muted)',
+          flexShrink: 0,
+        }}>
           분석 월
         </span>
         <div style={{ position: 'relative', flex: 1 }}>
@@ -96,11 +101,17 @@ ${soopList || '(데이터 없음)'}
             value={selectedMonth}
             onChange={e => { setSelectedMonth(e.target.value); setCopied(false); }}
             style={{
-              width: '100%', padding: '8px 32px 8px 12px',
-              borderRadius: '10px', border: '1px solid var(--card-border)',
-              background: 'var(--card)', color: 'var(--text)',
-              fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
-              outline: 'none', appearance: 'none' as const,
+              width: '100%',
+              padding: '8px 30px 8px 12px',
+              borderRadius: '10px',
+              border: '1px solid var(--card-border)',
+              background: 'var(--card)',
+              color: 'var(--text)',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              outline: 'none',
+              appearance: 'none' as const,
             }}
           >
             {availableMonths.map(m => (
@@ -108,56 +119,100 @@ ${soopList || '(데이터 없음)'}
             ))}
           </select>
           <span style={{
-            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-            pointerEvents: 'none', color: 'var(--text-muted)', fontSize: '0.75rem',
+            position: 'absolute', right: '10px', top: '50%',
+            transform: 'translateY(-50%)',
+            pointerEvents: 'none',
+            color: 'var(--text-muted)',
+            fontSize: '0.7rem',
           }}>▾</span>
         </div>
       </div>
 
-      {/* 복사 카드 */}
+      {/* 복사 버튼 카드 */}
       <div
+        role="button"
+        tabIndex={0}
         onClick={handleCopy}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCopy(); }}
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '20px 24px',
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          padding: '18px 20px',
           background: copied
-            ? 'linear-gradient(135deg,rgba(34,197,94,0.12) 0%,rgba(34,197,94,0.04) 100%)'
+            ? 'linear-gradient(135deg,rgba(34,197,94,0.1) 0%,rgba(34,197,94,0.03) 100%)'
             : 'linear-gradient(135deg,rgba(235,112,26,0.08) 0%,rgba(235,112,26,0.02) 100%)',
-          border: `1px solid ${copied ? 'rgba(34,197,94,0.35)' : 'rgba(235,112,26,0.2)'}`,
-          borderRadius: '16px', cursor: hasData ? 'pointer' : 'default',
-          transition: 'all 0.25s', flexWrap: 'wrap' as const, gap: '12px',
+          border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(235,112,26,0.18)'}`,
+          borderRadius: '14px',
+          cursor: hasData ? 'pointer' : 'default',
+          transition: 'all 0.25s',
+          flexWrap: 'wrap' as const,
           opacity: hasData ? 1 : 0.5,
+          userSelect: 'none' as const,
         }}
-        onMouseEnter={e => { if (hasData && !copied) { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(235,112,26,0.5)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(235,112,26,0.12)'; } }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = copied ? 'rgba(34,197,94,0.35)' : 'rgba(235,112,26,0.2)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
+        onMouseEnter={e => {
+          if (hasData && !copied) {
+            const el = e.currentTarget as HTMLElement;
+            el.style.borderColor = 'rgba(235,112,26,0.45)';
+            el.style.boxShadow = '0 6px 24px rgba(235,112,26,0.1)';
+          }
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.borderColor = copied ? 'rgba(34,197,94,0.3)' : 'rgba(235,112,26,0.18)';
+          el.style.boxShadow = 'none';
+        }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* 아이콘 + 텍스트 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
           <div style={{
-            width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0,
-            background: copied ? 'linear-gradient(135deg,#22c55e,#16a34a)' : 'linear-gradient(135deg,#EB701A,#ff8c3a)',
+            width: '40px', height: '40px', borderRadius: '11px', flexShrink: 0,
+            background: copied
+              ? 'linear-gradient(135deg,#22c55e,#16a34a)'
+              : 'linear-gradient(135deg,#EB701A,#ff8c3a)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.3rem', transition: 'all 0.3s',
-          }}>{copied ? '✅' : '📋'}</div>
-          <div>
-            <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: copied ? '#22c55e' : '#EB701A', marginBottom: '3px' }}>
+            fontSize: '1.2rem', transition: 'all 0.3s',
+          }}>
+            {copied ? '✅' : '📋'}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{
+              fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+              textTransform: 'uppercase' as const,
+              color: copied ? '#22c55e' : '#EB701A',
+              marginBottom: '2px',
+            }}>
               {copied ? '복사 완료!' : 'AI 분석 질문'}
             </div>
-            <p style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            <p style={{
+              fontSize: '0.92rem', fontWeight: 800, color: 'var(--text)',
+              letterSpacing: '-0.02em', lineHeight: 1.2, margin: 0,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+            }}>
               {monthLabel} 분석 질문 복사
             </p>
-            <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '3px' }}>
-              {copied ? '제미나이에 붙여넣기 하세요!' : `YT ${ytVideos.length}개 · SOOP ${soopVods.length}개`}
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+              {copied
+                ? '제미나이에 붙여넣기 하세요 ✓'
+                : `YT ${ytVideos.length}개 · SOOP ${soopVods.length}개`}
             </p>
           </div>
         </div>
+
+        {/* 복사 버튼 */}
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '5px',
-          background: copied ? 'linear-gradient(135deg,#22c55e,#16a34a)' : 'linear-gradient(135deg,#EB701A,#ff8c3a)',
+          display: 'inline-flex', alignItems: 'center', gap: '4px',
+          background: copied
+            ? 'linear-gradient(135deg,#22c55e,#16a34a)'
+            : 'linear-gradient(135deg,#EB701A,#ff8c3a)',
           color: '#fff', borderRadius: '100px',
-          padding: '9px 18px', fontSize: '0.82rem', fontWeight: 700,
+          padding: '8px 16px', fontSize: '0.78rem', fontWeight: 700,
           flexShrink: 0, transition: 'all 0.3s',
+          whiteSpace: 'nowrap' as const,
         }}>
-          {copied ? '✓ 복사됨' : '클릭해서 복사'}
+          {copied ? '✓ 복사됨' : '복사'}
         </div>
       </div>
     </div>
