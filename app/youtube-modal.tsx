@@ -172,107 +172,202 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
 
   const fmt = (n: number) => n >= 10000 ? `${(n/10000).toFixed(1)}만` : n.toLocaleString();
   const totalViews = top10.reduce((s, v) => s + v.views, 0);
-  const avgViews   = Math.round(totalViews / top10.length);
+  const avgViews = Math.round(totalViews / top10.length);
   const stats = [
-    { label:'요 조회수',   value: fmt(totalViews) },
-    { label:'1위 조회수',  value: fmt(top10[0].views) },
+    { label:'요 조회수', value: fmt(totalViews) },
+    { label:'1위 조회수', value: fmt(top10[0].views) },
     { label:'평균 조회수', value: fmt(avgViews) },
   ];
 
-  const DPOS: Record<number, React.CSSProperties> = {
-    1:  { gridColumn:'1/3', gridRow:'1' },
-    2:  { gridColumn:'3',   gridRow:'1' },
-    3:  { gridColumn:'1',   gridRow:'2' },
-    4:  { gridColumn:'2',   gridRow:'2' },
-    5:  { gridColumn:'3',   gridRow:'2' },
-    6:  { gridColumn:'1',   gridRow:'3' },
-    7:  { gridColumn:'2/4', gridRow:'3' },
-    8:  { gridColumn:'1',   gridRow:'4' },
-    9:  { gridColumn:'2',   gridRow:'4' },
-    10: { gridColumn:'3',   gridRow:'4' },
-  };
+  // ── 모바일: Apple iPhone 리스트 스타일 ──
+  if (isMobile) {
+    return (
+      <>
+        <style>{`
+          @keyframes listFadeIn {
+            from { opacity:0; transform:translateX(-12px); }
+            to   { opacity:1; transform:translateX(0); }
+          }
+        `}</style>
+        {/* 리스트 컨테이너 */}
+        <div style={{
+          background:'var(--card)',
+          borderRadius:'18px',
+          overflow:'hidden',
+          border:'1px solid var(--card-border)',
+          boxShadow:'0 2px 16px rgba(0,0,0,0.06)',
+        }}>
+          {top10.map((video, i) => {
+            const rank = i + 1;
+            const rankColor = rank === 1 ? '#EB701A' : rank <= 3 ? 'var(--text-muted)' : 'var(--text-muted)';
+            const isFirst = rank === 1;
+            return (
+              <div key={video.id}
+                onClick={() => onPlay(video.id)}
+                style={{
+                  display:'flex', alignItems:'center', gap:'12px',
+                  padding:'10px 14px',
+                  borderBottom: i < top10.length - 1 ? '1px solid var(--card-border)' : 'none',
+                  cursor:'pointer',
+                  background: isFirst ? 'rgba(235,112,26,0.04)' : 'transparent',
+                  animation:`listFadeIn 0.4s ${i * 0.04}s both`,
+                  transition:'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background='rgba(235,112,26,0.08)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background= isFirst ? 'rgba(235,112,26,0.04)' : 'transparent'}
+              >
+                {/* 순위 */}
+                <div style={{
+                  flexShrink:0, width:'22px', textAlign:'center',
+                  fontSize: isFirst ? '0.95rem' : '0.82rem',
+                  fontWeight:900,
+                  color: isFirst ? '#EB701A' : rank <= 3 ? 'var(--text-muted)' : 'var(--text-muted)',
+                  fontStyle: isFirst ? 'normal' : 'normal',
+                }}>
+                  {rank}
+                </div>
+                {/* 썸네일 */}
+                <div style={{ flexShrink:0, width:'80px', height:'45px', borderRadius:'8px', overflow:'hidden', position:'relative' }}>
+                  <img src={video.thumbnail} alt={video.title}
+                    style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                  {isFirst && (
+                    <div style={{
+                      position:'absolute', inset:0,
+                      border:'2px solid #EB701A', borderRadius:'8px', pointerEvents:'none',
+                    }} />
+                  )}
+                </div>
+                {/* 텍스트 */}
+                <div style={{ flex:1, minWidth:0, overflow:'hidden' }}>
+                  <p style={{
+                    fontSize:'0.82rem', fontWeight: isFirst ? 700 : 600,
+                    color:'var(--text)', lineHeight:1.35, margin:0,
+                    whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+                  }}>{video.title}</p>
+                  <span style={{ fontSize:'0.72rem', color:'#EB701A', fontWeight:700 }}>
+                    {fmt(video.views)}회
+                  </span>
+                </div>
+                {/* 재생 아이콘 */}
+                <div style={{
+                  flexShrink:0, width:'28px', height:'28px', borderRadius:'50%',
+                  background: isFirst ? '#EB701A' : 'var(--bg-deeper)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}>
+                  <span style={{ fontSize:'0.6rem', marginLeft:'2px', color: isFirst ? '#fff' : 'var(--text-muted)' }}>▶</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-  const hov = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = e.currentTarget as HTMLElement;
-    el.style.transform = 'scale(1.03)';
-    el.style.boxShadow = '0 20px 50px rgba(0,0,0,0.4)';
-    el.style.zIndex = '10';
-  };
-  const unhov = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = e.currentTarget as HTMLElement;
-    el.style.transform = '';
-    el.style.boxShadow = '';
-    el.style.zIndex = '';
+        {/* BY THE NUMBERS — Apple 카드 스타일 */}
+        <div style={{ marginTop:'16px', background:'var(--bg-deeper)', borderRadius:'18px', padding:'16px' }}>
+          <p style={{ fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:'12px' }}>BY THE NUMBERS</p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px' }}>
+            {stats.map((s, i) => (
+              <div key={i} style={{
+                background:'var(--card)', borderRadius:'14px', padding:'14px 10px',
+                textAlign:'center', border:'1px solid var(--card-border)',
+                boxShadow:'0 1px 4px rgba(0,0,0,0.05)',
+              }}>
+                <p style={{ fontSize:'1.3rem', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'4px' }}>{s.value}</p>
+                <p style={{ fontSize:'0.62rem', color:'var(--text-muted)', fontWeight:500 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── 데스크탑: Apple iPad 그리드 스타일 ──
+  const DPOS: Record<number, React.CSSProperties> = {
+    1: { gridColumn:'1/3', gridRow:'1' },
+    2: { gridColumn:'3', gridRow:'1' },
+    3: { gridColumn:'1', gridRow:'2' },
+    4: { gridColumn:'2', gridRow:'2' },
+    5: { gridColumn:'3', gridRow:'2' },
+    6: { gridColumn:'1', gridRow:'3' },
+    7: { gridColumn:'2/4', gridRow:'3' },
+    8: { gridColumn:'1', gridRow:'4' },
+    9: { gridColumn:'2', gridRow:'4' },
+    10: { gridColumn:'3', gridRow:'4' },
   };
 
   return (
     <>
       <style>{`
         @keyframes smebSlideUp {
-          from { opacity:0; transform:translateY(32px); }
+          from { opacity:0; transform:translateY(24px); }
           to   { opacity:1; transform:translateY(0); }
         }
+        .top10-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .top10-card:hover { transform: scale(1.02) !important; box-shadow: 0 20px 48px rgba(0,0,0,0.28) !important; z-index: 10; }
       `}</style>
+
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3,1fr)',
-        gridAutoRows: isMobile ? 'clamp(140px,38vw,190px)' : 'clamp(170px,16vw,230px)',
-        gap: '10px',
+        display:'grid',
+        gridTemplateColumns:'repeat(3,1fr)',
+        gridAutoRows:'clamp(170px,16vw,230px)',
+        gap:'10px',
+        background:'var(--bg-deeper)',
+        padding:'12px',
+        borderRadius:'20px',
       }}>
         {top10.map((video, i) => {
           const rank = i + 1;
-          const pos  = isMobile ? {} : DPOS[rank];
-          const delay = `${i * 0.055}s`;
           const isFirst = rank === 1;
+          const delay = `${i * 0.05}s`;
           return (
             <div key={video.id}
+              className="top10-card"
               onClick={() => onPlay(video.id)}
-              onMouseEnter={hov}
-              onMouseLeave={unhov}
               style={{
-                ...pos, position:'relative', cursor:'pointer',
-                borderRadius:'14px', overflow:'hidden', background:'#111',
-                animation:`smebSlideUp 0.6s ${delay} cubic-bezier(0.22,1,0.36,1) both`,
-                boxShadow: isFirst ? '0 0 0 2px #EB701A' : '0 2px 10px rgba(0,0,0,0.15)',
+                ...DPOS[rank], position:'relative', cursor:'pointer',
+                borderRadius:'16px', overflow:'hidden', background:'#111',
+                animation:`smebSlideUp 0.55s ${delay} cubic-bezier(0.22,1,0.36,1) both`,
+                boxShadow: isFirst ? '0 0 0 2.5px #EB701A, 0 8px 24px rgba(235,112,26,0.2)' : '0 2px 12px rgba(0,0,0,0.18)',
               }}
             >
               <img src={video.thumbnail} alt={video.title}
                 style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', pointerEvents:'none' }} />
               <div style={{ position:'absolute', inset:0,
-                background:'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.08) 100%)' }} />
-              <span style={{
-                position:'absolute', top:'-8px', right:'4px',
-                fontSize:'clamp(70px,11vw,130px)', fontWeight:900, lineHeight:1,
-                color:'rgba(255,255,255,0.1)', letterSpacing:'-0.06em',
-                pointerEvents:'none', userSelect:'none' as const,
-              }}>{rank}</span>
+                background:'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }} />
+
+              {/* 순위 배지 */}
               <div style={{
-                position:'absolute', top:'12px', left:'12px',
-                background: isFirst ? '#EB701A' : 'rgba(0,0,0,0.55)',
-                backdropFilter:'blur(6px)',
+                position:'absolute', top:'10px', left:'10px',
+                background: isFirst ? '#EB701A' : 'rgba(0,0,0,0.5)',
+                backdropFilter:'blur(8px)',
                 color:'#fff', fontWeight:900,
-                fontSize: isFirst ? '0.85rem' : '0.78rem',
-                width:'28px', height:'28px', borderRadius:'50%',
+                fontSize: isFirst ? '0.82rem' : '0.75rem',
+                width:'26px', height:'26px', borderRadius:'50%',
                 display:'flex', alignItems:'center', justifyContent:'center',
-                border: isFirst ? '2px solid rgba(255,255,255,0.4)' : '2px solid rgba(255,255,255,0.2)',
-                boxShadow: isFirst ? '0 0 0 3px rgba(235,112,26,0.35)' : 'none',
+                border:'1.5px solid rgba(255,255,255,0.25)',
+                boxShadow: isFirst ? '0 0 0 2.5px rgba(235,112,26,0.35)' : 'none',
               }}>{rank}</div>
+
               {isFirst && (
-                <div style={{ position:'absolute', top:'12px', right:'12px',
-                  background:'#EB701A', color:'#fff', fontSize:'0.55rem', fontWeight:900,
-                  padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.1em' }}>BEST</div>
-              )}
-              <div style={{ position:'absolute', bottom:'12px', left:'12px', right:'12px' }}>
                 <div style={{
-                  fontSize:'clamp(1.1rem,2.2vw,1.7rem)', fontWeight:900,
-                  color:'#EB701A', letterSpacing:'-0.03em', lineHeight:1, marginBottom:'5px',
+                  position:'absolute', top:'10px', right:'10px',
+                  background:'#EB701A', color:'#fff', fontSize:'0.52rem',
+                  fontWeight:900, padding:'3px 7px', borderRadius:'5px', letterSpacing:'0.08em',
+                }}>BEST</div>
+              )}
+
+              {/* 하단 정보 */}
+              <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'14px' }}>
+                <div style={{
+                  fontSize:'clamp(1rem,2vw,1.6rem)', fontWeight:900,
+                  color:'#EB701A', letterSpacing:'-0.03em', lineHeight:1, marginBottom:'4px',
                 }}>
                   {fmt(video.views)}
-                  <span style={{ fontSize:'0.6em', fontWeight:700, color:'rgba(235,112,26,0.7)', marginLeft:'4px' }}>회</span>
+                  <span style={{ fontSize:'0.58em', color:'rgba(235,112,26,0.75)', marginLeft:'3px', fontWeight:700 }}>회</span>
                 </div>
                 <p style={{
-                  fontSize: isMobile ? '0.72rem' : '0.78rem', fontWeight:700,
-                  color:'rgba(255,255,255,0.88)', lineHeight:1.35,
+                  fontSize:'0.76rem', fontWeight:600,
+                  color:'rgba(255,255,255,0.9)', lineHeight:1.35,
                   display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden',
                 } as React.CSSProperties}>{video.title}</p>
               </div>
@@ -280,20 +375,21 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
           );
         })}
       </div>
-      <div style={{ marginTop:'20px' }}>
-        <div style={{ borderRadius:'16px', border:'1px solid var(--card-border)', background:'var(--card)', padding:'20px 24px' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'18px' }}>
-            <span style={{ display:'block', width:'18px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />
-            <span style={{ fontSize:'0.68rem', fontWeight:800, letterSpacing:'0.14em', textTransform:'uppercase' as const, color:'#EB701A' }}>BY THE NUMBERS</span>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
-            {stats.map((s, i) => (
-              <div key={i} style={{ paddingRight: i<2 ? '20px' : '0', paddingLeft: i>0 ? '20px' : '0', borderRight: i<2 ? '1px dashed var(--card-border)' : 'none' }}>
-                <p style={{ fontSize:'clamp(2rem,3.5vw,3rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'6px' }}>{s.value}</p>
-                <p style={{ fontSize:'0.82rem', color:'var(--text-muted)', fontWeight:500, lineHeight:1.4 }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
+
+      {/* BY THE NUMBERS — Apple 카드 스타일 */}
+      <div style={{ marginTop:'12px', background:'var(--bg-deeper)', borderRadius:'20px', padding:'20px 24px' }}>
+        <p style={{ fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:'14px' }}>BY THE NUMBERS</p>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'10px' }}>
+          {stats.map((s, i) => (
+            <div key={i} style={{
+              background:'var(--card)', borderRadius:'16px', padding:'20px 24px',
+              border:'1px solid var(--card-border)',
+              boxShadow:'0 1px 6px rgba(0,0,0,0.06)',
+            }}>
+              <p style={{ fontSize:'clamp(1.8rem,3vw,2.6rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'6px' }}>{s.value}</p>
+              <p style={{ fontSize:'0.8rem', color:'var(--text-muted)', fontWeight:500 }}>{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </>
