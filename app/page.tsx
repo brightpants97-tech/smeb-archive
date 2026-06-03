@@ -14,7 +14,7 @@ const getYoutubeVideos = unstable_cache(async () => {
     const thisYear  = now.getFullYear();
     const cutoffISO = `${thisYear - 1}-01-01T00:00:00Z`;
     const chRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${CH}&key=${KEY}`,
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${CH}&key=${KEY}`,h
       { cache: 'no-store' }
     );
     const chData = await chRes.json();
@@ -266,7 +266,6 @@ export default async function Home() {
               <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
               <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
             </h1>
-            <p style={{fontSize:'0.82rem',color:'rgba(255,255,255,0.3)',marginTop:'2rem',letterSpacing:'0.1em',textTransform:'uppercase' as const}}>전 프로게이머 스맵 송경호 · 유튜브 · SOOP 다시보기</p>
           </div>
           <div className="mob-hide" style={{flexShrink:0,width:'clamp(240px,22vw,300px)'}}>
             <HeroLiveCard />
