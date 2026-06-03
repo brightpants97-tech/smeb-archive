@@ -332,31 +332,40 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
         />
       )}
 
-      <div style={{ marginBottom: '24px', position: 'relative' }}>
-        <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem' }}>🔍</span>
+      {/* ── 검색창 ── */}
+      <div style={{ marginBottom:'20px', position:'relative' }}>
+        <span style={{ position:'absolute', left:'14px', top:'50%', transform:'translateY(-50%)', fontSize:'1rem', pointerEvents:'none' }}>🔍</span>
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="다시보기 제목 검색..."
-          style={{ width: '100%', padding: '12px 16px 12px 42px', borderRadius: '12px', border: BORDER, background: 'var(--card)', color: 'var(--text)', fontSize: '0.9rem', outline: 'none' }} />
+          style={{
+            width:'100%', padding:'13px 16px 13px 44px',
+            borderRadius:'14px', border:'1px solid var(--card-border)',
+            background:'var(--card)', color:'var(--text)', fontSize:'0.9rem',
+            outline:'none', boxShadow:'0 1px 6px rgba(0,0,0,0.06)',
+            transition:'box-shadow 0.2s',
+          }}
+          onFocus={e => (e.currentTarget as HTMLElement).style.boxShadow='0 0 0 3px rgba(235,112,26,0.2)'}
+          onBlur={e => (e.currentTarget as HTMLElement).style.boxShadow='0 1px 6px rgba(0,0,0,0.06)'}
+        />
       </div>
 
       {search ? (
+        /* ── 검색 결과 ── */
         <div>
-          <p style={{ marginBottom: '16px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          <p style={{ marginBottom:'16px', fontSize:'0.85rem', color:'var(--text-muted)' }}>
             &ldquo;{search}&rdquo; 검색 결과: {filteredBySearch?.length || 0}개
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ background:'var(--bg-deeper)', borderRadius:'18px', padding:'12px', display:'flex', flexDirection:'column', gap:'8px' }}>
             {filteredBySearch?.map(({ date, vod }, i) => (
               <a key={i} href={`https://vod.sooplive.com/player/${vod.id}`} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 16px', background: 'var(--card)', borderRadius: '12px', border: BORDER, textDecoration: 'none', color: 'var(--text)', transition: 'transform 0.15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
-                {vod.thumb && <img src={vod.thumb} alt="" style={{ width: '100px', borderRadius: '8px', flexShrink: 0, objectFit: 'cover' }} />}
+                style={{ display:'flex', gap:'12px', alignItems:'center', padding:'12px 14px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'var(--text)', transition:'transform 0.15s', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform=''}>
+                {vod.thumb && <img src={vod.thumb} alt="" style={{ width:'100px', borderRadius:'8px', flexShrink:0, objectFit:'cover', aspectRatio:'16/9' }} />}
                 <div>
-                  <p style={{ fontSize: '0.72rem', color: '#EB701A', fontWeight: 700, marginBottom: '4px' }}>{date}</p>
-                  <p style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text)' }}>{vod.title}</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    👁 {vod.views?.toLocaleString()}회{vod.duration ? ` · ${fmtDuration(vod.duration)}` : ''}
-                  </p>
+                  <p style={{ fontSize:'0.72rem', color:'#EB701A', fontWeight:700, marginBottom:'4px' }}>{date}</p>
+                  <p style={{ fontSize:'0.9rem', fontWeight:600, marginBottom:'4px', color:'var(--text)' }}>{vod.title}</p>
+                  <p style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>👁 {vod.views?.toLocaleString()}회{vod.duration ? ` · ${fmtDuration(vod.duration)}` : ''}</p>
                 </div>
               </a>
             ))}
@@ -364,125 +373,173 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: '4px' }}>연도</span>
-            {years.map(y => (
-              <button key={y} onClick={() => {
-                setSelectedYear(y);
-                const currentYear = String(todayDate.getFullYear());
-                if (y === currentYear && sortedMonths.includes(currentYM)) {
-                  setSelectedMonth(currentYM);
-                } else {
-                  const lastInYear = [...sortedMonths].filter(m => m.startsWith(y)).pop();
-                  if (lastInYear) setSelectedMonth(lastInYear);
-                }
-              }}
+          {/* ── 연도 + 월 탭 그룹 ── */}
+          <div style={{ background:'var(--bg-deeper)', borderRadius:'18px', padding:'16px', marginBottom:'20px' }}>
+            {/* 연도 */}
+            <div style={{ display:'flex', gap:'6px', marginBottom:'12px', flexWrap:'wrap', alignItems:'center' }}>
+              <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px', letterSpacing:'0.06em', textTransform:'uppercase' }}>연도</span>
+              {years.map(y => (
+                <button key={y} onClick={() => {
+                  setSelectedYear(y);
+                  const currentYear = String(todayDate.getFullYear());
+                  if (y === currentYear && sortedMonths.includes(currentYM)) {
+                    setSelectedMonth(currentYM);
+                  } else {
+                    const lastInYear = [...sortedMonths].filter(m => m.startsWith(y)).pop();
+                    if (lastInYear) setSelectedMonth(lastInYear);
+                  }
+                }}
                 style={{
-                  padding: '7px 20px', borderRadius: '100px', cursor: 'pointer', fontWeight: 700, fontSize: '0.92rem', transition: 'all 0.15s',
+                  padding:'6px 18px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize:'0.88rem', transition:'all 0.15s',
                   background: selectedYear === y ? '#EB701A' : 'var(--card)',
                   color: selectedYear === y ? '#fff' : 'var(--text-muted)',
-                  boxShadow: selectedYear === y ? '0 4px 14px rgba(235,112,26,0.35)' : 'none',
-                  border: selectedYear === y ? '1px solid #EB701A' : BORDER,
+                  boxShadow: selectedYear === y ? '0 4px 14px rgba(235,112,26,0.3)' : 'none',
+                  border: selectedYear === y ? '1px solid #EB701A' : '1px solid var(--card-border)',
                 }}>
-                {y}년
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: '6px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'center', padding: '14px 16px', background: 'var(--bg-deeper)', borderRadius: '14px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: '4px' }}>월</span>
-            {monthsInYear.map(ym => {
-              const mo = parseInt(ym.split('-')[1]);
-              const cnt = Object.values(monthMap[ym] || {}).reduce((a: number, arr: any) => a + arr.length, 0);
-              const isSelected = ym === validSelectedMonth;
-              return (
-                <button key={ym} onClick={() => setSelectedMonth(ym)}
-                  style={{
-                    padding: '5px 14px', borderRadius: '100px', cursor: 'pointer', fontWeight: isSelected ? 700 : 500, fontSize: '0.82rem', transition: 'all 0.15s', position: 'relative',
-                    background: isSelected ? '#1A1A1A' : 'var(--card)',
-                    color: isSelected ? '#fff' : cnt > 0 ? 'var(--text)' : 'var(--text-muted)',
-                    border: isSelected ? '1px solid #1A1A1A' : BORDER,
-                    opacity: cnt === 0 ? 0.45 : 1,
-                  }}>
-                  {mo}월
-                  {cnt > 0 && (
-                    <span style={{ position: 'absolute', top: '-3px', right: '-3px', width: '7px', height: '7px', borderRadius: '50%', background: isSelected ? '#fff' : '#EB701A' }} />
-                  )}
+                  {y}년
                 </button>
-              );
-            })}
+              ))}
+            </div>
+            {/* 구분선 */}
+            <div style={{ height:'1px', background:'var(--card-border)', margin:'0 0 12px' }} />
+            {/* 월 */}
+            <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center' }}>
+              <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px', letterSpacing:'0.06em', textTransform:'uppercase' }}>월</span>
+              {monthsInYear.map(ym => {
+                const mo = parseInt(ym.split('-')[1]);
+                const cnt = Object.values(monthMap[ym] || {}).reduce((a: number, arr: any) => a + arr.length, 0);
+                const isSelected = ym === validSelectedMonth;
+                return (
+                  <button key={ym} onClick={() => setSelectedMonth(ym)}
+                    style={{
+                      padding:'5px 13px', borderRadius:'100px', cursor:'pointer',
+                      fontWeight: isSelected ? 700 : 500, fontSize:'0.8rem', transition:'all 0.15s', position:'relative',
+                      background: isSelected ? '#1A1A1A' : 'var(--card)',
+                      color: isSelected ? '#fff' : cnt > 0 ? 'var(--text)' : 'var(--text-muted)',
+                      border: isSelected ? '1px solid #1A1A1A' : '1px solid var(--card-border)',
+                      opacity: cnt === 0 ? 0.4 : 1,
+                    }}>
+                    {mo}월
+                    {cnt > 0 && (
+                      <span style={{ position:'absolute', top:'-3px', right:'-3px', width:'7px', height:'7px', borderRadius:'50%', background: isSelected ? '#EB701A' : '#EB701A' }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
+          {/* ── 이달의 TOP 5 ── */}
           <MonthTop5 vods={top5} month={validSelectedMonth} fmtDuration={fmtDuration} />
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>
-              {year}년 <span style={{ color: '#EB701A' }}>{month}월</span>
+          {/* ── 캘린더 헤더 ── */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'12px' }}>
+            <h3 style={{ fontSize:'1.1rem', fontWeight:800, color:'var(--text)', margin:0 }}>
+              {year}년 <span style={{ color:'#EB701A' }}>{month}월</span>
             </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
               {fmtMonthTotal(monthTotalSec) && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: '#EB701A', background: 'rgba(235,112,26,0.1)', border: '1px solid rgba(235,112,26,0.25)', padding: '4px 10px', borderRadius: '100px' }}>
+                <span style={{ display:'inline-flex', alignItems:'center', gap:'5px', fontSize:'0.75rem', fontWeight:700, color:'#EB701A', background:'rgba(235,112,26,0.1)', border:'1px solid rgba(235,112,26,0.2)', padding:'4px 10px', borderRadius:'100px' }}>
                   🕐 {fmtMonthTotal(monthTotalSec)}
                 </span>
               )}
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-deeper)', border: '1px solid var(--card-border)', padding: '4px 10px', borderRadius: '100px' }}>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:'5px', fontSize:'0.75rem', fontWeight:700, color:'var(--text-muted)', background:'var(--bg-deeper)', border:'1px solid var(--card-border)', padding:'4px 10px', borderRadius:'100px' }}>
                 📺 {totalCount}개
               </span>
             </div>
           </div>
 
-          <div style={{ borderRadius: '16px', overflow: 'hidden', border: BORDER, width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--bg-deeper)' }}>
-              {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
-                <div key={d} style={{ textAlign: 'center', padding: isMobile ? '6px 0' : '10px 0', fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 700, color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)', borderRight: i < 6 ? BORDER : 'none', borderBottom: BORDER, overflow: 'hidden' }}>{d}</div>
-              ))}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: GRID, background: 'var(--card)' }}>
-              {Array.from({ length: firstDay }).map((_, i) => {
-                const col = i % 7;
-                return (<div key={`e${i}`} style={{ minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden', borderRight: col < 6 ? BORDER : 'none', borderBottom: BORDER }} />);
-              })}
-              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-                const vods = calData[day] || [];
-                const isToday = todayDate.getFullYear() === year && todayDate.getMonth() + 1 === month && todayDate.getDate() === day;
-                const col = (firstDay + day - 1) % 7;
-                const totalCells = firstDay + daysInMonth;
-                const lastRowStart = Math.floor((totalCells - 1) / 7) * 7;
-                const cellIndex = firstDay + day - 1;
-                const isLastRow = cellIndex >= lastRowStart;
-                const hasVods = vods.length > 0;
-                return (
-                  <div key={day} onClick={() => openPanel(day, vods)}
-                    style={{ background: 'var(--card)', minHeight: isMobile ? '52px' : '90px', padding: isMobile ? '4px' : '8px', overflow: 'hidden', minWidth: 0, borderRight: col < 6 ? BORDER : 'none', borderBottom: isLastRow ? 'none' : BORDER, cursor: hasVods ? 'pointer' : 'default', transition: hasVods ? 'background 0.15s' : undefined }}
-                    onMouseEnter={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.05)'; }}
-                    onMouseLeave={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background = 'var(--card)'; }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: isToday ? 800 : 600, lineHeight: 1, minWidth: '22px', width: '22px', height: '22px', flexShrink: 0, borderRadius: '50%', background: isToday ? '#EB701A' : 'transparent', color: isToday ? '#fff' : col === 0 ? '#ef4444' : col === 6 ? '#3b82f6' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{day}</span>
-                      {vods.length > 0 && (<span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(235,112,26,0.15)', color: '#EB701A', padding: '1px 5px', borderRadius: '100px', flexShrink: 0 }}>{vods.length}</span>)}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
-                      {vods.slice(0, 2).map((vod: any, vi: number) => (
-                        <span key={vi} title={vod.title} style={{ display: isMobile ? 'none' : 'block', fontSize: '0.68rem', color: 'var(--text)', background: 'rgba(235,112,26,0.08)', borderRadius: '4px', padding: '2px 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-                          {vod.title}
-                        </span>
-                      ))}
-                      {vods.length > 2 && !isMobile && (
-                        <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 700, padding: '1px 5px' }}>+{vods.length - 2}개 더 →</span>
+          {/* ── 캘린더 그리드 ── */}
+          <div style={{ background:'var(--bg-deeper)', borderRadius:'20px', padding:'12px', overflow:'hidden' }}>
+            <div style={{ background:'var(--card)', borderRadius:'14px', overflow:'hidden', border:'1px solid var(--card-border)', boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
+              {/* 요일 헤더 */}
+              <div style={{ display:'grid', gridTemplateColumns:GRID, background:'var(--bg-deeper)', borderBottom:'1px solid var(--card-border)' }}>
+                {['일','월','화','수','목','금','토'].map((d, i) => (
+                  <div key={d} style={{
+                    textAlign:'center', padding: isMobile ? '8px 0' : '10px 0',
+                    fontSize: isMobile ? '0.65rem' : '0.73rem', fontWeight:700,
+                    color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)',
+                    borderRight: i < 6 ? '1px solid var(--card-border)' : 'none',
+                  }}>{d}</div>
+                ))}
+              </div>
+              {/* 날짜 셀 */}
+              <div style={{ display:'grid', gridTemplateColumns:GRID, background:'var(--card)' }}>
+                {Array.from({ length: firstDay }).map((_, i) => {
+                  const col = i % 7;
+                  return (<div key={`e${i}`} style={{ minHeight: isMobile ? '48px' : '88px', background:'var(--bg-deeper)', borderRight: col < 6 ? '1px solid var(--card-border)' : 'none', borderBottom:'1px solid var(--card-border)' }} />);
+                })}
+                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+                  const vods = calData[day] || [];
+                  const isToday = todayDate.getFullYear() === year && todayDate.getMonth() + 1 === month && todayDate.getDate() === day;
+                  const col = (firstDay + day - 1) % 7;
+                  const totalCells = firstDay + daysInMonth;
+                  const lastRowStart = Math.floor((totalCells - 1) / 7) * 7;
+                  const cellIndex = firstDay + day - 1;
+                  const isLastRow = cellIndex >= lastRowStart;
+                  const hasVods = vods.length > 0;
+                  return (
+                    <div key={day} onClick={() => openPanel(day, vods)}
+                      style={{
+                        background:'var(--card)', minHeight: isMobile ? '48px' : '88px',
+                        padding: isMobile ? '4px' : '8px', overflow:'hidden', minWidth:0,
+                        borderRight: col < 6 ? '1px solid var(--card-border)' : 'none',
+                        borderBottom: isLastRow ? 'none' : '1px solid var(--card-border)',
+                        cursor: hasVods ? 'pointer' : 'default',
+                        transition: hasVods ? 'background 0.15s' : undefined,
+                      }}
+                      onMouseEnter={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background='rgba(235,112,26,0.05)'; }}
+                      onMouseLeave={e => { if (hasVods) (e.currentTarget as HTMLElement).style.background='var(--card)'; }}
+                    >
+                      {/* 날짜 숫자 */}
+                      <div style={{ display:'flex', alignItems:'center', gap:'4px', marginBottom:'5px' }}>
+                        <span style={{
+                          fontSize: isMobile ? '0.75rem' : '0.82rem',
+                          fontWeight: isToday ? 900 : 600, lineHeight:1,
+                          minWidth:'22px', width:'22px', height:'22px', flexShrink:0,
+                          borderRadius:'50%',
+                          background: isToday ? '#EB701A' : 'transparent',
+                          color: isToday ? '#fff' : col === 0 ? '#ef4444' : col === 6 ? '#3b82f6' : 'var(--text-muted)',
+                          display:'flex', alignItems:'center', justifyContent:'center',
+                          boxShadow: isToday ? '0 2px 8px rgba(235,112,26,0.35)' : 'none',
+                        }}>{day}</span>
+                        {vods.length > 0 && (
+                          <span style={{
+                            fontSize:'0.6rem', fontWeight:700,
+                            background: hasVods ? '#EB701A' : 'rgba(235,112,26,0.12)',
+                            color: hasVods ? '#fff' : '#EB701A',
+                            padding:'1px 5px', borderRadius:'100px', flexShrink:0,
+                          }}>{vods.length}</span>
+                        )}
+                      </div>
+                      {/* 방송 타이틀 미리보기 */}
+                      {!isMobile && (
+                        <div style={{ display:'flex', flexDirection:'column', gap:'3px', minWidth:0 }}>
+                          {vods.slice(0, 2).map((vod: any, vi: number) => (
+                            <span key={vi} title={vod.title} style={{
+                              display:'block', fontSize:'0.66rem', color:'var(--text)',
+                              background:'rgba(235,112,26,0.07)', borderRadius:'5px',
+                              padding:'2px 5px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                            }}>{vod.title}</span>
+                          ))}
+                          {vods.length > 2 && (
+                            <span style={{ fontSize:'0.63rem', color:'#EB701A', fontWeight:700, padding:'1px 5px' }}>+{vods.length - 2}개 더 →</span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                );
-              })}
-              {(() => {
-                const totalCells = firstDay + daysInMonth;
-                const remainder = totalCells % 7;
-                if (remainder === 0) return null;
-                const trailing = 7 - remainder;
-                return Array.from({ length: trailing }).map((_, i) => (
-                  <div key={`t${i}`} style={{ minHeight: isMobile ? '52px' : '90px', background: 'var(--bg-deeper)', overflow: 'hidden', borderRight: (remainder + i) < 6 ? BORDER : 'none', borderBottom: 'none' }} />
-                ));
-              })()}
+                  );
+                })}
+                {(() => {
+                  const totalCells = firstDay + daysInMonth;
+                  const remainder = totalCells % 7;
+                  if (remainder === 0) return null;
+                  const trailing = 7 - remainder;
+                  return Array.from({ length: trailing }).map((_, i) => (
+                    <div key={`t${i}`} style={{ minHeight: isMobile ? '48px' : '88px', background:'var(--bg-deeper)', borderRight:(remainder + i) < 6 ? '1px solid var(--card-border)' : 'none' }} />
+                  ));
+                })()}
+              </div>
             </div>
           </div>
         </>
@@ -490,5 +547,3 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     </div>
   );
 }
-
-
