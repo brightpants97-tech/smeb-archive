@@ -357,10 +357,10 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
       <div id="videos" className="sec-light" style={{ margin: isMobile ? '20px 0 0' : '40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding: isMobile ? '0' : '40px clamp(1.5rem, 5vw, 3rem)' }}>
         <div style={{ display:'flex', flexDirection:'column', gap: isMobile ? '20px' : '40px' }}>
           <div>
-            <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom: isMobile ? '4px' : '8px', display:'flex', alignItems:'center', gap:'8px' }}>
-              <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
-            </p>
-            <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 영상</h2>
+            <div style={{ margin: isMobile ? '0 -1.2rem 16px' : '0 calc(-1 * clamp(1.5rem,5vw,3rem)) 20px', background:'#EB701A', padding: isMobile ? '20px 1.2rem' : '28px clamp(1.5rem,5vw,3rem)', overflow:'hidden', position:'relative' }}>
+              <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)', backgroundSize:'36px 36px', pointerEvents:'none' }} />
+              <h2 style={{ fontSize: isMobile ? '2rem' : 'clamp(2rem,5vw,4rem)', fontWeight:900, letterSpacing:'-0.06em', lineHeight:1, color:'#1A1A1A', position:'relative', zIndex:1 }}>최신 영상</h2>
+            </div>
             <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '0' : '14px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
@@ -403,10 +403,10 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
           </div>
 
           <div style={{ order: -1 }}>
-            <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
-              <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
-            </p>
-            <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 공지</h2>
+            <div style={{ margin: isMobile ? '0 -1.2rem 16px' : '0 calc(-1 * clamp(1.5rem,5vw,3rem)) 20px', background:'#EB701A', padding: isMobile ? '20px 1.2rem' : '28px clamp(1.5rem,5vw,3rem)', overflow:'hidden', position:'relative' }}>
+              <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)', backgroundSize:'36px 36px', pointerEvents:'none' }} />
+              <h2 style={{ fontSize: isMobile ? '2rem' : 'clamp(2rem,5vw,4rem)', fontWeight:900, letterSpacing:'-0.06em', lineHeight:1, color:'#1A1A1A', position:'relative', zIndex:1 }}>최신 공지</h2>
+            </div>
             <div className="mob-notice-list" style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0' : '12px', flexWrap: isMobile ? undefined : 'wrap' as const, borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', overflow: 'hidden', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {notices.map((n, ni) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
