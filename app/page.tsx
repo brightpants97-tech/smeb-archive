@@ -170,6 +170,11 @@ export default async function Home() {
         .nav-link{color:var(--nav-text);transition:color 0.3s;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
+        /* Gemini 섹션 반응형 그리드 */
+        .gemini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+        .gemini-steps { display: flex; flex-direction: column; gap: 0; }
+        .gemini-step-row { display: flex; align-items: flex-start; gap: 12px; }
+
         /* 모바일 반응형 */
         @media (max-width: 768px) {
           .mob-hide { display: none !important; }
@@ -184,6 +189,8 @@ export default async function Home() {
           .mob-hero h1 span { font-size: clamp(3.5rem,22vw,8rem) !important; } .mob-hero h1 em { font-size: clamp(2rem,13vw,5rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
+          .gemini-grid { grid-template-columns: 1fr !important; }
+          .gemini-step-row { gap: 10px !important; }
         }
       `}</style>
       <ScrollObserver />
@@ -276,133 +283,136 @@ export default async function Home() {
           </h2>
         </div>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
-          {/* 제미나이 사용 안내 카드 */}
-          <div style={{
-            marginTop:'40px', padding:'20px 24px',
-            background:'linear-gradient(135deg,rgba(66,133,244,0.06) 0%,rgba(52,168,83,0.04) 100%)',
-            border:'1px solid rgba(66,133,244,0.15)',
-            borderRadius:'16px',
-          }}>
-            <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'16px'}}>
-              <span style={{fontSize:'1rem'}}>&#128161;</span>
-              <span style={{fontSize:'0.72rem',fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase' as const,color:'#4285f4'}}>
-                Gemini 사용 방법
-              </span>
+          {/* ─── Gemini 콘텐츠 분석 섹션 ─── */}
+          <div style={{marginTop:'40px'}}>
+
+            {/* 섹션 헤더 */}
+            <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'20px'}}>
+              <div style={{
+                width:'32px',height:'32px',borderRadius:'10px',flexShrink:0,
+                background:'linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335)',
+                display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1rem',
+              }}>✨</div>
+              <div>
+                <div style={{fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'#4285f4',marginBottom:'1px'}}>AI 콘텐츠 분석</div>
+                <p style={{fontSize:'0.9rem',fontWeight:800,color:'var(--text)',letterSpacing:'-0.02em',lineHeight:1}}>Gemini로 이번 달 분석하기</p>
+              </div>
             </div>
-            <div style={{display:'flex',flexDirection:'column' as const,gap:'12px'}}>
-              {/* STEP 1 */}
-              <div style={{display:'flex',alignItems:'flex-start',gap:'12px'}}>
-                <div style={{
-                  flexShrink:0,width:'24px',height:'24px',borderRadius:'50%',
-                  background:'linear-gradient(135deg,#4285f4,#34a853)',
-                  display:'flex',alignItems:'center',justifyContent:'center',
-                  fontSize:'0.72rem',fontWeight:800,color:'#fff',marginTop:'1px',
-                }}>1</div>
-                <div>
-                  <div style={{display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap' as const}}>
-                    <span style={{fontSize:'0.72rem',fontWeight:700,color:'#4285f4',background:'rgba(66,133,244,0.1)',borderRadius:'100px',padding:'2px 8px',whiteSpace:'nowrap' as const}}>
-                      최초 1회만
+
+            {/* 사용 방법 안내 — 수평 스텝 카드 */}
+            <div style={{
+              padding:'16px 20px',
+              background:'linear-gradient(135deg,rgba(66,133,244,0.05) 0%,rgba(52,168,83,0.03) 100%)',
+              border:'1px solid rgba(66,133,244,0.13)',
+              borderRadius:'14px',
+              marginBottom:'16px',
+            }}>
+              <div className="gemini-steps" style={{gap:'10px'}}>
+
+                {/* STEP 1 */}
+                <div className="gemini-step-row">
+                  <div style={{
+                    flexShrink:0,width:'22px',height:'22px',borderRadius:'50%',marginTop:'1px',
+                    background:'linear-gradient(135deg,#4285f4,#34a853)',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    fontSize:'0.68rem',fontWeight:800,color:'#fff',
+                  }}>1</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <span style={{fontSize:'0.68rem',fontWeight:700,color:'#4285f4',background:'rgba(66,133,244,0.1)',borderRadius:'100px',padding:'1px 8px',marginRight:'8px',whiteSpace:'nowrap' as const}}>최초 1회만</span>
+                    <span style={{fontSize:'0.8rem',color:'var(--text-muted)'}}>
+                      Gemini 설정 → 개인 인텔리전스 → 연결된 앱 → Google Workspace 활성화
                     </span>
                   </div>
-                  <div style={{display:'flex',alignItems:'center',gap:'6px',marginTop:'6px',flexWrap:'wrap' as const}}>
-                    {['설정','개인 인텔리전스','연결된 앱','Google Workspace 활성화'].map((step, i, arr) => (
-                      <span key={i} style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                        <span style={{
-                          fontSize:'0.8rem',fontWeight:600,color:'var(--text)',
-                          background:'var(--bg-deeper)',borderRadius:'8px',padding:'3px 10px',
-                          whiteSpace:'nowrap' as const,
-                        }}>{step}</span>
-                        {i < arr.length - 1 && <span style={{color:'var(--text-muted)',fontSize:'0.8rem',fontWeight:700}}>›</span>}
-                      </span>
-                    ))}
-                  </div>
                 </div>
-              </div>
-              {/* divider */}
-              <div style={{height:'1px',background:'var(--card-border)',margin:'0 0 0 36px'}} />
-              {/* STEP 2 */}
-              <div style={{display:'flex',alignItems:'flex-start',gap:'12px'}}>
-                <div style={{
-                  flexShrink:0,width:'24px',height:'24px',borderRadius:'50%',
-                  background:'linear-gradient(135deg,#EB701A,#ff8c3a)',
-                  display:'flex',alignItems:'center',justifyContent:'center',
-                  fontSize:'0.72rem',fontWeight:800,color:'#fff',marginTop:'1px',
-                }}>2</div>
-                <p style={{fontSize:'0.85rem',color:'var(--text)',lineHeight:1.6,marginTop:'2px'}}>
-                  <span style={{fontWeight:700}}>분석 질문 카드</span>를 클릭해서 복사 →{' '}
-                  <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer"
-                    style={{color:'#4285f4',fontWeight:700,textDecoration:'underline',textUnderlineOffset:'3px'}}>
-                    gemini.google.com/app
-                  </a>
-                  {'에서 붙여넣기'}
-                </p>
-              {/* Pro 팁 */}
-              <div style={{height:'1px',background:'var(--card-border)',margin:'0 0 0 36px'}} />
-              <div style={{display:'flex',alignItems:'center',gap:'10px',paddingLeft:'36px',flexWrap:'wrap' as const}}>
-                <span style={{
-                  fontSize:'0.72rem',fontWeight:800,letterSpacing:'0.06em',
-                  color:'#fff',background:'linear-gradient(135deg,#4285f4,#a855f7)',
-                  borderRadius:'100px',padding:'2px 10px',whiteSpace:'nowrap' as const,
-                }}>PRO</span>
-                <p style={{fontSize:'0.82rem',color:'var(--text-muted)',lineHeight:1.5}}>
-                  구글 로그인 후 <span style={{color:'var(--text)',fontWeight:600}}>Flash으로도 답변은 나오지만</span>{' '}
-                  <span style={{color:'#a855f7',fontWeight:700}}>Pro 모드</span>로 변경하면 더 구체적인 분석을 받을 수 있어요
-                </p>
-              </div>
+
+                <div style={{height:'1px',background:'var(--card-border)',margin:'0 4px 0 30px'}} />
+
+                {/* STEP 2 */}
+                <div className="gemini-step-row">
+                  <div style={{
+                    flexShrink:0,width:'22px',height:'22px',borderRadius:'50%',marginTop:'1px',
+                    background:'linear-gradient(135deg,#EB701A,#ff8c3a)',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    fontSize:'0.68rem',fontWeight:800,color:'#fff',
+                  }}>2</div>
+                  <p style={{flex:1,minWidth:0,fontSize:'0.82rem',color:'var(--text)',lineHeight:1.55,margin:0}}>
+                    아래 <span style={{fontWeight:700}}>분석 질문 카드</span>를 클릭해서 복사 →{' '}
+                    <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer"
+                      style={{color:'#4285f4',fontWeight:700,textDecoration:'underline',textUnderlineOffset:'2px'}}>
+                      gemini.google.com/app
+                    </a>
+                    에 붙여넣기
+                  </p>
+                </div>
+
+                <div style={{height:'1px',background:'var(--card-border)',margin:'0 4px 0 30px'}} />
+
+                {/* PRO 팁 */}
+                <div style={{display:'flex',alignItems:'flex-start',gap:'8px',paddingLeft:'30px',flexWrap:'wrap' as const}}>
+                  <span style={{
+                    flexShrink:0,fontSize:'0.65rem',fontWeight:800,letterSpacing:'0.06em',
+                    color:'#fff',background:'linear-gradient(135deg,#4285f4,#a855f7)',
+                    borderRadius:'100px',padding:'2px 8px',whiteSpace:'nowrap' as const,marginTop:'2px',
+                  }}>PRO</span>
+                  <p style={{fontSize:'0.78rem',color:'var(--text-muted)',lineHeight:1.5,margin:0}}>
+                    로그인 후{' '}
+                    <span style={{color:'#a855f7',fontWeight:700}}>Pro 모드</span>
+                    로 변경하면 더 구체적인 분석을 받을 수 있어요
+                  </p>
+                </div>
+
               </div>
             </div>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginTop:'40px'}}>
-            <a
-              href="https://gemini.google.com/app"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display:'flex', alignItems:'center', justifyContent:'space-between',
-                padding:'24px 28px',
-                background:'linear-gradient(135deg,rgba(66,133,244,0.08) 0%,rgba(52,168,83,0.06) 50%,rgba(251,188,5,0.06) 100%)',
-                border:'1px solid rgba(66,133,244,0.2)',
-                borderRadius:'16px', textDecoration:'none',
-                transition:'all 0.2s', cursor:'pointer',
-                flexWrap:'wrap' as const, gap:'16px',
-              }}
-            >
-              <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
+
+            {/* 메인 액션 카드 2열 그리드 (모바일 1열) */}
+            <div className="gemini-grid">
+
+              {/* Gemini 열기 링크 */}
+              <a
+                href="https://gemini.google.com/app"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display:'flex',alignItems:'center',gap:'16px',
+                  padding:'20px 22px',
+                  background:'linear-gradient(135deg,rgba(66,133,244,0.08) 0%,rgba(52,168,83,0.06) 50%,rgba(251,188,5,0.05) 100%)',
+                  border:'1px solid rgba(66,133,244,0.18)',
+                  borderRadius:'14px',textDecoration:'none',
+                  transition:'border-color 0.2s,box-shadow 0.2s',
+                }}
+              >
                 <div style={{
-                  width:'48px', height:'48px', borderRadius:'12px', flexShrink:0,
+                  width:'44px',height:'44px',borderRadius:'12px',flexShrink:0,
                   background:'linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335)',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:'1.5rem',
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.3rem',
                 }}>✨</div>
-                <div>
-                  <div style={{fontSize:'0.72rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'#4285f4', marginBottom:'4px'}}>
-                    AI 분석
-                  </div>
-                  <p style={{fontSize:'1rem', fontWeight:800, color:'var(--text)', letterSpacing:'-0.02em', lineHeight:1.2}}>
-                    Gemini로 콘텐츠 분석하기
-                  </p>
-                  <p style={{fontSize:'0.8rem', color:'var(--text-muted)', marginTop:'4px'}}>
-                    gemini.google.com/app → 영상 제목 붙여넣기로 직접 분석
-                  </p>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase' as const,color:'#4285f4',marginBottom:'3px'}}>AI 분석</div>
+                  <p style={{fontSize:'0.95rem',fontWeight:800,color:'var(--text)',letterSpacing:'-0.02em',lineHeight:1.2,margin:0}}>Gemini 열기</p>
+                  <p style={{fontSize:'0.75rem',color:'var(--text-muted)',marginTop:'3px',margin:0}}>복사한 질문을 붙여넣기</p>
                 </div>
-              </div>
-              <div style={{
-                display:'inline-flex', alignItems:'center', gap:'6px',
-                background:'linear-gradient(135deg,#4285f4,#34a853)',
-                color:'#fff', borderRadius:'100px',
-                padding:'10px 20px', fontSize:'0.85rem', fontWeight:700,
-                flexShrink:0,
-              }}>
-                Gemini 열기 ↗
-              </div>
-            </a>
-            <PromptCopyCard
-              monthlyTop10={monthlyTop10}
-              monthTop5={monthTop5}
-              sortedMonths={sortedMonths}
-              currentMonth={currentMonth}
-            />
+                <div style={{
+                  display:'inline-flex',alignItems:'center',gap:'4px',
+                  background:'linear-gradient(135deg,#4285f4,#34a853)',
+                  color:'#fff',borderRadius:'100px',
+                  padding:'8px 16px',fontSize:'0.78rem',fontWeight:700,
+                  flexShrink:0,whiteSpace:'nowrap' as const,
+                }}>
+                  열기 ↗
+                </div>
+              </a>
+
+              {/* 프롬프트 복사 카드 */}
+              <PromptCopyCard
+                monthlyTop10={monthlyTop10}
+                monthTop5={monthTop5}
+                sortedMonths={sortedMonths}
+                currentMonth={currentMonth}
+              />
+
+            </div>
           </div>
+          {/* ─── /Gemini 섹션 ─── */}
         </div>
       </section>
 
