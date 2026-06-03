@@ -355,7 +355,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
 
       {/* ── 최신 영상 + 공지 ── */}
       <div id="videos" className="sec-light" style={{ margin: isMobile ? '20px 0 0' : '40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding: isMobile ? '0' : '40px clamp(1.5rem, 5vw, 3rem)' }}>
-        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: isMobile ? '20px' : '40px', alignItems:'start' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap: isMobile ? '20px' : '40px' }}>
           <div>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom: isMobile ? '4px' : '8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />최신 업로드
@@ -402,15 +402,15 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
             </div>
           </div>
 
-          <div>
+          <div style={{ order: -1 }}>
             <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A', letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px' }}>
               <span style={{ display:'block', width:'24px', height:'2px', background:'#EB701A', borderRadius:'2px' }} />SOOP 공지
             </p>
             <h2 style={{ fontSize: isMobile ? '1.3rem' : 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', marginBottom: isMobile ? '10px' : '16px' }}>최신 공지</h2>
-            <div className="mob-notice-list" style={{ display:'flex', flexDirection:'column', gap: isMobile ? '0' : '10px', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', overflow: 'hidden', background: isMobile ? 'var(--card)' : 'transparent' }}>
+            <div className="mob-notice-list" style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0' : '12px', flexWrap: isMobile ? undefined : 'wrap' as const, borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', overflow: 'hidden', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {notices.map((n, ni) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="notice-card"
-                  style={{ display:'flex', flexDirection:'column', gap:'6px', padding: isMobile ? '14px 18px' : '16px', background:'var(--card)', borderRadius: isMobile ? '0' : '14px', border: isMobile ? 'none' : '1px solid var(--card-border)', borderBottom: isMobile ? '1px solid var(--card-border)' : 'none', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
+                  style={{ display:'flex', flexDirection:'column', gap:'6px', flex: isMobile ? undefined : '1 1 0', minWidth: isMobile ? undefined : '0', padding: isMobile ? '14px 18px' : '16px', background:'var(--card)', borderRadius: isMobile ? '0' : '14px', border: isMobile ? 'none' : '1px solid var(--card-border)', borderBottom: isMobile ? '1px solid var(--card-border)' : 'none', textDecoration:'none', transition:'transform 0.15s, box-shadow 0.15s' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'flex-start' : 'space-between', gap:'6px' }}>
                     <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A' }}>
                       {n.date.split('-')[1]}월 {n.date.split('-')[2]}일
@@ -418,7 +418,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                     <div style={{ display:'flex', gap:'8px', fontSize:'0.72rem', color:'var(--text-muted)' }}>
                       <span>❤️ {n.likes}</span>
                       <span>💬 {n.comments}</span>
-                    </div>
+                    </div>h
                   </div>
                   <p style={{ fontWeight:700, fontSize: isMobile ? '0.82rem' : '0.9rem', color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', margin:0 }}>{n.title}</p>
                   <p style={{ color:'var(--text-muted)', display:'-webkit-box', WebkitLineClamp: isMobile ? 1 : 2, WebkitBoxOrient:'vertical', overflow:'hidden', margin:0, lineHeight:1.5, fontSize: isMobile ? '0.72rem' : '0.78rem' } as React.CSSProperties}>{n.summary}</p>
