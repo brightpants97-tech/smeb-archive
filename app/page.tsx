@@ -421,9 +421,7 @@ export default async function Home() {
       <section id="soopcal" className="sec-main mob-cal-section" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
         <div style={{position:'absolute',bottom:'10%',right:'5%',width:'500px',height:'400px',background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)',pointerEvents:'none'}} />
         <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
-          <div className="eyebrow">SOOP 다시보기</div>
-          <h2 className="section-title sec-title" style={{marginBottom:'40px'}}>다시보기 <em style={{fontStyle:'italic'}}>캘린더</em></h2>
-          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
+            <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
 
