@@ -174,26 +174,11 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
   const totalViews = top10.reduce((s, v) => s + v.views, 0);
   const avgViews   = Math.round(totalViews / top10.length);
   const stats = [
-    { label:'총 조회수',   value: fmt(totalViews) },
+    { label:'요 조회수',   value: fmt(totalViews) },
     { label:'1위 조회수',  value: fmt(top10[0].views) },
     { label:'평균 조회수', value: fmt(avgViews) },
   ];
 
-  // 카드별 테마
-  const THEMES: Record<number,{bg:string;fg:string;accent:string}> = {
-    1:  { bg:'#0d0d0d', fg:'#fff',    accent:'#EB701A' },
-    2:  { bg:'#FAF4E8', fg:'#0d0d0d', accent:'#0d0d0d' },
-    3:  { bg:'#EB701A', fg:'#fff',    accent:'rgba(255,255,255,0.7)' },
-    4:  { bg:'#111',    fg:'#EB701A', accent:'rgba(255,255,255,0.45)' },
-    5:  { bg:'#F2EBD9', fg:'#0d0d0d', accent:'#0d0d0d' },
-    6:  { bg:'#16213e', fg:'#fff',    accent:'#EB701A' },
-    7:  { bg:'#1a1a1a', fg:'#fff',    accent:'#EB701A' },
-    8:  { bg:'#EB701A', fg:'#0d0d0d', accent:'rgba(0,0,0,0.5)' },
-    9:  { bg:'#0d0d0d', fg:'#EB701A', accent:'rgba(255,255,255,0.5)' },
-    10: { bg:'#F2EBD9', fg:'#0d0d0d', accent:'#EB701A' },
-  };
-
-  // 데스크탑 그리드 위치
   const DPOS: Record<number, React.CSSProperties> = {
     1:  { gridColumn:'1/3', gridRow:'1' },
     2:  { gridColumn:'3',   gridRow:'1' },
@@ -210,7 +195,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
   const hov = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = e.currentTarget as HTMLElement;
     el.style.transform = 'scale(1.03)';
-    el.style.boxShadow = '0 20px 50px rgba(0,0,0,0.35)';
+    el.style.boxShadow = '0 20px 50px rgba(0,0,0,0.4)';
     el.style.zIndex = '10';
   };
   const unhov = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -228,132 +213,73 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
           to   { opacity:1; transform:translateY(0); }
         }
       `}</style>
-
       <div style={{
-        display:'grid',
+        display: 'grid',
         gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3,1fr)',
-        gridAutoRows: isMobile ? 'clamp(150px,40vw,200px)' : 'clamp(180px,17vw,240px)',
-        gap:'10px',
+        gridAutoRows: isMobile ? 'clamp(140px,38vw,190px)' : 'clamp(170px,16vw,230px)',
+        gap: '10px',
       }}>
         {top10.map((video, i) => {
           const rank = i + 1;
-          const th = THEMES[rank];
-          const pos = isMobile ? {} : DPOS[rank];
+          const pos  = isMobile ? {} : DPOS[rank];
           const delay = `${i * 0.055}s`;
-          const dateStr = new Date(video.publishedAt).toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
-
-          /* ── 카드 콘텐츠 ── */
-          let inner: React.ReactNode;
-
-          if (rank === 1) {
-            /* 콜라주형 wide */
-            inner = (
-              <div style={{ position:'relative', width:'100%', height:'100%', display:'flex', gap:'16px', padding:'20px', overflow:'hidden' }}>
-                <span style={{ position:'absolute', top:'-15px', left:'-5px', fontSize:'clamp(120px,16vw,190px)', fontWeight:900, lineHeight:1, color:'rgba(235,112,26,0.1)', pointerEvents:'none', userSelect:'none' as const }}>1</span>
-                <div style={{ width:'48%', flexShrink:0, position:'relative', zIndex:1 }}>
-                  <img src={video.thumbnail} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'10px', transform:'rotate(-2.5deg)', boxShadow:'6px 10px 28px rgba(0,0,0,0.6)' }} />
-                  <div style={{ position:'absolute', top:'8px', left:'8px', background:'#EB701A', color:'#fff', fontWeight:900, fontSize:'0.55rem', padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.1em' }}>BEST</div>
-                </div>
-                <div style={{ flex:1, display:'flex', flexDirection:'column' as const, justifyContent:'flex-end', position:'relative', zIndex:1 }}>
-                  <div style={{ fontSize:'0.58rem', fontWeight:800, color:'#EB701A', letterSpacing:'0.15em', marginBottom:'8px', textTransform:'uppercase' as const }}>No.1 · 이번달</div>
-                  <p style={{ fontSize:'clamp(0.85rem,1.6vw,1.1rem)', fontWeight:900, color:'#fff', lineHeight:1.3, marginBottom:'10px', display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:'rgba(255,255,255,0.55)' }}>👁 {video.views.toLocaleString()}회</span>
-                </div>
-              </div>
-            );
-          } else if (rank === 4) {
-            /* 조회수 통계형 */
-            inner = (
-              <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column' as const, justifyContent:'space-between', padding:'16px', position:'relative', overflow:'hidden' }}>
-                <div>
-                  <div style={{ fontSize:'0.55rem', fontWeight:800, letterSpacing:'0.15em', color:'rgba(235,112,26,0.5)', marginBottom:'4px' }}>RANK · {rank}</div>
-                  <div style={{ fontSize:'0.58rem', fontWeight:800, letterSpacing:'0.12em', color:'#EB701A', marginBottom:'4px' }}>조회수</div>
-                  <p style={{ fontSize:'clamp(1.6rem,3.5vw,2.6rem)', fontWeight:900, color:'#EB701A', letterSpacing:'-0.04em', lineHeight:1 }}>{fmt(video.views)}</p>
-                </div>
-                <p style={{ fontSize:'0.75rem', fontWeight:700, color:'rgba(255,255,255,0.6)', lineHeight:1.35, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-              </div>
-            );
-          } else if (rank === 7) {
-            /* 와이드 썸네일형 */
-            inner = (
-              <div style={{ position:'relative', width:'100%', height:'100%' }}>
-                <img src={video.thumbnail} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', filter:'grayscale(25%)' }} />
-                <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(235,112,26,0.72) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)' }} />
-                <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column' as const, justifyContent:'space-between', padding:'16px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <span style={{ fontSize:'0.58rem', fontWeight:900, letterSpacing:'0.15em', color:'#fff', opacity:.85 }}>NO.{rank}</span>
-                    <span style={{ fontSize:'0.65rem', fontWeight:700, color:'#fff', opacity:.75 }}>👁 {fmt(video.views)}</span>
-                  </div>
-                  <p style={{ fontSize:'clamp(0.85rem,1.6vw,1.15rem)', fontWeight:900, color:'#fff', lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                </div>
-              </div>
-            );
-          } else if (rank === 8) {
-            /* 순위 숫자 강조형 */
-            inner = (
-              <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column' as const, justifyContent:'space-between', padding:'14px 16px', position:'relative', overflow:'hidden' }}>
-                <span style={{ position:'absolute', bottom:'-20px', right:'-8px', fontSize:'clamp(90px,14vw,140px)', fontWeight:900, lineHeight:1, color:'rgba(0,0,0,0.12)', pointerEvents:'none' }}>8</span>
-                <span style={{ fontSize:'0.55rem', fontWeight:900, letterSpacing:'0.15em', color:'rgba(0,0,0,0.4)' }}>RANK</span>
-                <div style={{ position:'relative', zIndex:1 }}>
-                  <p style={{ fontSize:'clamp(3rem,6vw,5.5rem)', fontWeight:900, letterSpacing:'-0.05em', lineHeight:0.9, color:'#0d0d0d', marginBottom:'8px' }}>8</p>
-                  <p style={{ fontSize:'0.72rem', fontWeight:700, color:'rgba(0,0,0,0.65)', lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                </div>
-              </div>
-            );
-          } else if (rank === 3 || rank === 6 || rank === 9) {
-            /* 타이틀 강조형 (컬러 배경) */
-            inner = (
-              <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column' as const, justifyContent:'space-between', padding:'14px 16px', position:'relative', overflow:'hidden' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontSize:'0.55rem', fontWeight:900, letterSpacing:'0.15em', color: th.accent }}>NO.{rank}</span>
-                  <span style={{ fontSize:'0.6rem', color: th.accent }}>👁 {fmt(video.views)}</span>
-                </div>
-                <p style={{ fontSize:'clamp(0.88rem,1.8vw,1.2rem)', fontWeight:900, color: th.fg, lineHeight:1.25, display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                <span style={{ fontSize:'0.58rem', fontWeight:600, color: th.accent, letterSpacing:'0.04em' }}>{dateStr}</span>
-              </div>
-            );
-          } else {
-            /* 썸네일형 (2, 5, 10) */
-            inner = (
-              <div style={{ position:'relative', width:'100%', height:'100%', display:'flex', flexDirection:'column' as const }}>
-                <div style={{ flex:1, overflow:'hidden', minHeight:0 }}>
-                  <img src={video.thumbnail} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                </div>
-                <div style={{ padding:'10px 12px', background: th.bg, flexShrink:0 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'3px' }}>
-                    <span style={{ fontSize:'0.55rem', fontWeight:900, letterSpacing:'0.15em', color: th.accent }}>NO.{rank}</span>
-                    <span style={{ fontSize:'0.6rem', fontWeight:700, color: th.fg, opacity:.6 }}>👁 {fmt(video.views)}</span>
-                  </div>
-                  <p style={{ fontSize:'0.75rem', fontWeight:800, color: th.fg, lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                </div>
-              </div>
-            );
-          }
-
+          const isFirst = rank === 1;
           return (
             <div key={video.id}
               onClick={() => onPlay(video.id)}
               onMouseEnter={hov}
               onMouseLeave={unhov}
               style={{
-                ...pos,
-                background: th.bg,
-                borderRadius:'14px',
-                overflow:'hidden',
-                cursor:'pointer',
+                ...pos, position:'relative', cursor:'pointer',
+                borderRadius:'14px', overflow:'hidden', background:'#111',
                 animation:`smebSlideUp 0.6s ${delay} cubic-bezier(0.22,1,0.36,1) both`,
-                transition:'transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease',
-                boxShadow:'0 2px 12px rgba(0,0,0,0.1)',
-                position:'relative',
+                boxShadow: isFirst ? '0 0 0 2px #EB701A' : '0 2px 10px rgba(0,0,0,0.15)',
               }}
             >
-              {inner}
+              <img src={video.thumbnail} alt={video.title}
+                style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', pointerEvents:'none' }} />
+              <div style={{ position:'absolute', inset:0,
+                background:'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.08) 100%)' }} />
+              <span style={{
+                position:'absolute', top:'-8px', right:'4px',
+                fontSize:'clamp(70px,11vw,130px)', fontWeight:900, lineHeight:1,
+                color:'rgba(255,255,255,0.1)', letterSpacing:'-0.06em',
+                pointerEvents:'none', userSelect:'none' as const,
+              }}>{rank}</span>
+              <div style={{
+                position:'absolute', top:'12px', left:'12px',
+                background: isFirst ? '#EB701A' : 'rgba(0,0,0,0.55)',
+                backdropFilter:'blur(6px)',
+                color:'#fff', fontWeight:900,
+                fontSize: isFirst ? '0.85rem' : '0.78rem',
+                width:'28px', height:'28px', borderRadius:'50%',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                border: isFirst ? '2px solid rgba(255,255,255,0.4)' : '2px solid rgba(255,255,255,0.2)',
+                boxShadow: isFirst ? '0 0 0 3px rgba(235,112,26,0.35)' : 'none',
+              }}>{rank}</div>
+              {isFirst && (
+                <div style={{ position:'absolute', top:'12px', right:'12px',
+                  background:'#EB701A', color:'#fff', fontSize:'0.55rem', fontWeight:900,
+                  padding:'3px 8px', borderRadius:'4px', letterSpacing:'0.1em' }}>BEST</div>
+              )}
+              <div style={{ position:'absolute', bottom:'12px', left:'12px', right:'12px' }}>
+                <div style={{
+                  fontSize:'clamp(1.1rem,2.2vw,1.7rem)', fontWeight:900,
+                  color:'#EB701A', letterSpacing:'-0.03em', lineHeight:1, marginBottom:'5px',
+                }}>
+                  {fmt(video.views)}
+                  <span style={{ fontSize:'0.6em', fontWeight:700, color:'rgba(235,112,26,0.7)', marginLeft:'4px' }}>회</span>
+                </div>
+                <p style={{
+                  fontSize: isMobile ? '0.72rem' : '0.78rem', fontWeight:700,
+                  color:'rgba(255,255,255,0.88)', lineHeight:1.35,
+                  display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden',
+                } as React.CSSProperties}>{video.title}</p>
+              </div>
             </div>
           );
         })}
       </div>
-
-      {/* BY THE NUMBERS */}
       <div style={{ marginTop:'20px' }}>
         <div style={{ borderRadius:'16px', border:'1px solid var(--card-border)', background:'var(--card)', padding:'20px 24px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'18px' }}>
