@@ -105,11 +105,9 @@ function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
         }}>
           {data.topYT?.title || '업로드 없음'}
         </p>
-        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' as const }}>
-          {data.ytCount > 0 && <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '100px', background: 'rgba(255,50,50,0.12)', color: '#ff7878' }}>YT {data.ytCount}</span>}
-          {data.soopCount > 0 && <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '100px', background: 'rgba(0,150,255,0.12)', color: '#60b8ff' }}>SOOP {data.soopCount}</span>}
-          {data.topYT && <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '100px', background: 'rgba(235,112,26,0.12)', color: ORANGE }}>{fmt(data.topYT.views)}회</span>}
-        </div>
+        {data.topYT && (
+          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: ORANGE }}>{fmt(data.topYT.views)}회</span>
+        )}
       </div>
     </div>
   );
