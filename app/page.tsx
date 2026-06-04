@@ -249,18 +249,6 @@ export default async function Home() {
         </a>
       )}
 
-      {liveStatus.isLive && (
-        <a href={`https://www.sooplive.com/${process.env.SOOP_BJID || 'townboy'}`} target="_blank" rel="noopener noreferrer"
-          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', background:'linear-gradient(90deg,#e8000a,#c0000a)', color:'#fff', padding:'10px 20px', textDecoration:'none', position:'sticky', top:'60px', zIndex:199 }}>
-          <span style={{ display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(255,255,255,0.2)', borderRadius:'100px', padding:'3px 10px', fontSize:'0.72rem', fontWeight:800 }}>
-            <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#fff', display:'inline-block', animation:'pulse 1.2s infinite' }} />
-            LIVE
-          </span>
-          <span style={{ fontSize:'0.88rem', fontWeight:600, maxWidth:'60vw', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{liveStatus.title || '스맵임 방송 중'}</span>
-          {liveStatus.viewers > 0 && <span style={{ fontSize:'0.78rem', opacity:0.85 }}>👁 {Number(liveStatus.viewers).toLocaleString()}명 시청 중</span>}
-          <span style={{ fontSize:'0.78rem', opacity:0.75 }}>→ 바로가기</span>
-        </a>
-      )}
 
       <section className="mob-hero" style={{padding:'clamp(3rem,8vw,6rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
         <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(2rem,4vw,4rem)',flexWrap:'wrap'}}>
@@ -418,22 +406,16 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 오렌지 풀블리드 구분 섹션 */}
-      <section style={{background:'#EB701A',padding:'36px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
-        <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px)',backgroundSize:'40px 40px',pointerEvents:'none'}} />
-        <div style={{maxWidth:'1400px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'2rem',flexWrap:'wrap' as const,position:'relative',zIndex:1}}>
-          <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A'}}>
-            SOOP <em style={{fontStyle:'italic'}}>다시보기</em>
-          </h2>
-          <p style={{fontSize:'0.92rem',color:'rgba(0,0,0,0.5)',maxWidth:'260px',lineHeight:1.6,fontWeight:500}}>
-            방송별 다시보기를 월별 캘린더로 정리했어요
-          </p>
-        </div>
-      </section>
-      <section id="soopcal" className="sec-main mob-cal-section" style={{padding:'40px clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
+      <section id="soopcal" className="sec-main mob-cal-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
         <div style={{position:'absolute',bottom:'10%',right:'5%',width:'500px',height:'400px',background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)',pointerEvents:'none'}} />
         <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
-            <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
+          <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
+            <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
+            <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1}}>
+              SOOP <em style={{fontStyle:'italic'}}>다시보기</em>
+            </h2>
+          </div>
+          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
 
