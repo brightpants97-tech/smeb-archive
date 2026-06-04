@@ -49,11 +49,11 @@ function StatCard({ value, label, suffix = '', delay = 0, active }: {
   useEffect(() => { if (active) { const t = setTimeout(() => setGo(true), delay); return () => clearTimeout(t); } }, [active, delay]);
   const count = useCountUp(value, 2400, go);
   return (
-    <div style={{ textAlign: 'center', padding: '28px 20px', background: 'rgba(235,112,26,0.05)', border: '1px solid rgba(235,112,26,0.13)', borderRadius: '20px', flex: 1, minWidth: '160px' }}>
-      <div style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)', fontWeight: 900, letterSpacing: '-0.04em', color: ORANGE, lineHeight: 1, fontVariantNumeric: 'tabular-nums' as const }}>
+    <div style={{ textAlign: 'center', padding: '24px 16px', background: 'rgba(235,112,26,0.05)', border: '1px solid rgba(235,112,26,0.13)', borderRadius: '20px', flex: 1, minWidth: '140px', overflow: 'hidden' }}>
+      <div style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', fontWeight: 900, letterSpacing: '-0.03em', color: ORANGE, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' as const, overflow: 'hidden', wordBreak: 'break-all' as const }}>
         {fmt(count)}{suffix}
       </div>
-      <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginTop: '10px', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '10px', fontWeight: 500 }}>{label}</div>
     </div>
   );
 }
@@ -254,21 +254,21 @@ export default function RewindClient({ year, stats, monthlyData, top10 }: Props)
           </div>
 
           {/* 서브 스탯 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginTop: '14px' }}>
-            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px' }}>
-              <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>활동 개월 수</div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: '#fff' }}>{stats.activeMonths}개월 <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.3)' }}>/ 12</span></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '14px', marginTop: '14px' }}>
+            <div style={{ padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
+              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>활동 개월 수</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{stats.activeMonths}개월 <span style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)' }}>/ 12</span></div>
             </div>
-            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px' }}>
-              <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>가장 바빴던 달</div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
-              <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>유튜브 {stats.peakMonth.ytCount}개 · SOOP {stats.peakMonth.soopCount}개</div>
+            <div style={{ padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
+              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>가장 바빴던 달</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>YT {stats.peakMonth.ytCount} · SOOP {stats.peakMonth.soopCount}</div>
             </div>
             {top10[0] && (
-              <div style={{ padding: '20px 24px', background: 'rgba(255,190,0,0.04)', border: '1px solid rgba(255,190,0,0.14)', borderRadius: '16px', gridColumn: 'span 2' }}>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(255,190,0,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>🏆 올해의 영상</div>
-                <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', lineHeight: 1.4, margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{top10[0].title}</p>
-                <span style={{ fontSize: '0.82rem', color: '#FFB800', fontWeight: 700 }}>{fmt(top10[0].views)}회 조회</span>
+              <div style={{ padding: '18px 20px', background: 'rgba(255,190,0,0.04)', border: '1px solid rgba(255,190,0,0.14)', borderRadius: '16px', overflow: 'hidden' }}>
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,190,0,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>🏆 올해의 영상</div>
+                <p style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 6px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{top10[0].title}</p>
+                <span style={{ fontSize: '0.78rem', color: '#FFB800', fontWeight: 700 }}>{fmt(top10[0].views)}회 조회</span>
               </div>
             )}
           </div>
