@@ -45,7 +45,7 @@ function VideoModal({ activeId, onClose }: { activeId: string; onClose: () => vo
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'}>
           ✕ 닫기
         </button>
-        <div style={{ aspectRatio:'16/9', borderRadius:'18px', overflow:'hidden', boxShadow:'0 32px 100px rgba(0,0,0,0.8)' }}>
+        <div style={{ aspectRatio:'16/9', borderRadius:'28px', overflow:'hidden', boxShadow:'0 32px 100px rgba(0,0,0,0.8)' }}>
           <iframe src={`https://www.youtube.com/embed/${activeId}?autoplay=1&rel=0`}
             width="100%" height="100%"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -70,7 +70,7 @@ function LiveSection() {
   }, []);
 
   return (
-    <div style={{ borderRadius:'16px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', display:'flex', flexDirection:'column' }}>
+    <div style={{ borderRadius:'24px', overflow:'hidden', border:'1px solid var(--card-border)', background:'var(--card)', boxShadow:'var(--card-shadow,0 4px 24px rgba(0,0,0,0.09))', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', display:'flex', flexDirection:'column' }}>
       <a href={PLAY_URL} target="_blank" rel="noopener noreferrer" style={{ display:'block', textDecoration:'none' }}>
         <div style={{ width:'100%', aspectRatio:'16/9', background:'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', display:'flex', alignItems:'center', justifyContent:'center' }}>
           <img src={PROFILE} alt="스맵" style={{ width:'72px', height:'72px', borderRadius:'50%', border:'3px solid rgba(235,112,26,0.7)', objectFit:'cover' }} />
@@ -192,7 +192,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         {/* 리스트 컨테이너 */}
         <div style={{
           background:'var(--card)',
-          borderRadius:'18px',
+          borderRadius:'24px',
           overflow:'hidden',
           border:'1px solid var(--card-border)',
           boxShadow:'0 2px 16px rgba(0,0,0,0.06)',
@@ -227,13 +227,13 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                   {rank}
                 </div>
                 {/* 썸네일 */}
-                <div style={{ flexShrink:0, width:'80px', height:'45px', borderRadius:'8px', overflow:'hidden', position:'relative' }}>
+                <div style={{ flexShrink:0, width:'80px', height:'45px', borderRadius:'12px', overflow:'hidden', position:'relative' }}>
                   <img src={video.thumbnail} alt={video.title}
                     style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                   {isFirst && (
                     <div style={{
                       position:'absolute', inset:0,
-                      border:'2px solid #EB701A', borderRadius:'8px', pointerEvents:'none',
+                      border:'2px solid #EB701A', borderRadius:'12px', pointerEvents:'none',
                     }} />
                   )}
                 </div>
@@ -262,12 +262,12 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         </div>
 
         {/* BY THE NUMBERS — Apple 카드 스타일 */}
-        <div style={{ marginTop:'16px', background:'var(--bg-deeper)', borderRadius:'18px', padding:'16px' }}>
+        <div style={{ marginTop:'16px', background:'var(--bg-deeper)', borderRadius:'24px', padding:'16px' }}>
           <p style={{ fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:'12px' }}>BY THE NUMBERS</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px' }}>
             {stats.map((s, i) => (
               <div key={i} style={{
-                background:'var(--card)', borderRadius:'14px', padding:'14px 10px',
+                background:'var(--card)', borderRadius:'22px', padding:'14px 10px',
                 textAlign:'center', border:'1px solid var(--card-border)',
                 boxShadow:'0 1px 4px rgba(0,0,0,0.05)',
               }}>
@@ -310,9 +310,9 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         display:'grid',
         gridTemplateColumns:'repeat(3,1fr)',
         gridAutoRows:'clamp(170px,16vw,230px)',
-        gap:'10px',
-        background:'var(--bg-deeper)',
-        padding:'12px',
+        gap:'14px',
+        background:'var(--card)',
+        padding:'16px',
         borderRadius:'20px',
       }}>
         {top10.map((video, i) => {
@@ -379,7 +379,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
       {/* BY THE NUMBERS — Apple 카드 스타일 */}
       <div style={{ marginTop:'12px', background:'var(--bg-deeper)', borderRadius:'20px', padding:'20px 24px' }}>
         <p style={{ fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:'14px' }}>BY THE NUMBERS</p>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'10px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'14px' }}>
           {stats.map((s, i) => (
             <div key={i} style={{
               background:'var(--card)', borderRadius:'16px', padding:'20px 24px',
@@ -457,7 +457,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)', backgroundSize:'36px 36px', pointerEvents:'none' }} />
               <h2 style={{ fontSize: isMobile ? '2rem' : 'clamp(2rem,5vw,4rem)', fontWeight:900, letterSpacing:'-0.06em', lineHeight:1, color:'#1A1A1A', position:'relative', zIndex:1 }}>최신 영상</h2>
             </div>
-            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '0' : '14px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '16px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'transparent' }}>
+            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '0' : '16px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '22px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'transparent' }}>
               {videos.slice(0, 6).map((video, i) => (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
                   className="card fade-in-up"
@@ -528,7 +528,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                   ))}
                 </div>
               ) : (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'10px' }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'14px' }}>
                   {notices.map((n, ni) => (
                     <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer"
                       style={{ display:'flex', flexDirection:'column', gap:'10px', padding:'20px 22px', background:'var(--card)', borderRadius:'16px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', boxShadow:'0 1px 6px rgba(0,0,0,0.06)', transition:'transform 0.18s, box-shadow 0.18s' } as React.CSSProperties}
