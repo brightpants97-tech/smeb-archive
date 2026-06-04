@@ -149,21 +149,21 @@ export default async function Home() {
         html{scroll-behavior:smooth;overflow-x:hidden;}
         body{font-family:'Pretendard',sans-serif;transition:background 0.3s,color 0.3s;overflow-x:hidden;}
         a{text-decoration:none;color:inherit;}
-        :root{--bg:#FAF4E8;--bg-section:#FAF4E8;--bg-deeper:#EDE3D3;--card:#FFFBF4;--card-border:rgba(0,0,0,0.08);--text:#1A1A1A;--text-inv:#1A1A1A;--text-muted:#888888;--text-sub:rgba(0,0,0,0.45);--accent:#EB701A;--header-bg:rgba(250,244,232,0.9);--header-border:rgba(0,0,0,0.08);--nav-text:rgba(0,0,0,0.55);--footer-bg:#1A1A1A;}
-        [data-theme="dark"]{--bg:#0a0a0a;--bg-section:#111111;--bg-deeper:#080808;--card:#161616;--card-border:rgba(255,255,255,0.06);--text:#EDEDED;--text-inv:#ffffff;--text-muted:#666666;--text-sub:rgba(255,255,255,0.35);--accent:#EB701A;--header-bg:rgba(8,8,8,0.92);--header-border:rgba(255,255,255,0.05);--nav-text:rgba(255,255,255,0.5);--footer-bg:#050505;}
+        :root{--bg:#F5EFE2;--bg-section:#F5EFE2;--bg-deeper:#E8DDD0;--card:rgba(255,251,244,0.80);--card-border:rgba(0,0,0,0.09);--card-shadow:0 4px 24px rgba(0,0,0,0.09),0 1px 6px rgba(0,0,0,0.06);--card-shadow-hover:0 16px 56px rgba(0,0,0,0.16),0 4px 16px rgba(0,0,0,0.10);--text:#1A1A1A;--text-inv:#1A1A1A;--text-muted:#888888;--text-sub:rgba(0,0,0,0.45);--accent:#EB701A;--header-bg:rgba(245,239,226,0.88);--header-border:rgba(0,0,0,0.07);--nav-text:rgba(0,0,0,0.55);--footer-bg:#111111;--radius-card:24px;--radius-lg:32px;}
+        [data-theme="dark"]{--bg:#0a0a0a;--bg-section:#111111;--bg-deeper:#080808;--card:rgba(28,28,28,0.80);--card-border:rgba(255,255,255,0.08);--card-shadow:0 4px 24px rgba(0,0,0,0.40),0 1px 6px rgba(0,0,0,0.25);--card-shadow-hover:0 20px 60px rgba(0,0,0,0.55),0 6px 20px rgba(0,0,0,0.30);--text:#EDEDED;--text-inv:#ffffff;--text-muted:#666666;--text-sub:rgba(255,255,255,0.35);--accent:#EB701A;--header-bg:rgba(8,8,8,0.92);--header-border:rgba(255,255,255,0.05);--nav-text:rgba(255,255,255,0.5);--footer-bg:#050505;--radius-card:24px;--radius-lg:32px;}
         body{background:var(--bg);color:var(--text);}
         .sec-main{background:var(--bg-section);transition:background 0.3s;}
         .sec-footer{background:var(--footer-bg);transition:background 0.3s;}
-        .card{background:var(--card);border-radius:16px;overflow:hidden;border:1px solid var(--card-border);transition:transform 0.2s,box-shadow 0.2s,background 0.3s;}
-        .card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.12);}
-        .notice-card{display:flex;flex-direction:column;gap:8px;padding:16px;background:var(--card);border-radius:14px;border:1px solid var(--card-border);text-decoration:none;transition:transform 0.15s,box-shadow 0.15s;color:inherit;}
-        .notice-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
+        .card{background:var(--card);border-radius:var(--radius-card,24px);overflow:hidden;border:1px solid var(--card-border);box-shadow:var(--card-shadow);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);transition:transform 0.25s cubic-bezier(0.22,1,0.36,1),box-shadow 0.25s cubic-bezier(0.22,1,0.36,1),background 0.3s;}
+        .card:hover{transform:translateY(-6px) scale(1.01);box-shadow:var(--card-shadow-hover);}
+        .notice-card{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--card);border-radius:var(--radius-card,24px);border:1px solid var(--card-border);box-shadow:var(--card-shadow);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);text-decoration:none;transition:transform 0.2s cubic-bezier(0.22,1,0.36,1),box-shadow 0.2s cubic-bezier(0.22,1,0.36,1);color:inherit;}
+        .notice-card:hover{transform:translateY(-4px) scale(1.01);box-shadow:var(--card-shadow-hover);}
         .site-header{background:var(--header-bg);border-bottom:1px solid var(--header-border);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);transition:background 0.3s,border-color 0.3s;}
         .sec-title{color:var(--text-inv);transition:color 0.3s;}
         .sec-sub-text{color:var(--text-sub);transition:color 0.3s;}
-        .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+        .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;background:rgba(235,112,26,0.08);padding:4px 10px 4px 8px;border-radius:100px;}
         .eyebrow::before{content:'';display:block;width:24px;height:2px;background:var(--accent);border-radius:2px;}
-        .section-title{font-size:clamp(2rem,3.5vw,2.8rem);font-weight:900;letter-spacing:-0.06em;line-height:1;font-stretch:condensed;}
+        .section-title{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;letter-spacing:-0.05em;line-height:1.05;font-stretch:condensed;}
         .fade-in-up{opacity:0;transform:translateY(32px);transition:opacity 0.65s cubic-bezier(0.22,1,0.36,1),transform 0.65s cubic-bezier(0.22,1,0.36,1);}
         .fade-in-up.visible{opacity:1;transform:translateY(0);}
         .logo-text{color:var(--text-inv);transition:color 0.3s;}
@@ -278,7 +278,7 @@ export default async function Home() {
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
-          <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative'}}>
+          <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
           <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
           <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1}}>
             유튜브 <em style={{fontStyle:'italic'}}>TOP 10</em>
@@ -306,7 +306,7 @@ export default async function Home() {
               padding:'16px 20px',
               background:'linear-gradient(135deg,rgba(66,133,244,0.05) 0%,rgba(52,168,83,0.03) 100%)',
               border:'1px solid rgba(66,133,244,0.13)',
-              borderRadius:'14px',
+              borderRadius:'20px',
               marginBottom:'16px',
             }}>
               <div className="gemini-steps" style={{gap:'10px'}}>
@@ -379,12 +379,12 @@ export default async function Home() {
                   padding:'20px 22px',
                   background:'linear-gradient(135deg,rgba(66,133,244,0.08) 0%,rgba(52,168,83,0.06) 50%,rgba(251,188,5,0.05) 100%)',
                   border:'1px solid rgba(66,133,244,0.18)',
-                  borderRadius:'14px',textDecoration:'none',
+                  borderRadius:'20px',textDecoration:'none',
                   transition:'border-color 0.2s,box-shadow 0.2s',
                 }}
               >
                 <div style={{
-                  width:'44px',height:'44px',borderRadius:'12px',flexShrink:0,
+                  width:'44px',height:'44px',borderRadius:'16px',flexShrink:0,
                   background:'linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335)',
                   display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.3rem',
                 }}>✨</div>
@@ -419,7 +419,7 @@ export default async function Home() {
       </section>
 
       {/* 오렌지 풀블리드 구분 섹션 */}
-      <section style={{background:'#EB701A',padding:'36px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative'}}>
+      <section style={{background:'#EB701A',padding:'36px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
         <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px)',backgroundSize:'40px 40px',pointerEvents:'none'}} />
         <div style={{maxWidth:'1400px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'2rem',flexWrap:'wrap' as const,position:'relative',zIndex:1}}>
           <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A'}}>
