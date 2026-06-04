@@ -7,6 +7,11 @@ const DARK   = '#0b0b0b';
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
 function fmt(n: number) { return n.toLocaleString('ko-KR'); }
+function fmtShort(n: number) {
+  if (n >= 100000000) return `${(n / 100000000).toFixed(1)}억`;
+  if (n >= 10000)     return `${(n / 10000).toFixed(1)}만`;
+  return n.toLocaleString('ko-KR');
+}
 
 // ── 카운터 훅 ──
 function useCountUp(target: number, duration = 2200, active = false) {
@@ -106,7 +111,15 @@ function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
           {data.topYT?.title || '업로드 없음'}
         </p>
         {data.topYT && (
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: ORANGE }}>{fmt(data.topYT.views)}회</span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
+            background: 'rgba(235,112,26,0.15)', border: '1px solid rgba(235,112,26,0.3)',
+            borderRadius: '100px', padding: '4px 12px',
+          }}>
+            <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>👁</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: ORANGE, letterSpacing: '-0.02em' }}>
+              {fmtShort(data.topYT.views)}회
+            </span>
+          </div>
         )}
       </div>
     </div>
