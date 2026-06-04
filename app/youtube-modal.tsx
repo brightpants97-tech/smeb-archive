@@ -199,32 +199,53 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         }}>
           {top10.map((video, i) => {
             const rank = i + 1;
-            const rankColor = rank === 1 ? '#EB701A' : rank <= 3 ? 'var(--text-muted)' : 'var(--text-muted)';
             const isFirst = rank === 1;
+            const isTop3 = rank <= 3;
+            const rowBg   = rank===1 ? 'rgba(255,190,0,0.06)' : rank===2 ? 'rgba(160,168,180,0.05)' : rank===3 ? 'rgba(180,110,50,0.05)' : 'transparent';
+            const rowHover = rank===1 ? 'rgba(255,180,0,0.11)' : rank===2 ? 'rgba(160,168,180,0.09)' : rank===3 ? 'rgba(180,110,50,0.09)' : 'rgba(235,112,26,0.08)';
             return (
               <div key={video.id}
                 onClick={() => onPlay(video.id)}
                 style={{
                   display:'flex', alignItems:'center', gap:'12px',
-                  padding:'10px 14px',
+                  padding: isTop3 ? '12px 14px' : '10px 14px',
                   borderBottom: i < top10.length - 1 ? '1px solid var(--card-border)' : 'none',
+                  borderLeft: rank===1 ? '3.5px solid #FFB800' : rank===2 ? '3.5px solid #A0A8B8' : rank===3 ? '3.5px solid #CD7F32' : '3.5px solid transparent',
                   cursor:'pointer',
-                  background: isFirst ? 'rgba(235,112,26,0.04)' : 'transparent',
+                  background: rowBg,
                   animation:`listFadeIn 0.4s ${i * 0.04}s both`,
                   transition:'background 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background='rgba(235,112,26,0.08)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background= isFirst ? 'rgba(235,112,26,0.04)' : 'transparent'}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background=rowHover}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background=rowBg}
               >
                 {/* 순위 */}
-                <div style={{
-                  flexShrink:0, width:'22px', textAlign:'center',
-                  fontSize: isFirst ? '0.95rem' : '0.82rem',
-                  fontWeight:900,
-                  color: isFirst ? '#EB701A' : rank <= 3 ? 'var(--text-muted)' : 'var(--text-muted)',
-                  fontStyle: isFirst ? 'normal' : 'normal',
-                }}>
-                  {rank}
+                <div style={{ flexShrink:0, width: isTop3 ? '42px' : '28px', textAlign:'center', lineHeight:1 }}>
+                  {rank===1 ? (
+                    <span style={{
+                      fontSize:'2.2rem', fontWeight:900, display:'block', lineHeight:1, letterSpacing:'-0.04em',
+                      background:'linear-gradient(160deg,#FFE566 0%,#FF8C00 55%,#FFD700 100%)',
+                      WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent',
+                      filter:'drop-shadow(0 2px 6px rgba(255,150,0,0.5))',
+                    }}>1</span>
+                  ) : rank===2 ? (
+                    <span style={{
+                      fontSize:'1.85rem', fontWeight:900, display:'block', lineHeight:1, letterSpacing:'-0.04em',
+                      background:'linear-gradient(160deg,#FFFFFF 0%,#9AAAB8 55%,#D8DCE4 100%)',
+                      WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent',
+                    }}>2</span>
+                  ) : rank===3 ? (
+                    <span style={{
+                      fontSize:'1.65rem', fontWeight:900, display:'block', lineHeight:1, letterSpacing:'-0.04em',
+                      background:'linear-gradient(160deg,#F0A870 0%,#8B4513 55%,#CD7F32 100%)',
+                      WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent',
+                    }}>3</span>
+                  ) : (
+                    <span style={{
+                      fontSize:'1.1rem', fontWeight:800, display:'block', lineHeight:1,
+                      color:'var(--text-muted)',
+                    }}>{rank}</span>
+                  )}
                 </div>
                 {/* 썸네일 */}
                 <div style={{ flexShrink:0, width:'80px', height:'45px', borderRadius:'12px', overflow:'hidden', position:'relative' }}>
@@ -338,22 +359,50 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
               {/* 순위 배지 */}
               <div style={{
                 position:'absolute', top:'10px', left:'10px',
-                background: isFirst ? '#EB701A' : 'rgba(0,0,0,0.5)',
-                backdropFilter:'blur(8px)',
-                color:'#fff', fontWeight:900,
-                fontSize: isFirst ? '0.82rem' : '0.75rem',
-                width:'26px', height:'26px', borderRadius:'50%',
+                background: rank===1
+                  ? 'linear-gradient(135deg,#FFE566,#FF8C00)'
+                  : rank===2
+                  ? 'linear-gradient(135deg,#E8ECF0,#8A9AAA)'
+                  : rank===3
+                  ? 'linear-gradient(135deg,#F0A060,#7A3A0A)'
+                  : 'rgba(0,0,0,0.55)',
+                backdropFilter: rank>3 ? 'blur(8px)' : 'none',
+                color: rank===2 ? '#1A1A1A' : '#fff',
+                fontWeight:900,
+                fontSize: rank===1 ? '1.2rem' : rank<=3 ? '1rem' : '0.75rem',
+                width:  rank===1 ? '44px' : rank<=3 ? '36px' : '26px',
+                height: rank===1 ? '44px' : rank<=3 ? '36px' : '26px',
+                borderRadius:'50%',
                 display:'flex', alignItems:'center', justifyContent:'center',
-                border:'1.5px solid rgba(255,255,255,0.25)',
-                boxShadow: isFirst ? '0 0 0 2.5px rgba(235,112,26,0.35)' : 'none',
+                letterSpacing:'-0.03em',
+                border: rank===1
+                  ? '2px solid rgba(255,220,80,0.7)'
+                  : rank===2
+                  ? '2px solid rgba(255,255,255,0.55)'
+                  : rank===3
+                  ? '2px solid rgba(240,160,60,0.55)'
+                  : '1.5px solid rgba(255,255,255,0.2)',
+                boxShadow: rank===1
+                  ? '0 0 0 3px rgba(255,190,0,0.28), 0 6px 16px rgba(255,140,0,0.55)'
+                  : rank===2
+                  ? '0 0 0 2px rgba(180,190,200,0.28), 0 4px 10px rgba(0,0,0,0.35)'
+                  : rank===3
+                  ? '0 0 0 2px rgba(180,100,40,0.28), 0 4px 10px rgba(0,0,0,0.35)'
+                  : 'none',
               }}>{rank}</div>
 
-              {isFirst && (
+              {rank<=3 && (
                 <div style={{
                   position:'absolute', top:'10px', right:'10px',
-                  background:'#EB701A', color:'#fff', fontSize:'0.52rem',
-                  fontWeight:900, padding:'3px 7px', borderRadius:'5px', letterSpacing:'0.08em',
-                }}>BEST</div>
+                  background: rank===1
+                    ? 'linear-gradient(135deg,#FFE566,#FF8C00)'
+                    : rank===2
+                    ? 'linear-gradient(135deg,#D8DCE4,#8A9AAA)'
+                    : 'linear-gradient(135deg,#F0A060,#7A3A0A)',
+                  color: rank===2 ? '#1A1A1A' : '#fff',
+                  fontSize:'0.52rem', fontWeight:900, padding:'3px 7px',
+                  borderRadius:'5px', letterSpacing:'0.1em',
+                }}>{rank===1 ? '🥇 BEST' : rank===2 ? '🥈 2위' : '🥉 3위'}</div>
               )}
 
               {/* 하단 정보 */}
