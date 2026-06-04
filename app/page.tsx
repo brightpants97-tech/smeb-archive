@@ -191,6 +191,9 @@ export default async function Home() {
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
           .gemini-grid { grid-template-columns: 1fr !important; }
           .gemini-step-row { gap: 10px !important; }
+          @media (max-width: 960px) {
+            .hero-card { display: none !important; }
+          }
         }
       `}</style>
       <ScrollObserver />
@@ -260,14 +263,14 @@ export default async function Home() {
       )}
 
       <section className="mob-hero" style={{padding:'clamp(3rem,8vw,6rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
-        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(2rem,4vw,4rem)'}}>
-          <div style={{flexShrink:0,width:'40%',minWidth:0}}>
+        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(2rem,4vw,4rem)',flexWrap:'wrap'}}>
+          <div style={{flexGrow:1,flexShrink:1,minWidth:'280px'}}>
             <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
               <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
               <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
             </h1>
           </div>
-          <div className="mob-hide" style={{flexShrink:0,width:'clamp(240px,22vw,300px)'}}>
+          <div className="mob-hide hero-card" style={{flexShrink:0,width:'clamp(240px,22vw,300px)'}}>
             <HeroLiveCard />
           </div>
         </div>
