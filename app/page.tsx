@@ -197,7 +197,8 @@ export default async function Home() {
         }
       `}</style>
       <ScrollObserver />
-      <header className="site-header" style={{position:'sticky',top:0,zIndex:200,height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
+      <div style={{height:'72px'}} />
+      <header className="site-header" style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:'72px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
         <a href="/" style={{textDecoration:'none',display:'flex',alignItems:'center'}}>
           <svg width="120" height="32" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-label="SMEB Archive">
             <text x="0" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="var(--text-inv)">SME</text>
@@ -207,13 +208,13 @@ export default async function Home() {
           </svg>
         </a>
         <nav className="mob-nav" style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
-          <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.8rem',fontWeight:500}}>BEST 10</a>
-          <a href="#videos" className="nav-link mob-hide" style={{fontSize:'0.8rem',fontWeight:500}}>유튜브</a>
-          <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.8rem',fontWeight:500}}>다시보기</a>
+          <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>BEST 10</a>
+          <a href="#videos" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>유튜브</a>
+          <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>다시보기</a>
           <ThemeToggle />
-          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'linear-gradient(135deg,#EB701A,#ff8c3a)',color:'#fff',padding:'0.4rem 1rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:700,boxShadow:'0 4px 14px rgba(235,112,26,0.35)'}}>YouTube ↗</a>
-          <a href="/rewind/2025" style={{display:'inline-flex',alignItems:'center',gap:'4px',background:'linear-gradient(135deg,#1a1a2e,#2d1b69)',color:'#fff',padding:'0.4rem 1rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:700,boxShadow:'0 4px 14px rgba(45,27,105,0.4)',textDecoration:'none',whiteSpace:'nowrap' as const,border:'1px solid rgba(255,255,255,0.15)'}}>✨ 2025 레포트</a>
-          <a href="https://cafe.naver.com/smebsmeb" target="_blank" className="mob-hide" style={{background:'linear-gradient(135deg,#03C75A,#02b351)',color:'#fff',padding:'0.4rem 1.1rem',borderRadius:'100px',fontSize:'0.78rem',fontWeight:700,boxShadow:'0 4px 14px rgba(3,199,90,0.35)'}}>판카페 ↗</a>
+          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'linear-gradient(135deg,#EB701A,#ff8c3a)',color:'#fff',padding:'0.55rem 1.3rem',borderRadius:'100px',fontSize:'0.88rem',fontWeight:700,boxShadow:'0 4px 14px rgba(235,112,26,0.35)'}}>YouTube ↗</a>
+          <a href="/rewind/2025" style={{display:'inline-flex',alignItems:'center',gap:'6px',background:'linear-gradient(135deg,#1a1a2e,#2d1b69)',color:'#fff',padding:'0.55rem 1.3rem',borderRadius:'100px',fontSize:'0.88rem',fontWeight:700,boxShadow:'0 4px 14px rgba(45,27,105,0.4)',textDecoration:'none',whiteSpace:'nowrap' as const,border:'1px solid rgba(255,255,255,0.15)'}}>✨ 2025 레포트</a>
+          <a href="https://cafe.naver.com/smebsmeb" target="_blank" className="mob-hide" style={{background:'linear-gradient(135deg,#03C75A,#02b351)',color:'#fff',padding:'0.55rem 1.3rem',borderRadius:'100px',fontSize:'0.88rem',fontWeight:700,boxShadow:'0 4px 14px rgba(3,199,90,0.35)'}}>팬카페 ↗</a>
         </nav>
       </header>
 
@@ -227,7 +228,7 @@ export default async function Home() {
             background:'linear-gradient(90deg,#e8000a,#c0000a)',
             color:'#fff', padding:'10px 20px', textDecoration:'none',
             borderBottom:'1px solid rgba(255,255,255,0.15)',
-            position:'sticky', top:'60px', zIndex:199,
+            position:'fixed', top:'72px', zIndex:199,
           }}
         >
           <span style={{
