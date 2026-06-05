@@ -25,6 +25,7 @@ export interface Vod {
 export interface MonthData {
   key: string; month: number;
   topYT: Video | null;
+  top3: Video[];
   ytCount: number; soopCount: number;
   totalMonthViews: number;
 }
@@ -145,6 +146,7 @@ export default async function RewindPage() {
     return {
       key, month: i + 1,
       topYT: ytM[0] || null,
+      top3: ytM.slice(0, 3),
       ytCount: ytM.length,
       soopCount: soopM.length,
       totalMonthViews: ytM.reduce((s, v) => s + v.views, 0),

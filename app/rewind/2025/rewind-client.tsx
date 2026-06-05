@@ -74,11 +74,14 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
 
 // ── 월별 카드 ──
 function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
-  const hasData = data.ytCount > 0 || data.soopCount > 0;
+  const hasData = data.top3.length > 0;
   const [hov, setHov] = useState(false);
+  const [hovRank, setHovRank] = useState<number | null>(null);
+  const top1 = data.top3[0] || null;
+  const rest = data.top3.slice(1);
+
   return (
     <div
-      onClick={() => data.topYT && window.open(`https://youtube.com/watch?v=${data.topYT.id}`, '_blank')}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -89,48 +92,83 @@ function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
         transform: hov && hasData ? 'translateY(-5px)' : 'none',
         boxShadow: hov && hasData ? '0 16px 40px rgba(235,112,26,0.15)' : 'none',
         transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-        cursor: data.topYT ? 'pointer' : 'default',
+        display: 'flex', flexDirection: 'column' as const,
       }}
     >
-      {/* 썸네일 */}
-      <div style={{ width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a' }}>
-        {data.topYT
-          ? <img src={data.topYT.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      {/* 1위 썸네일 */}
+      <div
+        onClick={() => top1 && window.open(`https://youtube.com/watch?v=${top1.id}`, '_blank')}
+        style={{ width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a', cursor: top1 ? 'pointer' : 'default', flexShrink: 0 }}
+      >
+        {top1
+          ? <img src={top1.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: '2rem' }}>📭</div>
         }
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
-        <div style={{
-          position: 'absolute', top: '10px', left: '12px',
-          background: hasData ? ORANGE : 'rgba(255,255,255,0.12)',
-          color: '#fff', fontSize: '0.72rem', fontWeight: 800,
-          padding: '3px 10px', borderRadius: '100px',
-        }}>{MONTH_KO[data.month - 1]}</div>
-      </div>
-      {/* 정보 */}
-      <div style={{ padding: '14px 16px 18px' }}>
-        <p style={{
-          fontSize: '0.82rem', fontWeight: 600,
-          color: hasData ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)',
-          lineHeight: 1.4, margin: '0 0 10px',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical' as const,
-          overflow: 'hidden',
-        }}>
-          {data.topYT?.title || '업로드 없음'}
-        </p>
-        {data.topYT && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
-            background: 'rgba(235,112,26,0.15)', border: '1px solid rgba(235,112,26,0.3)',
-            borderRadius: '100px', padding: '4px 12px',
-          }}>
-            <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>👁</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: ORANGE, letterSpacing: '-0.02em' }}>
-              {fmtShort(data.topYT.views)}회
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 55%)' }} />
+        {/* 월 배지 */}
+        <div style={{ position: 'absolute', top: '10px', left: '12px', background: hasData ? ORANGE : 'rgba(255,255,255,0.12)', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: '100px' }}>
+          {MONTH_KO[data.month - 1]}
+        </div>
+        {/* 1위 배지 */}
+        {top1 && (
+          <div style={{ position: 'absolute', bottom: '10px', left: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ background: 'linear-gradient(135deg,#FFE566,#FF8C00)', color: '#fff', fontSize: '0.62rem', fontWeight: 900, padding: '2px 8px', borderRadius: '100px' }}>🥇 1위</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'rgba(235,112,26,0.85)', borderRadius: '100px', padding: '2px 8px' }}>
+              <span style={{ fontSize: '0.6rem' }}>👁</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#fff' }}>{fmtShort(top1.views)}회</span>
             </span>
           </div>
         )}
       </div>
+
+      {/* 1위 제목 */}
+      {top1 && (
+        <div style={{ padding: '12px 14px 8px' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.88)', lineHeight: 1.4, margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
+            {top1.title}
+          </p>
+        </div>
+      )}
+
+      {/* 2위·3위 리스트 */}
+      {rest.length > 0 && (
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginTop: 'auto' }}>
+          {rest.map((v, i) => (
+            <div
+              key={v.id}
+              onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
+              onMouseEnter={() => setHovRank(i)}
+              onMouseLeave={() => setHovRank(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '9px 14px',
+                borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                cursor: 'pointer',
+                background: hovRank === i ? 'rgba(235,112,26,0.06)' : 'transparent',
+                transition: 'background 0.15s',
+              }}
+            >
+              {/* 순위 */}
+              <span style={{ flexShrink: 0, fontSize: '0.72rem', fontWeight: 900, color: i === 0 ? 'rgba(200,200,210,0.7)' : 'rgba(180,110,40,0.8)', width: '20px', textAlign: 'center' as const }}>
+                {i === 0 ? '🥈' : '🥉'}
+              </span>
+              {/* 제목 */}
+              <p style={{ flex: 1, minWidth: 0, fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)', lineHeight: 1.35, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                {v.title}
+              </p>
+              {/* 조회수 */}
+              <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: ORANGE }}>
+                {fmtShort(v.views)}회
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 데이터 없음 */}
+      {!hasData && (
+        <div style={{ padding: '20px 16px', textAlign: 'center' as const, color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem' }}>업로드 없음</div>
+      )}
     </div>
   );
 }
