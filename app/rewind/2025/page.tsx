@@ -159,7 +159,7 @@ export default async function RewindPage() {
     ytUploads:      ytVideos.length,
     totalViews:     ytVideos.reduce((s, v) => s + v.views, 0),
     soopBroadcasts: soopVods.length,
-    broadcastHours: Math.round(soopVods.reduce((s, v) => s + (v.duration || 0), 0) / 3600),
+    broadcastHours: Math.round(soopVods.reduce((s, v) => s + (v.duration || 0), 0) / 3600000),
     activeMonths:   active.length,
     peakMonth:      peak,
   };
