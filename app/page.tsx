@@ -278,16 +278,17 @@ export default async function Home() {
           {/* ─── Gemini 콘텐츠 분석 섹션 ─── */}
           <div style={{marginTop:'40px'}}>
 
-            {/* 섹션 헤더 */}
-            <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'20px'}}>
-              <div style={{
-                width:'32px',height:'32px',borderRadius:'10px',flexShrink:0,
-                background:'linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335)',
-                display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1rem',
-              }}>✨</div>
-              <div>
-                <div style={{fontSize:'0.68rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'#4285f4',marginBottom:'1px'}}>AI 콘텐츠 분석</div>
-                <p style={{fontSize:'0.9rem',fontWeight:800,color:'var(--text)',letterSpacing:'-0.02em',lineHeight:1}}>Gemini로 이번 달 분석하기</p>
+            {/* 섹션 헤더 — 오렌지 풀블리드 */}
+            <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
+              <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
+              <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',justifyContent:'space-between',gap:'16px',flexWrap:'wrap' as const}}>
+                <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A'}}>
+                  AI <em style={{fontStyle:'italic'}}>콘텐츠 분석</em>
+                </h2>
+                <div style={{display:'inline-flex',alignItems:'center',gap:'6px',background:'rgba(0,0,0,0.12)',borderRadius:'100px',padding:'6px 14px',flexShrink:0}}>
+                  <span style={{fontSize:'0.85rem'}}>✨</span>
+                  <span style={{fontSize:'0.75rem',fontWeight:800,color:'rgba(0,0,0,0.6)',letterSpacing:'0.04em'}}>Powered by Gemini</span>
+                </div>
               </div>
             </div>
 
