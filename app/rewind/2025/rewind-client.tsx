@@ -265,32 +265,64 @@ export default function RewindClient({ year, stats, monthlyData, top10 }: Props)
             </h2>
           </div>
 
-          {/* 메인 스탯 4개 */}
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' as const }}>
-            <StatCard value={stats.ytUploads}      label="유튜브 업로드"   suffix="개" delay={0}   active={statsInView} />
-            <StatCard value={stats.totalViews}     label="총 조회수"       suffix="회" delay={200} active={statsInView} />
-            <StatCard value={stats.soopBroadcasts} label="SOOP 방송"       suffix="개" delay={400} active={statsInView} />
-            <StatCard value={stats.broadcastHours} label="총 방송 시간" suffix="h" delay={600} active={statsInView} subText={`${Math.floor(stats.broadcastHours / 24).toLocaleString('ko-KR')}일`} />
+          {/* ── 유튜브 그룹 ── */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(255,0,0,0.12)', border: '1px solid rgba(255,0,0,0.22)', borderRadius: '100px', padding: '3px 10px' }}>
+                <span style={{ fontSize: '0.6rem' }}>▶</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#ff6b6b', letterSpacing: '0.06em' }}>YOUTUBE</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}>
+              <StatCard value={stats.ytUploads}  label="업로드 영상 수"    suffix="개" delay={0}   active={statsInView} />
+              <StatCard value={stats.totalViews} label="총 조회수"          suffix="회" delay={150} active={statsInView} />
+              <StatCard value={stats.avgViews}   label="영상당 평균 조회수" suffix="회" delay={300} active={statsInView} />
+            </div>
           </div>
 
-          {/* 서브 스탯 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '14px', marginTop: '14px' }}>
-            <div style={{ padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>영상당 평균 조회수</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{fmtShort(stats.avgViews)}<span style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>회</span></div>
-            </div>
-            <div style={{ padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>가장 바빴던 달</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>YT {stats.peakMonth.ytCount} · SOOP {stats.peakMonth.soopCount}</div>
-            </div>
-            {top10[0] && (
-              <div style={{ padding: '18px 20px', background: 'rgba(255,190,0,0.04)', border: '1px solid rgba(255,190,0,0.14)', borderRadius: '16px', overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.65rem', color: 'rgba(255,190,0,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>🏆 올해의 영상</div>
-                <p style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 6px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{top10[0].title}</p>
-                <span style={{ fontSize: '0.78rem', color: '#FFB800', fontWeight: 700 }}>{fmt(top10[0].views)}회 조회</span>
+          {/* ── SOOP 그룹 ── */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(30,120,255,0.1)', border: '1px solid rgba(30,120,255,0.22)', borderRadius: '100px', padding: '3px 10px' }}>
+                <span style={{ fontSize: '0.6rem' }}>●</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#60a8ff', letterSpacing: '0.06em' }}>SOOP</span>
               </div>
-            )}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}>
+              <StatCard value={stats.soopBroadcasts} label="방송 횟수"    suffix="개" delay={0}   active={statsInView} />
+              <StatCard value={stats.broadcastHours} label="총 방송 시간" suffix="h"  delay={150} active={statsInView} subText={`${Math.floor(stats.broadcastHours / 24).toLocaleString('ko-KR')}일`} />
+            </div>
+          </div>
+
+          {/* ── 올해의 영상 ── */}
+          {top10[0] && (
+            <div style={{ marginTop: '16px', padding: '20px 24px', background: 'rgba(255,190,0,0.04)', border: '1px solid rgba(255,190,0,0.14)', borderRadius: '16px', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '1rem' }}>🏆</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,190,0,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>올해의 영상</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' as const }}>
+                {top10[0].thumbnail && (
+                  <img src={top10[0].thumbnail} alt="" style={{ width: '120px', height: '68px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,190,0,0.25)' }} />
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 6px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{top10[0].title}</p>
+                  <span style={{ fontSize: '0.82rem', color: '#FFB800', fontWeight: 700 }}>{fmt(top10[0].views)}회 조회</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── 가장 바빴던 달 ── */}
+          <div style={{ marginTop: '12px', padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', gap: '16px', width: '100%', boxSizing: 'border-box' as const }}>
+            <div>
+              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>가장 바빴던 달</div>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7 }}>
+              <div><span style={{ color: '#ff6b6b' }}>YT</span> {stats.peakMonth.ytCount}개</div>
+              <div><span style={{ color: '#60a8ff' }}>SOOP</span> {stats.peakMonth.soopCount}개</div>
+            </div>
           </div>
         </div>
       </section>
