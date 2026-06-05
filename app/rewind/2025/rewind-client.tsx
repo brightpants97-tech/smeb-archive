@@ -276,8 +276,8 @@ export default function RewindClient({ year, stats, monthlyData, top10 }: Props)
           {/* 서브 스탯 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '14px', marginTop: '14px' }}>
             <div style={{ padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>활동 개월 수</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{stats.activeMonths}개월 <span style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)' }}>/ 12</span></div>
+              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>영상당 평균 조회수</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff' }}>{fmtShort(stats.avgViews)}<span style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>회</span></div>
             </div>
             <div style={{ padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden' }}>
               <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>가장 바빴던 달</div>

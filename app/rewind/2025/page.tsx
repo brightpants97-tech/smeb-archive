@@ -31,7 +31,7 @@ export interface MonthData {
 export interface RewindStats {
   ytUploads: number; totalViews: number;
   soopBroadcasts: number; broadcastHours: number;
-  activeMonths: number; peakMonth: MonthData;
+  avgViews: number; peakMonth: MonthData;
 }
 
 // ── YouTube 데이터 ──
@@ -155,12 +155,13 @@ export default async function RewindPage() {
   const active  = monthlyData.filter(m => m.ytCount > 0 || m.soopCount > 0);
   const peak    = monthlyData.reduce((b, m) => (m.ytCount + m.soopCount > b.ytCount + b.soopCount ? m : b), monthlyData[0]);
 
+  const totalViews = ytVideos.reduce((s, v) => s + v.views, 0);
   const stats: RewindStats = {
     ytUploads:      ytVideos.length,
-    totalViews:     ytVideos.reduce((s, v) => s + v.views, 0),
+    totalViews,
     soopBroadcasts: soopVods.length,
     broadcastHours: Math.round(soopVods.reduce((s, v) => s + (v.duration || 0), 0) / 3600000),
-    activeMonths:   active.length,
+    avgViews:       ytVideos.length > 0 ? Math.round(totalViews / ytVideos.length) : 0,
     peakMonth:      peak,
   };
 
