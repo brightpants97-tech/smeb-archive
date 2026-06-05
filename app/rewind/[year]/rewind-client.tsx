@@ -227,9 +227,9 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
 }
 
 // ── 메인 컴포넌트 ──
-interface Props { year: number; stats: RewindStats; monthlyData: MonthData[]; top10: Video[]; }
+interface Props { year: number; validYears: number[]; stats: RewindStats; monthlyData: MonthData[]; top10: Video[]; }
 
-export default function RewindClient({ year, stats, monthlyData, top10 }: Props) {
+export default function RewindClient({ year, validYears, stats, monthlyData, top10 }: Props) {
   const [statsRef, statsInView] = useInView(0.2);
   const [monthRef, monthInView] = useInView(0.05);
   const [top10Ref, top10InView] = useInView(0.05);
@@ -254,11 +254,52 @@ export default function RewindClient({ year, stats, monthlyData, top10 }: Props)
       }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(235,112,26,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(235,112,26,0.04) 1px,transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none' }} />
 
-        {/* 홈 링크 */}
-        <a href="/" style={{ position: 'absolute', top: '24px', left: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600, transition: 'color 0.2s', zIndex: 10 }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color='#fff'}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'}
-        >← 스맵 아카이브</a>
+        {/* 상단 바: 홈 + 연도 네비 */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px clamp(1.2rem,4vw,3rem)', zIndex: 10, flexWrap: 'wrap' as const, gap: '12px' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600, transition: 'color 0.2s', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color='#fff'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'}
+          >← 스맵 아카이브</a>
+
+          {/* 연도 탭 */}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
+            {validYears.map(y => {
+              const isActive = y === year;
+              return (
+                <a key={y} href={`/rewind/${y}`}
+                  style={{
+                    padding: '6px 16px', borderRadius: '100px', textDecoration: 'none',
+                    fontSize: '0.82rem', fontWeight: 800, transition: 'all 0.18s',
+                    background: isActive ? ORANGE : 'rgba(255,255,255,0.07)',
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                    border: `1px solid ${isActive ? ORANGE : 'rgba(255,255,255,0.1)'}`,
+                    boxShadow: isActive ? '0 0 16px rgba(235,112,26,0.4)' : 'none',
+                  }}
+                  onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.color='#fff'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; }}}
+                  onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.07)'; }}}
+                >{y}</a>
+              );
+            })}
+          </div>
+
+          {/* 이전/다음 연도 화살표 */}
+          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+            {validYears.indexOf(year) > 0 && (
+              <a href={`/rewind/${year - 1}`}
+                style={{ padding: '6px 14px', borderRadius: '100px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.18s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='#fff'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.06)'; }}
+              >← {year - 1}</a>
+            )}
+            {validYears.indexOf(year) < validYears.length - 1 && (
+              <a href={`/rewind/${year + 1}`}
+                style={{ padding: '6px 14px', borderRadius: '100px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.18s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='#fff'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.06)'; }}
+              >{year + 1} →</a>
+            )}
+          </div>
+        </div>
 
         {/* 연도 + 카피 */}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1, padding: '0 2rem' }}>
@@ -423,7 +464,7 @@ export default function RewindClient({ year, stats, monthlyData, top10 }: Props)
           <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.42)', maxWidth: '380px', lineHeight: 1.75, marginBottom: '52px' }}>
             스맵과 함께한 {year}년,<br />
             모든 순간이 이 아카이브에 담겼어요.<br />
-            {year + 1}년에도 함께해요.
+            {validYears.includes(year + 1) ? `${year + 1}년에도 함께해요.` : '앞으로도 함께해요.'}
           </p>
 
           {/* 버튼 */}
