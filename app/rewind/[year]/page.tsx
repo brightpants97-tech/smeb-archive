@@ -116,7 +116,7 @@ async function fetchSOOPVods(year: number) {
     } catch { return { contents: [], totalPages: 1 }; }
   };
 
-  const process = (contents: any[]) => {
+  const addVods = (contents: any[]) => {
     for (const v of contents) {
       if (v.ucc?.fileType !== 'REVIEW') continue;
       const date = v.regDate?.split(' ')[0] || '';
@@ -126,12 +126,12 @@ async function fetchSOOPVods(year: number) {
   };
 
   const first = await fetchPage(1);
-  process(first.contents);
+  addVods(first.contents);
   let p = 2;
   while (p <= first.totalPages) {
     const chunk = Array.from({ length: Math.min(10, first.totalPages - p + 1) }, (_, i) => p + i);
     const results = await Promise.all(chunk.map(fetchPage));
-    results.forEach(r => process(r.contents));
+    results.forEach(r => addVods(r.contents));
     p += 10;
   }
   return all;
