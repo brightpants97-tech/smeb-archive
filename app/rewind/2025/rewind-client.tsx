@@ -47,8 +47,8 @@ function useInView(threshold = 0.2) {
 }
 
 // ── 통계 카드 ──
-function StatCard({ value, label, suffix = '', delay = 0, active }: {
-  value: number; label: string; suffix?: string; delay?: number; active: boolean;
+function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
+  value: number; label: string; suffix?: string; delay?: number; active: boolean; subText?: string;
 }) {
   const [go, setGo] = useState(false);
   useEffect(() => { if (active) { const t = setTimeout(() => setGo(true), delay); return () => clearTimeout(t); } }, [active, delay]);
@@ -58,7 +58,16 @@ function StatCard({ value, label, suffix = '', delay = 0, active }: {
       <div style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', fontWeight: 900, letterSpacing: '-0.03em', color: ORANGE, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' as const, overflow: 'hidden', wordBreak: 'break-all' as const }}>
         {fmt(count)}{suffix}
       </div>
-      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '10px', fontWeight: 500 }}>{label}</div>
+      {subText && (
+        <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px',
+          background: 'rgba(235,112,26,0.1)', border: '1px solid rgba(235,112,26,0.2)',
+          borderRadius: '100px', padding: '2px 10px',
+        }}>
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>≈</span>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>{subText}</span>
+        </div>
+      )}
+      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
     </div>
   );
 }
@@ -261,7 +270,7 @@ export default function RewindClient({ year, stats, monthlyData, top10 }: Props)
             <StatCard value={stats.ytUploads}      label="유튜브 업로드"   suffix="개" delay={0}   active={statsInView} />
             <StatCard value={stats.totalViews}     label="총 조회수"       suffix="회" delay={200} active={statsInView} />
             <StatCard value={stats.soopBroadcasts} label="SOOP 방송"       suffix="개" delay={400} active={statsInView} />
-            <StatCard value={stats.broadcastHours} label="총 방송 시간"    suffix="h"  delay={600} active={statsInView} />
+            <StatCard value={stats.broadcastHours} label="총 방송 시간" suffix="h" delay={600} active={statsInView} subText={`${Math.floor(stats.broadcastHours / 24).toLocaleString('ko-KR')}일`} />
           </div>
 
           {/* 서브 스탯 */}
