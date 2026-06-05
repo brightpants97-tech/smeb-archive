@@ -173,6 +173,8 @@ export default async function Home() {
         /* Gemini 섹션 반응형 그리드 */
         .gemini-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; align-items: stretch; margin-top: 0; }
         .gemini-flow-arrow { display: flex; align-items: center; justify-content: center; padding: 0 10px; color: var(--text-muted); font-size: 1.4rem; font-weight: 200; flex-shrink: 0; }
+        .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
+        .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
         .gemini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
         .gemini-steps { display: flex; flex-direction: column; gap: 0; }
         .gemini-step-row { display: flex; align-items: flex-start; gap: 12px; }
@@ -398,16 +400,14 @@ export default async function Home() {
                 </div>
                 {/* Gemini 열기 버튼 */}
                 <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer"
+                  className="gemini-open-btn"
                   style={{
                     display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',
                     background:'linear-gradient(135deg,#4285f4,#34a853)',
                     color:'#fff',borderRadius:'14px',padding:'14px 20px',
                     textDecoration:'none',fontWeight:700,fontSize:'0.92rem',
                     boxShadow:'0 6px 20px rgba(66,133,244,0.3)',
-                    transition:'opacity 0.2s,box-shadow 0.2s',
                   }}
-                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity='0.88';(e.currentTarget as HTMLElement).style.boxShadow='0 8px 28px rgba(66,133,244,0.45)';}}
-                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity='1';(e.currentTarget as HTMLElement).style.boxShadow='0 6px 20px rgba(66,133,244,0.3)';}}
                 >
                   Gemini 열기 ↗
                 </a>
