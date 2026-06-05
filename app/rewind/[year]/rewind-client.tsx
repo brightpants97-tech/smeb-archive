@@ -256,10 +256,18 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
         {/* 상단 바: 홈 + 연도 네비 */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px clamp(1.2rem,4vw,3rem)', zIndex: 10, flexWrap: 'wrap' as const, gap: '12px' }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600, transition: 'color 0.2s', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color='#fff'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'}
-          >← 스맵 아카이브</a>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, opacity: 0.85, transition: 'opacity 0.2s' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity='1'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity='0.85'}
+            aria-label="스맵 아카이브 홈"
+          >
+            <svg width="110" height="30" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+              <text x="0" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="#ffffff">SME</text>
+              <text x="192" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
+              <rect x="0" y="80" width="248" height="2.5" fill="#ffffff" rx="1.5"/>
+              <text x="2" y="93" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="rgba(255,255,255,0.5)">ARCHIVE</text>
+            </svg>
+          </a>
 
           {/* 연도 탭 */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
