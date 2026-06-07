@@ -68,6 +68,37 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
         </div>
       )}
       <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
+    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
+      <a href="/"
+        style={{
+          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          background: 'rgba(15,15,15,0.85)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(16px)',
+          color: '#fff', padding: '10px 18px', borderRadius: '100px',
+          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = ORANGE;
+          el.style.borderColor = ORANGE;
+          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = 'rgba(15,15,15,0.85)';
+          el.style.borderColor = 'rgba(255,255,255,0.15)';
+          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        스맵 아카이브
+      </a>
     </div>
   );
 }
@@ -163,6 +194,37 @@ function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
           : <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', margin: 0 }}>업로드 없음</p>
         }
       </div>
+    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
+      <a href="/"
+        style={{
+          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          background: 'rgba(15,15,15,0.85)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(16px)',
+          color: '#fff', padding: '10px 18px', borderRadius: '100px',
+          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = ORANGE;
+          el.style.borderColor = ORANGE;
+          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = 'rgba(15,15,15,0.85)';
+          el.style.borderColor = 'rgba(255,255,255,0.15)';
+          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        스맵 아카이브
+      </a>
     </div>
   );
 }
@@ -222,6 +284,37 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
         <span style={{ fontSize: '0.75rem', color: ORANGE, fontWeight: 700 }}>{fmt(video.views)}회</span>
       </div>
       {isTop3 && <div style={{ flexShrink: 0, fontSize: '1.3rem' }}>{MEDAL[rank - 1]}</div>}
+    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
+      <a href="/"
+        style={{
+          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          background: 'rgba(15,15,15,0.85)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(16px)',
+          color: '#fff', padding: '10px 18px', borderRadius: '100px',
+          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = ORANGE;
+          el.style.borderColor = ORANGE;
+          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = 'rgba(15,15,15,0.85)';
+          el.style.borderColor = 'rgba(255,255,255,0.15)';
+          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        스맵 아카이브
+      </a>
     </div>
   );
 }
@@ -256,18 +349,48 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
         {/* 상단 바: 홈 + 연도 네비 */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px clamp(1.2rem,4vw,3rem)', zIndex: 10, flexWrap: 'wrap' as const, gap: '12px' }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, opacity: 0.85, transition: 'opacity 0.2s' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity='1'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity='0.85'}
-            aria-label="스맵 아카이브 홈"
-          >
-            <svg width="110" height="30" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
-              <text x="0" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="#ffffff">SME</text>
-              <text x="192" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
-              <rect x="0" y="80" width="248" height="2.5" fill="#ffffff" rx="1.5"/>
-              <text x="2" y="93" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="rgba(255,255,255,0.5)">ARCHIVE</text>
-            </svg>
-          </a>
+          {/* 로고 + 홈 버튼 묶음 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', opacity: 0.9, transition: 'opacity 0.2s' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity='1'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity='0.9'}
+              aria-label="스맵 아카이브 홈"
+            >
+              <svg width="90" height="24" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg">
+                <text x="0" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="#ffffff">SME</text>
+                <text x="192" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
+                <rect x="0" y="80" width="248" height="2.5" fill="#ffffff" rx="1.5"/>
+                <text x="2" y="93" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="rgba(255,255,255,0.5)">ARCHIVE</text>
+              </svg>
+            </a>
+            {/* 홈으로 버튼 — 클릭 가능함을 명시 */}
+            <a href="/"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'rgba(255,255,255,0.75)',
+                padding: '5px 12px', borderRadius: '100px',
+                textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700,
+                transition: 'all 0.18s', whiteSpace: 'nowrap' as const,
+                backdropFilter: 'blur(8px)',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = ORANGE;
+                el.style.color = '#fff';
+                el.style.borderColor = ORANGE;
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = 'rgba(255,255,255,0.1)';
+                el.style.color = 'rgba(255,255,255,0.75)';
+                el.style.borderColor = 'rgba(255,255,255,0.2)';
+              }}
+            >
+              ← 홈으로
+            </a>
+          </div>
 
           {/* 연도 탭 */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
@@ -495,6 +618,37 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </p>
         </div>
       </section>
+    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
+      <a href="/"
+        style={{
+          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          background: 'rgba(15,15,15,0.85)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(16px)',
+          color: '#fff', padding: '10px 18px', borderRadius: '100px',
+          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = ORANGE;
+          el.style.borderColor = ORANGE;
+          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = 'rgba(15,15,15,0.85)';
+          el.style.borderColor = 'rgba(255,255,255,0.15)';
+          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        스맵 아카이브
+      </a>
     </div>
   );
 }
