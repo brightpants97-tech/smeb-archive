@@ -385,21 +385,35 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
           {/* ── 올해의 영상 ── */}
           {top10[0] && (
-            <div style={{ marginTop: '16px', padding: '20px 24px', background: 'rgba(255,190,0,0.04)', border: '1px solid rgba(255,190,0,0.14)', borderRadius: '16px', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '1rem' }}>🏆</span>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,190,0,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>올해의 영상</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' as const }}>
-                {top10[0].thumbnail && (
-                  <img src={top10[0].thumbnail} alt="" style={{ width: '120px', height: '68px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,190,0,0.25)' }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 6px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{top10[0].title}</p>
-                  <span style={{ fontSize: '0.82rem', color: '#FFB800', fontWeight: 700 }}>{fmt(top10[0].views)}회 조회</span>
+            <a
+              href={`https://youtube.com/watch?v=${top10[0].id}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ marginTop: '16px', display: 'block', borderRadius: '16px', overflow: 'hidden', textDecoration: 'none', position: 'relative', cursor: 'pointer' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+            >
+              {/* 썸네일 전체 너비 */}
+              <div style={{ width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a' }}>
+                <img src={top10[0].thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }} />
+                {/* 골드 테두리 */}
+                <div style={{ position: 'absolute', inset: 0, border: '2px solid rgba(255,190,0,0.35)', borderRadius: '16px', pointerEvents: 'none' }} />
+                {/* 배지 */}
+                <div style={{ position: 'absolute', top: '12px', left: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ background: 'linear-gradient(135deg,#FFE566,#FF8C00)', color: '#000', fontSize: '0.68rem', fontWeight: 900, padding: '3px 12px', borderRadius: '100px' }}>🏆 올해의 영상</span>
+                </div>
+                {/* 재생 아이콘 */}
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>▶</div>
+                {/* 하단 텍스트 */}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 16px 14px' }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', lineHeight: 1.4, margin: '0 0 6px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{top10[0].title}</p>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.5)', borderRadius: '100px', padding: '3px 10px' }}>
+                    <span style={{ fontSize: '0.62rem', opacity: 0.7 }}>👁</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#FFB800' }}>{fmt(top10[0].views)}회 조회</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </a>
           )}
 
           {/* ── 가장 바빴던 달 ── */}
