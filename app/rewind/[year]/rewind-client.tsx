@@ -73,90 +73,97 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
 }
 
 // ── 월별 카드 ──
-// ── 월별 카드: 1위 크게 + 2·3위 아래 나열 ──
+// ── 월별 카드: 1위 썸네일 크게 + 2·3위 텍스트 리스트 ──
 function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
   const hasData = data.top3.length > 0;
-  const [hov, setHov] = useState(false);
+  const [hov1, setHov1] = useState(false);
+  const [hovRow, setHovRow] = useState<number|null>(null);
   const top1 = data.top3[0] || null;
-  const top2 = data.top3[1] || null;
-  const top3 = data.top3[2] || null;
+  const rest = data.top3.slice(1);
+  const MEDAL_STYLE = [
+    { medal: '🥈', color: '#B0B8C4', label: '2위' },
+    { medal: '🥉', color: '#C47A3A', label: '3위' },
+  ];
 
   return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        borderRadius: '16px', overflow: 'hidden',
-        background: hasData ? '#161616' : '#0f0f0f',
-        border: `1px solid ${hov && hasData ? 'rgba(235,112,26,0.4)' : hasData ? 'rgba(235,112,26,0.15)' : 'rgba(255,255,255,0.05)'}`,
-        animation: `rwFadeUp 0.5s ${idx * 0.04}s both`,
-        transform: hov && hasData ? 'translateY(-5px)' : 'none',
-        boxShadow: hov && hasData ? '0 16px 40px rgba(235,112,26,0.12)' : 'none',
-        transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-        display: 'flex', flexDirection: 'column' as const,
-      }}
-    >
-      {/* ── 1위: 썸네일 크게 ── */}
+    <div style={{
+      borderRadius: '16px', overflow: 'hidden',
+      background: hasData ? '#161616' : '#0f0f0f',
+      border: `1px solid ${hasData ? 'rgba(235,112,26,0.12)' : 'rgba(255,255,255,0.05)'}`,
+      animation: `rwFadeUp 0.5s ${idx * 0.04}s both`,
+      display: 'flex', flexDirection: 'column' as const,
+      transition: 'box-shadow 0.2s, border-color 0.2s',
+    }}>
+
+      {/* 월 라벨 */}
+      <div style={{ padding: '10px 14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 800, color: hasData ? ORANGE : 'rgba(255,255,255,0.2)' }}>
+          {MONTH_KO[data.month - 1]}
+        </span>
+        {top1 && <span style={{ fontSize: '0.62rem', background: 'linear-gradient(135deg,#FFE566,#FF8C00)', color: '#000', fontWeight: 800, padding: '1px 8px', borderRadius: '100px' }}>🥇 1위</span>}
+      </div>
+
+      {/* 1위 썸네일 */}
       <div
         onClick={() => top1 && window.open(`https://youtube.com/watch?v=${top1.id}`, '_blank')}
-        style={{ width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a', cursor: top1 ? 'pointer' : 'default', flexShrink: 0 }}
+        onMouseEnter={() => setHov1(true)}
+        onMouseLeave={() => setHov1(false)}
+        style={{
+          margin: '8px 14px 0', borderRadius: '10px', overflow: 'hidden',
+          aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
+          cursor: top1 ? 'pointer' : 'default', flexShrink: 0,
+          transform: hov1 && top1 ? 'scale(1.02)' : 'scale(1)',
+          transition: 'transform 0.2s',
+        }}
       >
         {top1
           ? <img src={top1.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: '2rem' }}>📭</div>
         }
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 50%)' }} />
-        {/* 월 + 1위 배지 */}
-        <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span style={{ background: ORANGE, color: '#fff', fontSize: '0.68rem', fontWeight: 800, padding: '3px 10px', borderRadius: '100px' }}>
-            {MONTH_KO[data.month - 1]}
-          </span>
-          {top1 && <span style={{ background: 'linear-gradient(135deg,#FFE566,#FF8C00)', color: '#fff', fontSize: '0.65rem', fontWeight: 900, padding: '3px 9px', borderRadius: '100px' }}>🥇 1위</span>}
-        </div>
-        {/* 1위 조회수 */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 45%)' }} />
         {top1 && (
-          <div style={{ position: 'absolute', bottom: '8px', right: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', borderRadius: '100px', padding: '3px 9px' }}>
-            <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>👁</span>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: ORANGE }}>{fmtShort(top1.views)}회</span>
+          <div style={{ position: 'absolute', bottom: '8px', right: '8px', display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', borderRadius: '100px', padding: '2px 8px' }}>
+            <span style={{ fontSize: '0.58rem', opacity: 0.7 }}>👁</span>
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: ORANGE }}>{fmtShort(top1.views)}회</span>
           </div>
         )}
       </div>
 
       {/* 1위 제목 */}
       {top1 && (
-        <div style={{ padding: '10px 12px 8px' }}>
-          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1.4, margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const }}>
-            {top1.title}
-          </p>
-        </div>
+        <p style={{ margin: '8px 14px 4px', fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.88)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const }}>
+          {top1.title}
+        </p>
       )}
 
-      {/* ── 2·3위: 나란히 ── */}
-      {(top2 || top3) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto' }}>
-          {[top2, top3].map((v, i) => {
-            const medal = i === 0 ? '🥈' : '🥉';
-            const grad  = i === 0 ? 'linear-gradient(135deg,#E8ECF0,#8A9AAA)' : 'linear-gradient(135deg,#F0A060,#7A3A0A)';
-            return v ? (
+      {/* 2·3위 텍스트 리스트 */}
+      {rest.length > 0 && (
+        <div style={{ margin: '6px 0 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          {rest.map((v, i) => {
+            const ms = MEDAL_STYLE[i];
+            return (
               <div
                 key={v.id}
                 onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
-                style={{ position: 'relative', aspectRatio: '16/9', background: '#0a0a0a', cursor: 'pointer', overflow: 'hidden' }}
+                onMouseEnter={() => setHovRow(i)}
+                onMouseLeave={() => setHovRow(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '7px 14px',
+                  borderBottom: i < rest.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  cursor: 'pointer',
+                  background: hovRow === i ? 'rgba(255,255,255,0.04)' : 'transparent',
+                  transition: 'background 0.15s',
+                }}
               >
-                <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 55%)' }} />
-                {/* 순위 배지 */}
-                <div style={{ position: 'absolute', top: '6px', left: '6px', background: grad, borderRadius: '100px', padding: '2px 7px', fontSize: '0.58rem', fontWeight: 900, color: i === 0 ? '#1a1a1a' : '#fff' }}>
-                  {medal} {i + 2}위
-                </div>
-                {/* 조회수 */}
-                <div style={{ position: 'absolute', bottom: '6px', left: '6px', right: '6px' }}>
-                  <p style={{ fontSize: '0.62rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{v.title}</p>
-                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: ORANGE }}>{fmtShort(v.views)}회</span>
-                </div>
+                <span style={{ fontSize: '0.75rem', flexShrink: 0 }}>{ms.medal}</span>
+                <p style={{ flex: 1, minWidth: 0, fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.65)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                  {v.title}
+                </p>
+                <span style={{ flexShrink: 0, fontSize: '0.65rem', fontWeight: 700, color: ms.color }}>
+                  {fmtShort(v.views)}회
+                </span>
               </div>
-            ) : (
-              <div key={i} style={{ aspectRatio: '16/9', background: '#111' }} />
             );
           })}
         </div>
