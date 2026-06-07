@@ -73,18 +73,13 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
 }
 
 // ── 월별 카드 ──
-const RANK_STYLE = [
-  { medal: '🥇', grad: 'linear-gradient(135deg,#FFE566,#FF8C00)', glow: 'rgba(255,160,0,0.3)' },
-  { medal: '🥈', grad: 'linear-gradient(135deg,#E8ECF0,#8A9AAA)', glow: 'rgba(160,170,180,0.2)' },
-  { medal: '🥉', grad: 'linear-gradient(135deg,#F0A060,#7A3A0A)', glow: 'rgba(180,100,40,0.2)' },
-];
-
+// ── 월별 카드: 1위 크게 + 2·3위 아래 나열 ──
 function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
   const hasData = data.top3.length > 0;
-  const [sel, setSel] = useState(0);
   const [hov, setHov] = useState(false);
-  const video = data.top3[sel] || null;
-  const rs = RANK_STYLE[sel];
+  const top1 = data.top3[0] || null;
+  const top2 = data.top3[1] || null;
+  const top3 = data.top3[2] || null;
 
   return (
     <div
@@ -101,68 +96,76 @@ function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
         display: 'flex', flexDirection: 'column' as const,
       }}
     >
-      {/* 탭 버튼 */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '10px 12px 0', gap: '6px' }}>
-        {/* 월 라벨 */}
-        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: hasData ? ORANGE : 'rgba(255,255,255,0.2)', marginRight: 'auto' }}>
-          {MONTH_KO[data.month - 1]}
-        </span>
-        {/* 1·2·3위 탭 */}
-        {data.top3.map((_, i) => {
-          const rs2 = RANK_STYLE[i];
-          const isActive = sel === i;
-          return (
-            <button
-              key={i}
-              onClick={() => setSel(i)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '3px',
-                padding: '4px 10px', borderRadius: '100px', border: 'none',
-                cursor: 'pointer', transition: 'all 0.18s',
-                background: isActive ? rs2.grad : 'rgba(255,255,255,0.06)',
-                boxShadow: isActive ? `0 0 10px ${rs2.glow}` : 'none',
-                fontSize: '0.68rem', fontWeight: 800,
-                color: isActive ? (i === 1 ? '#1a1a1a' : '#fff') : 'rgba(255,255,255,0.35)',
-              }}
-            >
-              {rs2.medal} {i + 1}위
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 썸네일 */}
+      {/* ── 1위: 썸네일 크게 ── */}
       <div
-        onClick={() => video && window.open(`https://youtube.com/watch?v=${video.id}`, '_blank')}
-        style={{ width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a', cursor: video ? 'pointer' : 'default', marginTop: '10px', flexShrink: 0 }}
+        onClick={() => top1 && window.open(`https://youtube.com/watch?v=${top1.id}`, '_blank')}
+        style={{ width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a', cursor: top1 ? 'pointer' : 'default', flexShrink: 0 }}
       >
-        {video
-          ? <img
-              key={video.id}
-              src={video.thumbnail} alt=""
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 0.2s' }}
-            />
+        {top1
+          ? <img src={top1.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: '2rem' }}>📭</div>
         }
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
-        {/* 조회수 */}
-        {video && (
-          <div style={{ position: 'absolute', bottom: '10px', right: '12px', display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', borderRadius: '100px', padding: '3px 10px' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 50%)' }} />
+        {/* 월 + 1위 배지 */}
+        <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <span style={{ background: ORANGE, color: '#fff', fontSize: '0.68rem', fontWeight: 800, padding: '3px 10px', borderRadius: '100px' }}>
+            {MONTH_KO[data.month - 1]}
+          </span>
+          {top1 && <span style={{ background: 'linear-gradient(135deg,#FFE566,#FF8C00)', color: '#fff', fontSize: '0.65rem', fontWeight: 900, padding: '3px 9px', borderRadius: '100px' }}>🥇 1위</span>}
+        </div>
+        {/* 1위 조회수 */}
+        {top1 && (
+          <div style={{ position: 'absolute', bottom: '8px', right: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', borderRadius: '100px', padding: '3px 9px' }}>
             <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>👁</span>
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: ORANGE }}>{fmtShort(video.views)}회</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: ORANGE }}>{fmtShort(top1.views)}회</span>
           </div>
         )}
       </div>
 
-      {/* 제목 */}
-      <div style={{ padding: '12px 14px 16px', flex: 1 }}>
-        {video
-          ? <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
-              {video.title}
-            </p>
-          : <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', margin: 0 }}>업로드 없음</p>
-        }
-      </div>
+      {/* 1위 제목 */}
+      {top1 && (
+        <div style={{ padding: '10px 12px 8px' }}>
+          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1.4, margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const }}>
+            {top1.title}
+          </p>
+        </div>
+      )}
+
+      {/* ── 2·3위: 나란히 ── */}
+      {(top2 || top3) && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto' }}>
+          {[top2, top3].map((v, i) => {
+            const medal = i === 0 ? '🥈' : '🥉';
+            const grad  = i === 0 ? 'linear-gradient(135deg,#E8ECF0,#8A9AAA)' : 'linear-gradient(135deg,#F0A060,#7A3A0A)';
+            return v ? (
+              <div
+                key={v.id}
+                onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
+                style={{ position: 'relative', aspectRatio: '16/9', background: '#0a0a0a', cursor: 'pointer', overflow: 'hidden' }}
+              >
+                <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 55%)' }} />
+                {/* 순위 배지 */}
+                <div style={{ position: 'absolute', top: '6px', left: '6px', background: grad, borderRadius: '100px', padding: '2px 7px', fontSize: '0.58rem', fontWeight: 900, color: i === 0 ? '#1a1a1a' : '#fff' }}>
+                  {medal} {i + 2}위
+                </div>
+                {/* 조회수 */}
+                <div style={{ position: 'absolute', bottom: '6px', left: '6px', right: '6px' }}>
+                  <p style={{ fontSize: '0.62rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{v.title}</p>
+                  <span style={{ fontSize: '0.58rem', fontWeight: 700, color: ORANGE }}>{fmtShort(v.views)}회</span>
+                </div>
+              </div>
+            ) : (
+              <div key={i} style={{ aspectRatio: '16/9', background: '#111' }} />
+            );
+          })}
+        </div>
+      )}
+
+      {/* 데이터 없음 */}
+      {!hasData && (
+        <div style={{ padding: '24px 16px', textAlign: 'center' as const, color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem' }}>업로드 없음</div>
+      )}
     </div>
   );
 }
