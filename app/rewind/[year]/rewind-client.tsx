@@ -68,37 +68,6 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
         </div>
       )}
       <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
-    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
-      <a href="/"
-        style={{
-          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
-          display: 'inline-flex', alignItems: 'center', gap: '7px',
-          background: 'rgba(15,15,15,0.85)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(16px)',
-          color: '#fff', padding: '10px 18px', borderRadius: '100px',
-          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = ORANGE;
-          el.style.borderColor = ORANGE;
-          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = 'rgba(15,15,15,0.85)';
-          el.style.borderColor = 'rgba(255,255,255,0.15)';
-          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </svg>
-        스맵 아카이브
-      </a>
     </div>
   );
 }
@@ -194,37 +163,6 @@ function MonthCard({ data, idx }: { data: MonthData; idx: number }) {
           : <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', margin: 0 }}>업로드 없음</p>
         }
       </div>
-    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
-      <a href="/"
-        style={{
-          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
-          display: 'inline-flex', alignItems: 'center', gap: '7px',
-          background: 'rgba(15,15,15,0.85)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(16px)',
-          color: '#fff', padding: '10px 18px', borderRadius: '100px',
-          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = ORANGE;
-          el.style.borderColor = ORANGE;
-          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = 'rgba(15,15,15,0.85)';
-          el.style.borderColor = 'rgba(255,255,255,0.15)';
-          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </svg>
-        스맵 아카이브
-      </a>
     </div>
   );
 }
@@ -284,37 +222,6 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
         <span style={{ fontSize: '0.75rem', color: ORANGE, fontWeight: 700 }}>{fmt(video.views)}회</span>
       </div>
       {isTop3 && <div style={{ flexShrink: 0, fontSize: '1.3rem' }}>{MEDAL[rank - 1]}</div>}
-    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
-      <a href="/"
-        style={{
-          position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
-          display: 'inline-flex', alignItems: 'center', gap: '7px',
-          background: 'rgba(15,15,15,0.85)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          backdropFilter: 'blur(16px)',
-          color: '#fff', padding: '10px 18px', borderRadius: '100px',
-          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = ORANGE;
-          el.style.borderColor = ORANGE;
-          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = 'rgba(15,15,15,0.85)';
-          el.style.borderColor = 'rgba(255,255,255,0.15)';
-          el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </svg>
-        스맵 아카이브
-      </a>
     </div>
   );
 }
@@ -618,7 +525,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </p>
         </div>
       </section>
-    {/* ② 플로팅 홈 버튼 — 항상 고정 */}
+
+      {/* ② 플로팅 홈 버튼 — 항상 고정 */}
       <a href="/"
         style={{
           position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
@@ -630,12 +538,13 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           transition: 'all 0.2s',
+          whiteSpace: 'nowrap' as const,
         }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLElement;
           el.style.background = ORANGE;
           el.style.borderColor = ORANGE;
-          el.style.boxShadow = `0 8px 32px rgba(235,112,26,0.45)`;
+          el.style.boxShadow = '0 8px 32px rgba(235,112,26,0.45)';
         }}
         onMouseLeave={e => {
           const el = e.currentTarget as HTMLElement;
@@ -644,7 +553,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
         }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{flexShrink:0}}>
           <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
         스맵 아카이브
