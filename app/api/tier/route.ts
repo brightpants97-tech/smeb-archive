@@ -14,8 +14,8 @@ const RANK_KO: Record<string, string> = { I:'1', II:'2', III:'3', IV:'4' };
 const TOP_TIER = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];
 
 async function riotFetch(url: string) {
-  const res = await fetch(url, {
-    headers: { 'X-Riot-Token': KEY },
+  const sep = url.includes('?') ? '&' : '?';
+  const res = await fetch(`${url}${sep}api_key=${KEY}`, {
     cache: 'no-store' as RequestCache,
   });
   if (!res.ok) throw { status: res.status };
