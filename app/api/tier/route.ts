@@ -77,9 +77,10 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (e: any) {
-    if (e?.status === 404) {
-      return NextResponse.json({ error: '소환사를 찾을 수 없어요. 라이엇 ID를 확인해주세요.' }, { status: 404 });
-    }
-    return NextResponse.json({ error: 'API 조회 중 오류가 발생했어요.' }, { status: 500 });
+    const s = e?.status;
+    if (s === 404) return NextResponse.json({ error: '소환사를 찾을 수 없어요. 라이엇 ID를 확인해주세요.' }, { status: 404 });
+    if (s === 403) return NextResponse.json({ error: 'API 키가 만료됐어요. Riot 개발자 페이지에서 키를 갱신해주세요.' }, { status: 403 });
+    if (s === 429) return NextResponse.json({ error: '요청이 너무 많아요. 잠시 후 다시 시도해주세요.' }, { status: 429 });
+    return NextResponse.json({ error: `조회 오류 (${s ?? 'unknown'}) - 잠시 후 다시 시도해주세요.` }, { status: 500 });
   }
 }
