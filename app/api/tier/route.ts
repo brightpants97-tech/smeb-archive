@@ -31,6 +31,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: '소환사명과 태그를 입력해주세요.' }, { status: 400 });
   }
 
+  if (!KEY) {
+    return NextResponse.json({ error: 'API 키가 설정되지 않았어요. 관리자에게 문의해주세요.' }, { status: 500 });
+  }
+
   try {
     // 1) PUUID
     const account = await riotFetch(
@@ -79,6 +83,7 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     const s = e?.status;
     if (s === 404) return NextResponse.json({ error: '소환사를 찾을 수 없어요. 라이엇 ID를 확인해주세요.' }, { status: 404 });
+    if (s === 401) return NextResponse.json({ error: 'API 키 인증 실패 (401). 키를 다시 확인해주세요.' }, { status: 401 });
     if (s === 403) return NextResponse.json({ error: 'API 키가 만료됐어요. Riot 개발자 페이지에서 키를 갱신해주세요.' }, { status: 403 });
     if (s === 429) return NextResponse.json({ error: '요청이 너무 많아요. 잠시 후 다시 시도해주세요.' }, { status: 429 });
     return NextResponse.json({ error: `조회 오류 (${s ?? 'unknown'}) - 잠시 후 다시 시도해주세요.` }, { status: 500 });
