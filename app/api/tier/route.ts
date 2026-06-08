@@ -35,16 +35,29 @@ export async function GET(req: NextRequest) {
 
   // 디버그용 (임시)
   if (name === 'debug') {
-    const encoded = encodeURIComponent('춘봉박');
-    const testUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encoded}/kr1?api_key=${KEY.trim()}`;
-    const testRes = await fetch(testUrl);
-    const testBody = await testRes.text();
-    return NextResponse.json({ 
-      keyStart: KEY.substring(0, 12), keyLen: KEY.length,
-      encoded, testUrl: testUrl.replace(KEY, 'KEY_HIDDEN'),
-      riotStatus: testRes.status,
-      riotBody: testBody.substring(0, 300)
-    });
+    const step: Record<string, any> = {};
+    try {
+      // 1단계
+      const encoded = encodeURIComponent('춘봉박');
+      const r1 = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encoded}/kr1?api_key=${KEY.trim()}`);
+      const d1 = await r1.json();
+      step['1_account'] = { status: r1.status, puuid: d1.puuid?.slice(0,10) };
+      if (!r1.ok) return NextResponse.json({ step });
+      
+      // 2단계
+      const r2 = await fetch(`https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${d1.puuid}?api_key=${KEY.trim()}`);
+      const d2 = await r2.json();
+      step['2_summoner'] = { status: r2.status, id: d2.id?.slice(0,10) };
+      if (!r2.ok) return NextResponse.json({ step, d2 });
+
+      // 3단계
+      const r3 = await fetch(`https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${d2.id}?api_key=${KEY.trim()}`);
+      const d3 = await r3.json();
+      step['3_league'] = { status: r3.status, count: Array.isArray(d3) ? d3.length : d3 };
+    } catch(e) {
+      step['error'] = String(e);
+    }
+    return NextResponse.json({ step });
   }
 
   try {
