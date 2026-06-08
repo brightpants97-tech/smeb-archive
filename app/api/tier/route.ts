@@ -15,9 +15,7 @@ const TOP_TIER = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];
 
 async function riotFetch(url: string) {
   const sep = url.includes('?') ? '&' : '?';
-  const res = await fetch(`${url}${sep}api_key=${KEY}`, {
-    cache: 'no-store' as RequestCache,
-  });
+  const res = await fetch(`${url}${sep}api_key=${KEY.trim()}`);
   if (!res.ok) throw { status: res.status };
   return res.json();
 }
