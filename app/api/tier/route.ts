@@ -35,6 +35,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'API 키가 설정되지 않았어요. 관리자에게 문의해주세요.' }, { status: 500 });
   }
 
+  // 디버그용 (임시)
+  if (name === 'debug') {
+    return NextResponse.json({ keyStart: KEY.substring(0, 12), keyLen: KEY.length });
+  }
+
   try {
     // 1) PUUID
     const account = await riotFetch(
