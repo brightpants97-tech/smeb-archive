@@ -37,7 +37,15 @@ export async function GET(req: NextRequest) {
 
   // 디버그용 (임시)
   if (name === 'debug') {
-    return NextResponse.json({ keyStart: KEY.substring(0, 12), keyLen: KEY.length });
+    // Riot API 직접 호출 테스트
+    const testUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/Faker/KR1?api_key=${KEY}`;
+    const testRes = await fetch(testUrl);
+    const testBody = await testRes.text();
+    return NextResponse.json({ 
+      keyStart: KEY.substring(0, 12), keyLen: KEY.length,
+      riotStatus: testRes.status,
+      riotBody: testBody.substring(0, 200)
+    });
   }
 
   try {
