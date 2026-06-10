@@ -507,7 +507,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       </div>
       {/* 썸네일 */}
       <div style={{
-        flexShrink: 0, width: '92px', height: '52px', borderRadius: '10px', overflow: 'hidden',
+        flexShrink: 0, width: '140px', height: '79px', borderRadius: '10px', overflow: 'hidden',
         boxShadow: rank === 1 ? '0 0 0 2px #FFB800, 0 4px 16px rgba(255,160,0,0.35)' : rank === 2 ? '0 0 0 1.5px #A0A8B8' : rank === 3 ? '0 0 0 1.5px #CD7F32' : 'none',
       }}>
         <img src={video.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
