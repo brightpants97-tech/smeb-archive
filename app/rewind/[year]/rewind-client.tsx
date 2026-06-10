@@ -149,15 +149,19 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
                     position: 'relative', overflow: 'visible',
                   }}>
                     {/* 바 안 상단 — 피크·호버 시 숫자 표시 */}
-                    {(isPeak || isHov) && !isEmpty && barH >= 20 && (
+                    {(isPeak || isHov) && !isEmpty && barH >= 28 && (
                       <div style={{
                         position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)',
-                        fontSize: '0.58rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
-                        color: isPeak ? '#000' : '#fff',
-                        textShadow: isPeak ? 'none' : '0 1px 3px rgba(0,0,0,0.5)',
+                        fontSize: '0.7rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
+                        color: '#fff',
+                        background: 'rgba(0,0,0,0.55)',
+                        backdropFilter: 'blur(4px)',
+                        padding: '2px 7px', borderRadius: '4px',
+                        border: isPeak ? '1px solid rgba(255,184,0,0.5)' : '1px solid rgba(255,255,255,0.15)',
                         pointerEvents: 'none',
+                        letterSpacing: '-0.02em',
                       }}>
-                        {fmtShort(val)}
+                        {fmtShort(val)}회
                       </div>
                     )}
                   </div>
