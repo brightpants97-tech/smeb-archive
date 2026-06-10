@@ -78,6 +78,13 @@ const RANK_INFO = [
   { medal: '🥇', grad: 'linear-gradient(135deg,#FFE566,#FF8C00)', tc: '#000' },
   { medal: '🥈', grad: 'linear-gradient(135deg,#D8DCE4,#8A9AAA)',  tc: '#111' },
   { medal: '🥉', grad: 'linear-gradient(135deg,#F0A060,#7A3A0A)',  tc: '#fff' },
+  { medal: '4', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
+  { medal: '5', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
+  { medal: '6', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
+  { medal: '7', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
+  { medal: '8', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
+  { medal: '9', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
+  { medal: '10', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
 ];
 
 function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
@@ -100,8 +107,8 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
       </div>
 
       {/* 최대 10개 하이라이트 */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(6px,1vw,12px)', minWidth: 0 }}>
-        {[0, 1, 2].map(i => {
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(6px,1vw,12px)', minWidth: 0 }}>
+        {Array.from({ length: Math.min(videos.length, 10) }, (_, i) => i).map(i => {
           const v  = videos[i];
           const ri = RANK_INFO[i];
           const isHov = hovIdx === i;
