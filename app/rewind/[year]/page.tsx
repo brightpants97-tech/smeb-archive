@@ -25,7 +25,8 @@ export interface Video {
 export interface MonthData {
   key: string; month: number;
   topYT: Video | null;
-  top3: Video[];
+  top3: Video[];  // 하위호환
+  topVideos: Video[];
   ytCount: number; soopCount: number;
   totalMonthViews: number;
 }
@@ -156,6 +157,7 @@ export default async function RewindPage({ params }: { params: Promise<{ year: s
       key, month: i + 1,
       topYT: ytM[0] || null,
       top3: ytM.slice(0, 3),
+      topVideos: ytM.slice(0, 10),
       ytCount: ytM.length,
       soopCount: soopM.length,
       totalMonthViews: ytM.reduce((s, v) => s + v.views, 0),
