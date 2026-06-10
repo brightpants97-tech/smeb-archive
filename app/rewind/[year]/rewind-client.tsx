@@ -81,7 +81,8 @@ const RANK_INFO = [
 ];
 
 function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
-  const hasData = data.top3.length > 0;
+  const videos = data.topVideos || data.top3;
+  const hasData = videos.length > 0;
   const [hovIdx, setHovIdx] = useState<number|null>(null);
 
   return (
@@ -98,10 +99,10 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
         </span>
       </div>
 
-      {/* 3개 썸네일 */}
+      {/* 최대 10개 하이라이트 */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(6px,1vw,12px)', minWidth: 0 }}>
         {[0, 1, 2].map(i => {
-          const v  = data.top3[i];
+          const v  = videos[i];
           const ri = RANK_INFO[i];
           const isHov = hovIdx === i;
 
