@@ -135,7 +135,7 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
                   {/* 툴팁 */}
                   <div style={{
                     fontSize: '0.62rem', fontWeight: 800, color: isPeak ? '#FFB800' : ORANGE,
-                    opacity: isHov ? 1 : 0, transition: 'opacity 0.15s',
+                    opacity: isPeak || isHov ? 1 : 0, transition: 'opacity 0.15s',
                     whiteSpace: 'nowrap' as const, background: 'rgba(0,0,0,0.8)',
                     padding: '3px 8px', borderRadius: '6px', border: `1px solid ${isPeak ? 'rgba(255,184,0,0.3)' : 'rgba(235,112,26,0.3)'}`,
                     marginBottom: '2px',
