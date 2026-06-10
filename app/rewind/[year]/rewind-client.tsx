@@ -107,7 +107,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
       </div>
 
       {/* 최대 10개 하이라이트 */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(6px,1vw,12px)', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 'clamp(6px,1vw,10px)', minWidth: 0 }}>
         {Array.from({ length: Math.min(videos.length, 10) }, (_, i) => i).map(i => {
           const v  = videos[i];
           const ri = RANK_INFO[i];
@@ -123,7 +123,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
               {/* 썸네일 */}
               <div style={{
                 borderRadius: 'clamp(8px,1vw,12px)', overflow: 'hidden',
-                aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
+                width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
                 transform: isHov ? 'scale(1.03)' : 'scale(1)',
                 boxShadow: isHov ? '0 8px 24px rgba(0,0,0,0.5)' : 'none',
                 transition: 'transform 0.2s, box-shadow 0.2s',
@@ -145,7 +145,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
               </p>
             </div>
           ) : (
-            <div key={i} style={{ aspectRatio: '16/9', borderRadius: 'clamp(8px,1vw,12px)', background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.07)' }} />
+            <div key={i} style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'clamp(8px,1vw,12px)', background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.07)' }} />
           );
         })}
       </div>
