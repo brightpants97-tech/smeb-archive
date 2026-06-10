@@ -11,14 +11,16 @@ interface Props {
   monthTop5: Record<string, VideoItem[]>;
   sortedMonths: string[];
   currentMonth: string;
+  monthlyAll?: Record<string, VideoItem[]>;
+  soopMonthAll?: Record<string, VideoItem[]>;
 }
 
-export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, currentMonth }: Props) {
+export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, currentMonth, monthlyAll, soopMonthAll }: Props) {
   const availableMonths = useMemo(() => {
-    const ytM = Object.keys(monthlyTop10).filter(m => (monthlyTop10[m] || []).length > 0);
-    const soopM = sortedMonths.filter(m => (monthTop5[m] || []).length > 0);
+    const ytM = Object.keys(monthlyAll || monthlyTop10).filter(m => ((monthlyAll || monthlyTop10)[m] || []).length > 0);
+    const soopM = sortedMonths.filter(m => ((soopMonthAll || monthTop5)[m] || []).length > 0);
     return [...new Set([...ytM, ...soopM])].sort().reverse();
-  }, [monthlyTop10, monthTop5, sortedMonths]);
+  }, [monthlyAll, monthlyTop10, monthTop5, soopMonthAll, sortedMonths]);
 
   const defaultMonth = useMemo(() => {
     if (availableMonths.includes(currentMonth)) return currentMonth;
@@ -28,11 +30,12 @@ export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, 
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [copied, setCopied] = useState(false);
 
-  const ytVideos = useMemo(() => (monthlyTop10[selectedMonth] || []).slice(0, 10), [monthlyTop10, selectedMonth]);
-  const soopVods = useMemo(() => (monthTop5[selectedMonth] || []).slice(0, 5), [monthTop5, selectedMonth]);
+  // 전체 데이터 사용 (없으면 기존 top10/top5 fallback)
+  const ytVideos = useMemo(() => (monthlyAll || monthlyTop10)[selectedMonth] || [], [monthlyAll, monthlyTop10, selectedMonth]);
+  const soopVods  = useMemo(() => (soopMonthAll  || monthTop5)[selectedMonth]  || [], [soopMonthAll,  monthTop5,  selectedMonth]);
 
   const [yr, mo] = selectedMonth.split('-');
-  const monthLabel = `${yr}년 ${parseInt(mo)}월`;
+  const monthLabel = `${yr}텄 ${parseInt(mo)}월`;
 
   const ytList = ytVideos.map((v, i) =>
     `${i + 1}. ${v.title} (조회수: ${Number(v.views).toLocaleString('ko-KR')})`
@@ -45,10 +48,10 @@ export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, 
   const prompt = `아래는 스맵(SMEB) 스트리머의 ${monthLabel} 콘텐츠 데이터야.
 (사이트: https://www.smebarchive.xyz/)
 
-[유튜브 TOP${ytVideos.length || 10}]
+[유튜브 ${monthLabel} 전체 영상 (${ytVideos.length}개, 조회수 순)]
 ${ytList || '(데이터 없음)'}
 
-[SOOP 다시보기 TOP${soopVods.length || 5}]
+[SOOP 다시보기 ${monthLabel} 전체 (${soopVods.length}개, 조회수 순)]
 ${soopList || '(데이터 없음)'}
 
 위 데이터를 기반으로 아래 7가지를 분석해줘:
@@ -80,8 +83,8 @@ ${soopList || '(데이터 없음)'}
 
   const fmtMonth = (m: string) => {
     const [y, mo2] = m.split('-');
-    const ytC = (monthlyTop10[m] || []).length;
-    const soopC = (monthTop5[m] || []).length;
+    const ytC  = ((monthlyAll  || monthlyTop10)[m] || []).length;
+    const soopC = ((soopMonthAll || monthTop5)[m]  || []).length;
     return `${y}년 ${parseInt(mo2)}월${ytC > 0 ? ` · YT${ytC}` : ''}${soopC > 0 ? ` · SOOP${soopC}` : ''}`;
   };
 
@@ -197,7 +200,7 @@ ${soopList || '(데이터 없음)'}
             <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
               {copied
                 ? '제미나이에 붙여넣기 하세요 ✓'
-                : `YT ${ytVideos.length}개 · SOOP ${soopVods.length}개`}
+                : `YT 전체 ${ytVideos.length}개 · SOOP 전체 ${soopVods.length}개`}
             </p>
           </div>
         </div>
