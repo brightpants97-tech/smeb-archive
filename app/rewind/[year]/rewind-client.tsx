@@ -411,7 +411,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
       </div>
 
       {/* 최대 10개 하이라이트 */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 'clamp(6px,1vw,10px)', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'clamp(6px,1vw,10px)', minWidth: 0 }}>
         {Array.from({ length: Math.min(videos.length, 10) }, (_, i) => i).map(i => {
           const v  = videos[i];
           const ri = RANK_INFO[i];
