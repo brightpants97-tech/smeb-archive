@@ -132,19 +132,6 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
                   onMouseEnter={() => !isEmpty && setHov(i)}
                   onMouseLeave={() => setHov(null)}
                 >
-                  {/* 툴팁 — absolute로 레이아웃 높이에 영향 없게 */}
-                  <div style={{
-                    position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-                    marginBottom: '6px', pointerEvents: 'none',
-                    fontSize: '0.62rem', fontWeight: 800, color: isPeak ? '#FFB800' : ORANGE,
-                    opacity: isPeak || isHov ? 1 : 0, transition: 'opacity 0.15s',
-                    whiteSpace: 'nowrap' as const, background: 'rgba(0,0,0,0.85)',
-                    padding: '3px 8px', borderRadius: '6px', border: `1px solid ${isPeak ? 'rgba(255,184,0,0.3)' : 'rgba(235,112,26,0.3)'}`,
-                    zIndex: 10,
-                  }}>
-                    {fmtShort(val)}회{mode === 'avg' && m.ytCount > 0 ? ` (${m.ytCount}개)` : ''}
-                  </div>
-
                   {/* 바 */}
                   <div style={{
                     width: '100%', borderRadius: '6px 6px 0 0',
@@ -159,7 +146,21 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
                           : `linear-gradient(to top, rgba(235,112,26,0.8), rgba(235,112,26,0.35))`,
                     boxShadow: isPeak && inView ? '0 0 20px rgba(255,184,0,0.4)' : isHov ? '0 0 12px rgba(235,112,26,0.3)' : 'none',
                     minHeight: isEmpty ? '4px' : '0',
-                  }} />
+                    position: 'relative', overflow: 'visible',
+                  }}>
+                    {/* 바 안 상단 — 피크·호버 시 숫자 표시 */}
+                    {(isPeak || isHov) && !isEmpty && barH >= 20 && (
+                      <div style={{
+                        position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)',
+                        fontSize: '0.58rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
+                        color: isPeak ? '#000' : '#fff',
+                        textShadow: isPeak ? 'none' : '0 1px 3px rgba(0,0,0,0.5)',
+                        pointerEvents: 'none',
+                      }}>
+                        {fmtShort(val)}
+                      </div>
+                    )}
+                  </div>
 
                   {/* 월 라벨 */}
                   <div style={{ textAlign: 'center' as const }}>
