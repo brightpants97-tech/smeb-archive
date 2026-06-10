@@ -36,15 +36,15 @@ export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, 
   const soopVods  = useMemo(() => (soopMonthAll  || monthTop5)[selectedMonth]  || [], [soopMonthAll,  monthTop5,  selectedMonth]);
 
   const [yr, mo] = selectedMonth.split('-');
-  const monthLabel = `${yr}텄 ${parseInt(mo)}월`;
+  const monthLabel = `${yr}년 ${parseInt(mo)}월`;
 
   const ytList = ytVideos.map((v, i) =>
-    `${i + 1}. ${v.title} (\uc870\ud68c\uc218: ${Number(v.views).toLocaleString('ko-KR')})${v.id ? `\n   https://www.youtube.com/watch?v=${v.id}` : ''}`
-  ).join('\n');
+    `${i + 1}. ${v.title}\n   조회수: ${Number(v.views).toLocaleString('ko-KR')}회${v.id ? `  |  https://www.youtube.com/watch?v=${v.id}` : ''}`
+  ).join('\n\n');
 
   const soopList = soopVods.map((v, i) =>
-    `${i + 1}. ${v.title} (조회수: ${Number(v.views).toLocaleString('ko-KR')})`
-  ).join('\n');
+    `${i + 1}. ${v.title}\n   조회수: ${Number(v.views || 0).toLocaleString('ko-KR')}회${v.id ? `  |  https://vod.sooplive.com/player/${v.id}` : ''}`
+  ).join('\n\n');
 
   const prompt = `아래는 스맵(SMEB) 스트리머의 ${monthLabel} 콘텐츠 데이터야.
 (사이트: https://www.smebarchive.xyz/)
@@ -57,8 +57,8 @@ ${soopList || '(데이터 없음)'}
 
 위 데이터를 기반으로 아래 7가지를 분석해줘:
 
-1. 유튜브 TOP10 키워드 10가지: 영상 주요상황 설명
-2. SOOP 다시보기 캘린더 TOP5의 키워드 5가지: 영상 주요상황 설명
+1. 유튜브 전체 영상(${ytVideos.length}개) 키워드 ${Math.min(ytVideos.length, 15)}가지: 각 영상의 주요 상황 설명 (링크 참고)
+2. SOOP 다시보기 전체(${soopVods.length}개) 키워드 ${Math.min(soopVods.length, 10)}가지: 각 영상의 주요 상황 설명 (링크 참고)
 3. 유튜브와 SOOP에서 이번달 주된 콘텐츠
 4. swot 분석
 5. swot을 참고한 콘텐츠 5가지 추천(생방송에서 가능한 현실성 있는 콘텐츠, 구체적으로)
