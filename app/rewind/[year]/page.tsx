@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import RewindClient from './rewind-client';
 
-const VALID_YEARS = [2021, 2022, 2023, 2024, 2025];
+const VALID_YEARS = [2021, 2022, 2023, 2024, 2025, 2026];
 
 export async function generateStaticParams() {
   return VALID_YEARS.map(y => ({ year: String(y) }));
