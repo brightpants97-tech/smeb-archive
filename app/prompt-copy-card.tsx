@@ -38,6 +38,10 @@ export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, 
   const [yr, mo] = selectedMonth.split('-');
   const monthLabel = `${yr}년 ${parseInt(mo)}월`;
 
+  // 최고 조회수 영상
+  const topYt   = ytVideos[0];
+  const topSoop = soopVods[0];
+
   const ytList = ytVideos.map((v, i) =>
     `${i + 1}. ${v.title}\n   조회수: ${Number(v.views).toLocaleString('ko-KR')}회${v.id ? `  |  https://www.youtube.com/watch?v=${v.id}` : ''}`
   ).join('\n\n');
@@ -50,9 +54,11 @@ export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, 
 (사이트: https://www.smebarchive.xyz/)
 
 [유튜브 ${monthLabel} 전체 영상 (${ytVideos.length}개, 조회수 순)]
+🏆 최고 조회수: ${topYt ? `${topYt.title} (${Number(topYt.views).toLocaleString('ko-KR')}회)${topYt.id ? ` → https://www.youtube.com/watch?v=${topYt.id}` : ''}` : '없음'}
 ${ytList || '(데이터 없음)'}
 
 [SOOP 다시보기 ${monthLabel} 전체 (${soopVods.length}개, 조회수 순)]
+🏆 최고 조회수: ${topSoop ? `${topSoop.title} (${Number(topSoop.views || 0).toLocaleString('ko-KR')}회)${topSoop.id ? ` → https://vod.sooplive.com/player/${topSoop.id}` : ''}` : '없음'}
 ${soopList || '(데이터 없음)'}
 
 위 데이터를 기반으로 아래 7가지를 분석해줘:
@@ -63,7 +69,8 @@ ${soopList || '(데이터 없음)'}
 4. swot 분석
 5. swot을 참고한 콘텐츠 5가지 추천(생방송에서 가능한 현실성 있는 콘텐츠, 구체적으로)
 6. 이번 달 만났던 모든 스트리머 또는 유튜버 / 베스트 케미 1명
-7. 한 문장으로 정리하는 이번 달(명언)`;
+7. 이번 달 최고 조회수 유튜브 영상과 SOOP 영상 각 1개씩 - 왜 이 영상이 가장 인기 있었는지 구체적인 이유 분석
+8. 한 문장으로 정리하는 이번 달(명언)`;
 
   const handleCopy = async () => {
     try {
