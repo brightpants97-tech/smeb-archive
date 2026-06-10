@@ -555,13 +555,13 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       <section style={{
         minHeight: '100vh',
         display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
-        position: 'relative', overflow: 'hidden',
+        position: 'relative', overflow: 'hidden', paddingTop: '72px',
         background: `radial-gradient(ellipse 80% 55% at 50% 50%, rgba(235,112,26,0.14) 0%, transparent 70%)`,
       }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(235,112,26,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(235,112,26,0.04) 1px,transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none' }} />
 
         {/* 상단 바: 홈 + 연도 네비 */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px clamp(1.2rem,4vw,3rem)', zIndex: 10, flexWrap: 'wrap' as const, gap: '12px' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px clamp(1.2rem,4vw,3rem)', zIndex: 100, flexWrap: 'wrap' as const, gap: '12px', background: 'rgba(11,11,11,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {/* 로고 + 홈 버튼 묶음 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', opacity: 0.9, transition: 'opacity 0.2s' }}
