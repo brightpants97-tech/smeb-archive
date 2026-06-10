@@ -61,7 +61,7 @@ ${ytList || '(데이터 없음)'}
 🏆 최고 조회수: ${topSoop ? `${topSoop.title} (${Number(topSoop.views || 0).toLocaleString('ko-KR')}회)${topSoop.id ? ` → https://vod.sooplive.com/player/${topSoop.id}` : ''}` : '없음'}
 ${soopList || '(데이터 없음)'}
 
-위 데이터를 기반으로 아래 7가지를 분석해줘:
+위 데이터를 기반으로 아래 10가지를 분석해줘:
 
 1. 유튜브+SOOP 통합 키워드 15가지: 이달 전체 영상 기반 핵심 키워드 15개, 각 키워드마다 관련 영상 주요 상황 설명 (링크 참고)
 2. 유튜브와 SOOP에서 이번달 주된 콘텐츠
