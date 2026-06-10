@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 
 interface VideoItem {
+  id?: string;
   title: string;
   views: number;
 }
@@ -38,7 +39,7 @@ export default function PromptCopyCard({ monthlyTop10, monthTop5, sortedMonths, 
   const monthLabel = `${yr}텄 ${parseInt(mo)}월`;
 
   const ytList = ytVideos.map((v, i) =>
-    `${i + 1}. ${v.title} (조회수: ${Number(v.views).toLocaleString('ko-KR')})`
+    `${i + 1}. ${v.title} (\uc870\ud68c\uc218: ${Number(v.views).toLocaleString('ko-KR')})${v.id ? `\n   https://www.youtube.com/watch?v=${v.id}` : ''}`
   ).join('\n');
 
   const soopList = soopVods.map((v, i) =>
