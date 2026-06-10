@@ -526,6 +526,16 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
 interface Props { year: number; validYears: number[]; stats: RewindStats; monthlyData: MonthData[]; top10: Video[]; }
 
 export default function RewindClient({ year, validYears, stats, monthlyData, top10 }: Props) {
+  // 현재 연도면 경과 일수, 과거 연도면 윤년 여부 반영한 연간 일수
+  const dayCount = (() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    if (year < currentYear) {
+      return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 366 : 365;
+    }
+    const start = new Date(year, 0, 1);
+    return Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
+  })();
   const [statsRef, statsInView] = useInView(0.2);
   const [monthRef, monthInView] = useInView(0.05);
   const [top10Ref, top10InView] = useInView(0.05);
@@ -641,7 +651,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             {year}
           </div>
           <div style={{ fontSize: 'clamp(1rem, 2.8vw, 1.7rem)', fontWeight: 700, color: 'rgba(255,255,255,0.82)', marginTop: '20px', letterSpacing: '-0.02em', animation: 'rwFadeUp 0.7s 0.45s both' }}>
-            스맵과 함께한 365일
+            {`스맵과 함께한 ${dayCount}일`}
           </div>
 
           {/* 배지 */}
@@ -811,7 +821,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </h2>
 
           <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.42)', maxWidth: '380px', lineHeight: 1.75, marginBottom: '52px' }}>
-            스맵과 함께한 {year}년,<br />
+            스맵과 함께한 {year}년 {dayCount}일,<br />
             모든 순간이 이 아카이브에 담겼어요.<br />
             {validYears.includes(year + 1) ? `${year + 1}년에도 함께해요.` : '앞으로도 함께해요.'}
           </p>
