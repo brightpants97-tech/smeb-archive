@@ -98,9 +98,7 @@ ${soopList || '(데이터 없음)'}
 - 티어표·랭킹: 꼴찌(C)→1위(S) 순으로 한 줄씩
 - 섹션 간 구분선 필수
 - 마지막 명언은 큰따옴표 인용구로 마무리
-
-위 내용을 Google Docs 문서로 만들어줘.
-문서 제목은 'SMEB MONTHLY REPORT｜[연월]호' 로 해줘.`;
+`;
 
   const handleCopy = async () => {
     try {
