@@ -118,7 +118,7 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
           </div>
 
           {/* 바 차트 */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(4px,1vw,10px)', height: `${BAR_H + 52}px`, paddingLeft: '52px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(4px,1vw,10px)', height: `${BAR_H + 52}px`, paddingLeft: '52px', paddingTop: '32px', boxSizing: 'border-box' as const }}>
             {monthlyData.map((m, i) => {
               const val     = getValue(m);
               const ratio   = maxVal > 0 ? val / maxVal : 0;
@@ -128,17 +128,19 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
               const isEmpty = val === 0;
               return (
                 <div key={m.key}
-                  style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px', cursor: isEmpty ? 'default' : 'pointer' }}
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px', cursor: isEmpty ? 'default' : 'pointer', position: 'relative' }}
                   onMouseEnter={() => !isEmpty && setHov(i)}
                   onMouseLeave={() => setHov(null)}
                 >
-                  {/* 툴팁 */}
+                  {/* 툴팁 — absolute로 레이아웃 높이에 영향 없게 */}
                   <div style={{
+                    position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                    marginBottom: '6px', pointerEvents: 'none',
                     fontSize: '0.62rem', fontWeight: 800, color: isPeak ? '#FFB800' : ORANGE,
                     opacity: isPeak || isHov ? 1 : 0, transition: 'opacity 0.15s',
-                    whiteSpace: 'nowrap' as const, background: 'rgba(0,0,0,0.8)',
+                    whiteSpace: 'nowrap' as const, background: 'rgba(0,0,0,0.85)',
                     padding: '3px 8px', borderRadius: '6px', border: `1px solid ${isPeak ? 'rgba(255,184,0,0.3)' : 'rgba(235,112,26,0.3)'}`,
-                    marginBottom: '2px',
+                    zIndex: 10,
                   }}>
                     {fmtShort(val)}회{mode === 'avg' && m.ytCount > 0 ? ` (${m.ytCount}개)` : ''}
                   </div>
