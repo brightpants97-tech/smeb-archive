@@ -133,12 +133,27 @@ export default async function Home() {
   });
   Object.keys(monthlyTop10).forEach(mk => { monthlyTop10[mk] = [...monthlyTop10[mk]].sort((a, b) => b.views - a.views).slice(0, 10); });
 
+  // 월별 YouTube 전체 (프롬프트용)
+  const monthlyAll: Record<string, any[]> = {};
+  videos.forEach((v: any) => {
+    const mk = v.publishedAt?.slice(0, 7); if (!mk) return;
+    if (!monthlyAll[mk]) monthlyAll[mk] = [];
+    monthlyAll[mk].push(v);
+  });
+  Object.keys(monthlyAll).forEach(mk => { monthlyAll[mk] = [...monthlyAll[mk]].sort((a, b) => b.views - a.views); });
+
   const soopByDate: Record<string, any[]> = {};
   vods.forEach((v: any) => { if (!soopByDate[v.date]) soopByDate[v.date] = []; soopByDate[v.date].push(v); });
   const monthMap: Record<string, Record<number, any[]>> = {};
   Object.keys(soopByDate).forEach(date => { const mk = date.substring(0, 7); if (!monthMap[mk]) monthMap[mk] = {}; monthMap[mk][parseInt(date.split('-')[2], 10)] = soopByDate[date]; });
   const monthTop5: Record<string, any[]> = {};
   [...new Set(vods.map((v: any) => v.date.substring(0, 7)))].forEach(mk => { const mv = vods.filter((v: any) => v.date.startsWith(mk)); monthTop5[mk] = [...mv].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5); });
+
+  // 월별 SOOP 전체 (프롬프트용)
+  const soopMonthAll: Record<string, any[]> = {};
+  [...new Set(vods.map((v: any) => v.date.substring(0, 7)))].forEach(mk => {
+    soopMonthAll[mk] = vods.filter((v: any) => v.date.startsWith(mk)).sort((a: any, b: any) => (b.views || 0) - (a.views || 0));
+  });
   const sortedMonths = Object.keys(monthMap).sort();
 
   return (
@@ -373,6 +388,8 @@ export default async function Home() {
                   monthTop5={monthTop5}
                   sortedMonths={sortedMonths}
                   currentMonth={currentMonth}
+                  monthlyAll={monthlyAll}
+                  soopMonthAll={soopMonthAll}
                 />
               </div>
 
