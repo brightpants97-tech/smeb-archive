@@ -557,11 +557,11 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       <section ref={monthRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
           <div style={{ marginBottom: '48px', animation: monthInView ? 'rwFadeUp 0.6s both' : 'none' }}>
-            <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Monthly Highlights</p>
+            <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Monthly TOP 10</p>
             <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
-              월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>하이라이트</em>
+              월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>TOP 10</em>
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>각 달의 최다 조회 영상 · 클릭하면 유튜브로 이동해요</p>
+            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>각 달의 최다 조회 영상 TOP 10 · 클릭하면 유튜브로 이동해요</p>
           </div>
           {monthInView && (
             <div style={{ display: 'flex', flexDirection: 'column' as const }}>
