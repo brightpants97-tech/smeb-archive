@@ -482,7 +482,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: '16px',
-        padding: isTop3 ? '16px 20px' : '12px 20px',
+        padding: isTop3 ? '20px 24px' : '16px 24px',
         borderBottom: rank < 10 ? '1px solid rgba(255,255,255,0.05)' : 'none',
         borderLeft: isTop3 ? `3.5px solid ${BORDER_COLOR[rank]}` : '3.5px solid transparent',
         background: hov ? 'rgba(235,112,26,0.07)' : rank === 1 ? 'rgba(255,190,0,0.04)' : 'transparent',
@@ -507,7 +507,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       </div>
       {/* 썸네일 */}
       <div style={{
-        flexShrink: 0, width: '140px', height: '79px', borderRadius: '10px', overflow: 'hidden',
+        flexShrink: 0, width: '420px', height: '236px', borderRadius: '14px', overflow: 'hidden',
         boxShadow: rank === 1 ? '0 0 0 2px #FFB800, 0 4px 16px rgba(255,160,0,0.35)' : rank === 2 ? '0 0 0 1.5px #A0A8B8' : rank === 3 ? '0 0 0 1.5px #CD7F32' : 'none',
       }}>
         <img src={video.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
