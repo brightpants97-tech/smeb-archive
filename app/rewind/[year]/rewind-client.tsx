@@ -172,6 +172,15 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
                       {MONTH_KO[m.month - 1]}
                     </span>
                     {isPeak && <span style={{ fontSize: '0.55rem', color: '#FFB800', fontWeight: 700 }}>👑</span>}
+                    {/* 바가 너무 낮을 때 숫자를 라벨 아래에 표시 */}
+                    {(isPeak || isHov) && !isEmpty && barH < 28 && (
+                      <span style={{
+                        fontSize: '0.62rem', fontWeight: 800, display: 'block', marginTop: '2px',
+                        color: isPeak ? '#FFB800' : ORANGE,
+                      }}>
+                        {fmtShort(val)}회
+                      </span>
+                    )}
                   </div>
                 </div>
               );
