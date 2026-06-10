@@ -228,14 +228,18 @@ function ChartSection({ monthlyData, validYears, year }: { monthlyData: MonthDat
               {tab === 'monthly' ? <>월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교</> : <>연도별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교</>}
             </h2>
             {/* 탭 */}
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {([['monthly', '월별'], ['yearly', '연도별']] as const).map(([t, label]) => (
+            <div style={{ display: 'flex', gap: '0', background: 'rgba(255,255,255,0.06)', borderRadius: '14px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              {([['monthly', '📅 월별'], ['yearly', '📊 연도별']] as const).map(([t, label]) => (
                 <button key={t} onClick={() => setTab(t)} style={{
-                  padding: '8px 20px', borderRadius: '100px', border: 'none', cursor: 'pointer',
-                  fontSize: '0.82rem', fontWeight: 800, transition: 'all 0.18s',
-                  background: tab === t ? ORANGE : 'rgba(255,255,255,0.07)',
-                  color: tab === t ? '#fff' : 'rgba(255,255,255,0.45)',
-                  boxShadow: tab === t ? '0 0 16px rgba(235,112,26,0.35)' : 'none',
+                  padding: '10px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                  fontSize: '0.85rem', fontWeight: 800, transition: 'all 0.2s',
+                  background: tab === t
+                    ? `linear-gradient(135deg, ${ORANGE}, #ff8c3a)`
+                    : 'transparent',
+                  color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)',
+                  boxShadow: tab === t ? '0 2px 12px rgba(235,112,26,0.4)' : 'none',
+                  letterSpacing: '-0.01em',
+                  minWidth: '100px',
                 }}>
                   {label}
                 </button>
