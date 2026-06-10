@@ -65,6 +65,7 @@ export default function HamburgerMenu() {
             { href:'#top3',    label:'BEST 3',    desc:'이달의 유튜브 TOP 3' },
             { href:'#videos',  label:'유튜브',    desc:'이번 달 전체 영상' },
             { href:'#soopcal', label:'다시보기',  desc:'SOOP 다시보기 캘린더' },
+            { href:'/teambuilder', label:'팀빌더', desc:'멸망전 팀 구성 도우미' },
           ].map(item => (
             <a key={item.href} href={item.href} onClick={close}
               style={{ display:'flex', flexDirection:'column', gap:'2px', padding:'16px 24px', textDecoration:'none', borderBottom:'1px solid var(--card-border)', transition:'background 0.15s' }}
