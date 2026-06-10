@@ -711,34 +711,46 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             </div>
           </div>
 
-          {/* ── 올해의 영상 ── */}
+          {/* ── 올해의 영상 TOP3 ── */}
           {top10[0] && (
-            <a
-              href={`https://youtube.com/watch?v=${top10[0].id}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: 'rgba(255,190,0,0.05)', border: '1px solid rgba(255,190,0,0.2)', borderRadius: '16px', textDecoration: 'none', transition: 'border-color 0.2s, background 0.2s' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='rgba(255,190,0,0.45)'; el.style.background='rgba(255,190,0,0.09)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='rgba(255,190,0,0.2)'; el.style.background='rgba(255,190,0,0.05)'; }}
-            >
-              {/* 썸네일 - 적당한 크기 */}
-              <div style={{ flexShrink: 0, width: '200px', aspectRatio: '16/9', borderRadius: '10px', overflow: 'hidden', position: 'relative', background: '#0a0a0a', boxShadow: '0 0 0 1.5px rgba(255,190,0,0.3)' }}>
-                <img src={top10[0].thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.15)' }} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>▶</div>
-              </div>
-              {/* 텍스트 */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '1rem' }}>🏆</span>
-                  <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'rgba(255,190,0,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>올해의 영상</span>
-                </div>
-                <p style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 8px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{top10[0].title}</p>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '0.62rem', opacity: 0.6 }}>👁</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#FFB800' }}>{fmt(top10[0].views)}회 조회</span>
-                </div>
-              </div>
-            </a>
+            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
+              {top10.slice(0, 3).map((v, i) => {
+                const MEDAL   = ['🥇','🥈','🥉'][i];
+                const COLOR   = ['#FFB800','#A0A8B8','#CD7F32'][i];
+                const BORDER  = [`rgba(255,190,0,0.25)`,`rgba(160,168,184,0.2)`,`rgba(205,127,50,0.2)`][i];
+                const BG      = [`rgba(255,190,0,0.05)`,`rgba(160,168,184,0.03)`,`rgba(205,127,50,0.03)`][i];
+                const BGHOV   = [`rgba(255,190,0,0.1)`,`rgba(160,168,184,0.07)`,`rgba(205,127,50,0.07)`][i];
+                return (
+                  <a key={v.id}
+                    href={`https://youtube.com/watch?v=${v.id}`}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: BG, border: `1px solid ${BORDER}`, borderRadius: '16px', textDecoration: 'none', transition: 'border-color 0.2s, background 0.2s' }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = BGHOV; }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = BG; }}
+                  >
+                    {/* 순위 */}
+                    <div style={{ flexShrink: 0, width: '36px', textAlign: 'center' as const }}>
+                      <span style={{ fontSize: i === 0 ? '1.8rem' : '1.4rem', lineHeight: 1 }}>{MEDAL}</span>
+                    </div>
+                    {/* 썸네일 */}
+                    <div style={{ flexShrink: 0, width: '200px', aspectRatio: '16/9', borderRadius: '10px', overflow: 'hidden', position: 'relative', background: '#0a0a0a', boxShadow: `0 0 0 1.5px ${BORDER}` }}>
+                      <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.12)' }} />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>▶</div>
+                    </div>
+                    {/* 텍스트 */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: '0.62rem', fontWeight: 700, color: COLOR, letterSpacing: '0.1em', textTransform: 'uppercase' as const, display: 'block', marginBottom: '6px' }}>{i + 1}위 · 올해의 영상</span>
+                      <p style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 8px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{v.title}</p>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '0.62rem', opacity: 0.6 }}>👁</span>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 800, color: COLOR }}>{fmt(v.views)}회 조회</span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
           )}
 
           {/* ── 가장 바빴던 달 ── */}
