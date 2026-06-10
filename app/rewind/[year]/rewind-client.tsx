@@ -73,6 +73,86 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
 }
 
 // ── 월별 카드 ──
+
+// ── 월별 조회수 차트 ──
+function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
+  const [hov, setHov] = useState<number | null>(null);
+  const [ref, inView] = useInView(0.2);
+  const maxViews = Math.max(...monthlyData.map(m => m.totalMonthViews), 1);
+  const BAR_H = 180;
+
+  return (
+    <div ref={ref as React.RefObject<HTMLDivElement>} style={{ width: '100%', overflowX: 'auto' }}>
+      <div style={{ minWidth: '560px', position: 'relative' }}>
+        {/* Y축 가이드라인 */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', pointerEvents: 'none', paddingBottom: '52px' }}>
+          {[100, 75, 50, 25, 0].map(pct => (
+            <div key={pct} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', width: '40px', textAlign: 'right' as const, flexShrink: 0 }}>
+                {pct > 0 ? fmtShort(Math.round(maxViews * pct / 100)) : '0'}
+              </span>
+              <div style={{ flex: 1, height: '1px', background: pct === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)' }} />
+            </div>
+          ))}
+        </div>
+
+        {/* 바 차트 */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(4px,1vw,10px)', height: `${BAR_H + 52}px`, paddingLeft: '52px' }}>
+          {monthlyData.map((m, i) => {
+            const ratio   = maxViews > 0 ? m.totalMonthViews / maxViews : 0;
+            const barH    = Math.max(ratio * BAR_H, m.totalMonthViews > 0 ? 4 : 0);
+            const isPeak  = m.totalMonthViews === maxViews && maxViews > 0;
+            const isHov   = hov === i;
+            const isEmpty = m.totalMonthViews === 0;
+            return (
+              <div key={m.key}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px', cursor: isEmpty ? 'default' : 'pointer' }}
+                onMouseEnter={() => !isEmpty && setHov(i)}
+                onMouseLeave={() => setHov(null)}
+              >
+                {/* 툴팁 */}
+                <div style={{
+                  fontSize: '0.62rem', fontWeight: 800, color: isPeak ? '#FFB800' : ORANGE,
+                  opacity: isHov ? 1 : 0, transition: 'opacity 0.15s',
+                  whiteSpace: 'nowrap' as const, background: 'rgba(0,0,0,0.8)',
+                  padding: '3px 8px', borderRadius: '6px', border: `1px solid ${isPeak ? 'rgba(255,184,0,0.3)' : 'rgba(235,112,26,0.3)'}`,
+                  marginBottom: '2px',
+                }}>
+                  {fmtShort(m.totalMonthViews)}회
+                </div>
+
+                {/* 바 */}
+                <div style={{
+                  width: '100%', borderRadius: '6px 6px 0 0',
+                  height: inView ? `${barH}px` : '0px',
+                  transition: `height 0.7s cubic-bezier(0.22,1,0.36,1) ${i * 0.05}s`,
+                  background: isEmpty
+                    ? 'rgba(255,255,255,0.05)'
+                    : isPeak
+                      ? 'linear-gradient(to top, #FF8C00, #FFE566)'
+                      : isHov
+                        ? `linear-gradient(to top, ${ORANGE}, rgba(235,112,26,0.6))`
+                        : `linear-gradient(to top, rgba(235,112,26,0.8), rgba(235,112,26,0.35))`,
+                  boxShadow: isPeak && inView ? '0 0 20px rgba(255,184,0,0.4)' : isHov ? '0 0 12px rgba(235,112,26,0.3)' : 'none',
+                  minHeight: isEmpty ? '4px' : '0',
+                }} />
+
+                {/* 월 라벨 */}
+                <div style={{ textAlign: 'center' as const }}>
+                  <span style={{ fontSize: 'clamp(0.6rem,1vw,0.72rem)', fontWeight: isPeak ? 900 : 600, color: isPeak ? '#FFB800' : isHov ? '#fff' : 'rgba(255,255,255,0.4)', display: 'block', transition: 'color 0.15s' }}>
+                    {MONTH_KO[m.month - 1]}
+                  </span>
+                  {isPeak && <span style={{ fontSize: '0.55rem', color: '#FFB800', fontWeight: 700 }}>👑</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── 월별 타임라인 행 ──
 const RANK_INFO = [
   { medal: '🥇', grad: 'linear-gradient(135deg,#FFE566,#FF8C00)', tc: '#000' },
@@ -432,6 +512,21 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
               <div><span style={{ color: '#60a8ff' }}>SOOP</span> {stats.peakMonth.soopCount}개</div>
             </div>
           </div>
+        </div>
+      </section>
+
+
+      {/* ───────────────── ② - 월별 조회수 차트 ───────────────── */}
+      <section style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '40px' }}>
+            <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Monthly Views</p>
+            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
+              월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>월별 유튜브 총 조회수 추이</p>
+          </div>
+          <MonthlyChart monthlyData={monthlyData} />
         </div>
       </section>
 
