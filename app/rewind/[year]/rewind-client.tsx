@@ -417,6 +417,10 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
           const ri = RANK_INFO[i];
           const isHov = hovIdx === i;
 
+          const isTop3 = i < 3;
+          const TOP3_BORDER = ['#FFB800', '#A0A8B8', '#CD7F32'];
+          const TOP3_GLOW   = ['rgba(255,184,0,0.5)', 'rgba(160,168,184,0.4)', 'rgba(205,127,50,0.4)'];
+
           return v ? (
             <div key={v.id}
               onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
@@ -428,8 +432,10 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
               <div style={{
                 borderRadius: 'clamp(8px,1vw,12px)', overflow: 'hidden',
                 width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
-                transform: isHov ? 'scale(1.03)' : 'scale(1)',
-                boxShadow: isHov ? '0 8px 24px rgba(0,0,0,0.5)' : 'none',
+                transform: isHov ? 'scale(1.04)' : 'scale(1)',
+                boxShadow: isTop3
+                  ? `0 0 0 2px ${TOP3_BORDER[i]}, 0 4px 16px ${TOP3_GLOW[i]}`
+                  : isHov ? '0 8px 24px rgba(0,0,0,0.5)' : 'none',
                 transition: 'transform 0.2s, box-shadow 0.2s',
               }}>
                 <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
