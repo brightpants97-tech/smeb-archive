@@ -74,6 +74,187 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
 
 // ── 월별 카드 ──
 
+
+// ── 연도별 비교 차트 ──
+interface YearStat { year: number; totalViews: number; ytUploads: number; avgViews: number; }
+
+function YearCompareChart({ validYears, currentYear }: { validYears: number[]; currentYear: number }) {
+  const [data, setData]   = useState<YearStat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mode, setMode]   = useState<'total' | 'avg'>('total');
+  const [hov, setHov]     = useState<number | null>(null);
+  const [ref, inView]     = useInView(0.2);
+  const BAR_H = 180;
+
+  useEffect(() => {
+    Promise.all(
+      validYears.map(y =>
+        fetch(`/api/rewind-stats?year=${y}`)
+          .then(r => r.json())
+          .catch(() => null)
+      )
+    ).then(results => {
+      setData(results.filter(Boolean) as YearStat[]);
+      setLoading(false);
+    });
+  }, []);
+
+  const getValue = (d: YearStat) => mode === 'total' ? d.totalViews : d.avgViews;
+  const maxVal   = Math.max(...data.map(getValue), 1);
+
+  return (
+    <div ref={ref as React.RefObject<HTMLDivElement>}>
+      {/* 토글 */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
+        {(['total', 'avg'] as const).map(m => (
+          <button key={m} onClick={() => setMode(m)} style={{
+            padding: '7px 18px', borderRadius: '100px', border: 'none', cursor: 'pointer',
+            fontSize: '0.78rem', fontWeight: 700, transition: 'all 0.18s',
+            background: mode === m ? ORANGE : 'rgba(255,255,255,0.07)',
+            color: mode === m ? '#fff' : 'rgba(255,255,255,0.4)',
+            boxShadow: mode === m ? '0 0 14px rgba(235,112,26,0.35)' : 'none',
+          }}>
+            {m === 'total' ? '총 조회수' : '평균 조회수'}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ height: `${BAR_H + 52}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>
+          데이터 불러오는 중...
+        </div>
+      ) : (
+        <div style={{ width: '100%' }}>
+          <div style={{ position: 'relative' }}>
+            {/* Y축 */}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', pointerEvents: 'none', paddingBottom: '52px' }}>
+              {[100, 75, 50, 25, 0].map(pct => (
+                <div key={pct} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', width: '40px', textAlign: 'right' as const, flexShrink: 0 }}>
+                    {pct > 0 ? fmtShort(Math.round(maxVal * pct / 100)) : '0'}
+                  </span>
+                  <div style={{ flex: 1, height: '1px', background: pct === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)' }} />
+                </div>
+              ))}
+            </div>
+
+            {/* 바 */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(8px,2vw,24px)', height: `${BAR_H + 52}px`, paddingLeft: '52px', paddingTop: '32px', boxSizing: 'border-box' as const }}>
+              {data.map((d, i) => {
+                const val    = getValue(d);
+                const ratio  = maxVal > 0 ? val / maxVal : 0;
+                const barH   = Math.max(ratio * BAR_H, val > 0 ? 4 : 0);
+                const isCur  = d.year === currentYear;
+                const isPeak = val === maxVal && maxVal > 0;
+                const isHov  = hov === i;
+                return (
+                  <div key={d.year}
+                    style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px', cursor: 'pointer', position: 'relative' }}
+                    onMouseEnter={() => setHov(i)}
+                    onMouseLeave={() => setHov(null)}
+                    onClick={() => window.location.href = `/rewind/${d.year}`}
+                  >
+                    {/* 바 */}
+                    <div style={{
+                      width: '100%', borderRadius: '6px 6px 0 0',
+                      height: inView ? `${barH}px` : '0px',
+                      transition: `height 0.7s cubic-bezier(0.22,1,0.36,1) ${i * 0.08}s`,
+                      background: isPeak
+                        ? 'linear-gradient(to top, #FF8C00, #FFE566)'
+                        : isCur
+                          ? `linear-gradient(to top, ${ORANGE}, rgba(235,112,26,0.5))`
+                          : isHov
+                            ? 'linear-gradient(to top, rgba(255,255,255,0.4), rgba(255,255,255,0.15))'
+                            : 'linear-gradient(to top, rgba(255,255,255,0.15), rgba(255,255,255,0.05))',
+                      boxShadow: isPeak ? '0 0 20px rgba(255,184,0,0.35)' : isCur ? '0 0 14px rgba(235,112,26,0.3)' : 'none',
+                      position: 'relative', overflow: 'visible',
+                    }}>
+                      {(isPeak || isHov) && barH >= 28 && (
+                        <div style={{
+                          position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)',
+                          fontSize: '0.7rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
+                          color: '#fff', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+                          padding: '2px 7px', borderRadius: '4px',
+                          border: isPeak ? '1px solid rgba(255,184,0,0.5)' : '1px solid rgba(255,255,255,0.15)',
+                          pointerEvents: 'none', letterSpacing: '-0.02em',
+                        }}>
+                          {fmtShort(val)}회
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 연도 라벨 */}
+                    <div style={{ textAlign: 'center' as const }}>
+                      <span style={{
+                        fontSize: 'clamp(0.7rem,1.2vw,0.85rem)', fontWeight: isCur || isPeak ? 900 : 600,
+                        color: isPeak ? '#FFB800' : isCur ? ORANGE : isHov ? '#fff' : 'rgba(255,255,255,0.4)',
+                        display: 'block', transition: 'color 0.15s',
+                      }}>
+                        {d.year}
+                      </span>
+                      {isCur && <span style={{ fontSize: '0.55rem', color: ORANGE, fontWeight: 700 }}>●</span>}
+                      {isPeak && !isCur && <span style={{ fontSize: '0.55rem', color: '#FFB800', fontWeight: 700 }}>👑</span>}
+                      {(isPeak || isHov) && barH < 28 && (
+                        <span style={{ fontSize: '0.62rem', fontWeight: 800, display: 'block', marginTop: '2px', color: isPeak ? '#FFB800' : ORANGE }}>
+                          {fmtShort(val)}회
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <p style={{ marginTop: '12px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center' as const }}>
+            ● 현재 연도 · 👑 최고 기록 · 클릭하면 해당 연도 리와인드로 이동
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ── 조회수 비교 차트 섹션 (탭) ──
+function ChartSection({ monthlyData, validYears, year }: { monthlyData: MonthData[]; validYears: number[]; year: number }) {
+  const [tab, setTab] = useState<'monthly' | 'yearly'>('monthly');
+  return (
+    <section style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '32px' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Views Analysis</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '16px' }}>
+            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
+              {tab === 'monthly' ? <>월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교</> : <>연도별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교</>}
+            </h2>
+            {/* 탭 */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {([['monthly', '월별'], ['yearly', '연도별']] as const).map(([t, label]) => (
+                <button key={t} onClick={() => setTab(t)} style={{
+                  padding: '8px 20px', borderRadius: '100px', border: 'none', cursor: 'pointer',
+                  fontSize: '0.82rem', fontWeight: 800, transition: 'all 0.18s',
+                  background: tab === t ? ORANGE : 'rgba(255,255,255,0.07)',
+                  color: tab === t ? '#fff' : 'rgba(255,255,255,0.45)',
+                  boxShadow: tab === t ? '0 0 16px rgba(235,112,26,0.35)' : 'none',
+                }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>
+            {tab === 'monthly' ? '월별 유튜브 총 조회수 추이' : '연도별 유튜브 조회수 비교'}
+          </p>
+        </div>
+        {tab === 'monthly'
+          ? <MonthlyChart monthlyData={monthlyData} />
+          : <YearCompareChart validYears={validYears} currentYear={year} />
+        }
+      </div>
+    </section>
+  );
+}
+
 // ── 월별 조회수 차트 ──
 function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
   const [hov, setHov]   = useState<number | null>(null);
@@ -555,19 +736,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       </section>
 
 
-      {/* ───────────────── ② - 월별 조회수 차트 ───────────────── */}
-      <section style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '40px' }}>
-            <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Monthly Views</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
-              월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>월별 유튜브 총 조회수 추이</p>
-          </div>
-          <MonthlyChart monthlyData={monthlyData} />
-        </div>
-      </section>
+      {/* ───────────────── ② - 조회수 비교 차트 ───────────────── */}
+      <ChartSection monthlyData={monthlyData} validYears={validYears} year={year} />
 
       {/* ───────────────── ③ 월별 하이라이트 ───────────────── */}
       <section ref={monthRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
