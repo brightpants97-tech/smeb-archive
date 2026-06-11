@@ -3,7 +3,6 @@ import CalendarSection from './calendar-section';
 import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
-import PromptCopyCard from './prompt-copy-card';
 import HeroLiveCard from './hero-live-card';
 
 const getYoutubeVideos = unstable_cache(async () => {
@@ -185,9 +184,7 @@ export default async function Home() {
         .nav-link{color:var(--nav-text);transition:color 0.3s;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-        /* Gemini 섹션 반응형 그리드 */
-        .gemini-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; align-items: stretch; margin-top: 0; }
-        .gemini-flow-arrow { display: flex; align-items: center; justify-content: center; padding: 0 10px; color: var(--text-muted); font-size: 1.4rem; font-weight: 200; flex-shrink: 0; }
+        
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
         .gemini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
@@ -296,163 +293,7 @@ export default async function Home() {
           </h2>
         </div>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
-          {/* ─── Gemini 콘텐츠 분석 섹션 ─── */}
-          <div style={{marginTop:'40px'}}>
-
-            {/* 섹션 헤더 — 오렌지 풀블리드 */}
-            <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
-              <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
-              <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',justifyContent:'space-between',gap:'16px',flexWrap:'wrap' as const}}>
-                <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A'}}>
-                  AI <em style={{fontStyle:'italic'}}>콘텐츠 분석</em>
-                </h2>
-                <div style={{display:'inline-flex',alignItems:'center',gap:'6px',background:'rgba(0,0,0,0.12)',borderRadius:'100px',padding:'6px 14px',flexShrink:0}}>
-                  <span style={{fontSize:'0.85rem'}}>✨</span>
-                  <span style={{fontSize:'0.75rem',fontWeight:800,color:'rgba(0,0,0,0.6)',letterSpacing:'0.04em'}}>Powered by Gemini</span>
-                </div>
-              </div>
-            </div>
-
-            {/* ── 3단계 흐름 카드 ── */}
-            <div className="gemini-flow">
-
-              {/* ① 설정 */}
-              <div style={{
-                padding:'24px 22px',
-                background:'linear-gradient(135deg,rgba(66,133,244,0.07) 0%,rgba(66,133,244,0.02) 100%)',
-                border:'1px solid rgba(66,133,244,0.15)',
-                borderRadius:'20px',
-                display:'flex',flexDirection:'column' as const,gap:'16px',
-              }}>
-                {/* 스텝 헤더 */}
-                <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                  <div style={{
-                    width:'36px',height:'36px',borderRadius:'50%',flexShrink:0,
-                    background:'linear-gradient(135deg,#4285f4,#34a853)',
-                    display:'flex',alignItems:'center',justifyContent:'center',
-                    fontSize:'0.72rem',fontWeight:900,color:'#fff',letterSpacing:'-0.02em',
-                  }}>01</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:'0.6rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'#4285f4'}}>STEP 1</div>
-                    <p style={{fontSize:'1.05rem',fontWeight:800,color:'var(--text)',margin:0,letterSpacing:'-0.03em',lineHeight:1}}>설정</p>
-                  </div>
-                  <span style={{flexShrink:0,fontSize:'0.62rem',fontWeight:700,color:'#4285f4',background:'rgba(66,133,244,0.1)',borderRadius:'100px',padding:'3px 10px',whiteSpace:'nowrap' as const,border:'1px solid rgba(66,133,244,0.2)'}}>최초 1회만</span>
-                </div>
-                {/* 경로 */}
-                <div style={{display:'flex',flexDirection:'column' as const,gap:'6px',paddingLeft:'4px'}}>
-                  {['Gemini 설정 열기','개인 인텔리전스','연결된 앱','Google Workspace 활성화'].map((step, i, arr) => (
-                    <div key={i}>
-                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-                        <div style={{width:'6px',height:'6px',borderRadius:'50%',flexShrink:0,background:i===arr.length-1?'#4285f4':'var(--card-border)',border:i===arr.length-1?'none':'2px solid rgba(66,133,244,0.3)'}} />
-                        <span style={{fontSize:'0.82rem',color:i===arr.length-1?'var(--text)':'var(--text-muted)',fontWeight:i===arr.length-1?700:400}}>{step}</span>
-                      </div>
-                      {i<arr.length-1 && <div style={{marginLeft:'2px',paddingLeft:'2px',height:'10px',borderLeft:'1.5px dashed rgba(66,133,244,0.25)'}} />}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* → */}
-              <div className="gemini-flow-arrow">→</div>
-
-              {/* ② 복사 (메인 CTA) */}
-              <div style={{
-                padding:'24px 22px',
-                background:'linear-gradient(135deg,rgba(235,112,26,0.09) 0%,rgba(235,112,26,0.03) 100%)',
-                border:'2px solid rgba(235,112,26,0.28)',
-                borderRadius:'20px',
-                display:'flex',flexDirection:'column' as const,gap:'16px',
-                position:'relative' as const,
-              }}>
-                {/* 매달 배지 */}
-                <div style={{position:'absolute' as const,top:'-12px',left:'50%',transform:'translateX(-50%)',background:'#EB701A',color:'#fff',fontSize:'0.62rem',fontWeight:800,padding:'3px 14px',borderRadius:'100px',whiteSpace:'nowrap' as const,letterSpacing:'0.08em',boxShadow:'0 4px 12px rgba(235,112,26,0.35)'}}>
-                  ✦ 매달 반복
-                </div>
-                {/* 스텝 헤더 */}
-                <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                  <div style={{
-                    width:'36px',height:'36px',borderRadius:'50%',flexShrink:0,
-                    background:'linear-gradient(135deg,#EB701A,#ff8c3a)',
-                    display:'flex',alignItems:'center',justifyContent:'center',
-                    fontSize:'0.72rem',fontWeight:900,color:'#fff',letterSpacing:'-0.02em',
-                  }}>02</div>
-                  <div>
-                    <div style={{fontSize:'0.6rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'#EB701A'}}>STEP 2</div>
-                    <p style={{fontSize:'1.05rem',fontWeight:800,color:'var(--text)',margin:0,letterSpacing:'-0.03em',lineHeight:1}}>분석 질문 복사</p>
-                  </div>
-                </div>
-                {/* 프롬프트 복사 카드 */}
-                <PromptCopyCard
-                  monthlyTop10={monthlyTop10}
-                  monthTop5={monthTop5}
-                  sortedMonths={sortedMonths}
-                  currentMonth={currentMonth}
-                  monthlyAll={monthlyAll}
-                  soopMonthAll={soopMonthAll}
-                />
-              </div>
-
-              {/* → */}
-              <div className="gemini-flow-arrow">→</div>
-
-              {/* ③ 분석 */}
-              <div style={{
-                padding:'24px 22px',
-                background:'linear-gradient(135deg,rgba(66,133,244,0.07) 0%,rgba(52,168,83,0.05) 50%,rgba(251,188,5,0.04) 100%)',
-                border:'1px solid rgba(66,133,244,0.15)',
-                borderRadius:'20px',
-                display:'flex',flexDirection:'column' as const,gap:'16px',
-              }}>
-                {/* 스텝 헤더 */}
-                <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                  <div style={{
-                    width:'36px',height:'36px',borderRadius:'50%',flexShrink:0,
-                    background:'linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335)',
-                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1rem',
-                  }}>✨</div>
-                  <div>
-                    <div style={{fontSize:'0.6rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'#4285f4'}}>STEP 3</div>
-                    <p style={{fontSize:'1.05rem',fontWeight:800,color:'var(--text)',margin:0,letterSpacing:'-0.03em',lineHeight:1}}>Gemini 분석</p>
-                  </div>
-                </div>
-                {/* Gemini 열기 버튼 */}
-                <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer"
-                  className="gemini-open-btn"
-                  style={{
-                    display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',
-                    background:'linear-gradient(135deg,#4285f4,#34a853)',
-                    color:'#fff',borderRadius:'14px',padding:'14px 20px',
-                    textDecoration:'none',fontWeight:700,fontSize:'0.92rem',
-                    boxShadow:'0 6px 20px rgba(66,133,244,0.3)',
-                  }}
-                >
-                  Gemini 열기 ↗
-                </a>
-                {/* PRO 팁 */}
-                <div style={{display:'flex',alignItems:'flex-start',gap:'8px'}}>
-                  <span style={{flexShrink:0,fontSize:'0.6rem',fontWeight:800,letterSpacing:'0.08em',color:'#fff',background:'linear-gradient(135deg,#4285f4,#a855f7)',borderRadius:'100px',padding:'2px 8px',whiteSpace:'nowrap' as const,marginTop:'2px'}}>PRO</span>
-                  <p style={{fontSize:'0.75rem',color:'var(--text-muted)',lineHeight:1.55,margin:0}}>
-                    로그인 후 <span style={{color:'#a855f7',fontWeight:700}}>Pro 모드</span>로 변경하면 더 구체적인 분석을 받을 수 있어요
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-          {/* ─── /Gemini 섹션 ─── */}
-        </div>
-      </section>
-
-      <section id="soopcal" className="sec-main mob-cal-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 60px',position:'relative'}}>
-        <div style={{position:'absolute',bottom:'10%',right:'5%',width:'500px',height:'400px',background:'radial-gradient(ellipse,rgba(235,112,26,0.06) 0%,transparent 70%)',pointerEvents:'none'}} />
-        <div style={{maxWidth:'1600px',margin:'0 auto',position:'relative',zIndex:1}} className="fade-in-up">
-          <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
-            <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
-            <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1}}>
-              SOOP <em style={{fontStyle:'italic'}}>다시보기</em>
-            </h2>
-          </div>
-          <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
+          CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
 
