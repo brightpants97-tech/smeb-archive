@@ -131,7 +131,7 @@ function BasicMode() {
         ))}
       </div>
       <RollBar allFilled={allFilled} rolling={rolling} onRoll={roll} onReset={reset} />
-      {result && <TwoTeamResult result={result.map(r=>({...r,subs:[]}))} revealed={revealed} onReroll={roll} />}
+      {result && <TwoTeamResult result={result.map(r=>({pos:r.pos,emoji:r.emoji,teams:[r.A,r.B],subs:[]}))} revealed={revealed} onReroll={roll} />}
     </>
   );
 }
