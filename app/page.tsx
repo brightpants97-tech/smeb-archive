@@ -187,7 +187,6 @@ export default async function Home() {
         
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
-        .gemini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
         .gemini-steps { display: flex; flex-direction: column; gap: 0; }
         .gemini-step-row { display: flex; align-items: flex-start; gap: 12px; }
 
@@ -205,9 +204,6 @@ export default async function Home() {
           .mob-hero h1 span { font-size: clamp(3.5rem,22vw,8rem) !important; } .mob-hero h1 em { font-size: clamp(2rem,13vw,5rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
-          .gemini-flow { grid-template-columns: 1fr !important; }
-          .gemini-flow-arrow { transform: rotate(90deg); padding: 4px 0; }
-          .gemini-grid { grid-template-columns: 1fr !important; }
           .gemini-step-row { gap: 10px !important; }
           @media (max-width: 960px) {
             .hero-card { display: none !important; }
