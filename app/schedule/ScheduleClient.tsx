@@ -13,6 +13,7 @@ export default function ScheduleClient() {
   const [month, setMonth]  = useState(now.getMonth() + 1);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError]       = useState('');
   const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
