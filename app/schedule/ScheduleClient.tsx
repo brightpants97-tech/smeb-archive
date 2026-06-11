@@ -16,11 +16,11 @@ export default function ScheduleClient() {
   const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
-    setLoading(true); setSelected(null);
+    setLoading(true); setSelected(null); setError('');
     fetch(`/api/schedule?year=${year}&month=${month}`)
       .then(r => r.json())
-      .then(d => { setEvents(d.events || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(d => { setEvents(d.events || []); if (d.error) setError(d.error); setLoading(false); })
+      .catch(e => { setError(String(e)); setLoading(false); });
   }, [year, month]);
 
   const prevMonth = () => { if (month === 1) { setYear(y => y-1); setMonth(12); } else setMonth(m => m-1); };
@@ -63,7 +63,8 @@ export default function ScheduleClient() {
               <em style={{ color:ACCENT, fontStyle:'normal', marginLeft:'6px', fontSize:'1.2rem' }}>{year}</em>
             </div>
             {loading && <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)', marginTop:'4px' }}>불러오는 중...</div>}
-            {!loading && <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)', marginTop:'4px' }}>일정 {events.length}개</div>}
+            {!loading && !error && <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,0.3)', marginTop:'4px' }}>일정 {events.length}개</div>}
+            {error && <div style={{ fontSize:'0.7rem', color:'#ff6b6b', marginTop:'4px', maxWidth:'280px' }}>⚠️ {error}</div>}
           </div>
           <button onClick={nextMonth} style={{ width:'36px', height:'36px', borderRadius:'10px', border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', color:'#fff', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
         </div>
@@ -161,7 +162,7 @@ export default function ScheduleClient() {
           <a href={`https://docs.google.com/spreadsheets/d/1Zm1VOH4rASeczj1mtxXE1pnafBPQb5x9Tak0cwdq8w4/edit`}
             target="_blank" rel="noopener noreferrer"
             style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.25)', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:'4px' }}>
-            📝 Google Sheets에서 수정
+📝 Google Sheets에서 수정
           </a>
         </div>
       </div>
