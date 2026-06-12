@@ -178,6 +178,10 @@ export default function ScheduleEmbed() {
         </div>
       )}
 
+      {/* 입력 안내 */}
+      <p style={{ marginTop:'10px', fontSize:'0.68rem', color:'rgba(128,128,128,0.6)', textAlign:'center' as const }}>
+        💡 각 날짜 칸에 직접 클릭 후 입력하세요 · Ctrl+Enter 대신 셀을 클릭해서 이동하면 날짜가 정확히 반영돼요
+      </p>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
   );
