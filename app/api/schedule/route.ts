@@ -3,7 +3,33 @@ import { NextResponse } from 'next/server';
 const PUB_ID = '2PACX-1vTaVpnVjcIITgQKdNZ2Vojdx7Ik78OviKKLh_-6wWvremg5U0A_-JI0XNONOm7UrXIpWTzWO3Uqs98V';
 const SRC_ID = '1Zm1VOH4rASeczj1mtxXE1pnafBPQb5x9Tak0cwdq8w4';
 
-const CATEGORIES = ['방송', '개인일정', '휴일', '선택취소', '선택 취소'];
+// RFC4180 완전한 CSV 파서 (멀티라인 셀 지원)
+function parseCSVText(text: string): string[][] {
+  const results: string[][] = [];
+  let row: string[] = [];
+  let cur = '';
+  let inQ = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQ && text[i + 1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      row.push(cur.trim()); cur = '';
+    } else if ((ch === '\n' || (ch === '\r' && text[i+1] === '\n')) && !inQ) {
+      if (ch === '\r') i++;
+      row.push(cur.trim()); cur = '';
+      results.push(row); row = [];
+    } else if (ch !== '\r') {
+      cur += ch;
+    }
+  }
+  if (cur.trim() || row.length > 0) { row.push(cur.trim()); results.push(row); }
+  return results;
+}
+
+const CATEGORIES = ['방송', '개인일정', '개인 일정', '휴일', '선택취소', '선택 취소'];
 
 let gidCache: Record<string, number> | null = null;
 
