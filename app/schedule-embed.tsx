@@ -30,6 +30,7 @@ export default function ScheduleEmbed() {
       .catch(() => setLoading(false));
   }, [year, month]);
 
+  const refresh = () => { setLoading(true); setSelected(null); fetch(`/api/schedule?year=${year}&month=${month}&t=${Date.now()}`).then(r=>r.json()).then(d=>{setEvents(d.events||[]);setLoading(false);}).catch(()=>setLoading(false)); };
   const prev = () => { if(month===1){setYear(y=>y-1);setMonth(12);}else setMonth(m=>m-1); };
   const next = () => { if(month===12){setYear(y=>y+1);setMonth(1);}else setMonth(m=>m+1); };
 
@@ -61,6 +62,7 @@ export default function ScheduleEmbed() {
           </span>
           <button onClick={next} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
           {loading && <span style={{ fontSize:'0.72rem', color:'#999' }}>불러오는 중...</span>}
+          <button onClick={refresh} disabled={loading} title="시트 새로고침" style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'0.9rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.5:1, transition:'all 0.15s' }}>🔄</button>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
           {Object.entries(CAT).map(([k, s]) => (
