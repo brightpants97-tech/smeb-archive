@@ -61,7 +61,6 @@ export default function ScheduleEmbed() {
           {Object.entries(CAT).map(([k, s]) => (
             <span key={k} style={{ fontSize:'0.62rem', fontWeight:700, padding:'2px 7px', borderRadius:'100px', background:s.bg, color:s.color }}>{s.icon} {k}</span>
           ))}
-          <a href="/schedule" style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.3)', textDecoration:'none', marginLeft:'4px', padding:'2px 8px', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'6px' }}>전체보기 →</a>
         </div>
       </div>
 
