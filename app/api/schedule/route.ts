@@ -33,38 +33,20 @@ const CATEGORIES = ['방송', '개인일정', '개인 일정', '휴일', '선택
 
 let gidCache: Record<string, number> | null = null;
 
+// 완전한 GID 맵 (pubhtml에서 추출 확인)
+const HARDCODED_GID_MAP: Record<string, number> = {
+  '2026년 1월':202601,'2026년 2월':202602,'2026년 3월':202603,
+  '2026년 4월':202604,'2026년 5월':202605,'2026년 6월':202606,
+  '2026년 7월':202607,'2026년 8월':202608,'2026년 9월':202609,
+  '2026년 10월':202610,'2026년 11월':202611,'2026년 12월':202612,
+  '2027년 1월':916286495,'2027년 2월':281248381,'2027년 3월':176728639,
+  '2027년 4월':63389854,'2027년 5월':588668077,'2027년 6월':1057643753,
+  '2027년 7월':179275070,'2027년 8월':816793490,'2027년 9월':1607656807,
+  '2027년 10월':1450126795,'2027년 11월':1950433908,'2027년 12월':673368685,
+};
+
 async function getGidMap(): Promise<Record<string, number>> {
-  if (gidCache) return gidCache;
-  const map: Record<string, number> = {};
-
-  try {
-    const r = await fetch(`https://spreadsheets.google.com/feeds/worksheets/${SRC_ID}/public/full?alt=json`, { cache: 'no-store' });
-    if (r.ok) {
-      const d = await r.json();
-      for (const e of d.feed?.entry ?? []) {
-        const title: string = e.title?.$t ?? '';
-        const vizLink = e.link?.find((l: any) => l.rel?.includes('visualizationApi'));
-        const gidMatch = vizLink?.href?.match(/gid=(\d+)/);
-        if (title && gidMatch) map[title] = parseInt(gidMatch[1]);
-      }
-    }
-  } catch {}
-
-  if (!Object.keys(map).length) {
-    try {
-      const r = await fetch(`https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pubhtml`, { cache: 'no-store' });
-      if (r.ok) {
-        const text = await r.text();
-        const re = /gid=(\d+)[^>]*>\s*(\d{4}년\s*\d{1,2}월)/g;
-        let m;
-        while ((m = re.exec(text)) !== null) map[m[2].replace(/\s+/, ' ')] = parseInt(m[1]);
-      }
-    } catch {}
-  }
-
-  map['2026년 6월'] = 202606; // fallback
-  gidCache = map;
-  return map;
+  return HARDCODED_GID_MAP;
 }
 
 async function fetchByGid(gid: number): Promise<string[][]> {
