@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const PUB_ID = '2PACX-1vTaVpnVjcIITgQKdNZ2Vojdx7Ik78OviKKLh_-6wWvremg5U0A_-JI0XNONOm7UrXIpWTzWO3Uqs98V';
 const SRC_ID = '1Zm1VOH4rASeczj1mtxXE1pnafBPQb5x9Tak0cwdq8w4';
 
-const CATEGORIES = ['방송', '개인일정', '휴일', '선택취소'];
+const CATEGORIES = ['방송', '개인일정', '휴일', '선택취소', '선택 취소'];
 
 let gidCache: Record<string, number> | null = null;
 
@@ -90,10 +90,12 @@ function parseCalendar(lines: string[][]): { date: number; category: string | nu
 
       for (const { date, col } of dateCols) {
         const all = cellTexts[col].filter(Boolean);
-        const category = all.find(t => CATEGORIES.includes(t)) ?? null;
-        const text = all.filter(t => !CATEGORIES.includes(t)).join(' / ');
-        // 선택취소는 무시
-        if (category !== '선택취소' && (category || text)) {
+        const normalize = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+        const isCategory = (t: string) => CATEGORIES.some(c => normalize(c) === normalize(t));
+        const isCancel   = (t: string) => normalize(t) === '선택취소';
+        const category = all.find(t => isCategory(t) && !isCancel(t)) ?? null;
+        const text = all.filter(t => !isCategory(t) && !isCancel(t)).join(' / ');
+        if (category || text) {
           events.push({ date, category, text });
         }
       }
