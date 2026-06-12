@@ -4,6 +4,7 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 import HeroLiveCard from './hero-live-card';
+import ScheduleEmbed from './schedule-embed';
 
 const getYoutubeVideos = unstable_cache(async () => {
   try {
@@ -290,6 +291,18 @@ export default async function Home() {
           </h2>
         </div>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
+
+          {/* ─── 일정표 ─── */}
+          <div style={{marginTop:'48px'}}>
+            <div style={{marginBottom:'20px'}}>
+              <p style={{fontSize:'0.72rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'var(--accent)',marginBottom:'8px',opacity:0.8}}>Schedule</p>
+              <h2 style={{fontSize:'clamp(1.4rem,3vw,2rem)',fontWeight:900,letterSpacing:'-0.04em',color:'var(--text)',lineHeight:1,margin:0}}>
+                일 <em style={{color:'var(--accent)',fontStyle:'italic'}}>정</em>
+              </h2>
+            </div>
+            <ScheduleEmbed />
+          </div>
+
           <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
         </div>
       </section>
