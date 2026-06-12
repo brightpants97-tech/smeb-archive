@@ -292,13 +292,8 @@ export default async function Home() {
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
 
           {/* ─── 일정표 ─── */}
-          <div style={{marginTop:'48px'}}>
-            <div style={{marginBottom:'20px'}}>
-              <p style={{fontSize:'0.72rem',fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:'var(--accent)',marginBottom:'8px',opacity:0.8}}>Schedule</p>
-              <h2 style={{fontSize:'clamp(1.4rem,3vw,2rem)',fontWeight:900,letterSpacing:'-0.04em',color:'var(--text)',lineHeight:1,margin:0}}>
-                일 <em style={{color:'var(--accent)',fontStyle:'italic'}}>정</em>
-              </h2>
-            </div>
+          <div style={{marginTop:'56px'}}>
+            <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'var(--text)',marginBottom:'20px',marginTop:0}}>일정표</h2>
             <ScheduleEmbed />
           </div>
 
