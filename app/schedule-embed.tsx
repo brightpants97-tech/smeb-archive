@@ -65,7 +65,7 @@ export default function ScheduleEmbed() {
           <button onClick={refresh} disabled={loading} title="시트 새로고침" style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'0.9rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.5:1, transition:'all 0.15s' }}>🔄</button>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-          {Object.entries(CAT).map(([k, s]) => (
+          {Object.entries(CAT).filter(([,s], i, arr) => arr.findIndex(([,x]) => x.label === s.label) === i).map(([k, s]) => (
             <span key={k} style={{ fontSize:'0.72rem', fontWeight:700, padding:'4px 10px', borderRadius:'100px', background:s.bg, color:s.color, border:`1.5px solid ${s.border}` }}>{s.label}</span>
           ))}
         </div>
