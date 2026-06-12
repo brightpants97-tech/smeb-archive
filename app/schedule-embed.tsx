@@ -54,11 +54,11 @@ export default function ScheduleEmbed() {
       {/* 컨트롤 바 */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', flexWrap:'wrap', gap:'12px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-          <button onClick={prev} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid rgba(0,0,0,0.15)', background:'rgba(0,0,0,0.04)', color:'#333', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>‹</button>
-          <span style={{ fontWeight:800, fontSize:'1.05rem', letterSpacing:'-0.02em', color:'#1A1A1A' }}>
+          <button onClick={prev} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>‹</button>
+          <span style={{ fontWeight:800, fontSize:'1.05rem', letterSpacing:'-0.02em', color:'var(--text)' }}>
             {MONTH_KO[month-1]} {year}
           </span>
-          <button onClick={next} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid rgba(0,0,0,0.15)', background:'rgba(0,0,0,0.04)', color:'#333', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
+          <button onClick={next} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
           {loading && <span style={{ fontSize:'0.72rem', color:'#999' }}>불러오는 중...</span>}
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
