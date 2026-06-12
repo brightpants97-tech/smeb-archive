@@ -8,6 +8,7 @@ const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월'
 const CAT: Record<string, { bg:string; border:string; color:string; label:string }> = {
   '방송':     { bg:'#FFF0E5', border:'#F4A06A', color:'#C05A10', label:'📺 방송' },
   '개인일정': { bg:'#E8F0FF', border:'#7AAAF5', color:'#2458C8', label:'🗓 개인' },
+  '개인 일정': { bg:'#E8F0FF', border:'#7AAAF5', color:'#2458C8', label:'🗓 개인' },
   '휴일':     { bg:'#E6F7E8', border:'#70C877', color:'#1E7D25', label:'🏖 휴일' },
 };
 
@@ -46,7 +47,7 @@ export default function ScheduleEmbed() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const selEv  = selected ? eMap[selected] : null;
-  const selCat = selEv?.category ? CAT[selEv.category] : null;
+  const selCat = selEv?.category ? (CAT[selEv.category] ?? CAT[selEv.category.replace(/\s+/g, '')]) : null;
 
   return (
     <div style={{ width:'100%' }}>
@@ -87,7 +88,8 @@ export default function ScheduleEmbed() {
             const isSel   = day === selected;
             const isSun   = idx % 7 === 0;
             const isSat   = idx % 7 === 6;
-            const catS    = ev?.category ? CAT[ev.category] : null;
+            const catKey  = ev?.category?.replace(/\s+/g, '') ?? '';
+            const catS    = ev?.category ? (CAT[ev.category] ?? CAT[catKey]) : null;
 
             return (
               <div key={idx}
