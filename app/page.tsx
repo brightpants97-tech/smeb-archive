@@ -293,7 +293,10 @@ export default async function Home() {
 
           {/* ─── 일정표 ─── */}
           <div style={{marginTop:'56px'}}>
-            <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'var(--text)',marginBottom:'20px',marginTop:0}}>일정표</h2>
+            <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 20px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
+              <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
+              <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1,margin:0}}>일정표</h2>
+            </div>
             <ScheduleEmbed />
           </div>
 
