@@ -119,13 +119,17 @@ export default function ScheduleEmbed() {
                   borderRight: idx%7===6 ? 'none' : '1px solid rgba(0,0,0,0.06)',
                   borderBottom: idx<cells.length-7 ? '1px solid rgba(0,0,0,0.06)' : 'none',
                   display:'flex', flexDirection:'column',
-                  background: isSel ? (catS ? catS.light : '#FFF8F3') : '#fff',
+                  background: isSel
+                    ? (catS ? catS.color + '22' : '#FFE8D6')  // 선택: 카테고리 색 더 진하게
+                    : catS
+                      ? catS.light                              // 카테고리 있는 날: 연한 틴트
+                      : '#fff',                                 // 일반: 흰색
                   cursor: day ? 'pointer' : 'default',
                   transition:'background 0.1s',
                   position:'relative', overflow:'hidden',
                 }}
-                onMouseEnter={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background='#F6F6F6'; }}
-                onMouseLeave={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background='#fff'; }}
+                onMouseEnter={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.color + '18' : '#F5F5F5'; }}
+                onMouseLeave={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.light : '#fff'; }}
               >
                 {day && (
                   <>
