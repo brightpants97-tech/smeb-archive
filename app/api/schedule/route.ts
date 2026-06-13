@@ -58,8 +58,8 @@ function extractDatePrefix(text: string): { date: number; text: string } | null 
 
 // 달력 파싱
 // 구조: Row N = 날짜행, Row N+1 = 이벤트행, Row N+2 = 빈행 spacer
-function parseCalendar(rows: string[][]): { date: number; category: string | null; text: string }[] {
-  const events: { date: number; category: string | null; text: string }[] = [];
+function parseCalendar(rows: string[][]): { date: number; category: string | null; texts: string[] }[] {
+  const events: { date: number; category: string | null; texts: string[] }[] = [];
 
   const isDateRow = (row: string[]) =>
     row.slice(0, 7).some(v => /^\d{1,2}$/.test(v.trim()) && parseInt(v) >= 1 && parseInt(v) <= 31);
@@ -96,18 +96,18 @@ function parseCalendar(rows: string[][]): { date: number; category: string | nul
     }
 
     // 컬럼별 이벤트 매핑
-    const dateEvMap: Record<number, { cat: string | null; texts: string[] }> = {};
+    const dateEvMap: Record<number, { cat: string | null; txts: string[] }> = {};
 
     // 정상 컬럼 매핑
     for (let c = 0; c < 7; c++) {
       if (cellTexts[c].length === 0) continue;
       const date = weekDates.find(d => dateColMap[d] === c);
       if (!date) continue;
-      if (!dateEvMap[date]) dateEvMap[date] = { cat: null, texts: [] };
+      if (!dateEvMap[date]) dateEvMap[date] = { cat: null, txts: [] };
       for (const t of cellTexts[c]) {
         if (isCancel(t)) continue;
         if (isCat(t)) dateEvMap[date].cat = t;
-        else dateEvMap[date].texts.push(t);
+        else dateEvMap[date].txts.push(t);
       }
     }
 
@@ -119,26 +119,25 @@ function parseCalendar(rows: string[][]): { date: number; category: string | nul
         const ex = extractDatePrefix(item);
         if (ex && weekDates.includes(ex.date)) {
           // "N일 텍스트" 형식 → 해당 날짜에
-          if (!dateEvMap[ex.date]) dateEvMap[ex.date] = { cat: null, texts: [] };
+          if (!dateEvMap[ex.date]) dateEvMap[ex.date] = { cat: null, txts: [] };
           if (isCat(ex.text)) dateEvMap[ex.date].cat = ex.text;
-          else dateEvMap[ex.date].texts.push(ex.text);
+          else dateEvMap[ex.date].txts.push(ex.text);
         } else if (isCat(item)) {
           // 카테고리만 → 주 첫날에
           const d = weekDates[0];
-          if (!dateEvMap[d]) dateEvMap[d] = { cat: null, texts: [] };
+          if (!dateEvMap[d]) dateEvMap[d] = { cat: null, txts: [] };
           dateEvMap[d].cat = item;
         } else {
           // 날짜 특정 불가 → 주 첫날에 ⚠️
           const d = weekDates[0];
-          if (!dateEvMap[d]) dateEvMap[d] = { cat: null, texts: [] };
-          dateEvMap[d].texts.push('⚠️ ' + item);
+          if (!dateEvMap[d]) dateEvMap[d] = { cat: null, txts: [] };
+          dateEvMap[d].txts.push('⚠️ ' + item);
         }
       }
     }
 
     for (const [ds, ev] of Object.entries(dateEvMap)) {
-      const text = ev.texts.join(' / ');
-      if (ev.cat || text) events.push({ date: parseInt(ds), category: ev.cat, text });
+      if (ev.cat || ev.txts.length) events.push({ date: parseInt(ds), category: ev.cat, texts: ev.txts });
     }
 
     i++;
