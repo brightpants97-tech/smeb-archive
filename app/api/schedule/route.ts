@@ -47,7 +47,8 @@ function parseCSV(text: string): string[][] {
 
 // 날짜 패턴 추출: "10일 소통데이", "10. 소통데이", "10) 소통데이"
 function extractDatePrefix(text: string): { date: number; text: string } | null {
-  const m = text.match(/^(\d{1,2})\s*[일\.\)\]]\s*(.+)$/s);
+  const firstLine = text.split('\n')[0];
+  const m = firstLine.match(/^(\d{1,2})\s*[일\.\)\]]\s*(.+)$/);
   if (m) {
     const d = parseInt(m[1]);
     if (d >= 1 && d <= 31) return { date: d, text: m[2].trim() };
