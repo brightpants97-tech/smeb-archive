@@ -61,8 +61,10 @@ function extractDatePrefix(text: string): { date: number; text: string } | null 
 function parseCalendar(rows: string[][]): { date: number; category: string | null; texts: string[] }[] {
   const events: { date: number; category: string | null; texts: string[] }[] = [];
 
-  const isDateRow = (row: string[]) =>
-    row.slice(0, 7).some(v => /^\d{1,2}$/.test(v.trim()) && parseInt(v) >= 1 && parseInt(v) <= 31);
+  const isDateRow = (row: string[]) => {
+    const nums = row.slice(0, 7).filter(v => /^\d{1,2}$/.test(v.trim()) && parseInt(v) >= 1 && parseInt(v) <= 31);
+    return nums.length >= 2; // 날짜 숫자가 2개 이상 = 날짜행 (텍스트에 "1","2" 단독 입력과 구별)
+  };
 
   let i = 0;
   while (i < rows.length) {
