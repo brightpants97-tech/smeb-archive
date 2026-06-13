@@ -6,11 +6,14 @@ const DAY_KO  = ['일','월','화','수','목','금','토'];
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
 const CAT: Record<string, { bg:string; border:string; color:string; label:string }> = {
-  '방송':     { bg:'#FFF0E5', border:'#F4A06A', color:'#C05A10', label:'📺 방송' },
-  '개인일정': { bg:'#E8F0FF', border:'#7AAAF5', color:'#2458C8', label:'🗓 개인' },
-  '개인 일정':{ bg:'#E8F0FF', border:'#7AAAF5', color:'#2458C8', label:'🗓 개인' },
-  '휴일':     { bg:'#E6F7E8', border:'#70C877', color:'#1E7D25', label:'🏖 휴일' },
+  '방송':      { bg:'#FFEEDE', border:'#E8863A', color:'#B34D00', label:'📺 방송' },
+  '개인일정':  { bg:'#DDE9FF', border:'#5B8EE8', color:'#1A44B0', label:'🗓 개인' },
+  '개인 일정': { bg:'#DDE9FF', border:'#5B8EE8', color:'#1A44B0', label:'🗓 개인' },
+  '휴일':      { bg:'#DFF2E1', border:'#4DB85A', color:'#186624', label:'🏖 휴일' },
 };
+
+const DEFAULT_BORDER = '#BBBBBB';
+const DEFAULT_BG     = 'rgba(0,0,0,0.05)';
 
 interface Event { date: number; category: string | null; texts: string[]; }
 
@@ -48,36 +51,52 @@ export default function ScheduleEmbed() {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const selEv  = selected ? eMap[selected] : null;
-  const getCat = (ev: Event | undefined) => ev?.category ? (CAT[ev.category] ?? CAT[ev.category.replace(/\s/g,'')]) : null;
+  const getCat = (ev?: Event) => {
+    if (!ev?.category) return null;
+    return CAT[ev.category] ?? CAT[ev.category.replace(/\s/g,'')] ?? null;
+  };
+  const selEv = selected ? eMap[selected] : null;
 
   return (
     <div style={{ width:'100%' }}>
+
       {/* 컨트롤 바 */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', flexWrap:'wrap', gap:'12px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-          <button onClick={prev} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>‹</button>
-          <span style={{ fontWeight:800, fontSize:'1.05rem', letterSpacing:'-0.02em', color:'var(--text)' }}>
+          <button onClick={prev} style={{ width:'36px', height:'36px', borderRadius:'9px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.15rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>‹</button>
+          <span style={{ fontWeight:900, fontSize:'1.1rem', letterSpacing:'-0.02em', color:'var(--text)' }}>
             {MONTH_KO[month-1]} {year}
           </span>
-          <button onClick={next} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
-          <button onClick={fetchData} disabled={loading} title="새로고침" style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'0.9rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.5:1 }}>🔄</button>
+          <button onClick={next} style={{ width:'36px', height:'36px', borderRadius:'9px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.15rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
+          <button onClick={fetchData} disabled={loading} title="새로고침"
+            style={{ width:'34px', height:'34px', borderRadius:'9px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'0.9rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.4:1, transition:'opacity 0.15s' }}>
+            🔄
+          </button>
           {loading && <span style={{ fontSize:'0.72rem', color:'#999' }}>불러오는 중...</span>}
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-          {Object.entries(CAT).filter(([,s],i,arr)=>arr.findIndex(([,x])=>x.label===s.label)===i).map(([k,s]) => (
-            <span key={k} style={{ fontSize:'0.72rem', fontWeight:700, padding:'4px 10px', borderRadius:'100px', background:s.bg, color:s.color, border:`1.5px solid ${s.border}` }}>{s.label}</span>
+
+        {/* 범례 */}
+        <div style={{ display:'flex', alignItems:'center', gap:'6px', flexWrap:'wrap' }}>
+          {Object.entries(CAT)
+            .filter(([,s], i, arr) => arr.findIndex(([,x]) => x.label === s.label) === i)
+            .map(([k, s]) => (
+              <span key={k} style={{ fontSize:'0.73rem', fontWeight:800, padding:'4px 11px', borderRadius:'100px', background:s.bg, color:s.color, border:`1.5px solid ${s.border}` }}>
+                {s.label}
+              </span>
           ))}
         </div>
       </div>
 
-      {/* 달력 */}
-      <div style={{ border:'1.5px solid rgba(0,0,0,0.1)', borderRadius:'14px', overflow:'hidden', background:'#fff' }}>
+      {/* 달력 그리드 */}
+      <div style={{ border:'1.5px solid rgba(0,0,0,0.12)', borderRadius:'14px', overflow:'hidden', background:'#fff' }}>
+
         {/* 요일 헤더 */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1.5px solid rgba(0,0,0,0.08)', background:'rgba(0,0,0,0.025)' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1.5px solid rgba(0,0,0,0.1)', background:'rgba(0,0,0,0.03)' }}>
           {DAY_KO.map((d, i) => (
-            <div key={d} style={{ padding:'12px 0', textAlign:'center', fontSize:'0.8rem', fontWeight:800,
-              color: i===0?'#D94040':i===6?'#2458C8':'#666' }}>{d}</div>
+            <div key={d} style={{ padding:'12px 0', textAlign:'center', fontSize:'0.82rem', fontWeight:800, letterSpacing:'0.03em',
+              color: i===0 ? '#C83232' : i===6 ? '#2052C8' : '#555' }}>
+              {d}
+            </div>
           ))}
         </div>
 
@@ -85,65 +104,87 @@ export default function ScheduleEmbed() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
           {cells.map((day, idx) => {
             const ev      = day ? eMap[day] : null;
+            const catS    = getCat(ev ?? undefined);
             const isToday = day === today;
             const isSel   = day === selected;
             const isSun   = idx % 7 === 0;
             const isSat   = idx % 7 === 6;
-            const catS    = getCat(ev ?? undefined);
-            const hasTexts = (ev?.texts?.length ?? 0) > 0;
+
+            let bgColor = '#fff';
+            if (isSel)   bgColor = '#FFF3E8';
+            else if (isToday) bgColor = '#FFFAF5';
+            else if (isSun)   bgColor = 'rgba(200,50,50,0.04)';
+            else if (isSat)   bgColor = 'rgba(32,82,200,0.04)';
 
             return (
               <div key={idx}
                 onClick={() => day && setSelected(isSel ? null : day)}
                 style={{
-                  minHeight:'100px', padding:'7px 7px 6px',
-                  borderRight: idx%7===6 ? 'none' : '1px solid rgba(0,0,0,0.06)',
-                  borderBottom: idx<cells.length-7 ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                  display:'flex', flexDirection:'column', gap:'3px',
-                  background: isSel ? '#FFF5EE' : isToday ? '#FFFAF7' : isSun ? 'rgba(220,80,80,0.025)' : isSat ? 'rgba(36,88,200,0.025)' : '#fff',
+                  minHeight:'120px', padding:'8px 7px 7px',
+                  borderRight: idx%7===6 ? 'none' : '1px solid rgba(0,0,0,0.07)',
+                  borderBottom: idx<cells.length-7 ? '1px solid rgba(0,0,0,0.07)' : 'none',
+                  display:'flex', flexDirection:'column', gap:'4px',
+                  background: bgColor,
                   cursor: day ? 'pointer' : 'default',
-                  transition:'background 0.12s',
+                  transition:'background 0.1s',
                   position:'relative',
                 }}
-                onMouseEnter={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background='#F8F8F8'; }}
-                onMouseLeave={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background=isToday?'#FFFAF7':isSun?'rgba(220,80,80,0.025)':isSat?'rgba(36,88,200,0.025)':'#fff'; }}
+                onMouseEnter={e => { if(day && !isSel) (e.currentTarget as HTMLElement).style.background = '#F5F5F5'; }}
+                onMouseLeave={e => { if(day && !isSel) (e.currentTarget as HTMLElement).style.background = bgColor; }}
               >
                 {day && (
                   <>
                     {/* 날짜 숫자 */}
                     <div style={{
                       display:'inline-flex', alignItems:'center', justifyContent:'center',
-                      width:'26px', height:'26px', borderRadius:'50%', flexShrink:0,
+                      width:'30px', height:'30px', borderRadius:'50%', flexShrink:0,
                       background: isToday ? ACCENT : 'transparent',
-                      fontSize:'0.85rem', fontWeight: isToday ? 900 : ev ? 700 : 500,
-                      color: isToday ? '#fff' : isSun ? '#D94040' : isSat ? '#2458C8' : ev ? '#111' : '#999',
-                    }}>{day}</div>
+                      fontSize:'0.9rem',
+                      fontWeight: isToday ? 900 : ev ? 800 : 500,
+                      color: isToday ? '#fff' : isSun ? '#C83232' : isSat ? '#2052C8' : ev ? '#111' : '#AAA',
+                    }}>
+                      {day}
+                    </div>
 
                     {/* 카테고리 배지 */}
                     {ev?.category && catS && (
                       <div style={{
-                        fontSize:'0.68rem', fontWeight:800, padding:'2px 6px', borderRadius:'5px',
-                        background:catS.bg, color:catS.color, border:`1.5px solid ${catS.border}`,
+                        fontSize:'0.73rem', fontWeight:800,
+                        padding:'3px 7px', borderRadius:'6px',
+                        background: catS.bg, color: catS.color,
+                        border:`1.5px solid ${catS.border}`,
                         whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
-                      }}>{catS.label}</div>
+                      }}>
+                        {catS.label}
+                      </div>
                     )}
 
-                    {/* 자유 텍스트 줄별 표시 */}
-                    {hasTexts && ev!.texts.map((t, ti) => (
+                    {/* 자유 텍스트 */}
+                    {ev?.texts.map((t, ti) => (
                       <div key={ti} style={{
-                        fontSize:'0.68rem', fontWeight:600, lineHeight:1.35,
-                        color:'#222',
-                        padding:'2px 6px', borderRadius:'5px',
-                        background:'rgba(0,0,0,0.04)',
-                        borderLeft:`2.5px solid ${catS ? catS.border : 'rgba(0,0,0,0.2)'}`,
-                        overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis',
-                      }}>{t}</div>
+                        fontSize:'0.73rem', fontWeight:600, lineHeight:1.4,
+                        color:'#1A1A1A',
+                        padding:'3px 7px 3px 8px',
+                        borderRadius:'0 6px 6px 0',
+                        borderLeft:`3px solid ${catS ? catS.border : DEFAULT_BORDER}`,
+                        background: catS ? catS.bg.replace(')', ', 0.6)').replace('rgb', 'rgba') : DEFAULT_BG,
+                        overflow:'hidden',
+                        display:'-webkit-box',
+                        WebkitLineClamp:2,
+                        WebkitBoxOrient:'vertical' as const,
+                        wordBreak:'break-all',
+                      }}>
+                        {t}
+                      </div>
                     ))}
 
-                    {/* 이벤트 점 */}
+                    {/* 이벤트 표시 점 */}
                     {ev && !isSel && (
-                      <div style={{ position:'absolute', top:'5px', right:'5px', width:'5px', height:'5px', borderRadius:'50%',
-                        background: catS ? catS.color : '#888' }} />
+                      <div style={{
+                        position:'absolute', top:'6px', right:'6px',
+                        width:'6px', height:'6px', borderRadius:'50%',
+                        background: catS ? catS.color : '#999',
+                      }} />
                     )}
                   </>
                 )}
@@ -154,39 +195,41 @@ export default function ScheduleEmbed() {
       </div>
 
       {/* 선택한 날 상세 */}
-      {selected && selEv && (
-        <div style={{ marginTop:'12px', padding:'16px 18px', borderRadius:'12px', animation:'fadeIn 0.2s both',
-          background: getCat(selEv) ? getCat(selEv)!.bg : '#F5F5F5',
-          border: `1.5px solid ${getCat(selEv) ? getCat(selEv)!.border : 'rgba(0,0,0,0.12)'}`,
-        }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom: selEv.texts.length ? '10px' : '0', flexWrap:'wrap' }}>
-            <span style={{ fontWeight:900, fontSize:'0.95rem', color: getCat(selEv) ? getCat(selEv)!.color : '#111' }}>
-              {month}월 {selected}일 ({DAY_KO[new Date(year,month-1,selected).getDay()]}요일)
-            </span>
-            {selEv.category && getCat(selEv) && (
-              <span style={{ fontSize:'0.72rem', fontWeight:800, padding:'3px 10px', borderRadius:'100px',
-                background:getCat(selEv)!.bg, color:getCat(selEv)!.color, border:`1.5px solid ${getCat(selEv)!.border}` }}>
-                {getCat(selEv)!.label}
+      {selected && selEv && (() => {
+        const cs = getCat(selEv);
+        return (
+          <div style={{
+            marginTop:'12px', padding:'16px 18px', borderRadius:'12px',
+            animation:'fadeIn 0.2s both',
+            background: cs ? cs.bg : '#F0F0F0',
+            border:`1.5px solid ${cs ? cs.border : 'rgba(0,0,0,0.15)'}`,
+          }}>
+            <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom: selEv.texts.length ? '10px' : '0', flexWrap:'wrap' }}>
+              <span style={{ fontWeight:900, fontSize:'1rem', color: cs ? cs.color : '#111' }}>
+                {month}월 {selected}일 ({DAY_KO[new Date(year,month-1,selected).getDay()]}요일)
               </span>
-            )}
+              {selEv.category && cs && (
+                <span style={{ fontSize:'0.75rem', fontWeight:800, padding:'3px 11px', borderRadius:'100px', background:cs.bg, color:cs.color, border:`1.5px solid ${cs.border}` }}>
+                  {cs.label}
+                </span>
+              )}
+            </div>
+            {selEv.texts.map((t, i) => (
+              <div key={i} style={{
+                fontSize:'0.9rem', lineHeight:1.65, color:'#111',
+                padding:'7px 12px',
+                borderLeft:`3px solid ${cs ? cs.border : DEFAULT_BORDER}`,
+                background:'rgba(255,255,255,0.65)',
+                borderRadius:'0 7px 7px 0',
+                marginBottom: i < selEv.texts.length-1 ? '6px' : '0',
+                fontWeight:500,
+              }}>
+                {t}
+              </div>
+            ))}
           </div>
-          {selEv.texts.map((t, i) => (
-            <div key={i} style={{
-              fontSize:'0.9rem', lineHeight:1.6, color:'#222',
-              padding:'6px 10px',
-              borderLeft:`3px solid ${getCat(selEv) ? getCat(selEv)!.border : 'rgba(0,0,0,0.2)'}`,
-              background:'rgba(255,255,255,0.6)',
-              borderRadius:'0 6px 6px 0',
-              marginBottom: i < selEv.texts.length - 1 ? '6px' : '0',
-            }}>{t}</div>
-          ))}
-        </div>
-      )}
-
-      {/* 입력 안내 */}
-      <p style={{ marginTop:'10px', fontSize:'0.68rem', color:'rgba(128,128,128,0.6)', textAlign:'center' as const }}>
-        💡 날짜 아래 드롭다운으로 카테고리, 그 아래 줄에 텍스트 입력
-      </p>
+        );
+      })()}
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
