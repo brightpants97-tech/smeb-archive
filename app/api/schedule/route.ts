@@ -78,10 +78,10 @@ function parseCalendar(rows: string[][]): { date: number; category: string | nul
     }
     const weekDates = Object.keys(dateColMap).map(Number);
 
-    // 이벤트 수집: 날짜행 바로 아래 1행 (Row N+1)
-    // 추가로 Row N+2도 확인 (spacer가 비어있으면 break, 내용 있으면 추가)
+    // 이벤트 수집: 날짜행 이후 최대 4행
+    // Row N+1: 드롭다운(카테고리), Row N+2~4: 자유텍스트 1~3
     const cellTexts: string[][] = Array.from({ length: 7 }, () => []);
-    for (let off = 1; off <= 2; off++) {
+    for (let off = 1; off <= 4; off++) {
       const erow = rows[i + off] ?? [];
       if (isDateRow(erow)) break;
       for (let c = 0; c < 7; c++) {
