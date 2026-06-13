@@ -113,8 +113,9 @@ function parseCalendar(rows: string[][]): { date: number; category: string | nul
       }
     }
 
-    // 병합셀 처리: col 0에만 텍스트 있고 나머지 비어있을 때
-    const onlyCol0 = cellTexts[0].length > 0 && cellTexts.slice(1).every(t => t.length === 0);
+    // 병합셀 처리: col 0에만 텍스트 있고, 나머지 비어있고, col 0에 실제 날짜가 없을 때
+    const col0HasDate = weekDates.some(d => dateColMap[d] === 0);
+    const onlyCol0 = !col0HasDate && cellTexts[0].length > 0 && cellTexts.slice(1).every(t => t.length === 0);
     if (onlyCol0) {
       for (const item of cellTexts[0]) {
         if (isCancel(item)) continue;
