@@ -44,10 +44,15 @@ export default function BanPickClient() {
   const [editC, setEditC]   = useState<string|null>(null);
   const [noteK, setNoteK]   = useState<string|null>(null);
   const [picker, setPicker] = useState<{tid:string;pid:string}|null>(null);
-  const [cmpMode, setCmpMode]     = useState(false);          // 비교 모드
-  const [cmpMyComp, setCmpMyComp] = useState<string|null>(null); // 내 조합 id
-  const [cmpOppTeam, setCmpOppTeam] = useState<string|null>(null); // 상대 팀 id
-  const [cmpOppComp, setCmpOppComp] = useState<string|null>(null); // 상대 조합 id
+  const [cmpMode, setCmpMode]     = useState(false);
+  const [cmpMyComp, setCmpMyComp] = useState<string|null>(null);
+  const [cmpOppTeam, setCmpOppTeam] = useState<string|null>(null);
+  const [cmpOppComp, setCmpOppComp] = useState<string|null>(null);
+  const [vsView, setVsView]       = useState(false);            // 대전 비교 독립 화면
+  const [vsBlueTeam, setVsBlueTeam] = useState<string|null>(null);
+  const [vsBlueComp, setVsBlueComp] = useState<string|null>(null);
+  const [vsRedTeam, setVsRedTeam]   = useState<string|null>(null);
+  const [vsRedComp, setVsRedComp]   = useState<string|null>(null);
   const [ms, setMs]         = useState('');
 
   useEffect(() => {
@@ -158,8 +163,152 @@ export default function BanPickClient() {
                 <div style={{fontWeight:900,fontSize:'1.2rem',letterSpacing:'-0.03em'}}>팀 목록</div>
                 <div style={{fontSize:'0.82rem',color:T3,marginTop:'4px'}}>팀 카드를 클릭하면 선수와 조합을 확인해요</div>
               </div>
-              <button onClick={addTeam} style={{...B_STYLE('#fff',A,'transparent')}}>+ 팀 추가</button>
+              <div style={{display:'flex',gap:'8px'}}>
+                <button onClick={()=>setVsView(true)} style={{...B_STYLE(T2,S,B)}}>⚔️ 대전 비교</button>
+                <button onClick={addTeam} style={{...B_STYLE('#fff',A,'transparent')}}>+ 팀 추가</button>
+              </div>
             </div>
+            {/* 대전 비교 화면 */}
+            {vsView && (
+              <div style={{marginBottom:'28px',background:S,border:`1px solid ${B}`,borderRadius:'16px',overflow:'hidden',animation:'fi 0.18s both'}}>
+                {/* 헤더 */}
+                <div style={{padding:'14px 20px',borderBottom:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'10px',background:'rgba(0,0,0,0.02)'}}>
+                  <span style={{fontWeight:900,fontSize:'1.05rem'}}>⚔️ 대전 비교</span>
+                  <button onClick={()=>{setVsView(false);setVsBlueTeam(null);setVsBlueComp(null);setVsRedTeam(null);setVsRedComp(null);}}
+                    style={{marginLeft:'auto',...B_STYLE(T2,S,B),...{padding:'5px 12px'}}}>닫기</button>
+                </div>
+
+                {/* 팀 선택 */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 40px 1fr',gap:'0'}}>
+                  {/* 블루팀 */}
+                  <div style={{padding:'16px 20px',borderRight:`1px solid ${B}`}}>
+                    <div style={{fontSize:'0.72rem',fontWeight:800,color:'#4A8FFF',letterSpacing:'0.08em',marginBottom:'10px'}}>BLUE TEAM</div>
+                    <select value={vsBlueTeam||''} onChange={e=>{setVsBlueTeam(e.target.value||null);setVsBlueComp(null);}}
+                      style={{width:'100%',background:'rgba(74,143,255,0.08)',border:'1.5px solid rgba(74,143,255,0.35)',borderRadius:'9px',padding:'8px 12px',color:T,fontSize:'0.9rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',marginBottom:'8px'}}>
+                      <option value="">팀 선택</option>
+                      {teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                    {vsBlueTeam && (
+                      <select value={vsBlueComp||''} onChange={e=>setVsBlueComp(e.target.value||null)}
+                        style={{width:'100%',background:'rgba(74,143,255,0.06)',border:'1.5px solid rgba(74,143,255,0.25)',borderRadius:'9px',padding:'8px 12px',color:T,fontSize:'0.88rem',fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+                        <option value="">조합 선택</option>
+                        {getComps(vsBlueTeam).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    )}
+                  </div>
+                  {/* VS */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:'0.88rem',color:T3}}>VS</div>
+                  {/* 레드팀 */}
+                  <div style={{padding:'16px 20px',borderLeft:`1px solid ${B}`}}>
+                    <div style={{fontSize:'0.72rem',fontWeight:800,color:'#FF4A6A',letterSpacing:'0.08em',marginBottom:'10px'}}>RED TEAM</div>
+                    <select value={vsRedTeam||''} onChange={e=>{setVsRedTeam(e.target.value||null);setVsRedComp(null);}}
+                      style={{width:'100%',background:'rgba(255,74,106,0.08)',border:'1.5px solid rgba(255,74,106,0.35)',borderRadius:'9px',padding:'8px 12px',color:T,fontSize:'0.9rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',marginBottom:'8px'}}>
+                      <option value="">팀 선택</option>
+                      {teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                    {vsRedTeam && (
+                      <select value={vsRedComp||''} onChange={e=>setVsRedComp(e.target.value||null)}
+                        style={{width:'100%',background:'rgba(255,74,106,0.06)',border:'1.5px solid rgba(255,74,106,0.25)',borderRadius:'9px',padding:'8px 12px',color:T,fontSize:'0.88rem',fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+                        <option value="">조합 선택</option>
+                        {getComps(vsRedTeam).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                {/* 비교 결과 */}
+                {vsBlueComp && vsRedComp && (() => {
+                  const blueT = teams.find(t=>t.id===vsBlueTeam);
+                  const redT  = teams.find(t=>t.id===vsRedTeam);
+                  const blueC = getComps(vsBlueTeam!).find(c=>c.id===vsBlueComp);
+                  const redC  = getComps(vsRedTeam!).find(c=>c.id===vsRedComp);
+                  if(!blueT||!redT||!blueC||!redC) return null;
+                  return (
+                    <div style={{borderTop:`1px solid ${B}`}}>
+                      {/* 팀명 헤더 */}
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 50px 1fr'}}>
+                        <div style={{padding:'12px 20px',background:`${blueT.color}10`,fontWeight:900,fontSize:'0.94rem',color:blueT.color}}>
+                          <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                            <div style={{width:'8px',height:'8px',borderRadius:'50%',background:blueT.color,boxShadow:`0 0 4px ${blueT.color}`}} />
+                            {blueT.name}
+                          </div>
+                          <div style={{fontSize:'0.76rem',color:T2,fontWeight:600,marginTop:'2px'}}>{blueC.name}</div>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.03)',borderLeft:`1px solid ${B}`,borderRight:`1px solid ${B}`,fontWeight:900,fontSize:'0.78rem',color:T3}}>라인</div>
+                        <div style={{padding:'12px 20px',background:`${redT.color}10`,fontWeight:900,fontSize:'0.94rem',color:redT.color,textAlign:'right' as const}}>
+                          <div style={{display:'flex',alignItems:'center',gap:'6px',justifyContent:'flex-end'}}>
+                            {redT.name}
+                            <div style={{width:'8px',height:'8px',borderRadius:'50%',background:redT.color,boxShadow:`0 0 4px ${redT.color}`}} />
+                          </div>
+                          <div style={{fontSize:'0.76rem',color:T2,fontWeight:600,marginTop:'2px'}}>{redC.name}</div>
+                        </div>
+                      </div>
+
+                      {/* 라인별 비교 */}
+                      {ROLES.map((role,ri)=>{
+                        const blueP  = [...blueT.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).find(p=>p.role===role);
+                        const redP   = [...redT.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).find(p=>p.role===role);
+                        const bluePk = blueC.picks.find(x=>x.playerId===blueP?.id);
+                        const redPk  = redC.picks.find(x=>x.playerId===redP?.id);
+                        const blueChamp = blueP?.champs.find(x=>x.champ.id===bluePk?.champId);
+                        const redChamp  = redP?.champs.find(x=>x.champ.id===redPk?.champId);
+                        return (
+                          <div key={role} style={{display:'grid',gridTemplateColumns:'1fr 50px 1fr',borderTop:`1px solid ${B}`,background:ri%2===0?'transparent':'rgba(0,0,0,0.015)'}}>
+                            {/* 블루 */}
+                            <div style={{padding:'12px 20px',display:'flex',alignItems:'center',gap:'10px'}}>
+                              {blueChamp ? (
+                                <>
+                                  <img src={img(blueChamp.champ)} alt={blueChamp.champ.name}
+                                    style={{width:'46px',height:'46px',borderRadius:'9px',objectFit:'cover',border:`2px solid ${blueT.color}55`,flexShrink:0}} />
+                                  <div>
+                                    <div style={{fontWeight:800,fontSize:'0.92rem'}}>{blueChamp.champ.name}</div>
+                                    <div style={{fontSize:'0.74rem',color:T2,marginTop:'2px'}}>
+                                      {blueP?.name}
+                                      {blueChamp.tag!=='onetrick'&&<span style={{marginLeft:'5px',color:TAGS[blueChamp.tag].color,fontWeight:700}}>{TAGS[blueChamp.tag].short}</span>}
+                                    </div>
+                                    {blueChamp.note&&<div style={{fontSize:'0.7rem',color:T3,marginTop:'2px',fontStyle:'italic'}}>{blueChamp.note}</div>}
+                                  </div>
+                                </>
+                              ) : (
+                                <div style={{color:T3,fontSize:'0.84rem'}}>{blueP?.name||role} · 미선택</div>
+                              )}
+                            </div>
+                            {/* 라인 */}
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',borderLeft:`1px solid ${B}`,borderRight:`1px solid ${B}`}}>{RI[role]}</div>
+                            {/* 레드 */}
+                            <div style={{padding:'12px 20px',display:'flex',alignItems:'center',gap:'10px',justifyContent:'flex-end',flexDirection:'row-reverse'}}>
+                              {redChamp ? (
+                                <>
+                                  <img src={img(redChamp.champ)} alt={redChamp.champ.name}
+                                    style={{width:'46px',height:'46px',borderRadius:'9px',objectFit:'cover',border:`2px solid ${redT.color}55`,flexShrink:0}} />
+                                  <div style={{textAlign:'right' as const}}>
+                                    <div style={{fontWeight:800,fontSize:'0.92rem'}}>{redChamp.champ.name}</div>
+                                    <div style={{fontSize:'0.74rem',color:T2,marginTop:'2px'}}>
+                                      {redP?.name}
+                                      {redChamp.tag!=='onetrick'&&<span style={{marginLeft:'5px',color:TAGS[redChamp.tag].color,fontWeight:700}}>{TAGS[redChamp.tag].short}</span>}
+                                    </div>
+                                    {redChamp.note&&<div style={{fontSize:'0.7rem',color:T3,marginTop:'2px',fontStyle:'italic'}}>{redChamp.note}</div>}
+                                  </div>
+                                </>
+                              ) : (
+                                <div style={{color:T3,fontSize:'0.84rem'}}>{redP?.name||role} · 미선택</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
+                {(!vsBlueComp||!vsRedComp)&&(
+                  <div style={{padding:'32px',textAlign:'center',color:T3,fontSize:'0.86rem',borderTop:`1px solid ${B}`}}>
+                    {!vsBlueTeam?'블루팀을 선택하세요':!vsBlueComp?'블루팀 조합을 선택하세요':!vsRedTeam?'레드팀을 선택하세요':'레드팀 조합을 선택하세요'}
+                  </div>
+                )}
+              </div>
+            )}
+
             {teams.length===0 ? (
               <div style={{textAlign:'center',padding:'100px 0',color:T3}}>
                 <div style={{fontSize:'3rem',marginBottom:'12px'}}>🏆</div>
