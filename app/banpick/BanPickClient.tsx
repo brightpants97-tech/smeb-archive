@@ -246,7 +246,7 @@ export default function BanPickClient() {
           </div>
 
           {/* 선수 테이블 */}
-          {teamTab==='players' && (sorted.length===0 ? (
+          {teamTab==='players' && (<>{sorted.length===0 ? (
             <div style={{textAlign:'center',padding:'60px 0',color:T3}}>
               <div style={{fontSize:'1.8rem',marginBottom:'8px'}}>👤</div>
               <div style={{fontSize:'0.94rem',fontWeight:600}}>선수를 추가해보세요</div>
