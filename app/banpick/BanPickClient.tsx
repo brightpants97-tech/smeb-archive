@@ -44,6 +44,10 @@ export default function BanPickClient() {
   const [editC, setEditC]   = useState<string|null>(null);
   const [noteK, setNoteK]   = useState<string|null>(null);
   const [picker, setPicker] = useState<{tid:string;pid:string}|null>(null);
+  const [cmpMode, setCmpMode]     = useState(false);          // 비교 모드
+  const [cmpMyComp, setCmpMyComp] = useState<string|null>(null); // 내 조합 id
+  const [cmpOppTeam, setCmpOppTeam] = useState<string|null>(null); // 상대 팀 id
+  const [cmpOppComp, setCmpOppComp] = useState<string|null>(null); // 상대 조합 id
   const [ms, setMs]         = useState('');
 
   useEffect(() => {
@@ -349,7 +353,13 @@ export default function BanPickClient() {
               <div>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'18px'}}>
                   <div style={{fontSize:'0.88rem',color:T2}}>선수별 챔피언을 골라 조합을 저장하세요</div>
-                  <button onClick={()=>addComp(curTeam.id)} style={{...B_STYLE('#fff',curTeam.color,'transparent')}}>+ 새 조합</button>
+                  <div style={{display:'flex',gap:'6px'}}>
+                    <button onClick={()=>{setCmpMode(!cmpMode);if(!cmpMode){setCmpMyComp(null);setCmpOppTeam(null);setCmpOppComp(null);}}}
+                      style={{...B_STYLE(cmpMode?curTeam.color:T2,cmpMode?`${curTeam.color}15`:S,cmpMode?`${curTeam.color}44`:B)}}>
+                      {cmpMode?'⚔️ 비교 중':'⚔️ 비교'}
+                    </button>
+                    <button onClick={()=>addComp(curTeam.id)} style={{...B_STYLE('#fff',curTeam.color,'transparent')}}>+ 새 조합</button>
+                  </div>
                 </div>
 
                 {getComps(curTeam.id).length===0 ? (
