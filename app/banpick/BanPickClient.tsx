@@ -60,6 +60,8 @@ export default function BanPickClient() {
   const [editTeam, setEditTeam]   = useState<string|null>(null);
   const [editPlayer, setEditPlayer] = useState<string|null>(null);
   const [noteKey, setNoteKey]     = useState<string|null>(null);
+  const [champPicker, setChampPicker] = useState<{tid:string;pid:string}|null>(null); // 모달 대상
+  const [modalSearch, setModalSearch] = useState('');
 
   /* 저장 */
   const save = async (key:string, val:unknown) => {
@@ -202,7 +204,64 @@ export default function BanPickClient() {
 
   return (
     <div style={{background:BG,minHeight:'100vh',color:'#fff',fontFamily:'system-ui,sans-serif',paddingBottom:'60px'}}>
-      <style>{`
+      {/* ══ 챔피언 선택 모달 ══ */}
+      {champPicker && (() => {
+        const t = teams.find(x=>x.id===champPicker.tid);
+        const p = t?.players.find(x=>x.id===champPicker.pid);
+        if (!t||!p) return null;
+        const modalFiltered = champs.filter(c => (c.name.includes(modalSearch)||c.id.toLowerCase().includes(modalSearch.toLowerCase())) && !p.champs.find(x=>x.champ.id===c.id));
+        return (
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}
+            onClick={e=>{ if(e.target===e.currentTarget) setChampPicker(null); }}>
+            <div style={{background:'#12121E',border:`1.5px solid ${t.color}44`,borderRadius:'18px',width:'100%',maxWidth:'600px',overflow:'hidden',boxShadow:`0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px ${t.color}22`}}>
+              {/* 모달 헤더 */}
+              <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',gap:'10px',background:`${t.color}0A`}}>
+                <div style={{width:'10px',height:'10px',borderRadius:'50%',background:t.color,boxShadow:`0 0 8px ${t.color}`}} />
+                <span style={{fontWeight:900,fontSize:'0.95rem',color:t.color}}>{t.name}</span>
+                <span style={{fontWeight:700,fontSize:'0.88rem',color:'rgba(255,255,255,0.5)'}}>· {p.name} 챔피언 추가</span>
+                <button onClick={()=>setChampPicker(null)}
+                  style={{marginLeft:'auto',background:'rgba(255,255,255,0.08)',border:'none',borderRadius:'8px',color:'rgba(255,255,255,0.6)',cursor:'pointer',padding:'5px 12px',fontSize:'0.8rem',fontWeight:700}}>
+                  닫기 ✕
+                </button>
+              </div>
+
+              {/* 검색 */}
+              <div style={{padding:'14px 16px 10px'}}>
+                <input
+                  autoFocus
+                  value={modalSearch}
+                  onChange={e=>setModalSearch(e.target.value)}
+                  placeholder="챔피언 이름 검색..."
+                  style={{width:'100%',background:'rgba(255,255,255,0.07)',border:`1px solid ${t.color}44`,borderRadius:'10px',padding:'10px 14px',color:'#fff',fontSize:'0.92rem',boxSizing:'border-box' as const}} />
+                <div style={{marginTop:'8px',fontSize:'0.68rem',color:'rgba(255,255,255,0.3)'}}>
+                  {modalFiltered.length}개 · 클릭해서 추가 · 이미 추가된 챔피언은 표시 안 됨
+                </div>
+              </div>
+
+              {/* 챔피언 그리드 */}
+              <div style={{padding:'0 16px 16px',maxHeight:'380px',overflowY:'auto'}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(58px,1fr))',gap:'6px'}}>
+                  {modalFiltered.map(c=>(
+                    <div key={c.id}
+                      onClick={()=>{ addPC(champPicker.tid,champPicker.pid,c); }}
+                      title={c.name}
+                      style={{borderRadius:'9px',overflow:'hidden',cursor:'pointer',border:`1.5px solid transparent`,transition:'all 0.12s',position:'relative'}}
+                      onMouseEnter={e=>{ (e.currentTarget as HTMLElement).style.border=`1.5px solid ${t.color}`; (e.currentTarget as HTMLElement).style.transform='scale(1.06)'; }}
+                      onMouseLeave={e=>{ (e.currentTarget as HTMLElement).style.border='1.5px solid transparent'; (e.currentTarget as HTMLElement).style.transform='scale(1)'; }}>
+                      <img src={imgUrl(c)} alt={c.name} style={{width:'100%',aspectRatio:'1',display:'block',objectFit:'cover'}} />
+                      <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.85))',padding:'3px 3px 4px',fontSize:'0.5rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                        {c.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+            <style>{`
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         .ci:hover{transform:scale(1.08);z-index:2}.ci{transition:transform 0.1s}
         input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.2)}
@@ -331,19 +390,13 @@ export default function BanPickClient() {
                         </div>
                       )}
 
-                      {/* 챔피언 추가 (편집 모드) */}
+                      {/* 챔피언 추가 버튼 (모달로 열림) */}
                       {editPlayer===p.id&&(
                         <div style={{padding:'0 10px 8px'}}>
-                          <input placeholder="챔피언 검색 후 클릭으로 추가" onChange={e=>setChampSearch(e.target.value)}
-                            style={{width:'100%',background:'rgba(255,255,255,0.05)',border:`1px solid ${BORDER}`,borderRadius:'7px',padding:'6px 9px',color:'#fff',fontSize:'0.75rem',marginBottom:'6px',boxSizing:'border-box' as const}} />
-                          <div style={{display:'flex',gap:'4px',flexWrap:'wrap',maxHeight:'100px',overflowY:'auto'}}>
-                            {champs.filter(c=>c.name.includes(champSearch)&&!p.champs.find(x=>x.champ.id===c.id)).slice(0,24).map(c=>(
-                              <div key={c.id} onClick={()=>addPC(team.id,p.id,c)} title={c.name}
-                                style={{cursor:'pointer',borderRadius:'5px',overflow:'hidden',width:'36px',height:'36px',flexShrink:0}}>
-                                <img src={imgUrl(c)} alt={c.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                              </div>
-                            ))}
-                          </div>
+                          <button onClick={()=>{ setChampPicker({tid:team.id,pid:p.id}); setModalSearch(''); }}
+                            style={{width:'100%',padding:'7px',borderRadius:'7px',border:`1.5px dashed ${team.color}55`,background:`${team.color}08`,color:`${team.color}cc`,fontSize:'0.78rem',fontWeight:700,cursor:'pointer'}}>
+                            🔍 챔피언 추가
+                          </button>
                         </div>
                       )}
                     </div>
