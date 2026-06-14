@@ -41,8 +41,10 @@ export default function BanPickClient() {
   const [ms, setMs]         = useState('');
 
   useEffect(() => {
+    // localStorage 동기 로드
+    try { const s = localStorage.getItem('bp-teams'); if(s) setTeams(JSON.parse(s)); } catch {}
+    // DDragon 비동기 로드
     (async () => {
-      try { const s = await (window as any).storage?.get('bp-teams'); if(s?.value) setTeams(JSON.parse(s.value)); } catch {}
       try {
         const v = (await (await fetch('https://ddragon.leagueoflegends.com/api/versions.json')).json())[0]; setVer(v);
         const d = await (await fetch(`https://ddragon.leagueoflegends.com/cdn/${v}/data/ko_KR/champion.json`)).json();
@@ -52,7 +54,12 @@ export default function BanPickClient() {
   }, []);
 
   const img  = (c:Champ) => `https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${c.img}`;
-  const save = async (t:Team[]) => { setTeams(t); try{await (window as any).storage?.set('bp-teams',JSON.stringify(t));}catch{} };
+  const [saved, setSaved] = useState(false);
+
+  const save = (t:Team[]) => {
+    setTeams(t);
+    try { localStorage.setItem('bp-teams', JSON.stringify(t)); setSaved(true); setTimeout(()=>setSaved(false), 1400); } catch {}
+  };
   const get  = (id:string) => teams.find(t=>t.id===id);
 
   const addTeam  = () => { const t:Team={id:Date.now()+'',name:`팀 ${teams.length+1}`,color:COLORS[teams.length%COLORS.length],players:[]}; save([...teams,t]); setSel(t.id); setEditT(t.id); };
@@ -110,7 +117,10 @@ export default function BanPickClient() {
             <span style={{fontWeight:800,fontSize:'0.88rem'}}>🏆 팀 관리</span>
           )}
         </div>
-        {ver && <span style={{display:'flex',alignItems:'center',fontSize:'0.62rem',color:T3}}>v{ver.slice(0,5)}</span>}
+        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+          {saved && <span style={{fontSize:'0.68rem',color:'#33CC77',fontWeight:700,animation:'fi 0.2s both'}}>✓ 저장됨</span>}
+          {ver && <span style={{fontSize:'0.62rem',color:T3}}>v{ver.slice(0,5)}</span>}
+        </div>
       </div>
 
       {/* ── 팀 목록 ── */}
