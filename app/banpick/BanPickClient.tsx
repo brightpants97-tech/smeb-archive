@@ -21,7 +21,9 @@ const TAGS = {
 interface Champ  { id:string; name:string; img:string; }
 interface PChamp { champ:Champ; tag:keyof typeof TAGS; note:string; }
 interface Player { id:string; name:string; role:string; champs:PChamp[]; }
-interface Team   { id:string; name:string; color:string; players:Player[]; }
+interface Team        { id:string; name:string; color:string; players:Player[]; }
+interface CompPick    { playerId:string; champId:string; }
+interface Composition { id:string; name:string; picks:CompPick[]; }
 
 const btn = (color:string, bg:string, bd:string) => ({
   padding:'5px 11px', borderRadius:'7px', border:`1px solid ${bd}`,
@@ -38,6 +40,9 @@ export default function BanPickClient() {
   const [editP, setEditP]   = useState<string|null>(null);
   const [noteK, setNoteK]   = useState<string|null>(null);
   const [picker, setPicker] = useState<{tid:string;pid:string}|null>(null);
+  const [teamTab, setTeamTab]   = useState<'players'|'comps'>('players');
+  const [comps, setComps]       = useState<Record<string, Composition[]>>({}); // teamId → comps
+  const [editComp, setEditComp] = useState<string|null>(null); // comp id being edited
   const [ms, setMs]         = useState('');
 
   useEffect(() => {
@@ -60,6 +65,32 @@ export default function BanPickClient() {
     setTeams(t);
     try { localStorage.setItem('bp-teams', JSON.stringify(t)); setSaved(true); setTimeout(()=>setSaved(false), 1400); } catch {}
   };
+  const saveComps = (c: Record<string, Composition[]>) => {
+    setComps(c);
+    try { localStorage.setItem('bp-comps', JSON.stringify(c)); setSaved(true); setTimeout(()=>setSaved(false),1400); } catch {}
+  };
+  const getComps  = (tid:string): Composition[] => comps[tid] || [];
+  const addComp   = (tid:string) => {
+    const team = teams.find(t=>t.id===tid); if(!team) return;
+    const sorted = [...team.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+    const newComp: Composition = { id:Date.now()+'', name:`조합 ${getComps(tid).length+1}`, picks: sorted.map(p=>({playerId:p.id, champId:p.champs[0]?.champ.id||''})) };
+    const updated = { ...comps, [tid]: [...getComps(tid), newComp] };
+    saveComps(updated); setEditComp(newComp.id);
+  };
+  const updComp   = (tid:string, cid:string, patch:Partial<Composition>) => {
+    const updated = { ...comps, [tid]: getComps(tid).map(c=>c.id===cid?{...c,...patch}:c) };
+    saveComps(updated);
+  };
+  const updPick   = (tid:string, cid:string, pid:string, champId:string) => {
+    const comp = getComps(tid).find(c=>c.id===cid); if(!comp) return;
+    const picks = comp.picks.map(p=>p.playerId===pid?{...p,champId}:p);
+    updComp(tid, cid, {picks});
+  };
+  const delComp   = (tid:string, cid:string) => {
+    const updated = { ...comps, [tid]: getComps(tid).filter(c=>c.id!==cid) };
+    saveComps(updated); if(editComp===cid) setEditComp(null);
+  };
+
   const get  = (id:string) => teams.find(t=>t.id===id);
 
   const addTeam  = () => { const t:Team={id:Date.now()+'',name:`팀 ${teams.length+1}`,color:COLORS[teams.length%COLORS.length],players:[]}; save([...teams,t]); setSel(t.id); setEditT(t.id); };
@@ -99,7 +130,7 @@ export default function BanPickClient() {
       {/* 헤더 */}
       <div style={{borderBottom:`1px solid ${B}`,padding:'0 clamp(1rem,4vw,2.5rem)',display:'flex',alignItems:'stretch',height:'56px',gap:'0'}}>
         {curTeam ? (
-          <button onClick={()=>{setSel(null);setEditT(null);setEditP(null);setNoteK(null);}}
+          <button onClick={()=>{setSel(null);setEditT(null);setEditP(null);setNoteK(null);setTeamTab('players');}}
             style={{background:'none',border:'none',color:T2,cursor:'pointer',fontSize:'0.9rem',fontWeight:700,paddingRight:'14px',borderRight:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'4px'}}>
             ← 전체
           </button>
@@ -146,7 +177,7 @@ export default function BanPickClient() {
                 const mustbans = t.players.flatMap(p=>p.champs.filter(pc=>pc.tag==='mustban'));
                 return (
                   <div key={t.id} className="tc"
-                    onClick={()=>setSel(t.id)}
+                    onClick={()=>{setSel(t.id);setTeamTab('players');setEditComp(null);}}
                     style={{background:S,border:`1px solid ${B}`,borderRadius:'12px',overflow:'hidden',cursor:'pointer',borderLeft:`3px solid ${t.color}`}}>
                     <div style={{padding:'16px 18px'}}>
                       <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'10px'}}>
@@ -215,7 +246,7 @@ export default function BanPickClient() {
           </div>
 
           {/* 선수 테이블 */}
-          {sorted.length===0 ? (
+          {teamTab==='players' && (sorted.length===0 ? (
             <div style={{textAlign:'center',padding:'60px 0',color:T3}}>
               <div style={{fontSize:'1.8rem',marginBottom:'8px'}}>👤</div>
               <div style={{fontSize:'0.94rem',fontWeight:600}}>선수를 추가해보세요</div>
@@ -313,6 +344,122 @@ export default function BanPickClient() {
             </div>
           )}
           </div>
+
+
+          {/* 조합 탭 */}
+          {teamTab==='comps' && (
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+                <div style={{fontSize:'0.88rem',color:T2}}>팀원별 챔피언 조합을 저장하고 비교하세요</div>
+                <button onClick={()=>addComp(curTeam.id)} style={{...btn('#fff',curTeam.color,'transparent')}}>+ 새 조합</button>
+              </div>
+
+              {getComps(curTeam.id).length===0 ? (
+                <div style={{textAlign:'center',padding:'60px 0',color:T3}}>
+                  <div style={{fontSize:'2rem',marginBottom:'8px'}}>⚔️</div>
+                  <div style={{fontWeight:700,fontSize:'0.96rem'}}>조합을 만들어보세요</div>
+                  <div style={{fontSize:'0.82rem',marginTop:'6px',color:T3}}>각 선수의 챔피언 풀에서 하나씩 선택해 조합을 구성해요</div>
+                </div>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+                  {getComps(curTeam.id).map(comp=>{
+                    const isE = editComp===comp.id;
+                    const sortedPl = [...curTeam.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+                    return (
+                      <div key={comp.id} style={{background:S,border:`1.5px solid ${isE?curTeam.color+'55':B}`,borderRadius:'14px',overflow:'hidden',transition:'border-color 0.15s'}}>
+                        {/* 조합 헤더 */}
+                        <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'10px',borderBottom:`1px solid ${B}`,background:isE?`${curTeam.color}08`:'transparent'}}>
+                          {isE ? (
+                            <input value={comp.name} onChange={e=>updComp(curTeam.id,comp.id,{name:e.target.value})}
+                              style={{flex:1,background:'#fff',border:`1px solid ${curTeam.color}66`,borderRadius:'7px',padding:'5px 10px',color:T,fontSize:'0.94rem',fontWeight:800}} />
+                          ) : (
+                            <span style={{flex:1,fontWeight:900,fontSize:'0.96rem'}}>{comp.name}</span>
+                          )}
+                          {/* 조합 픽 미리보기 (접혔을 때) */}
+                          {!isE && (
+                            <div style={{display:'flex',gap:'4px'}}>
+                              {sortedPl.map(p=>{
+                                const pick = comp.picks.find(x=>x.playerId===p.id);
+                                const pc   = p.champs.find(x=>x.champ.id===pick?.champId);
+                                return pc ? (
+                                  <div key={p.id} title={`${p.name}: ${pc.champ.name}`} style={{position:'relative'}}>
+                                    <img src={img(pc.champ)} alt={pc.champ.name}
+                                      style={{width:'34px',height:'34px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${curTeam.color}55`,display:'block'}} />
+                                    <div style={{position:'absolute',bottom:'-1px',left:'-1px',fontSize:'0.55rem',background:curTeam.color,color:'#fff',borderRadius:'3px',padding:'0 3px',fontWeight:800,lineHeight:'14px'}}>{RI[p.role]}</div>
+                                  </div>
+                                ) : (
+                                  <div key={p.id} style={{width:'34px',height:'34px',borderRadius:'7px',background:'rgba(0,0,0,0.06)',border:`1.5px dashed ${B}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.9rem'}}>{RI[p.role]||'?'}</div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <div style={{display:'flex',gap:'5px',flexShrink:0}}>
+                            <button onClick={()=>setEditComp(isE?null:comp.id)} style={{...btn(isE?curTeam.color:T2,isE?`${curTeam.color}15`:S,isE?`${curTeam.color}44`:B)}}>{isE?'완료':'편집'}</button>
+                            <button onClick={()=>{if(confirm(`${comp.name} 삭제?`))delComp(curTeam.id,comp.id);}} style={{...btn('rgba(255,100,100,0.8)','rgba(255,80,80,0.07)','rgba(255,80,80,0.2)')}}>삭제</button>
+                          </div>
+                        </div>
+
+                        {/* 조합 편집 */}
+                        {isE && (
+                          <div style={{padding:'14px 16px',display:'flex',flexDirection:'column',gap:'10px'}}>
+                            {sortedPl.map(p=>{
+                              const pick    = comp.picks.find(x=>x.playerId===p.id);
+                              const selChamp = p.champs.find(x=>x.champ.id===pick?.champId);
+                              return (
+                                <div key={p.id} style={{display:'flex',alignItems:'center',gap:'12px'}}>
+                                  {/* 선수 정보 */}
+                                  <div style={{display:'flex',alignItems:'center',gap:'6px',width:'90px',flexShrink:0}}>
+                                    <span style={{fontSize:'1.1rem'}}>{RI[p.role]||'👤'}</span>
+                                    <span style={{fontWeight:800,fontSize:'0.86rem',color:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.name}</span>
+                                  </div>
+                                  {/* 현재 선택 */}
+                                  {selChamp ? (
+                                    <div style={{display:'flex',alignItems:'center',gap:'6px',padding:'5px 10px',background:`${curTeam.color}12`,border:`1.5px solid ${curTeam.color}44`,borderRadius:'9px'}}>
+                                      <img src={img(selChamp.champ)} alt={selChamp.champ.name}
+                                        style={{width:'32px',height:'32px',borderRadius:'6px',objectFit:'cover'}} />
+                                      <span style={{fontWeight:800,fontSize:'0.86rem',color:curTeam.color}}>{selChamp.champ.name}</span>
+                                      <span style={{fontSize:'0.72rem',color:TAGS[selChamp.tag].color}}>{TAGS[selChamp.tag].short}</span>
+                                    </div>
+                                  ) : (
+                                    <div style={{padding:'5px 10px',background:'rgba(0,0,0,0.04)',border:`1.5px dashed ${B}`,borderRadius:'9px',fontSize:'0.82rem',color:T3}}>미선택</div>
+                                  )}
+                                  {/* 챔피언 선택 */}
+                                  <div style={{display:'flex',gap:'5px',flex:1,overflowX:'auto'}}>
+                                    {p.champs.map(pc=>{
+                                      const isSelected = pick?.champId===pc.champ.id;
+                                      const tg = TAGS[pc.tag];
+                                      return (
+                                        <div key={pc.champ.id}
+                                          onClick={()=>updPick(curTeam.id,comp.id,p.id,isSelected?'':pc.champ.id)}
+                                          title={`${pc.champ.name} (${tg.label})`}
+                                          style={{position:'relative',cursor:'pointer',flexShrink:0,borderRadius:'8px',overflow:'hidden',
+                                            border: isSelected?`2.5px solid ${curTeam.color}`:`2px solid ${tg.bd}`,
+                                            boxShadow: isSelected?`0 0 0 2px ${curTeam.color}44`:'none',
+                                            transition:'all 0.12s',
+                                          }}>
+                                          <img src={img(pc.champ)} alt={pc.champ.name}
+                                            style={{width:'40px',height:'40px',objectFit:'cover',display:'block',opacity:isSelected?1:0.75}} />
+                                          <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.75))',padding:'1px 2px 3px',fontSize:'0.48rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                                            {pc.champ.name}
+                                          </div>
+                                          <div style={{position:'absolute',top:'1px',right:'1px',fontSize:'0.5rem',lineHeight:1}}>{tg.short}</div>
+                                        </div>
+                                      );
+                                    })}
+                                    {p.champs.length===0&&<span style={{fontSize:'0.8rem',color:T3,alignSelf:'center'}}>챔피언 없음</span>}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
