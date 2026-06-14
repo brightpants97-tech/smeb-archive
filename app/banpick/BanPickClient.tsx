@@ -69,7 +69,14 @@ export default function BanPickClient() {
   const getComps = (tid:string) => comps[tid]||[];
 
   /* 팀 */
-  const addTeam = () => { const t:Team={id:Date.now()+'',name:`팀 ${teams.length+1}`,color:COLORS[teams.length%COLORS.length],players:[]}; saveTeams([...teams,t]); setSel(t.id); setEditT(t.id); setTab('players'); };
+  const addTeam = () => {
+    const tid = Date.now()+'';
+    const players: Player[] = ROLES.map((role, i) => ({
+      id: tid + '_' + i, name: role + ' 선수', role, champs: []
+    }));
+    const t: Team = { id:tid, name:`팀 ${teams.length+1}`, color:COLORS[teams.length%COLORS.length], players };
+    saveTeams([...teams, t]); setSel(t.id); setEditT(t.id); setTab('players');
+  };
   const updTeam = (id:string,p:Partial<Team>) => saveTeams(teams.map(t=>t.id===id?{...t,...p}:t));
   const delTeam = (id:string) => { saveTeams(teams.filter(t=>t.id!==id)); setSel(null); };
 
@@ -128,7 +135,7 @@ export default function BanPickClient() {
             <>
               <div style={{width:'9px',height:'9px',borderRadius:'50%',background:curTeam.color,boxShadow:`0 0 6px ${curTeam.color}`}} />
               <span style={{fontWeight:900,fontSize:'1rem',color:curTeam.color}}>{curTeam.name}</span>
-              <span style={{color:T3,fontSize:'0.82rem'}}>· {curTeam.players.length}명</span>
+              <span style={{color:T3,fontSize:'0.82rem'}}>· 5명</span>
             </>
           ) : <span style={{fontWeight:900,fontSize:'1rem'}}>🏆 팀 관리</span>}
         </div>
@@ -168,7 +175,7 @@ export default function BanPickClient() {
                           <div style={{width:'9px',height:'9px',borderRadius:'50%',background:t.color,flexShrink:0,boxShadow:`0 0 5px ${t.color}`}} />
                           <span style={{fontWeight:900,fontSize:'1rem'}}>{t.name}</span>
                           <div style={{marginLeft:'auto',display:'flex',gap:'5px'}}>
-                            <span style={{fontSize:'0.72rem',color:T3,background:'rgba(0,0,0,0.06)',padding:'2px 8px',borderRadius:'100px'}}>{t.players.length}명</span>
+                            <span style={{fontSize:'0.72rem',color:T3,background:'rgba(0,0,0,0.06)',padding:'2px 8px',borderRadius:'100px'}}>5명</span>
                             {compCount>0&&<span style={{fontSize:'0.72rem',color:t.color,background:`${t.color}18`,padding:'2px 8px',borderRadius:'100px',fontWeight:700}}>조합 {compCount}</span>}
                           </div>
                         </div>
@@ -225,7 +232,7 @@ export default function BanPickClient() {
               )}
               <div style={{display:'flex',gap:'6px',flexShrink:0}}>
                 {editT!==curTeam.id&&<button onClick={()=>setEditT(curTeam.id)} style={{...B_STYLE(T2,S,B)}}>편집</button>}
-                <button onClick={()=>addP(curTeam.id)} style={{...B_STYLE('#fff',curTeam.color,'transparent')}}>+ 선수</button>
+                
                 <button onClick={()=>{if(confirm(`${curTeam.name} 삭제?`))delTeam(curTeam.id);}} style={{...B_STYLE('rgba(255,80,80,0.9)','rgba(255,80,80,0.07)','rgba(255,80,80,0.25)')}}>팀 삭제</button>
               </div>
             </div>
@@ -298,7 +305,6 @@ export default function BanPickClient() {
                           <div style={{display:'flex',gap:'5px',flexShrink:0}}>
                             <button onClick={()=>setEditP(isE?null:p.id)} style={{...B_STYLE(isE?curTeam.color:T2,isE?`${curTeam.color}15`:S,isE?`${curTeam.color}44`:B)}}>{isE?'완료':'편집'}</button>
                             {isE&&<button onClick={()=>{setPicker({tid:curTeam.id,pid:p.id});setMs('');}} style={{...B_STYLE('#fff',curTeam.color,'transparent')}}>+ 챔피언</button>}
-                            <button onClick={()=>{if(confirm(`${p.name} 삭제?`))delP(curTeam.id,p.id);}} style={{...B_STYLE('rgba(255,80,80,0.8)','rgba(255,80,80,0.07)','rgba(255,80,80,0.2)')}}>삭제</button>
                           </div>
                         </div>
 
