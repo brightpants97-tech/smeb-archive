@@ -126,6 +126,7 @@ export default function BanPickClient() {
       {/* ── 팀 목록 ── */}
       {!curTeam && (
         <div style={{padding:'20px clamp(1rem,4vw,2.5rem)',animation:'fi 0.18s both'}}>
+          <div style={{maxWidth:'860px',margin:'0 auto'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
             <div>
               <div style={{fontWeight:900,fontSize:'1.1rem',letterSpacing:'-0.03em'}}>팀 목록</div>
@@ -183,12 +184,14 @@ export default function BanPickClient() {
               })}
             </div>
           )}
+          </div>
         </div>
       )}
 
       {/* ── 팀 상세 ── */}
       {curTeam && (
         <div style={{padding:'16px clamp(1rem,4vw,2.5rem)',animation:'si 0.18s both'}}>
+          <div style={{maxWidth:'860px',margin:'0 auto'}}>
 
           {/* 팀 헤더 */}
           <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'16px',paddingBottom:'14px',borderBottom:`1px solid ${B}`}}>
@@ -309,6 +312,7 @@ export default function BanPickClient() {
               })}
             </div>
           )}
+          </div>
         </div>
       )}
 
