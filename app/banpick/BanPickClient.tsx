@@ -2,12 +2,12 @@
 import { useState, useEffect, useMemo } from 'react';
 
 const A = '#EB701A';
-const BG = '#07070F';
-const S  = 'rgba(255,255,255,0.04)';
-const B  = 'rgba(255,255,255,0.08)';
-const T  = '#fff';
-const T2 = 'rgba(255,255,255,0.45)';
-const T3 = 'rgba(255,255,255,0.2)';
+const BG = '#F4F5F8';
+const S  = '#ffffff';
+const B  = 'rgba(0,0,0,0.09)';
+const T  = '#111';
+const T2 = '#555';
+const T3 = '#AAA';
 
 const COLORS = ['#FF6B35','#4A8FFF','#A855F7','#10B981','#F59E0B','#EC4899','#06B6D4','#84CC16'];
 const ROLES  = ['탑','정글','미드','원딜','서포터'];
@@ -88,12 +88,12 @@ export default function BanPickClient() {
         input,textarea,select{font-family:inherit}
         input::placeholder,textarea::placeholder{color:${T3}}
         input:focus,textarea:focus,select:focus{outline:none}
-        .tc:hover{border-color:rgba(255,255,255,0.18)!important;background:rgba(255,255,255,0.06)!important}
+        .tc:hover{border-color:rgba(0,0,0,0.18)!important;background:#ECEDF1!important}
         .tc{transition:all 0.12s!important}
         .ci{transition:transform 0.08s}
         .ci:hover{transform:scale(1.07)}
         ::-webkit-scrollbar{width:4px;height:4px}
-        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px}
+        ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);border-radius:4px}
       `}</style>
 
       {/* 헤더 */}
@@ -280,7 +280,7 @@ export default function BanPickClient() {
                           const tg=TAGS[pc.tag]; const nk=`${p.id}-${pc.champ.id}`;
                           return (
                             <div key={pc.champ.id} style={{display:'flex',flexDirection:'column',gap:'0'}}>
-                              <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 10px',background:'rgba(255,255,255,0.025)',borderRadius:`8px ${nk===noteK?'8px 0 0':'8px 8px 8px'}`,border:`1px solid ${tg.bd}`}}>
+                              <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 10px',background:'rgba(0,0,0,0.02)',borderRadius:`8px ${nk===noteK?'8px 0 0':'8px 8px 8px'}`,border:`1px solid ${tg.bd}`}}>
                                 <img src={img(pc.champ)} alt={pc.champ.name}
                                   style={{width:'32px',height:'32px',borderRadius:'6px',objectFit:'cover',border:`1.5px solid ${tg.color}`,flexShrink:0}} />
                                 <span style={{fontWeight:700,fontSize:'0.82rem',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{pc.champ.name}</span>
@@ -297,7 +297,7 @@ export default function BanPickClient() {
                               {noteK===nk&&(
                                 <textarea value={pc.note} onChange={e=>updPC(curTeam.id,p.id,pc.champ.id,{note:e.target.value})}
                                   placeholder="메모 (예: 레넥 잡으면 다이브 위주, 갱 조심)"
-                                  style={{width:'100%',background:'rgba(255,255,255,0.03)',border:`1px solid ${tg.bd}`,borderTop:'none',borderRadius:'0 0 8px 8px',padding:'7px 10px',color:'rgba(255,255,255,0.75)',fontSize:'0.75rem',lineHeight:1.6,resize:'vertical' as const,minHeight:'48px',boxSizing:'border-box' as const}} />
+                                  style={{width:'100%',background:'rgba(0,0,0,0.025)',border:`1px solid ${tg.bd}`,borderTop:'none',borderRadius:'0 0 8px 8px',padding:'7px 10px',color:'#333',fontSize:'0.75rem',lineHeight:1.6,resize:'vertical' as const,minHeight:'48px',boxSizing:'border-box' as const}} />
                               )}
                             </div>
                           );
@@ -316,9 +316,9 @@ export default function BanPickClient() {
       {picker&&(()=>{
         const t=teams.find(x=>x.id===picker.tid); const p=t?.players.find(x=>x.id===picker.pid); if(!t||!p) return null;
         return (
-          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.82)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}}
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}}
             onClick={e=>{if(e.target===e.currentTarget)setPicker(null);}}>
-            <div style={{background:'#0F0F1A',border:`1px solid ${t.color}33`,borderRadius:'16px',width:'100%',maxWidth:'580px',overflow:'hidden',boxShadow:`0 24px 64px rgba(0,0,0,0.8)`}}>
+            <div style={{background:'#fff',border:`1px solid ${t.color}33`,borderRadius:'16px',width:'100%',maxWidth:'580px',overflow:'hidden',boxShadow:`0 24px 64px rgba(0,0,0,0.8)`}}>
               {/* 모달 헤더 */}
               <div style={{padding:'12px 16px',borderBottom:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'8px'}}>
                 <div style={{width:'7px',height:'7px',borderRadius:'50%',background:t.color,boxShadow:`0 0 5px ${t.color}`}} />
@@ -343,7 +343,7 @@ export default function BanPickClient() {
                       onMouseEnter={e=>(e.currentTarget as HTMLElement).style.borderColor=t.color}
                       onMouseLeave={e=>(e.currentTarget as HTMLElement).style.borderColor='transparent'}>
                       <img src={img(c)} alt={c.name} style={{width:'100%',aspectRatio:'1',display:'block',objectFit:'cover'}} />
-                      <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.88))',padding:'2px 2px 3px',fontSize:'0.46rem',fontWeight:700,color:T,textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                      <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.46rem',fontWeight:700,color:T,textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                         {c.name}
                       </div>
                     </div>
