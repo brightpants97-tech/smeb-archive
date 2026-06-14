@@ -396,28 +396,42 @@ export default function BanPickClient() {
                 </div>
 
                 {/* 조합 저장/불러오기 바 */}
-                <div style={{padding:'10px 16px',borderBottom:`1px solid ${B}`,display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap',background:'rgba(0,0,0,0.015)'}}>
-                  <span style={{fontSize:'0.78rem',fontWeight:700,color:T2,flexShrink:0}}>⚔️ 조합</span>
-                  <input value={manCompName} onChange={e=>setManCompName(e.target.value)} placeholder="조합 이름"
-                    style={{background:'#fff',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 9px',color:T,fontSize:'0.82rem',width:'110px'}} />
-                  <button onClick={()=>{
-                    if(!manageTeamId) return;
-                    const name=manCompName.trim()||`조합 ${getC(manageTeamId).length+1}`;
-                    const nc:Composition={id:Date.now()+'',name,picks:{...managePicks}};
-                    saveC({...comps,[manageTeamId]:[...getC(manageTeamId),nc]});
-                    setManCompName('');
-                  }} style={{...Btn('#fff',manTeam.color,'transparent',{flexShrink:0})}}>💾 저장</button>
-                  {getC(manageTeamId||'').map(c=>(
-                    <div key={c.id} style={{display:'flex'}}>
-                      <button onClick={()=>setManagePicks({...c.picks})}
-                        style={{padding:'4px 9px',borderRadius:'6px 0 0 6px',border:`1px solid ${manTeam.color}44`,borderRight:'none',background:`${manTeam.color}10`,color:manTeam.color,fontSize:'0.76rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
-                        {c.name}
-                      </button>
-                      <button onClick={()=>manageTeamId&&saveC({...comps,[manageTeamId]:getC(manageTeamId).filter(x=>x.id!==c.id)})}
-                        style={{padding:'4px 7px',borderRadius:'0 6px 6px 0',border:`1px solid ${manTeam.color}44`,background:`${manTeam.color}08`,color:'rgba(200,50,50,0.8)',fontSize:'0.76rem',cursor:'pointer',fontFamily:'inherit'}}>✕</button>
-                    </div>
-                  ))}
-                  <button onClick={()=>setManagePicks({})} style={{...Btn(T3,S,B,{marginLeft:'auto',padding:'4px 9px',fontSize:'0.76rem'})}}>초기화</button>
+                <div style={{padding:'9px 16px',borderBottom:`1px solid ${B}`,display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap',background:'rgba(0,0,0,0.015)'}}>
+                  {/* 저장 영역 */}
+                  <div style={{display:'flex',gap:'6px',alignItems:'center',flexShrink:0}}>
+                    <input value={manCompName} onChange={e=>setManCompName(e.target.value)}
+                      onKeyDown={e=>{
+                        if(e.key==='Enter'&&manageTeamId){
+                          const name=manCompName.trim()||`조합 ${getC(manageTeamId).length+1}`;
+                          saveC({...comps,[manageTeamId]:[...getC(manageTeamId),{id:Date.now()+'',name,picks:{...managePicks}}]});
+                          setManCompName('');
+                        }
+                      }}
+                      placeholder="조합 이름 입력 후 저장"
+                      style={{background:'#fff',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 9px',color:T,fontSize:'0.8rem',width:'140px'}} />
+                    <button onClick={()=>{
+                      if(!manageTeamId) return;
+                      const name=manCompName.trim()||`조합 ${getC(manageTeamId).length+1}`;
+                      saveC({...comps,[manageTeamId]:[...getC(manageTeamId),{id:Date.now()+'',name,picks:{...managePicks}}]});
+                      setManCompName('');
+                    }} style={{...Btn('#fff',manTeam.color,'transparent',{flexShrink:0,padding:'5px 12px'})}}>저장</button>
+                  </div>
+
+                  {/* 저장된 조합 미니 칩 */}
+                  <div style={{display:'flex',gap:'5px',flexWrap:'wrap',flex:1,alignItems:'center'}}>
+                    {getC(manageTeamId||'').map(c=>(
+                      <div key={c.id} style={{display:'flex',alignItems:'center',borderRadius:'100px',overflow:'hidden',border:`1.5px solid ${manTeam.color}33`,background:`${manTeam.color}0D`}}>
+                        <button onClick={()=>setManagePicks({...c.picks})}
+                          style={{padding:'3px 10px 3px 10px',background:'transparent',border:'none',color:manTeam.color,fontSize:'0.76rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',lineHeight:'1.5'}}>
+                          {c.name}
+                        </button>
+                        <button onClick={()=>manageTeamId&&saveC({...comps,[manageTeamId]:getC(manageTeamId).filter(x=>x.id!==c.id)})}
+                          style={{padding:'3px 8px 3px 2px',background:'transparent',border:'none',borderLeft:`1px solid ${manTeam.color}22`,color:'rgba(180,50,50,0.6)',fontSize:'0.72rem',cursor:'pointer',fontFamily:'inherit',lineHeight:'1.5'}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={()=>setManagePicks({})} style={{...Btn(T3,S,B,{padding:'4px 9px',fontSize:'0.74rem',flexShrink:0})}}>초기화</button>
                 </div>
 
                 {/* 선수별 */}
