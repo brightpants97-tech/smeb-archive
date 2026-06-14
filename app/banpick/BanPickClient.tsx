@@ -56,6 +56,8 @@ export default function BanPickClient() {
   const [picker,       setPicker]       = useState<string|null>(null); // player id
   const [ms,           setMs]           = useState('');
   const [noteKey,      setNoteKey]      = useState<string|null>(null);
+  const [managePicks, setManagePicks]   = useState<Record<string,string>>({});  // 팀 관리 화면에서 바로 조합
+  const [manCompName, setManCompName]   = useState('');
 
   useEffect(() => {
     try { const t=localStorage.getItem('bp-teams'); if(t) setTeams(JSON.parse(t)); } catch {}
@@ -359,7 +361,7 @@ export default function BanPickClient() {
               <div style={{display:'flex',gap:'6px',marginBottom:'16px',flexWrap:'wrap'}}>
                 {teams.map(t=>(
                   <div key={t.id} style={{display:'flex',gap:'0'}}>
-                    <button onClick={()=>{setManageTeamId(t.id);setEditMode(false);}}
+                    <button onClick={()=>{setManageTeamId(t.id);setEditMode(false);setManagePicks({});}}
                       style={{padding:'6px 14px',borderRadius:'8px 0 0 8px',border:`1.5px solid ${manageTeamId===t.id?t.color+'66':B}`,borderRight:'none',background:manageTeamId===t.id?`${t.color}18`:S,color:manageTeamId===t.id?t.color:T2,fontSize:'0.86rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
                       {t.name}
                     </button>
@@ -393,6 +395,31 @@ export default function BanPickClient() {
                   </div>
                 </div>
 
+                {/* 조합 저장/불러오기 바 */}
+                <div style={{padding:'10px 16px',borderBottom:`1px solid ${B}`,display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap',background:'rgba(0,0,0,0.015)'}}>
+                  <span style={{fontSize:'0.78rem',fontWeight:700,color:T2,flexShrink:0}}>⚔️ 조합</span>
+                  <input value={manCompName} onChange={e=>setManCompName(e.target.value)} placeholder="조합 이름"
+                    style={{background:'#fff',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 9px',color:T,fontSize:'0.82rem',width:'110px'}} />
+                  <button onClick={()=>{
+                    if(!manageTeamId) return;
+                    const name=manCompName.trim()||`조합 ${getC(manageTeamId).length+1}`;
+                    const nc:Composition={id:Date.now()+'',name,picks:{...managePicks}};
+                    saveC({...comps,[manageTeamId]:[...getC(manageTeamId),nc]});
+                    setManCompName('');
+                  }} style={{...Btn('#fff',manTeam.color,'transparent',{flexShrink:0})}}>💾 저장</button>
+                  {getC(manageTeamId||'').map(c=>(
+                    <div key={c.id} style={{display:'flex'}}>
+                      <button onClick={()=>setManagePicks({...c.picks})}
+                        style={{padding:'4px 9px',borderRadius:'6px 0 0 6px',border:`1px solid ${manTeam.color}44`,borderRight:'none',background:`${manTeam.color}10`,color:manTeam.color,fontSize:'0.76rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                        {c.name}
+                      </button>
+                      <button onClick={()=>manageTeamId&&saveC({...comps,[manageTeamId]:getC(manageTeamId).filter(x=>x.id!==c.id)})}
+                        style={{padding:'4px 7px',borderRadius:'0 6px 6px 0',border:`1px solid ${manTeam.color}44`,background:`${manTeam.color}08`,color:'rgba(200,50,50,0.8)',fontSize:'0.76rem',cursor:'pointer',fontFamily:'inherit'}}>✕</button>
+                    </div>
+                  ))}
+                  <button onClick={()=>setManagePicks({})} style={{...Btn(T3,S,B,{marginLeft:'auto',padding:'4px 9px',fontSize:'0.76rem'})}}>초기화</button>
+                </div>
+
                 {/* 선수별 */}
                 <div style={{padding:'12px 16px',display:'flex',flexDirection:'column',gap:'10px'}}>
                   {manSorted.map(p=>(
@@ -411,11 +438,21 @@ export default function BanPickClient() {
                           const tg=TAGS[pc.tag]; const nk=`${p.id}-${pc.champ.id}`;
                           return (
                             <div key={pc.champ.id} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'3px'}}>
-                              <div style={{position:'relative',borderRadius:'8px',overflow:'hidden',border:`2px solid ${tg.bd}`,flexShrink:0}}>
-                                <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name}
-                                  style={{width:'44px',height:'44px',objectFit:'cover',display:'block'}} />
-                                <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
-                              </div>
+                              {(() => {
+                                const isSel = managePicks[p.id]===pc.champ.id;
+                                return (
+                                  <div onClick={()=>!editMode&&setManagePicks(prev=>prev[p.id]===pc.champ.id?{...prev,[p.id]:''}:{...prev,[p.id]:pc.champ.id})}
+                                    style={{position:'relative',borderRadius:'8px',overflow:'hidden',
+                                      border:isSel?`2.5px solid ${manTeam.color}`:`2px solid ${tg.bd}`,
+                                      boxShadow:isSel?`0 0 0 2px ${manTeam.color}44`:'none',
+                                      cursor:editMode?'default':'pointer',flexShrink:0,transition:'all 0.1s'}}>
+                                    <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name}
+                                      style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.75}} />
+                                    <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
+                                    {isSel&&<div style={{position:'absolute',bottom:'2px',left:'50%',transform:'translateX(-50%)',width:'6px',height:'6px',borderRadius:'50%',background:manTeam.color}} />}
+                                  </div>
+                                );
+                              })()}
                               {editMode&&(
                                 <div style={{display:'flex',gap:'3px'}}>
                                   <select value={pc.tag} onChange={e=>updPC(p.id,pc.champ.id,{tag:e.target.value as any})}
