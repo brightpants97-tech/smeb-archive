@@ -222,6 +222,10 @@ export default function BanPickClient() {
 
             {/* 팀 헤더 */}
             <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'20px',paddingBottom:'18px',borderBottom:`1px solid ${B}`,flexWrap:'wrap'}}>
+              <button onClick={()=>{setSel(null);setEditT(null);setEditP(null);setNoteK(null);setEditC(null);}}
+                style={{display:'flex',alignItems:'center',gap:'5px',padding:'7px 14px',borderRadius:'8px',border:`1px solid ${B}`,background:S,color:T2,cursor:'pointer',fontSize:'0.88rem',fontWeight:700,fontFamily:'inherit',flexShrink:0}}>
+                ← 팀 목록
+              </button>
               {editT===curTeam.id ? (
                 <>
                   <input value={curTeam.name} onChange={e=>updTeam(curTeam.id,{name:e.target.value})}
