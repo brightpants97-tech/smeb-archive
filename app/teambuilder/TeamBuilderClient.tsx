@@ -101,7 +101,9 @@ export default function TeamBuilderClient() {
         </div>
       </header>
 
-      <main style={{maxWidth:'720px',margin:'0 auto',padding:'32px clamp(1rem,4vw,2rem) 80px'}}>
+      <main style={{maxWidth:'1100px',margin:'0 auto',padding:'32px clamp(1rem,4vw,2rem) 80px'}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'32px',alignItems:'start'}}>
+        <div>{/* 왼쪽: 입력 */}
         <p style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.3)',marginBottom:'20px',textAlign:'center'}}>
           {lockMode ? '🔒 라인을 고정한 채로 나머지만 다시 굴릴 수 있어요' : '🎲 매번 전체 라인을 새로 랜덤 배정해요'}
         </p>
@@ -161,7 +163,9 @@ export default function TeamBuilderClient() {
           <button onClick={reset} style={{padding:'16px',borderRadius:'14px',border:`1px solid ${BORDER}`,background:'none',color:'rgba(255,255,255,0.25)',fontSize:'0.82rem',fontWeight:700,cursor:'pointer'}}>초기화</button>
         </div>
 
-        {/* 결과 */}
+        </div>{/* 왼쪽 끝 */}
+
+        <div style={{position:'sticky',top:'24px'}}>{/* 오른쪽: 결과 */}
         {result&&(
           <div style={{display:'flex',flexDirection:'column',gap:'10px',animation:'popIn 0.3s both'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
@@ -203,6 +207,8 @@ export default function TeamBuilderClient() {
             )}
           </div>
         )}
+        </div>{/* 오른쪽 끝 */}
+        </div>{/* 그리드 끝 */}
       </main>
     </div>
   );
