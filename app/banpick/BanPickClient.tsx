@@ -539,6 +539,7 @@ export default function BanPickClient() {
                       <option value="__new__">＋ 새 팀 추가</option>
                     </select>
                     {blueTeam&&<button onClick={()=>setEditSide(isEditBlue?null:'blue')} style={{...Btn(isEditBlue?blueTeam.color:T2,isEditBlue?`${blueTeam.color}15`:S,isEditBlue?`${blueTeam.color}44`:B,{flexShrink:0})}}>{isEditBlue?'완료':'편집'}</button>}
+                    {blueTeam&&!isEditBlue&&<button onClick={()=>{if(confirm(`${blueTeam.name} 팀을 삭제할까요?`))delTeam(blueTeam.id);}} style={{...Btn('rgba(220,50,50,0.8)','rgba(220,50,50,0.07)','rgba(220,50,50,0.2)',{flexShrink:0,padding:'6px 10px'})}}>삭제</button>}
                   </div>
                   {ROLES.map((role,ri)=>{
                     const p=bSorted.find(x=>x.role===role)||null;
@@ -566,6 +567,7 @@ export default function BanPickClient() {
                 {/* ── 레드팀 ── */}
                 <div style={{background:'#ffffff',border:`1.5px solid ${redTeam?redTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
                   <div style={{padding:'10px 14px',display:'flex',gap:'8px',alignItems:'center',borderBottom:`1px solid ${B}`,background:redTeam?`${redTeam.color}0A`:'rgba(0,0,0,0.02)'}}>
+                    {redTeam&&!isEditRed&&<button onClick={()=>{if(confirm(`${redTeam.name} 팀을 삭제할까요?`))delTeam(redTeam.id);}} style={{...Btn('rgba(220,50,50,0.8)','rgba(220,50,50,0.07)','rgba(220,50,50,0.2)',{flexShrink:0,padding:'6px 10px'})}}>삭제</button>}
                     {redTeam&&<button onClick={()=>setEditSide(isEditRed?null:'red')} style={{...Btn(isEditRed?redTeam.color:T2,isEditRed?`${redTeam.color}15`:S,isEditRed?`${redTeam.color}44`:B,{flexShrink:0})}}>{isEditRed?'완료':'편집'}</button>}
                     <select value={redTeamId||''} onChange={e=>{if(e.target.value==='__new__')addTeamFromMain('red');else{setRedTeamId(e.target.value||null);setRedPicks({});setEditSide(null);}}}
                       style={{flex:1,background:redTeam?`${redTeam.color}0F`:'#f8f8fb',border:`1.5px solid ${redTeam?redTeam.color+'55':B}`,borderRadius:'8px',padding:'6px 10px',color:redTeam?.color||T,fontSize:'0.88rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',WebkitAppearance:'none' as const}}>
