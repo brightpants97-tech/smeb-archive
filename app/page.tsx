@@ -225,7 +225,6 @@ export default async function Home() {
           </svg>
         </a>
         <nav className="mob-nav" style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
-          <a href="/apps" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>도구</a>
           <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>BEST 10</a>
           <a href="#videos" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>최신 영상</a>
           <a href="#schedule" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>일정표</a>
