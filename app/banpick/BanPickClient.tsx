@@ -366,7 +366,8 @@ export default function BanPickClient() {
                         style={{...Btn('#fff',team.color,'transparent',{padding:'4px 9px',fontSize:'0.76rem',flexShrink:0})}}>+ 챔피언</button>}
                     </div>
                     {p.champs.length>0&&(
-                      <div style={{padding:'8px 10px',display:'flex',gap:'5px',flexWrap:'wrap'}}>
+                      <div style={{padding:'8px 10px',display:'flex',gap:'5px',overflowX:'auto',flexWrap:'nowrap',
+                        scrollbarWidth:'none' as const}}>
                         {p.champs.map(pc=>{
                           const isSel=picks[p.id]===pc.champ.id;
                           const tg=TAGS[pc.tag];
@@ -431,6 +432,7 @@ export default function BanPickClient() {
         input::placeholder{color:${T3}}
         input:focus,select:focus{outline:none}
         .ci{transition:transform 0.08s}.ci:hover{transform:scale(1.06)}
+        div::-webkit-scrollbar{display:none}
         ::-webkit-scrollbar{width:4px;height:4px}
         ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.14);border-radius:4px}
       `}</style>
