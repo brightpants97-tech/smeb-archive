@@ -205,6 +205,8 @@ export default async function Home() {
           .mob-hero h1 span { font-size: clamp(3.5rem,22vw,8rem) !important; } .mob-hero h1 em { font-size: clamp(2rem,13vw,5rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
+          .tools-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; background:rgba(168,85,247,0.12); border:1.5px solid rgba(168,85,247,0.35); color:#A855F7; font-size:0.82rem; font-weight:800; text-decoration:none; transition:all 0.15s; }
+          .tools-btn:hover { background:rgba(168,85,247,0.22); }
           .gemini-step-row { gap: 10px !important; }
           @media (max-width: 960px) {
             .hero-card { display: none !important; }
@@ -228,19 +230,7 @@ export default async function Home() {
           <a href="#videos" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>최신 영상</a>
           <a href="#schedule" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>일정표</a>
           <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>SOOP 다시보기</a>
-          <a href="/apps" style={{
-                display:'flex',alignItems:'center',gap:'6px',
-                padding:'7px 14px',borderRadius:'8px',
-                background:'rgba(168,85,247,0.12)',
-                border:'1.5px solid rgba(168,85,247,0.35)',
-                color:'#A855F7',
-                fontSize:'0.82rem',fontWeight:800,
-                textDecoration:'none',transition:'all 0.15s',
-              }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.background='rgba(168,85,247,0.22)';}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.background='rgba(168,85,247,0.12)';}}>
-                🛠️ 도구
-              </a>
+          <a href="/apps" className="tools-btn">🛠️ 도구</a>
           <ThemeToggle />
           <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'linear-gradient(135deg,#EB701A,#ff8c3a)',color:'#fff',padding:'0.55rem 1.3rem',borderRadius:'100px',fontSize:'0.88rem',fontWeight:700,boxShadow:'0 4px 14px rgba(235,112,26,0.35)'}}>YouTube ↗</a>
           <a href="/rewind/2026" style={{display:'inline-flex',alignItems:'center',gap:'8px',background:'linear-gradient(135deg,#2d1b69,#4a2fa0)',color:'#fff',padding:'0.85rem 2rem',borderRadius:'100px',fontSize:'1.05rem',fontWeight:900,boxShadow:'0 6px 24px rgba(45,27,105,0.6), 0 0 0 1px rgba(255,255,255,0.2)',textDecoration:'none',whiteSpace:'nowrap' as const,border:'1.5px solid rgba(255,255,255,0.25)',letterSpacing:'-0.01em',transition:'all 0.2s'}}>📊 연간결산</a>
