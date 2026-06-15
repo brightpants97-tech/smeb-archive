@@ -517,6 +517,7 @@ export default function BanPickClient() {
                         );
                       })}
                     </div>
+                  )}
                 </div>
               );
             };
