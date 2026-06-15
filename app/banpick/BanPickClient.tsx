@@ -92,6 +92,13 @@ export default function BanPickClient() {
     else if(side==='red'){setRedTeamId(tid);setRedPicks({});setEditSide('red');}
   };
 
+  // 진영 스왑
+  const swapSides=()=>{
+    const [bt,rt,bp,rp]=[blueTeamId,redTeamId,bluePicks,redPicks];
+    setBlueTeamId(rt); setRedTeamId(bt);
+    setBluePicks(rp);  setRedPicks(bp);
+  };
+
   // 대전 저장
   const saveMatch=()=>{
     const bt=getTeam(blueTeamId),rt=getTeam(redTeamId); if(!bt||!rt) return;
@@ -480,14 +487,18 @@ export default function BanPickClient() {
                       <>
                         <div style={{background:S,border:`1px solid ${B}`,borderRadius:'14px',overflow:'hidden'}}>
                           {/* VS 헤더 */}
-                          <div style={{padding:'10px 12px',background:'rgba(0,0,0,0.02)',borderBottom:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'4px'}}>
-                            <div style={{display:'flex',alignItems:'center',gap:'6px',justifyContent:'center'}}>
+                          <div style={{padding:'10px 12px',background:'rgba(0,0,0,0.02)',borderBottom:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'8px'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:'5px',flex:1,justifyContent:'center'}}>
                               <div style={{width:'7px',height:'7px',borderRadius:'50%',background:blueTeam.color}} />
                               <span style={{fontWeight:900,fontSize:'0.82rem',color:blueTeam.color}}>{blueTeam.name}</span>
                               <span style={{fontWeight:900,fontSize:'0.8rem',color:T3}}>vs</span>
                               <span style={{fontWeight:900,fontSize:'0.82rem',color:redTeam.color}}>{redTeam.name}</span>
                               <div style={{width:'7px',height:'7px',borderRadius:'50%',background:redTeam.color}} />
                             </div>
+                            <button onClick={swapSides} title="블루↔레드 진영 변경"
+                              style={{background:'none',border:`1px solid ${B}`,borderRadius:'7px',padding:'4px 8px',cursor:'pointer',fontSize:'0.8rem',color:T2,fontFamily:'inherit',flexShrink:0,lineHeight:1}}>
+                              ⇄
+                            </button>
                           </div>
                           {/* 포지션별 비교 */}
                           {ROLES.map((role,ri)=>{
