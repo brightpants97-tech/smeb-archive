@@ -527,10 +527,15 @@ export default function BanPickClient() {
                         </div>
 
                         {/* 저장된 대전 기록 */}
-                        {matchRecords.length>0&&(
+                        {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0&&(
                           <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-                            <div style={{fontSize:'0.72rem',fontWeight:700,color:T3,padding:'0 2px'}}>저장된 대전</div>
-                            {matchRecords.map(m=>{
+                            <div style={{fontSize:'0.72rem',fontWeight:700,color:T3,padding:'0 2px'}}>
+                              이 대전 기록 ({matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length})
+                            </div>
+                            {matchRecords.filter(m=>{
+                              const ids=new Set([m.blueTeamId,m.redTeamId]);
+                              return ids.has(blueTeamId)&&ids.has(redTeamId);
+                            }).map(m=>{
                               const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
                               const blueChamps=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.bluePicks[p.id])).filter(Boolean) as PChamp[]:[];
                               const redChamps =rt?[...rt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.redPicks[p.id])).filter(Boolean) as PChamp[]:[];
