@@ -49,7 +49,7 @@ export default function BanPickClient() {
   const [manCompName,setManCompName] = useState('');
   const [vsTeamId,setVsTeamId]   = useState<string|null>(null);
   const [vsCompId,setVsCompId]   = useState<string|null>(null);
-  const [picker,setPicker]       = useState<string|null>(null);
+  const [picker,setPicker]       = useState<{pid:string;side:'manage'|'blue'|'red'}|null>(null);
   const [ms,setMs]               = useState('');
 
   // 대전 기록 저장
@@ -62,6 +62,7 @@ export default function BanPickClient() {
   const [bluePicks,setBluePicks]   = useState<Record<string,string>>({});
   const [redPicks,setRedPicks]     = useState<Record<string,string>>({});
   const [blueCompName,setBlueCompName] = useState('');
+  const [editSide,setEditSide]         = useState<'blue'|'red'|null>(null); // 인라인 편집
   const [redCompName,setRedCompName]   = useState('');
 
   useEffect(()=>{
@@ -83,6 +84,17 @@ export default function BanPickClient() {
   const saveC=(c:Record<string,Composition[]>)=>{setComps(c);try{localStorage.setItem('bp-comps',JSON.stringify(c));flash();}catch{}};
   const getC=(tid:string)=>comps[tid]||[];
   const getTeam=(id:string|null)=>id?teams.find(t=>t.id===id)||null:null;
+
+  // 메인 뷰에서 새 팀 추가
+  const addTeamFromMain=(side:'blue'|'red')=>{
+    const tid=Date.now()+'';
+    const players:Player[]=ROLES.map((role,i)=>({id:`${tid}_${i}`,name:`${role} 선수`,role,champs:[]}));
+    const t:Team={id:tid,name:`팀 ${teams.length+1}`,color:COLORS[teams.length%COLORS.length],players};
+    saveT([...teams,t]);
+    if(side==='blue'){setBlueTeamId(tid);setBluePicks({});}
+    else{setRedTeamId(tid);setRedPicks({});}
+    setEditSide(side);
+  };
 
   // 대전 저장
   const saveMatch=()=>{
@@ -107,18 +119,18 @@ export default function BanPickClient() {
   const delTeam=(id:string)=>{saveT(teams.filter(t=>t.id!==id));if(blueTeamId===id)setBlueTeamId(null);if(redTeamId===id)setRedTeamId(null);};
 
   // 챔피언 CRUD
-  const addPC=(pid:string,c:Champ)=>{
-    if(!manTeamId)return;
-    const tm=getTeam(manTeamId);if(!tm)return;
-    updTeam(manTeamId,{players:tm.players.map(p=>p.id===pid?{...p,champs:p.champs.find(x=>x.champ.id===c.id)?p.champs:[...p.champs,{champ:c,tag:'onetrick' as const,note:''}]}:p)});
+  const addPC=(pid:string,c:Champ,teamId?:string)=>{
+    const tid=teamId||manTeamId; if(!tid)return;
+    const tm=getTeam(tid);if(!tm)return;
+    updTeam(tid,{players:tm.players.map(p=>p.id===pid?{...p,champs:p.champs.find(x=>x.champ.id===c.id)?p.champs:[...p.champs,{champ:c,tag:'onetrick' as const,note:''}]}:p)});
   };
-  const updPC=(pid:string,cid:string,patch:Partial<PChamp>)=>{
-    if(!manTeamId)return;const tm=getTeam(manTeamId);if(!tm)return;
-    updTeam(manTeamId,{players:tm.players.map(p=>p.id===pid?{...p,champs:p.champs.map(x=>x.champ.id===cid?{...x,...patch}:x)}:p)});
+  const updPC=(pid:string,cid:string,patch:Partial<PChamp>,teamId?:string)=>{
+    const tid=teamId||manTeamId; if(!tid)return;const tm=getTeam(tid);if(!tm)return;
+    updTeam(tid,{players:tm.players.map(p=>p.id===pid?{...p,champs:p.champs.map(x=>x.champ.id===cid?{...x,...patch}:x)}:p)});
   };
-  const delPC=(pid:string,cid:string)=>{
-    if(!manTeamId)return;const tm=getTeam(manTeamId);if(!tm)return;
-    updTeam(manTeamId,{players:tm.players.map(p=>p.id===pid?{...p,champs:p.champs.filter(x=>x.champ.id!==cid)}:p)});
+  const delPC=(pid:string,cid:string,teamId?:string)=>{
+    const tid=teamId||manTeamId; if(!tid)return;const tm=getTeam(tid);if(!tm)return;
+    updTeam(tid,{players:tm.players.map(p=>p.id===pid?{...p,champs:p.champs.filter(x=>x.champ.id!==cid)}:p)});
     setManagePicks(prev=>{const n={...prev};if(n[pid]===cid)delete n[pid];return n;});
   };
 
@@ -138,11 +150,12 @@ export default function BanPickClient() {
 
   const manTeam   = getTeam(manTeamId);
   const manSorted = manTeam?[...manTeam.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)):[];
+  const pickerTeamId = picker?.side==='blue'?blueTeamId:picker?.side==='red'?redTeamId:manTeamId;
   const mfChamps  = useMemo(()=>{
-    if(!picker||!manTeamId)return[];
-    const p=getTeam(manTeamId)?.players.find(x=>x.id===picker);
+    if(!picker)return[];
+    const p=getTeam(pickerTeamId)?.players.find(x=>x.id===picker.pid);
     return champs.filter(c=>(c.name.includes(ms)||c.id.toLowerCase().includes(ms.toLowerCase()))&&!p?.champs.find(x=>x.champ.id===c.id));
-  },[champs,ms,picker,manTeamId,teams]);
+  },[champs,ms,picker,pickerTeamId,teams]);
 
   const blueTeam = getTeam(blueTeamId);
   const redTeam  = getTeam(redTeamId);
@@ -304,17 +317,34 @@ export default function BanPickClient() {
     const setCName=side==='blue'?setBlueCompName:setRedCompName;
     const sideC=side==='blue'?BLUE_C:RED_C;
     const team=getTeam(teamId);
+    const isEdit=editSide===side;
     const sorted=team?[...team.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)):[];
     return (
       <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',gap:'10px'}}>
+        {/* 팀 선택 + 편집 버튼 */}
         <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
           <div style={{fontSize:'0.68rem',fontWeight:800,color:sideC,letterSpacing:'0.1em',flexShrink:0,width:'32px'}}>{side==='blue'?'BLUE':'RED'}</div>
-          <select value={teamId||''} onChange={e=>{setTid(e.target.value||null);if(side==='blue')setBluePicks({});else setRedPicks({});}}
+          <select value={teamId||''} onChange={e=>{
+            if(e.target.value==='__new__'){addTeamFromMain(side);}
+            else{setTid(e.target.value||null);if(side==='blue')setBluePicks({});else setRedPicks({});setEditSide(null);}
+          }}
             style={{flex:1,background:team?`${team.color}10`:S,border:`1.5px solid ${team?team.color+'55':B}`,borderRadius:'9px',padding:'8px 12px',color:team?.color||T,fontSize:'0.9rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
             <option value="">팀 선택</option>
             {teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+            <option value="__new__">＋ 새 팀 추가</option>
           </select>
+          {team&&<button onClick={()=>setEditSide(isEdit?null:side)}
+            style={{...Btn(isEdit?team.color:T2,isEdit?`${team.color}15`:S,isEdit?`${team.color}44`:B,{padding:'6px 10px',flexShrink:0})}}>
+            {isEdit?'완료':'편집'}
+          </button>}
         </div>
+
+        {/* 팀 이름 편집 */}
+        {team&&isEdit&&(
+          <input value={team.name} onChange={e=>updTeam(team.id,{name:e.target.value})}
+            style={{background:'#fff',border:`1.5px solid ${team.color}66`,borderRadius:'8px',padding:'6px 12px',color:T,fontSize:'0.92rem',fontWeight:900}} />
+        )}
+
         {team&&(
           <>
             <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
@@ -322,15 +352,22 @@ export default function BanPickClient() {
                 const selC=p.champs.find(x=>x.champ.id===picks[p.id]);
                 return (
                   <div key={p.id} style={{background:S,border:`1.5px solid ${selC?team.color+'44':B}`,borderRadius:'12px',overflow:'hidden',transition:'border-color 0.12s'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'9px 12px',borderBottom:p.champs.length>0?`1px solid ${B}`:'none',background:selC?`${team.color}05`:'transparent'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'9px 12px',borderBottom:p.champs.length>0||isEdit?`1px solid ${B}`:'none',background:selC?`${team.color}05`:'transparent'}}>
                       <span style={{fontSize:'1rem',flexShrink:0}}>{RI[p.role]}</span>
-                      <span style={{fontWeight:800,fontSize:'0.88rem',flex:1}}>{p.name}</span>
-                      {selC&&(
-                        <div style={{display:'flex',alignItems:'center',gap:'6px',padding:'3px 9px',background:`${team.color}15`,border:`1.5px solid ${team.color}44`,borderRadius:'7px'}}>
-                          <img src={img(selC.champ)} alt={selC.champ.name} style={{width:'22px',height:'22px',borderRadius:'5px',objectFit:'cover'}} />
-                          <span style={{fontWeight:800,fontSize:'0.78rem',color:team.color}}>{selC.champ.name}</span>
+                      {isEdit?(
+                        <input value={p.name} onChange={e=>updTeam(team.id,{players:team.players.map(x=>x.id===p.id?{...x,name:e.target.value}:x)})}
+                          style={{flex:1,background:'rgba(0,0,0,0.04)',border:`1px solid ${B}`,borderRadius:'6px',padding:'3px 7px',color:T,fontSize:'0.86rem',fontWeight:800}} />
+                      ):(
+                        <span style={{fontWeight:800,fontSize:'0.88rem',flex:1}}>{p.name}</span>
+                      )}
+                      {selC&&!isEdit&&(
+                        <div style={{display:'flex',alignItems:'center',gap:'5px',padding:'3px 8px',background:`${team.color}15`,border:`1.5px solid ${team.color}44`,borderRadius:'7px',flexShrink:0}}>
+                          <img src={img(selC.champ)} alt={selC.champ.name} style={{width:'20px',height:'20px',borderRadius:'4px',objectFit:'cover',flexShrink:0}} />
+                          <span style={{fontWeight:800,fontSize:'0.76rem',color:team.color,maxWidth:'80px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{selC.champ.name}</span>
                         </div>
                       )}
+                      {isEdit&&<button onClick={()=>{setPicker({pid:p.id,side});setMs('');}}
+                        style={{...Btn('#fff',team.color,'transparent',{padding:'4px 9px',fontSize:'0.76rem',flexShrink:0})}}>+ 챔피언</button>}
                     </div>
                     {p.champs.length>0&&(
                       <div style={{padding:'8px 10px',display:'flex',gap:'5px',flexWrap:'wrap'}}>
@@ -338,13 +375,17 @@ export default function BanPickClient() {
                           const isSel=picks[p.id]===pc.champ.id;
                           const tg=TAGS[pc.tag];
                           return (
-                            <div key={pc.champ.id} onClick={()=>togglePick(side,p.id,pc.champ.id)} title={`${pc.champ.name} (${tg.label})`}
-                              style={{position:'relative',cursor:'pointer',borderRadius:'8px',overflow:'hidden',flexShrink:0,
-                                border:isSel?`2.5px solid ${team.color}`:`2px solid ${tg.bd}`,
-                                boxShadow:isSel?`0 0 0 2px ${team.color}33`:'none',transition:'all 0.1s'}}>
-                              <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
-                              <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.5rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
-                              <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
+                            <div key={pc.champ.id} style={{position:'relative',flexShrink:0}}>
+                              <div onClick={()=>!isEdit&&togglePick(side,p.id,pc.champ.id)} title={`${pc.champ.name} (${tg.label})`}
+                                style={{borderRadius:'8px',overflow:'hidden',cursor:isEdit?'default':'pointer',
+                                  border:isSel?`2.5px solid ${team.color}`:`2px solid ${tg.bd}`,
+                                  boxShadow:isSel?`0 0 0 2px ${team.color}33`:'none',transition:'all 0.1s'}}>
+                                <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
+                                <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.5rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
+                                <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
+                              </div>
+                              {isEdit&&<button onClick={()=>delPC(p.id,pc.champ.id,team.id)}
+                                style={{position:'absolute',top:'-5px',right:'-5px',width:'16px',height:'16px',borderRadius:'50%',background:'rgba(220,50,50,0.9)',border:'none',color:'#fff',cursor:'pointer',fontSize:'0.6rem',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit',lineHeight:1}}>✕</button>}
                             </div>
                           );
                         })}
@@ -375,7 +416,7 @@ export default function BanPickClient() {
             )}
           </>
         )}
-        {!team&&<div style={{textAlign:'center',padding:'30px 0',color:T3,fontSize:'0.84rem'}}>팀을 선택하면<br/>챔피언 풀이 나와요</div>}
+        {!team&&<div style={{textAlign:'center',padding:'30px 0',color:T3,fontSize:'0.84rem'}}>팀을 선택하거나<br/>새 팀을 추가해보세요</div>}
       </div>
     );
   };
@@ -503,7 +544,7 @@ export default function BanPickClient() {
                             );
                           })}
                           {editMode&&(
-                            <button onClick={()=>{setPicker(p.id);setMs('');}}
+                            <button onClick={()=>{setPicker({pid:p.id,side:'manage'});setMs('');}}
                               style={{width:'44px',height:'44px',borderRadius:'8px',border:`1.5px dashed ${manTeam.color}55`,background:`${manTeam.color}08`,color:manTeam.color,cursor:'pointer',fontSize:'1.3rem',fontFamily:'inherit'}}>+</button>
                           )}
                         </div>
@@ -538,7 +579,7 @@ export default function BanPickClient() {
             ):(
               <>
                 {/* 3열: 블루 | 비교 | 레드 */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 220px 1fr',gap:'14px',alignItems:'start'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 260px 1fr',gap:'14px',alignItems:'start'}}>
 
                   {/* 블루팀 패널 */}
                   <div style={{background:`${BLUE_C}08`,border:`1.5px solid ${BLUE_C}30`,borderRadius:'16px',padding:'16px',maxHeight:'calc(100vh - 120px)',overflowY:'auto'}}>
@@ -573,7 +614,7 @@ export default function BanPickClient() {
                                     <>
                                       <img src={img(bC.champ)} alt={bC.champ.name} style={{width:'34px',height:'34px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${blueTeam.color}55`,flexShrink:0}} />
                                       <div style={{minWidth:0}}>
-                                        <div style={{fontWeight:800,fontSize:'0.76rem',color:blueTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{bC.champ.name}</div>
+                                        <div style={{fontWeight:800,fontSize:'0.76rem',color:blueTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'80px'}}>{bC.champ.name}</div>
                                         <div style={{fontSize:'0.62rem',color:T3}}>{bP?.name} <span style={{color:TAGS[bC.tag].color}}>{TAGS[bC.tag].short}</span></div>
                                       </div>
                                     </>
@@ -585,7 +626,7 @@ export default function BanPickClient() {
                                     <>
                                       <img src={img(rC.champ)} alt={rC.champ.name} style={{width:'34px',height:'34px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${redTeam.color}55`,flexShrink:0}} />
                                       <div style={{minWidth:0,textAlign:'right' as const}}>
-                                        <div style={{fontWeight:800,fontSize:'0.76rem',color:redTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{rC.champ.name}</div>
+                                        <div style={{fontWeight:800,fontSize:'0.76rem',color:redTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'80px'}}>{rC.champ.name}</div>
                                         <div style={{fontSize:'0.62rem',color:T3}}>{rP?.name} <span style={{color:TAGS[rC.tag].color}}>{TAGS[rC.tag].short}</span></div>
                                       </div>
                                     </>
@@ -649,8 +690,11 @@ export default function BanPickClient() {
       )}
 
       {/* 챔피언 추가 모달 */}
-      {picker&&manTeam&&(()=>{
-        const p=manTeam.players.find(x=>x.id===picker);if(!p)return null;
+      {picker&&(()=>{
+        const modalTeamId=picker.side==='blue'?blueTeamId:picker.side==='red'?redTeamId:manTeamId;
+        const modalTeam=getTeam(modalTeamId);
+        const p=modalTeam?.players.find(x=>x.id===picker.pid);if(!p||!modalTeam)return null;
+        const manTeam=modalTeam;
         return (
           <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.48)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}}
             onClick={e=>{if(e.target===e.currentTarget)setPicker(null);}}>
@@ -667,7 +711,7 @@ export default function BanPickClient() {
               <div style={{padding:'10px 14px 14px',maxHeight:'380px',overflowY:'auto'}}>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(64px,1fr))',gap:'5px'}}>
                   {mfChamps.map(c=>(
-                    <div key={c.id} className="ci" onClick={()=>addPC(picker,c)} title={c.name}
+                    <div key={c.id} className="ci" onClick={()=>addPC(picker.pid,c,modalTeamId||undefined)} title={c.name}
                       style={{borderRadius:'8px',overflow:'hidden',cursor:'pointer',border:'1.5px solid transparent',position:'relative'}}
                       onMouseEnter={e=>(e.currentTarget as HTMLElement).style.borderColor=manTeam.color}
                       onMouseLeave={e=>(e.currentTarget as HTMLElement).style.borderColor='transparent'}>
