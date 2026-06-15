@@ -56,6 +56,8 @@ export default function BanPickClient() {
   const [picker,       setPicker]       = useState<string|null>(null); // player id
   const [ms,           setMs]           = useState('');
   const [noteKey,      setNoteKey]      = useState<string|null>(null);
+  const [vsTeamId,  setVsTeamId]  = useState<string|null>(null); // 상대팀
+  const [vsCompId,  setVsCompId]  = useState<string|null>(null); // 상대 조합
   const [managePicks, setManagePicks]   = useState<Record<string,string>>({});  // 팀 관리 화면에서 바로 조합
   const [manCompName, setManCompName]   = useState('');
 
@@ -364,7 +366,7 @@ export default function BanPickClient() {
               <div style={{display:'flex',gap:'6px',marginBottom:'16px',flexWrap:'wrap'}}>
                 {teams.map(t=>(
                   <div key={t.id} style={{display:'flex',gap:'0'}}>
-                    <button onClick={()=>{setManageTeamId(t.id);setEditMode(false);setManagePicks({});}}
+                    <button onClick={()=>{setManageTeamId(t.id);setEditMode(false);setManagePicks({});setVsTeamId(null);setVsCompId(null);}}
                       style={{padding:'6px 14px',borderRadius:'8px 0 0 8px',border:`1.5px solid ${manageTeamId===t.id?t.color+'66':B}`,borderRight:'none',background:manageTeamId===t.id?`${t.color}18`:S,color:manageTeamId===t.id?t.color:T2,fontSize:'0.86rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
                       {t.name}
                     </button>
@@ -560,6 +562,91 @@ export default function BanPickClient() {
                     ))}
                   </div>
                 )}
+              </div>
+
+                {/* ── vs 비교 ── */}
+                <div style={{borderTop:`2px solid ${B}`,margin:'0 0 0 0'}}>
+                  <div style={{padding:'10px 14px 8px',display:'flex',alignItems:'center',gap:'6px'}}>
+                    <span style={{fontWeight:900,fontSize:'0.8rem',color:T2}}>⚔️ 상대팀 비교</span>
+                  </div>
+                  <div style={{padding:'0 12px 10px',display:'flex',flexDirection:'column',gap:'6px'}}>
+                    <select value={vsTeamId||''} onChange={e=>{setVsTeamId(e.target.value||null);setVsCompId(null);}}
+                      style={{width:'100%',background:'rgba(255,74,106,0.06)',border:'1.5px solid rgba(255,74,106,0.25)',borderRadius:'8px',padding:'7px 10px',color:T,fontSize:'0.84rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                      <option value="">상대 팀 선택</option>
+                      {teams.filter(t=>t.id!==manageTeamId).map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                    {vsTeamId && (
+                      <select value={vsCompId||''} onChange={e=>setVsCompId(e.target.value||null)}
+                        style={{width:'100%',background:'rgba(255,74,106,0.04)',border:'1.5px solid rgba(255,74,106,0.18)',borderRadius:'8px',padding:'7px 10px',color:T,fontSize:'0.82rem',fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+                        <option value="">상대 조합 선택</option>
+                        {getC(vsTeamId).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* 비교 결과 */}
+                  {vsCompId && vsTeamId && manTeam && (()=>{
+                    const vsTeam = teams.find(t=>t.id===vsTeamId);
+                    const vsComp = getC(vsTeamId).find(c=>c.id===vsCompId);
+                    if(!vsTeam||!vsComp) return null;
+                    const vsSorted = [...vsTeam.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+                    const mySorted = [...manTeam.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role));
+                    return (
+                      <div style={{margin:'0 12px 12px',borderRadius:'10px',overflow:'hidden',border:`1px solid ${B}`}}>
+                        {/* 팀명 헤더 */}
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 22px 1fr',background:'rgba(0,0,0,0.03)',borderBottom:`1px solid ${B}`}}>
+                          <div style={{padding:'6px 8px',fontWeight:800,fontSize:'0.72rem',color:manTeam.color,display:'flex',alignItems:'center',gap:'4px'}}>
+                            <div style={{width:'6px',height:'6px',borderRadius:'50%',background:manTeam.color,flexShrink:0}} />{manTeam.name}
+                          </div>
+                          <div style={{borderLeft:`1px solid ${B}`,borderRight:`1px solid ${B}`}} />
+                          <div style={{padding:'6px 8px',fontWeight:800,fontSize:'0.72rem',color:'#FF4A6A',textAlign:'right' as const,display:'flex',alignItems:'center',gap:'4px',justifyContent:'flex-end'}}>
+                            {vsTeam.name}<div style={{width:'6px',height:'6px',borderRadius:'50%',background:'#FF4A6A',flexShrink:0}} />
+                          </div>
+                        </div>
+                        {/* 포지션별 */}
+                        {ROLES.map((role,ri)=>{
+                          const myP  = mySorted.find(p=>p.role===role);
+                          const vsP  = vsSorted.find(p=>p.role===role);
+                          const myC  = myP?.champs.find(x=>x.champ.id===managePicks[myP.id]);
+                          const vsC  = vsP?.champs.find(x=>x.champ.id===vsComp.picks[vsP.id]);
+                          return (
+                            <div key={role} style={{display:'grid',gridTemplateColumns:'1fr 22px 1fr',borderTop:ri>0?`1px solid ${B}`:'none',background:ri%2===0?'transparent':'rgba(0,0,0,0.015)'}}>
+                              <div style={{padding:'6px 8px',display:'flex',alignItems:'center',gap:'5px'}}>
+                                {myC?(
+                                  <>
+                                    <img src={img(myC.champ)} alt={myC.champ.name} style={{width:'28px',height:'28px',borderRadius:'6px',objectFit:'cover',border:`1.5px solid ${manTeam.color}44`,flexShrink:0}} />
+                                    <div style={{minWidth:0}}>
+                                      <div style={{fontWeight:700,fontSize:'0.72rem',color:manTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{myC.champ.name}</div>
+                                      <div style={{fontSize:'0.6rem',color:T3}}>{myP?.name}</div>
+                                    </div>
+                                  </>
+                                ):<span style={{fontSize:'0.68rem',color:T3}}>미선택</span>}
+                              </div>
+                              <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.75rem',borderLeft:`1px solid ${B}`,borderRight:`1px solid ${B}`}}>{RI[role]}</div>
+                              <div style={{padding:'6px 8px',display:'flex',alignItems:'center',gap:'5px',justifyContent:'flex-end',flexDirection:'row-reverse'}}>
+                                {vsC?(
+                                  <>
+                                    <img src={img(vsC.champ)} alt={vsC.champ.name} style={{width:'28px',height:'28px',borderRadius:'6px',objectFit:'cover',border:'1.5px solid rgba(255,74,106,0.4)',flexShrink:0}} />
+                                    <div style={{minWidth:0,textAlign:'right' as const}}>
+                                      <div style={{fontWeight:700,fontSize:'0.72rem',color:'#FF4A6A',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{vsC.champ.name}</div>
+                                      <div style={{fontSize:'0.6rem',color:T3}}>{vsP?.name}</div>
+                                    </div>
+                                  </>
+                                ):<span style={{fontSize:'0.68rem',color:T3}}>미선택</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                  {vsTeamId && !vsCompId && (
+                    <div style={{padding:'12px',textAlign:'center',color:T3,fontSize:'0.76rem'}}>상대 조합을 선택하세요</div>
+                  )}
+                  {!vsTeamId && (
+                    <div style={{padding:'0 12px 12px',fontSize:'0.74rem',color:T3}}>상대 팀을 선택하면 포지션별 비교가 나와요</div>
+                  )}
+                </div>
               </div>
             )}
 
