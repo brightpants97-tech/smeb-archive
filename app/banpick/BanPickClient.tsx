@@ -517,13 +517,18 @@ export default function BanPickClient() {
                         );
                       })}
                     </div>
+                  ):(
+                    <div style={{textAlign:'center' as const,padding:'40px 16px',color:T3,fontSize:'0.8rem'}}>
+                      <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>📋</div>
+                      저장된 대전이 없어요
+                    </div>
                   )}
                 </div>
               );
             };
 
             return (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 240px',gap:'14px',alignItems:'start'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 220px 200px',gap:'14px',alignItems:'start'}}>
 
                 {/* ── 블루팀 ── */}
                 <div style={{background:S,border:`1.5px solid ${blueTeam?blueTeam.color+'33':B}`,borderRadius:'14px',overflow:'hidden'}}>
@@ -595,8 +600,8 @@ export default function BanPickClient() {
                   </div>
                 </div>
 
-                {/* ── 우측 비교 패널 (sticky) ── */}
-                <div style={{position:'sticky',top:'68px',display:'flex',flexDirection:'column',gap:'10px'}}>
+                {/* ── 우측: 비교 패널 (sticky) ── */}
+                <div style={{position:'sticky',top:'68px'}}>
                   <div style={{background:S,border:`1px solid ${B}`,borderRadius:'14px',overflow:'hidden'}}>
                     {/* VS 헤더 */}
                     <div style={{padding:'10px 12px',borderBottom:`1px solid ${B}`,background:'rgba(0,0,0,0.02)'}}>
@@ -645,8 +650,11 @@ export default function BanPickClient() {
                     </div>
                   </div>
 
-                  {/* 저장된 대전 */}
-                  {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0&&(
+                </div>
+
+                {/* ── 4번째 컬럼: 대전 기록 (sticky) ── */}
+                <div style={{position:'sticky',top:'68px'}}>
+                  {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0?(
                     <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
                       <div style={{fontSize:'0.7rem',fontWeight:700,color:T3}}>이 대전 기록</div>
                       {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).map(m=>{
@@ -670,6 +678,11 @@ export default function BanPickClient() {
                           </div>
                         );
                       })}
+                    </div>
+                  ):(
+                    <div style={{textAlign:'center' as const,padding:'40px 16px',color:T3,fontSize:'0.8rem'}}>
+                      <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>📋</div>
+                      저장된 대전이 없어요
                     </div>
                   )}
                 </div>
