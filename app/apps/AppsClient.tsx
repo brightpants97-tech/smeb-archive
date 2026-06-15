@@ -86,6 +86,19 @@ export default function AppsClient() {
     }}>
       <div style={{ maxWidth: '960px', margin: '0 auto' }}>
 
+        {/* 홈 링크 */}
+        <div style={{ marginBottom: '32px' }}>
+          <Link href="/" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            fontSize: '0.82rem', fontWeight: 700,
+            color: 'var(--text-secondary, #888)',
+            textDecoration: 'none', opacity: 0.7,
+            transition: 'opacity 0.15s',
+          }}>
+            ← 홈으로
+          </Link>
+        </div>
+
         {/* 헤더 */}
         <div style={{ marginBottom: '48px' }}>
           <p style={{
