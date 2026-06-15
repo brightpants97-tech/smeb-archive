@@ -639,7 +639,7 @@ export default function BanPickClient() {
                     })}
                     {/* 대전 저장 */}
                     <div style={{padding:'8px 10px',borderTop:`1px solid ${B}`,display:'flex',gap:'5px',background:'rgba(0,0,0,0.015)'}}>
-                      <input value={matchName} onChange={e=>setMatchName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveMatch()} placeholder="대전 이름"
+                      <input value={matchName} onChange={e=>setMatchName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveMatch()} placeholder="밴픽조합 이름"
                         style={{flex:1,background:'#fff',border:`1px solid ${B}`,borderRadius:'6px',padding:'5px 7px',color:T,fontSize:'0.76rem',minWidth:0}} />
                       <button onClick={saveMatch} style={{...Btn('#fff',A,'transparent',{padding:'5px 8px',fontSize:'0.76rem',flexShrink:0})}}>💾</button>
                     </div>
@@ -651,7 +651,7 @@ export default function BanPickClient() {
                 <div style={{position:'sticky',top:'68px'}}>
                   {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0?(
                     <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                      <div style={{fontSize:'0.7rem',fontWeight:700,color:T3}}>이 대전 기록</div>
+                      <div style={{fontSize:'0.7rem',fontWeight:700,color:T3}}>밴픽조합</div>
                       {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).map(m=>{
                         const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
                         const bC2=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.bluePicks[p.id])).filter(Boolean) as PChamp[]:[];
@@ -677,7 +677,7 @@ export default function BanPickClient() {
                   ):(
                     <div style={{textAlign:'center' as const,padding:'40px 16px',color:T3,fontSize:'0.8rem'}}>
                       <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>📋</div>
-                      저장된 대전이 없어요
+                      저장된 밴픽조합이 없어요
                     </div>
                   )}
                 </div>
