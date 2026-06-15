@@ -65,7 +65,8 @@ export default function HamburgerMenu() {
             { href:'#top3',    label:'BEST 3',    desc:'이달의 유튜브 TOP 3' },
             { href:'#videos',  label:'유튜브',    desc:'이번 달 전체 영상' },
             { href:'#soopcal', label:'다시보기',  desc:'SOOP 다시보기 캘린더' },
-            { href:'/banpick', label:'밴픽 도구', desc:'밴픽 시뮬레이터 & 선수 전력 분석' },
+            { href:'/apps', label:'도구', desc:'스맵 팀 운영 도구 모음' },
+            { href:'/banpick', label:'팀 관리', desc:'밴픽 조합 분석' },
             { href:'/teambuilder', label:'팀빌더', desc:'멸망전 팀 구성 도우미' },
           ].map(item => (
             <a key={item.href} href={item.href} onClick={close}
