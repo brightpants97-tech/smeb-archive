@@ -517,12 +517,6 @@ export default function BanPickClient() {
                         );
                       })}
                     </div>
-                  ):(
-                    <div style={{textAlign:'center' as const,padding:'40px 16px',color:T3,fontSize:'0.8rem'}}>
-                      <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>📋</div>
-                      저장된 대전이 없어요
-                    </div>
-                  )}
                 </div>
               );
             };
