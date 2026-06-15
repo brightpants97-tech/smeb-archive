@@ -2,14 +2,14 @@
 import { useState, useEffect, useMemo } from 'react';
 
 const A  = '#EB701A';
-const BG = '#F4F5F8';
-const S  = '#ffffff';
-const B  = 'rgba(0,0,0,0.09)';
-const T  = '#111';
-const T2 = '#666';
-const T3 = '#AAA';
-const BLUE_C = '#4A8FFF';
-const RED_C  = '#FF4A6A';
+const BG = '#0C0D14';
+const S  = 'rgba(255,255,255,0.06)';
+const B  = 'rgba(255,255,255,0.09)';
+const T  = '#F0F0FF';
+const T2 = 'rgba(255,255,255,0.5)';
+const T3 = 'rgba(255,255,255,0.22)';
+const BLUE_C = '#5B9FFF';
+const RED_C  = '#FF5577';
 
 const COLORS = ['#FF6B35','#4A8FFF','#A855F7','#10B981','#F59E0B','#EC4899','#06B6D4','#84CC16'];
 const ROLES  = ['탑','정글','미드','원딜','서포터'];
@@ -364,7 +364,7 @@ export default function BanPickClient() {
                         <span style={{fontWeight:800,fontSize:'0.88rem',flex:1}}>{p.name}</span>
                       )}
                       {selC&&!isEdit&&(
-                        <div style={{display:'flex',alignItems:'center',gap:'5px',padding:'3px 8px',background:`${team.color}15`,border:`1.5px solid ${team.color}44`,borderRadius:'7px',flexShrink:0}}>
+                        <div style={{display:'flex',alignItems:'center',gap:'5px',padding:'3px 8px',background:`${team.color}20`,border:`1.5px solid ${team.color}66`,borderRadius:'7px',flexShrink:0,boxShadow:`0 0 8px ${team.color}33`}}>
                           <img src={img(selC.champ)} alt={selC.champ.name} style={{width:'20px',height:'20px',borderRadius:'4px',objectFit:'cover',flexShrink:0}} />
                           <span style={{fontWeight:800,fontSize:'0.76rem',color:team.color,maxWidth:'80px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{selC.champ.name}</span>
                         </div>
@@ -382,7 +382,7 @@ export default function BanPickClient() {
                               <div onClick={()=>!isEdit&&togglePick(side,p.id,pc.champ.id)} title={`${pc.champ.name} (${tg.label})`}
                                 style={{borderRadius:'8px',overflow:'hidden',cursor:isEdit?'default':'pointer',
                                   border:isSel?`2.5px solid ${team.color}`:`2px solid ${tg.bd}`,
-                                  boxShadow:isSel?`0 0 0 2px ${team.color}33`:'none',transition:'all 0.1s'}}>
+                                  boxShadow:isSel?`0 0 0 2px ${team.color}66, 0 0 12px ${team.color}44`:'none',transition:'all 0.12s'}}>
                                 <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
                                 <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.52rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
                                 <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
@@ -434,6 +434,9 @@ export default function BanPickClient() {
     <div style={{background:BG,minHeight:'100vh',color:T,fontFamily:'system-ui,sans-serif',paddingBottom:'60px'}}>
       <style>{`
         @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+        body{background:#0C0D14}
+        select option{background:#1A1B2E;color:#F0F0FF}
+        input{color-scheme:dark}
         input,textarea,select{font-family:inherit}
         input::placeholder{color:${T3}}
         input:focus,select:focus{outline:none}
@@ -443,7 +446,7 @@ export default function BanPickClient() {
       `}</style>
 
       {/* 헤더 */}
-      <div style={{borderBottom:`1px solid ${B}`,padding:'0 clamp(1rem,4vw,2rem)',display:'flex',alignItems:'stretch',height:'52px',background:S,position:'sticky',top:0,zIndex:100}}>
+      <div style={{borderBottom:`1px solid ${B}`,padding:'0 clamp(1rem,4vw,2rem)',display:'flex',alignItems:'stretch',height:'52px',background:'rgba(12,13,20,0.85)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',position:'sticky',top:0,zIndex:100}}>
         <a href="/" style={{color:T2,fontSize:'0.88rem',textDecoration:'none',fontWeight:700,paddingRight:'14px',borderRight:`1px solid ${B}`,display:'flex',alignItems:'center'}}>← 홈</a>
         <div style={{display:'flex',alignItems:'center',padding:'0 14px',flex:1}}>
           <span style={{fontWeight:900,fontSize:'0.96rem'}}>⚔️ 조합 분석</span>
@@ -488,7 +491,7 @@ export default function BanPickClient() {
                       <span style={{fontWeight:800,fontSize:'0.88rem',flex:1}}>{player.name}</span>
                     )}
                     {selC&&!isEdit&&(
-                      <div style={{display:'flex',alignItems:'center',gap:'5px',padding:'3px 8px',background:`${team.color}15`,border:`1.5px solid ${team.color}44`,borderRadius:'7px',flexShrink:0}}>
+                      <div style={{display:'flex',alignItems:'center',gap:'5px',padding:'3px 8px',background:`${team.color}20`,border:`1.5px solid ${team.color}66`,borderRadius:'7px',flexShrink:0,boxShadow:`0 0 8px ${team.color}33`}}>
                         <img src={img(selC.champ)} alt={selC.champ.name} style={{width:'20px',height:'20px',borderRadius:'4px',objectFit:'cover',flexShrink:0}} />
                         <span style={{fontWeight:800,fontSize:'0.76rem',color:team.color,maxWidth:'80px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{selC.champ.name}</span>
                       </div>
@@ -506,7 +509,7 @@ export default function BanPickClient() {
                             <div onClick={()=>!isEdit&&togglePick(side,player.id,pc.champ.id)} title={`${pc.champ.name} (${tg.label})`}
                               style={{borderRadius:'8px',overflow:'hidden',cursor:isEdit?'default':'pointer',
                                 border:isSel?`2.5px solid ${team.color}`:`2px solid ${tg.bd}`,
-                                boxShadow:isSel?`0 0 0 2px ${team.color}33`:'none',transition:'all 0.1s'}}>
+                                boxShadow:isSel?`0 0 0 2px ${team.color}66, 0 0 12px ${team.color}44`:'none',transition:'all 0.12s'}}>
                               <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
                               <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.52rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
                               <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
@@ -526,11 +529,11 @@ export default function BanPickClient() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 220px 200px',gap:'14px',alignItems:'start'}}>
 
                 {/* ── 블루팀 ── */}
-                <div style={{background:S,border:`1.5px solid ${blueTeam?blueTeam.color+'33':B}`,borderRadius:'14px',overflow:'hidden'}}>
-                  <div style={{padding:'10px 14px',display:'flex',gap:'8px',alignItems:'center',borderBottom:`1px solid ${B}`,background:blueTeam?`${blueTeam.color}06`:'rgba(0,0,0,0.02)'}}>
+                <div style={{background:'rgba(255,255,255,0.05)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',border:`1.5px solid ${blueTeam?blueTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden'}}>
+                  <div style={{padding:'10px 14px',display:'flex',gap:'8px',alignItems:'center',borderBottom:`1px solid ${B}`,background:blueTeam?`${blueTeam.color}12`:'rgba(255,255,255,0.03)'}}>
                     <span style={{fontSize:'0.68rem',fontWeight:800,color:BLUE_C,letterSpacing:'0.1em',flexShrink:0}}>BLUE</span>
                     <select value={blueTeamId||''} onChange={e=>{if(e.target.value==='__new__')addTeamFromMain('blue');else{setBlueTeamId(e.target.value||null);setBluePicks({});setEditSide(null);}}}
-                      style={{flex:1,background:blueTeam?`${blueTeam.color}10`:S,border:`1.5px solid ${blueTeam?blueTeam.color+'55':B}`,borderRadius:'8px',padding:'6px 10px',color:blueTeam?.color||T,fontSize:'0.88rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                      style={{flex:1,background:blueTeam?`${blueTeam.color}18`:'rgba(255,255,255,0.06)',border:`1.5px solid ${blueTeam?blueTeam.color+'55':B}`,borderRadius:'8px',padding:'6px 10px',color:blueTeam?.color||T,fontSize:'0.88rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',WebkitAppearance:'none' as const}}>
                       <option value="">팀 선택</option>
                       {teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
                       <option value="__new__">＋ 새 팀 추가</option>
@@ -541,10 +544,10 @@ export default function BanPickClient() {
                     const p=bSorted.find(x=>x.role===role)||null;
                     return <div key={role} style={{borderTop:ri>0?`1px solid ${B}`:'none'}}><ChampGrid team={blueTeam} player={p} picks={bluePicks} side="blue" isEdit={isEditBlue} /></div>;
                   })}
-                  <div style={{padding:'10px 14px',borderTop:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'6px',background:'rgba(0,0,0,0.02)'}}>
+                  <div style={{padding:'10px 14px',borderTop:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'6px',background:'rgba(255,255,255,0.03)'}}>
                     <div style={{display:'flex',gap:'6px'}}>
                       <input value={blueCompName} onChange={e=>setBlueCompName(e.target.value)} placeholder="조합 이름"
-                        style={{flex:1,background:'#fff',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 8px',color:T,fontSize:'0.8rem'}} />
+                        style={{flex:1,background:'rgba(255,255,255,0.08)',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 8px',color:T,fontSize:'0.8rem'}} />
                       <button onClick={()=>{if(blueTeamId)saveComp(blueTeamId,bluePicks,blueCompName,setBlueCompName);}} style={{...Btn('#fff',blueTeam?.color||BLUE_C,'transparent',{flexShrink:0,padding:'5px 10px'})}}>💾</button>
                     </div>
                     {blueTeam&&getC(blueTeam.id).length>0&&(
@@ -561,11 +564,11 @@ export default function BanPickClient() {
                 </div>
 
                 {/* ── 레드팀 ── */}
-                <div style={{background:S,border:`1.5px solid ${redTeam?redTeam.color+'33':B}`,borderRadius:'14px',overflow:'hidden'}}>
-                  <div style={{padding:'10px 14px',display:'flex',gap:'8px',alignItems:'center',borderBottom:`1px solid ${B}`,background:redTeam?`${redTeam.color}06`:'rgba(0,0,0,0.02)'}}>
+                <div style={{background:'rgba(255,255,255,0.05)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',border:`1.5px solid ${redTeam?redTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden'}}>
+                  <div style={{padding:'10px 14px',display:'flex',gap:'8px',alignItems:'center',borderBottom:`1px solid ${B}`,background:redTeam?`${redTeam.color}12`:'rgba(255,255,255,0.03)'}}>
                     {redTeam&&<button onClick={()=>setEditSide(isEditRed?null:'red')} style={{...Btn(isEditRed?redTeam.color:T2,isEditRed?`${redTeam.color}15`:S,isEditRed?`${redTeam.color}44`:B,{flexShrink:0})}}>{isEditRed?'완료':'편집'}</button>}
                     <select value={redTeamId||''} onChange={e=>{if(e.target.value==='__new__')addTeamFromMain('red');else{setRedTeamId(e.target.value||null);setRedPicks({});setEditSide(null);}}}
-                      style={{flex:1,background:redTeam?`${redTeam.color}10`:S,border:`1.5px solid ${redTeam?redTeam.color+'55':B}`,borderRadius:'8px',padding:'6px 10px',color:redTeam?.color||T,fontSize:'0.88rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                      style={{flex:1,background:redTeam?`${redTeam.color}18`:'rgba(255,255,255,0.06)',border:`1.5px solid ${redTeam?redTeam.color+'55':B}`,borderRadius:'8px',padding:'6px 10px',color:redTeam?.color||T,fontSize:'0.88rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',WebkitAppearance:'none' as const}}>
                       <option value="">팀 선택</option>
                       {teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
                       <option value="__new__">＋ 새 팀 추가</option>
@@ -576,11 +579,11 @@ export default function BanPickClient() {
                     const p=rSorted.find(x=>x.role===role)||null;
                     return <div key={role} style={{borderTop:ri>0?`1px solid ${B}`:'none'}}><ChampGrid team={redTeam} player={p} picks={redPicks} side="red" isEdit={isEditRed} /></div>;
                   })}
-                  <div style={{padding:'10px 14px',borderTop:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'6px',background:'rgba(0,0,0,0.02)'}}>
+                  <div style={{padding:'10px 14px',borderTop:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'6px',background:'rgba(255,255,255,0.03)'}}>
                     <div style={{display:'flex',gap:'6px'}}>
                       <button onClick={()=>{if(redTeamId)saveComp(redTeamId,redPicks,redCompName,setRedCompName);}} style={{...Btn('#fff',redTeam?.color||RED_C,'transparent',{flexShrink:0,padding:'5px 10px'})}}>💾</button>
                       <input value={redCompName} onChange={e=>setRedCompName(e.target.value)} placeholder="조합 이름"
-                        style={{flex:1,background:'#fff',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 8px',color:T,fontSize:'0.8rem'}} />
+                        style={{flex:1,background:'rgba(255,255,255,0.08)',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 8px',color:T,fontSize:'0.8rem'}} />
                     </div>
                     {redTeam&&getC(redTeam.id).length>0&&(
                       <div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>
@@ -597,9 +600,9 @@ export default function BanPickClient() {
 
                 {/* ── 우측: 비교 패널 (sticky) ── */}
                 <div style={{position:'sticky',top:'68px'}}>
-                  <div style={{background:S,border:`1px solid ${B}`,borderRadius:'14px',overflow:'hidden'}}>
+                  <div style={{background:'rgba(255,255,255,0.05)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',border:`1px solid ${B}`,borderRadius:'16px',overflow:'hidden'}}>
                     {/* VS 헤더 */}
-                    <div style={{padding:'10px 12px',borderBottom:`1px solid ${B}`,background:'rgba(0,0,0,0.02)'}}>
+                    <div style={{padding:'10px 12px',borderBottom:`1px solid ${B}`,background:'rgba(255,255,255,0.03)'}}>
                       {blueTeam&&redTeam?(
                         <div style={{display:'flex',alignItems:'center',gap:'5px',justifyContent:'center',flexWrap:'wrap'}}>
                           <div style={{width:'6px',height:'6px',borderRadius:'50%',background:blueTeam.color}} />
@@ -640,7 +643,7 @@ export default function BanPickClient() {
                     {/* 대전 저장 */}
                     <div style={{padding:'8px 10px',borderTop:`1px solid ${B}`,display:'flex',gap:'5px',background:'rgba(0,0,0,0.015)'}}>
                       <input value={matchName} onChange={e=>setMatchName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveMatch()} placeholder="밴픽조합 이름"
-                        style={{flex:1,background:'#fff',border:`1px solid ${B}`,borderRadius:'6px',padding:'5px 7px',color:T,fontSize:'0.76rem',minWidth:0}} />
+                        style={{flex:1,background:'rgba(255,255,255,0.08)',border:`1px solid ${B}`,borderRadius:'6px',padding:'5px 7px',color:T,fontSize:'0.76rem',minWidth:0}} />
                       <button onClick={saveMatch} style={{...Btn('#fff',A,'transparent',{padding:'5px 8px',fontSize:'0.76rem',flexShrink:0})}}>💾</button>
                     </div>
                   </div>
@@ -657,7 +660,7 @@ export default function BanPickClient() {
                         const bC2=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.bluePicks[p.id])).filter(Boolean) as PChamp[]:[];
                         const rC2=rt?[...rt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.redPicks[p.id])).filter(Boolean) as PChamp[]:[];
                         return (
-                          <div key={m.id} style={{background:S,border:`1px solid ${B}`,borderRadius:'9px',overflow:'hidden'}}>
+                          <div key={m.id} style={{background:'rgba(255,255,255,0.04)',backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)',border:`1px solid ${B}`,borderRadius:'10px',overflow:'hidden'}}>
                             <button onClick={()=>loadMatch(m)} style={{width:'100%',padding:'8px 10px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
                               <div style={{fontWeight:800,fontSize:'0.76rem',color:T,marginBottom:'5px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
                               {bt&&<div style={{display:'flex',alignItems:'center',gap:'3px',marginBottom:'3px'}}>
@@ -695,14 +698,14 @@ export default function BanPickClient() {
         return (
           <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.48)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}}
             onClick={e=>{if(e.target===e.currentTarget)setPicker(null);}}>
-            <div style={{background:'#fff',border:`1.5px solid ${manTeam.color}44`,borderRadius:'16px',width:'100%',maxWidth:'660px',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.18)'}}>
-              <div style={{padding:'13px 16px',borderBottom:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'8px',background:`${manTeam.color}08`}}>
+            <div style={{background:'rgba(18,20,32,0.97)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',border:`1.5px solid ${manTeam.color}55`,borderRadius:'16px',width:'100%',maxWidth:'660px',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.18)'}}>
+              <div style={{padding:'13px 16px',borderBottom:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'8px',background:`${manTeam.color}12`}}>
                 <span style={{fontWeight:900,fontSize:'0.94rem',color:manTeam.color}}>{manTeam.name} · {p.name}</span>
                 <button onClick={()=>setPicker(null)} style={{marginLeft:'auto',...Btn(T2,S,B,{padding:'4px 10px'})}}>닫기 ✕</button>
               </div>
               <div style={{padding:'10px 14px',borderBottom:`1px solid ${B}`,display:'flex',gap:'8px',alignItems:'center'}}>
                 <input autoFocus value={ms} onChange={e=>setMs(e.target.value)} placeholder="챔피언 검색..."
-                  style={{flex:1,background:'#f8f9fb',border:`1.5px solid ${manTeam.color}55`,borderRadius:'8px',padding:'8px 12px',color:T,fontSize:'0.92rem'}} />
+                  style={{flex:1,background:'rgba(255,255,255,0.08)',border:`1.5px solid ${manTeam.color}55`,borderRadius:'8px',padding:'8px 12px',color:T,fontSize:'0.92rem'}} />
                 <span style={{fontSize:'0.74rem',color:T3}}>{mfChamps.length}개</span>
               </div>
               <div style={{padding:'10px 14px 14px',maxHeight:'380px',overflowY:'auto'}}>
