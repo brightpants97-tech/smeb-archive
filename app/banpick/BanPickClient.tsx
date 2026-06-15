@@ -460,7 +460,7 @@ export default function BanPickClient() {
             ):(
               <>
                 {/* 3열: 블루 | 비교 | 레드 */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 260px 1fr',gap:'14px',alignItems:'start'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 300px 1fr',gap:'14px',alignItems:'start'}}>
 
                   {/* 블루팀 패널 */}
                   <div style={{background:`${BLUE_C}08`,border:`1.5px solid ${BLUE_C}30`,borderRadius:'16px',padding:'16px',maxHeight:'calc(100vh - 120px)',overflowY:'auto'}}>
@@ -489,29 +489,30 @@ export default function BanPickClient() {
                             const bC=bP?.champs.find(x=>x.champ.id===bluePicks[bP.id]);
                             const rC=rP?.champs.find(x=>x.champ.id===redPicks[rP.id]);
                             return (
-                              <div key={role} style={{display:'grid',gridTemplateColumns:'1fr 26px 1fr',borderTop:ri>0?`1px solid ${B}`:'none',background:ri%2===0?'transparent':'rgba(0,0,0,0.018)'}}>
-                                <div style={{padding:'8px 10px',display:'flex',alignItems:'center',gap:'6px'}}>
+                              <div key={role} style={{display:'grid',gridTemplateColumns:'1fr 28px 1fr',borderTop:ri>0?`1px solid ${B}`:'none',background:ri%2===0?'transparent':'rgba(0,0,0,0.018)'}}>
+                                {/* 블루 */}
+                                <div style={{padding:'9px 10px',display:'flex',flexDirection:'column',alignItems:'flex-start',gap:'4px'}}>
                                   {bC?(
                                     <>
-                                      <img src={img(bC.champ)} alt={bC.champ.name} style={{width:'46px',height:'46px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${blueTeam.color}55`,flexShrink:0}} />
-                                      <div style={{minWidth:0}}>
-                                        <div style={{fontWeight:800,fontSize:'0.82rem',color:blueTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'90px'}}>{bC.champ.name}</div>
-                                        <div style={{fontSize:'0.68rem',color:T2}}>{bP?.name} <span style={{color:TAGS[bC.tag].color}}>{TAGS[bC.tag].short}</span></div>
-                                      </div>
+                                      <img src={img(bC.champ)} alt={bC.champ.name}
+                                        style={{width:'46px',height:'46px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${blueTeam.color}55`}} />
+                                      <div style={{fontWeight:800,fontSize:'0.8rem',color:blueTeam.color,lineHeight:1.3}}>{bC.champ.name}</div>
+                                      <div style={{fontSize:'0.67rem',color:T2,lineHeight:1.2}}>{bP?.name} <span style={{color:TAGS[bC.tag].color}}>{TAGS[bC.tag].short}</span></div>
                                     </>
-                                  ):<span style={{fontSize:'0.68rem',color:T3}}>미선택</span>}
+                                  ):<span style={{fontSize:'0.7rem',color:T3,padding:'4px 0'}}>미선택</span>}
                                 </div>
-                                <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.8rem',borderLeft:`1px solid ${B}`,borderRight:`1px solid ${B}`}}>{RI[role]}</div>
-                                <div style={{padding:'8px 10px',display:'flex',alignItems:'center',gap:'6px',justifyContent:'flex-end',flexDirection:'row-reverse'}}>
+                                {/* 포지션 */}
+                                <div style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.9rem',borderLeft:`1px solid ${B}`,borderRight:`1px solid ${B}`}}>{RI[role]}</div>
+                                {/* 레드 */}
+                                <div style={{padding:'9px 10px',display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'4px'}}>
                                   {rC?(
                                     <>
-                                      <img src={img(rC.champ)} alt={rC.champ.name} style={{width:'46px',height:'46px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${redTeam.color}55`,flexShrink:0}} />
-                                      <div style={{minWidth:0,textAlign:'right' as const}}>
-                                        <div style={{fontWeight:800,fontSize:'0.82rem',color:redTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'90px'}}>{rC.champ.name}</div>
-                                        <div style={{fontSize:'0.68rem',color:T2}}>{rP?.name} <span style={{color:TAGS[rC.tag].color}}>{TAGS[rC.tag].short}</span></div>
-                                      </div>
+                                      <img src={img(rC.champ)} alt={rC.champ.name}
+                                        style={{width:'46px',height:'46px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${redTeam.color}55`}} />
+                                      <div style={{fontWeight:800,fontSize:'0.8rem',color:redTeam.color,lineHeight:1.3,textAlign:'right' as const}}>{rC.champ.name}</div>
+                                      <div style={{fontSize:'0.67rem',color:T2,lineHeight:1.2,textAlign:'right' as const}}>{rP?.name} <span style={{color:TAGS[rC.tag].color}}>{TAGS[rC.tag].short}</span></div>
                                     </>
-                                  ):<span style={{fontSize:'0.68rem',color:T3}}>미선택</span>}
+                                  ):<span style={{fontSize:'0.7rem',color:T3,padding:'4px 0'}}>미선택</span>}
                                 </div>
                               </div>
                             );
