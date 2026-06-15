@@ -101,10 +101,10 @@ export default function TeamBuilderClient() {
         </div>
       </header>
 
-      <main style={{maxWidth:'1100px',margin:'0 auto',padding:'32px clamp(1rem,4vw,2rem) 80px'}}>
+      <main style={{maxWidth:'1080px',margin:'0 auto',padding:'28px clamp(1rem,4vw,2rem) 60px'}}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'32px',alignItems:'start'}}>
         <div>{/* 왼쪽: 입력 */}
-        <p style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.3)',marginBottom:'20px',textAlign:'center'}}>
+        <p style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.3)',marginBottom:'14px',textAlign:'center'}}>
           {lockMode ? '🔒 라인을 고정한 채로 나머지만 다시 굴릴 수 있어요' : '🎲 매번 전체 라인을 새로 랜덤 배정해요'}
         </p>
 
@@ -150,7 +150,7 @@ export default function TeamBuilderClient() {
         </div>
 
         {/* 버튼 */}
-        <div style={{display:'flex',gap:'10px',marginBottom:'36px'}}>
+        <div style={{display:'flex',gap:'10px',marginBottom:'0'}}>
           <button onClick={roll} disabled={!allFilled||rolling} style={{
             flex:1,padding:'16px 24px',borderRadius:'14px',border:'none',
             background:allFilled?`linear-gradient(135deg,${A_COLOR},#FF6B35)`:'rgba(255,255,255,0.06)',
@@ -165,7 +165,13 @@ export default function TeamBuilderClient() {
 
         </div>{/* 왼쪽 끝 */}
 
-        <div style={{position:'sticky',top:'24px'}}>{/* 오른쪽: 결과 */}
+        <div style={{position:'sticky',top:'24px',minHeight:'200px'}}>{/* 오른쪽: 결과 */}
+        {!result&&(
+          <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'280px',color:'rgba(255,255,255,0.15)',flexDirection:'column',gap:'12px'}}>
+            <span style={{fontSize:'2.5rem'}}>⚔️</span>
+            <span style={{fontSize:'0.82rem',fontWeight:600}}>팀 짜기 결과가 여기 나와요</span>
+          </div>
+        )}
         {result&&(
           <div style={{display:'flex',flexDirection:'column',gap:'10px',animation:'popIn 0.3s both'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
