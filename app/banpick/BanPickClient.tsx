@@ -366,8 +366,7 @@ export default function BanPickClient() {
                         style={{...Btn('#fff',team.color,'transparent',{padding:'4px 9px',fontSize:'0.76rem',flexShrink:0})}}>+ 챔피언</button>}
                     </div>
                     {p.champs.length>0&&(
-                      <div style={{padding:'8px 10px',display:'flex',gap:'5px',overflowX:'auto',flexWrap:'nowrap',
-                        scrollbarWidth:'none' as const}}>
+                      <div style={{padding:'6px 10px 8px',display:'grid',gridTemplateColumns:'repeat(auto-fill,34px)',gap:'4px'}}>
                         {p.champs.map(pc=>{
                           const isSel=picks[p.id]===pc.champ.id;
                           const tg=TAGS[pc.tag];
@@ -377,8 +376,8 @@ export default function BanPickClient() {
                                 style={{borderRadius:'8px',overflow:'hidden',cursor:isEdit?'default':'pointer',
                                   border:isSel?`2.5px solid ${team.color}`:`2px solid ${tg.bd}`,
                                   boxShadow:isSel?`0 0 0 2px ${team.color}33`:'none',transition:'all 0.1s'}}>
-                                <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
-                                <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.5rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
+                                <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'34px',height:'34px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
+                                <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.48rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
                                 <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
                               </div>
                               {isEdit&&<button onClick={()=>delPC(p.id,pc.champ.id,team.id)}
@@ -432,7 +431,6 @@ export default function BanPickClient() {
         input::placeholder{color:${T3}}
         input:focus,select:focus{outline:none}
         .ci{transition:transform 0.08s}.ci:hover{transform:scale(1.06)}
-        div::-webkit-scrollbar{display:none}
         ::-webkit-scrollbar{width:4px;height:4px}
         ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.14);border-radius:4px}
       `}</style>
