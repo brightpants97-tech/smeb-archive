@@ -493,10 +493,10 @@ export default function BanPickClient() {
                                 <div style={{padding:'8px 10px',display:'flex',alignItems:'center',gap:'6px'}}>
                                   {bC?(
                                     <>
-                                      <img src={img(bC.champ)} alt={bC.champ.name} style={{width:'34px',height:'34px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${blueTeam.color}55`,flexShrink:0}} />
+                                      <img src={img(bC.champ)} alt={bC.champ.name} style={{width:'46px',height:'46px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${blueTeam.color}55`,flexShrink:0}} />
                                       <div style={{minWidth:0}}>
-                                        <div style={{fontWeight:800,fontSize:'0.76rem',color:blueTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'80px'}}>{bC.champ.name}</div>
-                                        <div style={{fontSize:'0.62rem',color:T3}}>{bP?.name} <span style={{color:TAGS[bC.tag].color}}>{TAGS[bC.tag].short}</span></div>
+                                        <div style={{fontWeight:800,fontSize:'0.82rem',color:blueTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'90px'}}>{bC.champ.name}</div>
+                                        <div style={{fontSize:'0.68rem',color:T2}}>{bP?.name} <span style={{color:TAGS[bC.tag].color}}>{TAGS[bC.tag].short}</span></div>
                                       </div>
                                     </>
                                   ):<span style={{fontSize:'0.68rem',color:T3}}>미선택</span>}
@@ -505,10 +505,10 @@ export default function BanPickClient() {
                                 <div style={{padding:'8px 10px',display:'flex',alignItems:'center',gap:'6px',justifyContent:'flex-end',flexDirection:'row-reverse'}}>
                                   {rC?(
                                     <>
-                                      <img src={img(rC.champ)} alt={rC.champ.name} style={{width:'34px',height:'34px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${redTeam.color}55`,flexShrink:0}} />
+                                      <img src={img(rC.champ)} alt={rC.champ.name} style={{width:'46px',height:'46px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${redTeam.color}55`,flexShrink:0}} />
                                       <div style={{minWidth:0,textAlign:'right' as const}}>
-                                        <div style={{fontWeight:800,fontSize:'0.76rem',color:redTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'80px'}}>{rC.champ.name}</div>
-                                        <div style={{fontSize:'0.62rem',color:T3}}>{rP?.name} <span style={{color:TAGS[rC.tag].color}}>{TAGS[rC.tag].short}</span></div>
+                                        <div style={{fontWeight:800,fontSize:'0.82rem',color:redTeam.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:'90px'}}>{rC.champ.name}</div>
+                                        <div style={{fontSize:'0.68rem',color:T2}}>{rP?.name} <span style={{color:TAGS[rC.tag].color}}>{TAGS[rC.tag].short}</span></div>
                                       </div>
                                     </>
                                   ):<span style={{fontSize:'0.68rem',color:T3}}>미선택</span>}
@@ -528,23 +528,51 @@ export default function BanPickClient() {
 
                         {/* 저장된 대전 기록 */}
                         {matchRecords.length>0&&(
-                          <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
+                          <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
                             <div style={{fontSize:'0.72rem',fontWeight:700,color:T3,padding:'0 2px'}}>저장된 대전</div>
                             {matchRecords.map(m=>{
                               const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
+                              const blueChamps=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.bluePicks[p.id])).filter(Boolean) as PChamp[]:[];
+                              const redChamps =rt?[...rt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.redPicks[p.id])).filter(Boolean) as PChamp[]:[];
                               return (
-                                <div key={m.id} style={{background:S,border:`1px solid ${B}`,borderRadius:'9px',overflow:'hidden',display:'flex',alignItems:'center'}}>
+                                <div key={m.id} style={{background:S,border:`1px solid ${B}`,borderRadius:'10px',overflow:'hidden'}}>
+                                  {/* 클릭 영역 */}
                                   <button onClick={()=>loadMatch(m)}
-                                    style={{flex:1,padding:'7px 10px',background:'transparent',border:'none',color:T,fontSize:'0.76rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
-                                    <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
-                                    <div style={{fontSize:'0.62rem',color:T3,marginTop:'2px',display:'flex',gap:'4px'}}>
-                                      {bt&&<span style={{color:bt.color}}>{bt.name}</span>}
-                                      <span>vs</span>
-                                      {rt&&<span style={{color:rt.color}}>{rt.name}</span>}
+                                    style={{width:'100%',padding:'8px 10px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
+                                    {/* 제목 */}
+                                    <div style={{fontWeight:800,fontSize:'0.78rem',color:T,marginBottom:'6px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
+                                    {/* 블루팀 챔피언 */}
+                                    <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'4px'}}>
+                                      {bt&&<span style={{fontSize:'0.62rem',fontWeight:700,color:bt.color,width:'36px',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{bt.name}</span>}
+                                      <div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>
+                                        {blueChamps.map((pc,i)=>(
+                                          <div key={i} style={{position:'relative',flexShrink:0}}>
+                                            <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name}
+                                              style={{width:'28px',height:'28px',borderRadius:'5px',objectFit:'cover',border:`1.5px solid ${bt?.color||BLUE_C}44`,display:'block'}} />
+                                          </div>
+                                        ))}
+                                        {blueChamps.length===0&&<span style={{fontSize:'0.62rem',color:T3}}>미선택</span>}
+                                      </div>
+                                    </div>
+                                    {/* 레드팀 챔피언 */}
+                                    <div style={{display:'flex',alignItems:'center',gap:'5px'}}>
+                                      {rt&&<span style={{fontSize:'0.62rem',fontWeight:700,color:rt.color,width:'36px',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{rt.name}</span>}
+                                      <div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>
+                                        {redChamps.map((pc,i)=>(
+                                          <div key={i} style={{position:'relative',flexShrink:0}}>
+                                            <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name}
+                                              style={{width:'28px',height:'28px',borderRadius:'5px',objectFit:'cover',border:`1.5px solid ${rt?.color||RED_C}44`,display:'block'}} />
+                                          </div>
+                                        ))}
+                                        {redChamps.length===0&&<span style={{fontSize:'0.62rem',color:T3}}>미선택</span>}
+                                      </div>
                                     </div>
                                   </button>
-                                  <button onClick={()=>delMatch(m.id)}
-                                    style={{padding:'7px 9px',background:'transparent',border:'none',borderLeft:`1px solid ${B}`,color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.78rem',fontFamily:'inherit'}}>✕</button>
+                                  {/* 삭제 */}
+                                  <div style={{borderTop:`1px solid ${B}`,display:'flex',justifyContent:'flex-end'}}>
+                                    <button onClick={()=>delMatch(m.id)}
+                                      style={{padding:'4px 10px',background:'transparent',border:'none',color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.74rem',fontFamily:'inherit'}}>삭제 ✕</button>
+                                  </div>
                                 </div>
                               );
                             })}
