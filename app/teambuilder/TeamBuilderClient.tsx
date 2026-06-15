@@ -22,6 +22,7 @@ export default function TeamBuilderClient() {
   const [rolling, setRolling] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [locked, setLocked]   = useState<boolean[]>(POSITIONS.map(()=>false));
+  const [lockMode, setLockMode] = useState(false); // false=전라인랜덤, true=라인고정
   const timer = useRef<ReturnType<typeof setInterval>|null>(null);
 
   useEffect(()=>{
@@ -32,7 +33,7 @@ export default function TeamBuilderClient() {
   const save=(d:[string,string][])=>{ try{(window as any).storage?.set('tb-basic',JSON.stringify(d));}catch{} };
   const setName=(row:number,side:0|1,val:string)=>{ const n=names.map((p,i)=>i===row?(side===0?[val,p[1]]:[p[0],val]) as [string,string]:p); setNames(n);save(n); };
   const toggleLock=(i:number)=>setLocked(prev=>prev.map((v,j)=>j===i?!v:v));
-  const reset=()=>{ const d=POSITIONS.map(()=>['','']) as [string,string][]; setNames(d);save(d);setResult(null);setRevealed(false);setLocked(POSITIONS.map(()=>false)); };
+  const reset=()=>{ const d=POSITIONS.map(()=>['','']) as [string,string][]; setNames(d);save(d);setResult(null);setRevealed(false);setLocked(POSITIONS.map(()=>false));setLockMode(false); };
   const allFilled = names.every(([a,b])=>a.trim()&&b.trim());
 
   const roll=()=>{
@@ -42,7 +43,7 @@ export default function TeamBuilderClient() {
     let tick=0;
     timer.current=setInterval(()=>{
       setResult(POSITIONS.map((pos,i)=>{
-        if(locked[i]&&prev) return prev[i];
+        if(lockMode&&locked[i]&&prev) return prev[i];
         const sw=Math.random()>0.5;
         return{pos,emoji:POS_ICON[i],A:sw?names[i][1]:names[i][0],B:sw?names[i][0]:names[i][1]};
       }));
@@ -50,7 +51,7 @@ export default function TeamBuilderClient() {
       if(tick>=16){
         clearInterval(timer.current!);
         const final=POSITIONS.map((pos,i)=>{
-          if(locked[i]&&prev) return prev[i];
+          if(lockMode&&locked[i]&&prev) return prev[i];
           const sw=Math.random()>0.5;
           return{pos,emoji:POS_ICON[i],A:sw?names[i][1]:names[i][0],B:sw?names[i][0]:names[i][1]};
         });
@@ -82,11 +83,27 @@ export default function TeamBuilderClient() {
         <h1 style={{margin:0,fontSize:'clamp(1.8rem,5vw,2.8rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1}}>
           팀 <span style={{color:A_COLOR}}>빌</span>더
         </h1>
+
+        {/* 모드 토글 */}
+        <div style={{display:'inline-flex',marginTop:'20px',background:'rgba(255,255,255,0.05)',borderRadius:'12px',padding:'4px',border:`1px solid ${BORDER}`,gap:'0'}}>
+          {([
+            [false,'🎲  전 라인 랜덤'],
+            [true, '🔒  라인 고정'],
+          ] as const).map(([m,label])=>(
+            <button key={String(m)} onClick={()=>{setLockMode(m);if(!m)setLocked(POSITIONS.map(()=>false));}} style={{
+              padding:'9px 22px',borderRadius:'8px',border:'none',cursor:'pointer',
+              fontSize:'0.82rem',fontWeight:800,letterSpacing:'-0.01em',transition:'all 0.18s',
+              background:lockMode===m?(m?'#5B4FE8':A_COLOR):'transparent',
+              color:lockMode===m?'#fff':'rgba(255,255,255,0.35)',
+              boxShadow:lockMode===m?`0 2px 10px rgba(${m?'91,79,232':'235,112,26'},0.4)`:'none',
+            }}>{label}</button>
+          ))}
+        </div>
       </header>
 
       <main style={{maxWidth:'720px',margin:'0 auto',padding:'32px clamp(1rem,4vw,2rem) 80px'}}>
         <p style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.3)',marginBottom:'20px',textAlign:'center'}}>
-          라인별로 두 명씩 입력 → 🔒 로 라인 고정 → 랜덤 배정
+          {lockMode ? '🔒 라인을 고정한 채로 나머지만 다시 굴릴 수 있어요' : '🎲 매번 전체 라인을 새로 랜덤 배정해요'}
         </p>
 
         {/* 입력 */}
@@ -94,8 +111,8 @@ export default function TeamBuilderClient() {
           {POSITIONS.map((pos,i)=>(
             <div key={pos} style={{
               display:'grid',gridTemplateColumns:'1fr 56px 1fr',
-              background: locked[i]?'rgba(235,112,26,0.06)':CARD_BG,
-              border:`1px solid ${locked[i]?'rgba(235,112,26,0.35)':BORDER}`,
+              background: lockMode&&locked[i]?'rgba(235,112,26,0.06)':CARD_BG,
+              border:`1px solid ${lockMode&&locked[i]?'rgba(235,112,26,0.35)':BORDER}`,
               borderRadius:'14px',overflow:'hidden',transition:'all 0.18s',
             }}>
               {/* A 입력 */}
@@ -109,13 +126,15 @@ export default function TeamBuilderClient() {
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',borderLeft:`1px solid ${BORDER}`,borderRight:`1px solid ${BORDER}`,padding:'6px 0',background:'rgba(255,255,255,0.015)',gap:'3px'}}>
                 <span style={{fontSize:'0.95rem',lineHeight:1}}>{POS_ICON[i]}</span>
                 <span style={{fontSize:'0.45rem',fontWeight:700,color:'rgba(255,255,255,0.2)',letterSpacing:'0.06em'}}>{pos}</span>
-                <button
-                  onClick={()=>toggleLock(i)}
-                  className={`lock-btn${locked[i]?' active':''}`}
-                  title={locked[i]?'고정 해제':'이 라인 고정'}
-                  style={{background:'none',border:'none',cursor:'pointer',fontSize:'0.8rem',lineHeight:1,padding:'1px',marginTop:'2px'}}>
-                  🔒
-                </button>
+                {lockMode&&(
+                  <button
+                    onClick={()=>toggleLock(i)}
+                    className={`lock-btn${locked[i]?' active':''}`}
+                    title={locked[i]?'고정 해제':'이 라인 고정'}
+                    style={{background:'none',border:'none',cursor:'pointer',fontSize:'0.8rem',lineHeight:1,padding:'1px',marginTop:'2px'}}>
+                    🔒
+                  </button>
+                )}
               </div>
 
               {/* B 입력 */}
@@ -165,7 +184,7 @@ export default function TeamBuilderClient() {
                         <div key={r.pos} style={{display:'flex',alignItems:'center',gap:'9px',animation:revealed?`popIn 0.32s ${i*0.06}s both`:'none'}}>
                           <div style={{width:'26px',height:'26px',borderRadius:'7px',background:`rgba(${ti===0?'235,112,26':'74,127,232'},0.1)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.8rem',flexShrink:0}}>{r.emoji}</div>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:'0.55rem',color:'rgba(255,255,255,0.28)',fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>{r.pos}{locked[i]?' 🔒':''}</div>
+                            <div style={{fontSize:'0.55rem',color:'rgba(255,255,255,0.28)',fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.04em'}}>{r.pos}{lockMode&&locked[i]?' 🔒':''}</div>
                             <div style={{fontSize:revealed?'0.98rem':'0.88rem',fontWeight:900,color:'#fff',letterSpacing:'-0.02em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
                               {rolling?'···':ti===0?r.A:r.B}
                             </div>
@@ -177,7 +196,7 @@ export default function TeamBuilderClient() {
                 );
               })}
             </div>
-            {revealed&&(
+            {revealed&&lockMode&&(
               <p style={{textAlign:'center',fontSize:'0.72rem',color:'rgba(255,255,255,0.25)',margin:'4px 0 0'}}>
                 🔒 버튼으로 라인 고정 후 다시 굴리면 고정된 라인은 유지돼요
               </p>
