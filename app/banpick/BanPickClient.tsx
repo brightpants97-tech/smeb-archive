@@ -449,8 +449,7 @@ export default function BanPickClient() {
       </div>
 
 
-      {/* ── 블루 vs 레드 ── */
-        <div style={{padding:'20px clamp(1rem,4vw,2rem)',animation:'fi 0.18s both'}}>
+      <div style={{padding:'20px clamp(1rem,4vw,2rem)',animation:'fi 0.18s both'}}>
           <div style={{maxWidth:'1200px',margin:'0 auto'}}>
             {teams.length===0?(
               <div style={{textAlign:'center',padding:'80px 0',color:T3}}>
