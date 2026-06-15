@@ -569,6 +569,8 @@ export default function BanPickClient() {
             )}
           </div>
         </div>
+      </div>
+    </div>
 
       {/* 챔피언 추가 모달 */}
       {picker&&(()=>{
