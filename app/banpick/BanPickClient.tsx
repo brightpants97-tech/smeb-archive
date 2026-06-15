@@ -373,7 +373,7 @@ export default function BanPickClient() {
                         style={{...Btn('#fff',team.color,'transparent',{padding:'4px 9px',fontSize:'0.76rem',flexShrink:0})}}>+ 챔피언</button>}
                     </div>
                     {p.champs.length>0&&(
-                      <div style={{padding:'6px 10px 8px',display:'grid',gridTemplateColumns:'repeat(auto-fill,44px)',gap:'4px'}}>
+                      <div style={{padding:'6px 10px 8px',display:'grid',gridTemplateColumns:'repeat(8,44px)',gap:'4px'}}>
                         {p.champs.map(pc=>{
                           const isSel=picks[p.id]===pc.champ.id;
                           const tg=TAGS[pc.tag];
