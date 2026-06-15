@@ -373,7 +373,7 @@ export default function BanPickClient() {
                         style={{...Btn('#fff',team.color,'transparent',{padding:'4px 9px',fontSize:'0.76rem',flexShrink:0})}}>+ 챔피언</button>}
                     </div>
                     {p.champs.length>0&&(
-                      <div style={{padding:'6px 10px 8px',display:'grid',gridTemplateColumns:'repeat(auto-fill,34px)',gap:'4px'}}>
+                      <div style={{padding:'6px 10px 8px',display:'grid',gridTemplateColumns:'repeat(auto-fill,44px)',gap:'4px'}}>
                         {p.champs.map(pc=>{
                           const isSel=picks[p.id]===pc.champ.id;
                           const tg=TAGS[pc.tag];
@@ -383,8 +383,8 @@ export default function BanPickClient() {
                                 style={{borderRadius:'8px',overflow:'hidden',cursor:isEdit?'default':'pointer',
                                   border:isSel?`2.5px solid ${team.color}`:`2px solid ${tg.bd}`,
                                   boxShadow:isSel?`0 0 0 2px ${team.color}33`:'none',transition:'all 0.1s'}}>
-                                <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'34px',height:'34px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
-                                <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.48rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
+                                <img src={img(pc.champ)} alt={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.72}} />
+                                <div style={{position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(transparent,rgba(0,0,0,0.82))',padding:'2px 2px 3px',fontSize:'0.52rem',fontWeight:700,color:'#fff',textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{pc.champ.name}</div>
                                 <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
                               </div>
                               {isEdit&&<button onClick={()=>delPC(p.id,pc.champ.id,team.id)}
@@ -572,7 +572,7 @@ export default function BanPickClient() {
                                         {blueChamps.map((pc,i)=>(
                                           <div key={i} style={{position:'relative',flexShrink:0}}>
                                             <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name}
-                                              style={{width:'28px',height:'28px',borderRadius:'5px',objectFit:'cover',border:`1.5px solid ${bt?.color||BLUE_C}44`,display:'block'}} />
+                                              style={{width:'44px',height:'44px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${bt?.color||BLUE_C}55`,display:'block'}} />
                                           </div>
                                         ))}
                                         {blueChamps.length===0&&<span style={{fontSize:'0.62rem',color:T3}}>미선택</span>}
@@ -585,7 +585,7 @@ export default function BanPickClient() {
                                         {redChamps.map((pc,i)=>(
                                           <div key={i} style={{position:'relative',flexShrink:0}}>
                                             <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name}
-                                              style={{width:'28px',height:'28px',borderRadius:'5px',objectFit:'cover',border:`1.5px solid ${rt?.color||RED_C}44`,display:'block'}} />
+                                              style={{width:'44px',height:'44px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${rt?.color||RED_C}55`,display:'block'}} />
                                           </div>
                                         ))}
                                         {redChamps.length===0&&<span style={{fontSize:'0.62rem',color:T3}}>미선택</span>}
