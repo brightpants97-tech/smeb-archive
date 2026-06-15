@@ -83,14 +83,13 @@ export default function BanPickClient() {
   const getTeam=(id:string|null)=>id?teams.find(t=>t.id===id)||null:null;
 
   // 메인 뷰에서 새 팀 추가
-  const addTeamFromMain=(side:'blue'|'red')=>{
+  const addTeamFromMain=(side?:'blue'|'red')=>{
     const tid=Date.now()+'';
     const players:Player[]=ROLES.map((role,i)=>({id:`${tid}_${i}`,name:`${role} 선수`,role,champs:[]}));
     const t:Team={id:tid,name:`팀 ${teams.length+1}`,color:COLORS[teams.length%COLORS.length],players};
     saveT([...teams,t]);
-    if(side==='blue'){setBlueTeamId(tid);setBluePicks({});}
-    else{setRedTeamId(tid);setRedPicks({});}
-    setEditSide(side);
+    if(side==='blue'){setBlueTeamId(tid);setBluePicks({});setEditSide('blue');}
+    else if(side==='red'){setRedTeamId(tid);setRedPicks({});setEditSide('red');}
   };
 
   // 대전 저장
@@ -444,6 +443,10 @@ export default function BanPickClient() {
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
           {saved&&<span style={{fontSize:'0.74rem',color:'#33CC77',fontWeight:700}}>✓ 저장됨</span>}
+          <button onClick={()=>addTeamFromMain('blue')}
+            style={{...Btn('#fff',A,'transparent',{padding:'6px 14px',fontSize:'0.84rem'})}}>
+            + 팀 추가
+          </button>
           {ver&&<span style={{fontSize:'0.66rem',color:T3}}>v{ver.slice(0,5)}</span>}
         </div>
       </div>
@@ -453,9 +456,13 @@ export default function BanPickClient() {
           <div style={{maxWidth:'1200px',margin:'0 auto'}}>
             {teams.length===0?(
               <div style={{textAlign:'center',padding:'80px 0',color:T3}}>
-                <div style={{fontSize:'2.5rem',marginBottom:'12px'}}>⚙️</div>
-                <div style={{fontWeight:700,fontSize:'1rem',marginBottom:'8px'}}>먼저 팀을 만들어보세요</div>
-
+                <div style={{fontSize:'3rem',marginBottom:'14px'}}>🏆</div>
+                <div style={{fontWeight:700,fontSize:'1rem',color:T,marginBottom:'8px'}}>팀을 만들고 조합을 짜보세요</div>
+                <div style={{fontSize:'0.84rem',marginBottom:'20px',color:T3}}>헤더의 <strong style={{color:A}}>+ 팀 추가</strong> 버튼으로 팀을 생성해요</div>
+                <button onClick={()=>addTeamFromMain('blue')}
+                  style={{...Btn('#fff',A,'transparent',{fontSize:'0.96rem',padding:'10px 24px'})}}>
+                  + 첫 번째 팀 추가
+                </button>
               </div>
             ):(
               <>
