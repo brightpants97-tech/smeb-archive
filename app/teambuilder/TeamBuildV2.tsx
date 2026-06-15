@@ -32,7 +32,7 @@ export default function TeamBuilderClient() {
     const n = names.map((p,i)=>i===row?(side===0?[val,p[1]]:[p[0],val]) as [string,string]:p);
     setNames(n); save(n);
   };
-  const toggleLock = (i:number) => setLocked(prev=>prev.map((v,j)=>j===i?!v:v));
+  
   const reset = () => {
     const d = POSITIONS.map(()=>['','']) as [string,string][];
     setNames(d); save(d); setResult(null); setRevealed(false);
@@ -139,8 +139,8 @@ export default function TeamBuilderClient() {
                     <span style={{fontSize:'0.95rem',lineHeight:1}}>{POS_ICON[i]}</span>
                     <span style={{fontSize:'0.45rem',fontWeight:700,color:'rgba(255,255,255,0.2)',letterSpacing:'0.06em'}}>{pos}</span>
                     {lockMode&&(
-                      <button onClick={()=>toggleLock(i)} className={`lbtn${locked[i]?' on':''}`}
-                        title={locked[i]?'고정 해제':'이 라인 고정'}
+                      <button onClick={()=>toggleLock(i)} className={`lbtn${lockA[i]||lockB[i]?' on':''}`}
+                        title={lockA[i]||lockB[i]?'고정 해제':'이 라인 고정'}
                         style={{background:'none',border:'none',cursor:'pointer',fontSize:'0.8rem',lineHeight:1,padding:'1px',marginTop:'1px'}}>
                         🔒
                       </button>
