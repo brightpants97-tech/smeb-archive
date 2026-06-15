@@ -32,10 +32,7 @@ const Btn = (color:string,bg:string,bd:string,extra?:object)=>({
   fontFamily:'inherit',lineHeight:'1.4',...extra,
 });
 
-type View = 'manage' | 'main';
-
 export default function BanPickClient() {
-  const [view,setView]           = useState<View>('manage');
   const [champs,setChamps]       = useState<Champ[]>([]);
   const [ver,setVer]             = useState('');
   const [teams,setTeams]         = useState<Team[]>([]);
@@ -445,136 +442,21 @@ export default function BanPickClient() {
         <div style={{display:'flex',alignItems:'center',padding:'0 14px',flex:1}}>
           <span style={{fontWeight:900,fontSize:'0.96rem'}}>⚔️ 조합 분석</span>
         </div>
-        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
           {saved&&<span style={{fontSize:'0.74rem',color:'#33CC77',fontWeight:700}}>✓ 저장됨</span>}
-          <div style={{display:'flex',borderRadius:'8px',overflow:'hidden',border:`1px solid ${B}`}}>
-            {(['manage','main'] as View[]).map((v,i)=>(
-              <button key={v} onClick={()=>setView(v)} style={{padding:'6px 14px',border:'none',borderLeft:i>0?`1px solid ${B}`:'none',background:view===v?A:S,color:view===v?'#fff':T2,fontSize:'0.82rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
-                {v==='manage'?'팀 관리':'블루 vs 레드'}
-              </button>
-            ))}
-          </div>
           {ver&&<span style={{fontSize:'0.66rem',color:T3}}>v{ver.slice(0,5)}</span>}
         </div>
       </div>
 
-      {/* ── 팀 관리 ── */}
-      {view==='manage'&&(
-        <div style={{padding:'20px clamp(1rem,4vw,2rem)',animation:'fi 0.18s both'}}>
-          <div style={{maxWidth:'1060px',margin:'0 auto'}}>
-            <div style={{display:'flex',gap:'10px',alignItems:'center',marginBottom:'16px'}}>
-              <div style={{fontWeight:900,fontSize:'1.1rem'}}>팀 관리</div>
-              <button onClick={addTeam} style={{...Btn('#fff',A,'transparent',{marginLeft:'auto'})}}>+ 팀 추가</button>
-            </div>
-            {teams.length>0&&(
-              <div style={{display:'flex',gap:'6px',marginBottom:'14px',flexWrap:'wrap'}}>
-                {teams.map(t=>(
-                  <div key={t.id} style={{display:'flex'}}>
-                    <button onClick={()=>{setManTeamId(t.id);setEditMode(false);setManagePicks({});setVsTeamId(null);setVsCompId(null);}}
-                      style={{padding:'6px 14px',borderRadius:'8px 0 0 8px',border:`1.5px solid ${manTeamId===t.id?t.color+'66':B}`,borderRight:'none',background:manTeamId===t.id?`${t.color}18`:S,color:manTeamId===t.id?t.color:T2,fontSize:'0.86rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
-                      {t.name}
-                    </button>
-                    <button onClick={()=>{if(confirm(`${t.name} 삭제?`))delTeam(t.id);if(manTeamId===t.id)setManTeamId(null);}}
-                      style={{padding:'6px 8px',borderRadius:'0 8px 8px 0',border:`1.5px solid ${B}`,background:S,color:'rgba(200,50,50,0.6)',fontSize:'0.8rem',cursor:'pointer',fontFamily:'inherit'}}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            {manTeam?(
-              <div style={{display:'grid',gridTemplateColumns:'1fr 270px',gap:'16px',alignItems:'start'}}>
-                {/* 왼쪽 */}
-                <div style={{background:S,border:`1.5px solid ${manTeam.color}44`,borderRadius:'14px',overflow:'hidden'}}>
-                  {/* 팀 헤더 */}
-                  <div style={{padding:'12px 16px',borderBottom:`1px solid ${B}`,display:'flex',alignItems:'center',gap:'8px',background:`${manTeam.color}06`}}>
-                    {editMode?(
-                      <>
-                        <input value={manTeam.name} onChange={e=>updTeam(manTeam.id,{name:e.target.value})}
-                          style={{background:'#fff',border:`1.5px solid ${manTeam.color}66`,borderRadius:'7px',padding:'5px 10px',color:T,fontSize:'0.96rem',fontWeight:900,width:'130px'}} />
-                        <div style={{display:'flex',gap:'3px'}}>
-                          {COLORS.map(c=><div key={c} onClick={()=>updTeam(manTeam.id,{color:c})} style={{width:'18px',height:'18px',borderRadius:'50%',background:c,cursor:'pointer',border:manTeam.color===c?'2.5px solid #333':'2.5px solid transparent'}} />)}
-                        </div>
-                      </>
-                    ):(
-                      <span style={{fontWeight:900,fontSize:'0.96rem',color:manTeam.color}}>{manTeam.name}</span>
-                    )}
-                    <div style={{display:'flex',gap:'6px',marginLeft:'auto'}}>
-                      <button onClick={()=>setEditMode(!editMode)} style={{...Btn(editMode?A:T2,editMode?`${A}15`:S,editMode?`${A}44`:B)}}>{editMode?'완료':'편집'}</button>
-                    </div>
-                  </div>
-                  {/* 안내 */}
-                  {!editMode&&<div style={{padding:'7px 16px',borderBottom:`1px solid ${B}`,fontSize:'0.74rem',color:T3,background:'rgba(0,0,0,0.015)'}}>챔피언을 클릭해 오른쪽 패널에서 조합을 구성하세요</div>}
-                  {/* 선수별 */}
-                  <div style={{padding:'12px 16px',display:'flex',flexDirection:'column',gap:'10px'}}>
-                    {manSorted.map(p=>(
-                      <div key={p.id} style={{display:'flex',alignItems:'flex-start',gap:'10px'}}>
-                        <div style={{display:'flex',alignItems:'center',gap:'6px',width:'110px',flexShrink:0,paddingTop:'10px'}}>
-                          <span style={{fontSize:'1rem'}}>{RI[p.role]}</span>
-                          {editMode?(
-                            <input value={p.name} onChange={e=>updTeam(manTeam.id,{players:manTeam.players.map(x=>x.id===p.id?{...x,name:e.target.value}:x)})}
-                              style={{background:'#fff',border:`1px solid ${manTeam.color}55`,borderRadius:'6px',padding:'4px 6px',color:T,fontSize:'0.84rem',fontWeight:800,width:'72px'}} />
-                          ):(
-                            <span style={{fontWeight:800,fontSize:'0.88rem'}}>{p.name}</span>
-                          )}
-                        </div>
-                        <div style={{flex:1,display:'flex',flexWrap:'wrap',gap:'5px'}}>
-                          {p.champs.map(pc=>{
-                            const tg=TAGS[pc.tag];
-                            const isSel=managePicks[p.id]===pc.champ.id;
-                            return (
-                              <div key={pc.champ.id} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'3px'}}>
-                                <div onClick={()=>!editMode&&setManagePicks(prev=>prev[p.id]===pc.champ.id?{...prev,[p.id]:''}:{...prev,[p.id]:pc.champ.id})}
-                                  style={{position:'relative',borderRadius:'8px',overflow:'hidden',flexShrink:0,cursor:editMode?'default':'pointer',
-                                    border:isSel?`2.5px solid ${manTeam.color}`:`2px solid ${tg.bd}`,
-                                    boxShadow:isSel?`0 0 0 2px ${manTeam.color}44`:'none',transition:'all 0.1s'}}>
-                                  <img src={img(pc.champ)} alt={pc.champ.name} title={pc.champ.name} style={{width:'44px',height:'44px',objectFit:'cover',display:'block',opacity:isSel?1:0.75}} />
-                                  <div style={{position:'absolute',top:'1px',right:'2px',fontSize:'0.58rem',lineHeight:1}}>{tg.short}</div>
-                                </div>
-                                {editMode&&(
-                                  <div style={{display:'flex',gap:'2px'}}>
-                                    <select value={pc.tag} onChange={e=>updPC(p.id,pc.champ.id,{tag:e.target.value as any})}
-                                      style={{background:tg.bg,border:`1px solid ${tg.bd}`,borderRadius:'4px',padding:'1px 3px',color:tg.color,fontSize:'0.6rem',fontWeight:700,cursor:'pointer',width:'38px',fontFamily:'inherit'}}>
-                                      {Object.entries(TAGS).map(([k,v])=><option key={k} value={k}>{v.short}</option>)}
-                                    </select>
-                                    <button onClick={()=>delPC(p.id,pc.champ.id)}
-                                      style={{background:'rgba(255,80,80,0.1)',border:'1px solid rgba(255,80,80,0.3)',borderRadius:'4px',color:'rgba(200,40,40,0.9)',cursor:'pointer',fontSize:'0.6rem',fontWeight:700,padding:'1px 4px',fontFamily:'inherit'}}>✕</button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                          {editMode&&(
-                            <button onClick={()=>{setPicker({pid:p.id,side:'manage'});setMs('');}}
-                              style={{width:'44px',height:'44px',borderRadius:'8px',border:`1.5px dashed ${manTeam.color}55`,background:`${manTeam.color}08`,color:manTeam.color,cursor:'pointer',fontSize:'1.3rem',fontFamily:'inherit'}}>+</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 오른쪽 패널 */}
-                <RightPanel />
-              </div>
-            ):(
-              <div style={{textAlign:'center',padding:'60px 0',color:T3}}>
-                <div style={{fontSize:'2.5rem',marginBottom:'10px'}}>🏆</div>
-                <div style={{fontWeight:700}}>팀 탭을 선택하거나 + 팀 추가로 시작하세요</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── 블루 vs 레드 ── */}
-      {view==='main'&&(
+      {/* ── 블루 vs 레드 ── */
         <div style={{padding:'20px clamp(1rem,4vw,2rem)',animation:'fi 0.18s both'}}>
           <div style={{maxWidth:'1200px',margin:'0 auto'}}>
             {teams.length===0?(
               <div style={{textAlign:'center',padding:'80px 0',color:T3}}>
                 <div style={{fontSize:'2.5rem',marginBottom:'12px'}}>⚙️</div>
                 <div style={{fontWeight:700,fontSize:'1rem',marginBottom:'8px'}}>먼저 팀을 만들어보세요</div>
-                <button onClick={()=>setView('manage')} style={{...Btn('#fff',A,'transparent',{fontSize:'0.9rem',padding:'9px 20px'})}}>팀 관리로 이동</button>
+
               </div>
             ):(
               <>
@@ -687,7 +569,6 @@ export default function BanPickClient() {
             )}
           </div>
         </div>
-      )}
 
       {/* 챔피언 추가 모달 */}
       {picker&&(()=>{
