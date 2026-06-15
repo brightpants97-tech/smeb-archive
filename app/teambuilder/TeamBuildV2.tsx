@@ -126,7 +126,7 @@ export default function TeamBuilderClient() {
                   <div style={{position:'relative',display:'flex',alignItems:'center'}}>
                     <span style={{position:'absolute',left:'14px',fontSize:'0.65rem',fontWeight:800,color:names[i][0]?A_COLOR:'rgba(255,255,255,0.2)',pointerEvents:'none'}}>A</span>
                     <input value={names[i][0]} onChange={e=>setName(i,0,e.target.value)} onKeyDown={e=>e.key==='Enter'&&allFilled&&roll()} placeholder="이름"
-                      style={{width:'100%',background:'transparent',border:'none',padding:'15px lockMode?'36px':'14px' 15px 28px',color:'#fff',fontSize:'0.95rem',fontWeight:700}}/>
+                      style={{width:'100%',background:'transparent',border:'none',padding:lockMode?'15px 36px 15px 28px':'15px 14px 15px 28px',color:'#fff',fontSize:'0.95rem',fontWeight:700}}/>
                     {lockMode&&(
                       <button onClick={()=>setLockA(prev=>prev.map((v,j)=>j===i?!v:v))}
                         title={lockA[i]?'팀A 고정 해제':'팀A에 고정'}
@@ -155,7 +155,7 @@ export default function TeamBuilderClient() {
                       </button>
                     )}
                     <input value={names[i][1]} onChange={e=>setName(i,1,e.target.value)} onKeyDown={e=>e.key==='Enter'&&allFilled&&roll()} placeholder="이름"
-                      style={{width:'100%',background:'transparent',border:'none',padding:'15px 28px 15px lockMode?'36px':'14px'',color:'#fff',fontSize:'0.95rem',fontWeight:700,textAlign:'right'}}/>
+                      style={{width:'100%',background:'transparent',border:'none',padding:lockMode?'15px 28px 15px 36px':'15px 28px 15px 14px',color:'#fff',fontSize:'0.95rem',fontWeight:700,textAlign:'right'}}/>
                     <span style={{position:'absolute',right:'14px',fontSize:'0.65rem',fontWeight:800,color:names[i][1]?B_COLOR:'rgba(255,255,255,0.2)',pointerEvents:'none'}}>B</span>
                   </div>
                 </div>
