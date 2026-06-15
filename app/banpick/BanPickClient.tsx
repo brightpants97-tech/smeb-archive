@@ -562,7 +562,6 @@ export default function BanPickClient() {
                     ))}
                   </div>
                 )}
-              </div>
 
                 {/* ── vs 비교 ── */}
                 <div style={{borderTop:`2px solid ${B}`,margin:'0 0 0 0'}}>
@@ -647,7 +646,8 @@ export default function BanPickClient() {
                     <div style={{padding:'0 12px 12px',fontSize:'0.74rem',color:T3}}>상대 팀을 선택하면 포지션별 비교가 나와요</div>
                   )}
                 </div>
-              </div>
+              </div>{/* vs 비교 끝 */}
+              </div>{/* 패널 끝 */}
             )}
 
             </div>{/* grid 끝 */}
