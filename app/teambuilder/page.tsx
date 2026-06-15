@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import TeamBuilderClient from './TeamBuilderClient';
+import TeamBuilderClient from './TeamBuildV2';
 
 export const metadata: Metadata = {
   title: '팀빌더 | SMEB Archive',
