@@ -139,7 +139,7 @@ export default function TeamBuilderClient() {
                     <span style={{fontSize:'0.95rem',lineHeight:1}}>{POS_ICON[i]}</span>
                     <span style={{fontSize:'0.45rem',fontWeight:700,color:'rgba(255,255,255,0.2)',letterSpacing:'0.06em'}}>{pos}</span>
                     {lockMode&&(
-                      <button onClick={()=>toggleLock(i)} className={`lbtn${lockA[i]||lockB[i]?' on':''}`}
+                      <button onClick={()=>{setLockA(prev=>prev.map((v,j)=>j===i?!v:v));setLockB(prev=>prev.map((v,j)=>j===i?!v:v));}} className={`lbtn${lockA[i]||lockB[i]?' on':''}`}
                         title={lockA[i]||lockB[i]?'고정 해제':'이 라인 고정'}
                         style={{background:'none',border:'none',cursor:'pointer',fontSize:'0.8rem',lineHeight:1,padding:'1px',marginTop:'1px'}}>
                         🔒
