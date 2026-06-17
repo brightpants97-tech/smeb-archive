@@ -582,10 +582,22 @@ export default function BanPickClient() {
                         const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
                         const bC2=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.bluePicks[p.id])).filter(Boolean) as PChamp[]:[];
                         const rC2=rt?[...rt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.redPicks[p.id])).filter(Boolean) as PChamp[]:[];
+                        const isActive = m.blueTeamId===blueTeamId && m.redTeamId===redTeamId
+                          && JSON.stringify(m.bluePicks)===JSON.stringify(bluePicks)
+                          && JSON.stringify(m.redPicks)===JSON.stringify(redPicks);
                         return (
-                          <div key={m.id} style={{background:'#ffffff',border:`1px solid ${B}`,borderRadius:'10px',overflow:'hidden',boxShadow:'0 1px 6px rgba(0,0,0,0.06)'}}>
+                          <div key={m.id} style={{
+                            background: isActive ? `${A}10` : '#ffffff',
+                            border: isActive ? `2px solid ${A}` : `1px solid ${B}`,
+                            borderRadius:'10px',overflow:'hidden',
+                            boxShadow: isActive ? `0 0 0 3px ${A}26, 0 2px 10px ${A}33` : '0 1px 6px rgba(0,0,0,0.06)',
+                            transition:'all 0.15s',
+                          }}>
                             <button onClick={()=>loadMatch(m)} style={{width:'100%',padding:'8px 10px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
-                              <div style={{fontWeight:800,fontSize:'0.82rem',color:T,marginBottom:'6px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
+                              <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px'}}>
+                                {isActive&&<span style={{fontSize:'0.7rem',flexShrink:0}}>✓</span>}
+                                <div style={{fontWeight:800,fontSize:'0.82rem',color:isActive?A:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
+                              </div>
                               {bt&&<div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px',flexWrap:'wrap' as const}}>
                                 <span style={{fontSize:'0.68rem',fontWeight:700,color:bt.color,width:'42px',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{bt.name}</span>
                                 {bC2.map((pc,i)=><img key={i} src={img(pc.champ)} alt={pc.champ.name} style={{width:'50px',height:'50px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${bt.color}44`}} />)}
