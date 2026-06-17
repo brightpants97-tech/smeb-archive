@@ -454,7 +454,7 @@ export default function BanPickClient() {
             const isEditRed  = editSide==='red';
 
             return (
-              <div style={{display:'grid',gridTemplateColumns:'1.4fr 1.4fr 1.05fr 1.8fr',gap:'16px',alignItems:'start'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.3fr 1.3fr 1.1fr 2.3fr',gap:'16px',alignItems:'start'}}>
 
                 {/* ── 블루팀 ── */}
                 <div style={{background:'#ffffff',border:`1.5px solid ${blueTeam?blueTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
@@ -577,7 +577,7 @@ export default function BanPickClient() {
                   {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0?(
                     <div>
                       <div style={{fontSize:'0.7rem',fontWeight:700,color:T3,marginBottom:'6px'}}>밴픽조합</div>
-                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'18px'}}>
                       {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).map(m=>{
                         const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
                         const bC2=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>{const pc=p.champs.find(x=>x.champ.id===m.bluePicks[p.id]);return pc?{role:p.role,pc}:null;}).filter(Boolean) as {role:string;pc:PChamp}[]:[];
@@ -589,47 +589,47 @@ export default function BanPickClient() {
                           <div key={m.id} style={{
                             background: isActive ? `${A}10` : '#ffffff',
                             border: isActive ? `2px solid ${A}` : `1px solid ${B}`,
-                            borderRadius:'14px',overflow:'hidden',
+                            borderRadius:'16px',overflow:'hidden',
                             boxShadow: isActive ? `0 0 0 3px ${A}26, 0 2px 10px ${A}33` : '0 1px 6px rgba(0,0,0,0.06)',
                             transition:'all 0.15s',
                           }}>
-                            <button onClick={()=>loadMatch(m)} style={{width:'100%',padding:'16px 18px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
-                              <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px'}}>
-                                {isActive&&<span style={{fontSize:'0.7rem',flexShrink:0}}>✓</span>}
-                                <div style={{fontWeight:800,fontSize:'1rem',color:isActive?A:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
+                            <button onClick={()=>loadMatch(m)} style={{width:'100%',padding:'20px 22px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
+                              <div style={{display:'flex',alignItems:'center',gap:'6px',marginBottom:'10px'}}>
+                                {isActive&&<span style={{fontSize:'0.85rem',flexShrink:0}}>✓</span>}
+                                <div style={{fontWeight:800,fontSize:'1.12rem',color:isActive?A:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
                               </div>
-                              {bt&&<div style={{marginBottom:'16px'}}>
-                                <div style={{display:'flex',alignItems:'center',gap:'6px',marginBottom:'9px'}}>
-                                  <div style={{width:'9px',height:'9px',borderRadius:'50%',background:bt.color,flexShrink:0}} />
-                                  <span style={{fontSize:'0.88rem',fontWeight:800,color:bt.color}}>{bt.name}</span>
+                              {bt&&<div style={{marginBottom:'20px'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'11px'}}>
+                                  <div style={{width:'11px',height:'11px',borderRadius:'50%',background:bt.color,flexShrink:0}} />
+                                  <span style={{fontSize:'1rem',fontWeight:800,color:bt.color}}>{bt.name}</span>
                                 </div>
-                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'8px'}}>
+                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'11px'}}>
                                   {bC2.map(({role,pc},i)=>(
                                     <div key={i} style={{position:'relative'}}>
                                       <img src={img(pc.champ)} alt={pc.champ.name} title={`${RI[role]} ${role} · ${pc.champ.name}`}
-                                        style={{width:'100%',aspectRatio:'1',borderRadius:'10px',objectFit:'cover',border:`2.5px solid ${bt.color}55`,display:'block'}} />
-                                      <div style={{position:'absolute',top:'-6px',left:'-6px',width:'21px',height:'21px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${bt.color}77`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.74rem',lineHeight:1}}>{RI[role]}</div>
+                                        style={{width:'100%',aspectRatio:'1',borderRadius:'12px',objectFit:'cover',border:`3px solid ${bt.color}66`,display:'block'}} />
+                                      <div style={{position:'absolute',top:'-7px',left:'-7px',width:'25px',height:'25px',borderRadius:'50%',background:'#fff',border:`2px solid ${bt.color}88`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.86rem',lineHeight:1}}>{RI[role]}</div>
                                     </div>
                                   ))}
                                 </div>
                               </div>}
                               {rt&&<div>
-                                <div style={{display:'flex',alignItems:'center',gap:'6px',marginBottom:'9px'}}>
-                                  <div style={{width:'9px',height:'9px',borderRadius:'50%',background:rt.color,flexShrink:0}} />
-                                  <span style={{fontSize:'0.88rem',fontWeight:800,color:rt.color}}>{rt.name}</span>
+                                <div style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'11px'}}>
+                                  <div style={{width:'11px',height:'11px',borderRadius:'50%',background:rt.color,flexShrink:0}} />
+                                  <span style={{fontSize:'1rem',fontWeight:800,color:rt.color}}>{rt.name}</span>
                                 </div>
-                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'8px'}}>
+                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'11px'}}>
                                   {rC2.map(({role,pc},i)=>(
                                     <div key={i} style={{position:'relative'}}>
                                       <img src={img(pc.champ)} alt={pc.champ.name} title={`${RI[role]} ${role} · ${pc.champ.name}`}
-                                        style={{width:'100%',aspectRatio:'1',borderRadius:'10px',objectFit:'cover',border:`2.5px solid ${rt.color}55`,display:'block'}} />
-                                      <div style={{position:'absolute',top:'-6px',left:'-6px',width:'21px',height:'21px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${rt.color}77`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.74rem',lineHeight:1}}>{RI[role]}</div>
+                                        style={{width:'100%',aspectRatio:'1',borderRadius:'12px',objectFit:'cover',border:`3px solid ${rt.color}66`,display:'block'}} />
+                                      <div style={{position:'absolute',top:'-7px',left:'-7px',width:'25px',height:'25px',borderRadius:'50%',background:'#fff',border:`2px solid ${rt.color}88`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.86rem',lineHeight:1}}>{RI[role]}</div>
                                     </div>
                                   ))}
                                 </div>
                               </div>}
                             </button>
-                            <button onClick={()=>delMatch(m.id)} style={{width:'100%',padding:'7px',background:'transparent',border:'none',borderTop:`1px solid ${B}`,color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.78rem',fontFamily:'inherit'}}>삭제 ✕</button>
+                            <button onClick={()=>delMatch(m.id)} style={{width:'100%',padding:'9px',background:'transparent',border:'none',borderTop:`1px solid ${B}`,color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.85rem',fontFamily:'inherit'}}>삭제 ✕</button>
                           </div>
                         );
                       })}
