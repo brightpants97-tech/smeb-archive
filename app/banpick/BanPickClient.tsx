@@ -439,7 +439,7 @@ export default function BanPickClient() {
 
 
       <div style={{padding:'16px clamp(1rem,4vw,2rem)',animation:'fi 0.18s both'}}>
-        <div style={{maxWidth:'1560px',margin:'0 auto'}}>
+        <div style={{maxWidth:'1680px',margin:'0 auto'}}>
           {teams.length===0?(
             <div style={{textAlign:'center',padding:'80px 0',color:T3}}>
               <div style={{fontSize:'3rem',marginBottom:'14px'}}>🏆</div>
@@ -454,7 +454,7 @@ export default function BanPickClient() {
             const isEditRed  = editSide==='red';
 
             return (
-              <div style={{display:'grid',gridTemplateColumns:'1.6fr 1.6fr 1fr 1fr',gap:'16px',alignItems:'start'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.5fr 1.5fr 1fr 1.3fr',gap:'16px',alignItems:'start'}}>
 
                 {/* ── 블루팀 ── */}
                 <div style={{background:'#ffffff',border:`1.5px solid ${blueTeam?blueTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
@@ -577,7 +577,7 @@ export default function BanPickClient() {
                   {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0?(
                     <div>
                       <div style={{fontSize:'0.7rem',fontWeight:700,color:T3,marginBottom:'6px'}}>밴픽조합</div>
-                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
                       {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).map(m=>{
                         const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
                         const bC2=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>{const pc=p.champs.find(x=>x.champ.id===m.bluePicks[p.id]);return pc?{role:p.role,pc}:null;}).filter(Boolean) as {role:string;pc:PChamp}[]:[];
@@ -593,37 +593,37 @@ export default function BanPickClient() {
                             boxShadow: isActive ? `0 0 0 3px ${A}26, 0 2px 10px ${A}33` : '0 1px 6px rgba(0,0,0,0.06)',
                             transition:'all 0.15s',
                           }}>
-                            <button onClick={()=>loadMatch(m)} style={{width:'100%',padding:'8px 10px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
+                            <button onClick={()=>loadMatch(m)} style={{width:'100%',padding:'12px 14px',background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left' as const}}>
                               <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px'}}>
                                 {isActive&&<span style={{fontSize:'0.7rem',flexShrink:0}}>✓</span>}
-                                <div style={{fontWeight:800,fontSize:'0.82rem',color:isActive?A:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
+                                <div style={{fontWeight:800,fontSize:'0.9rem',color:isActive?A:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
                               </div>
-                              {bt&&<div style={{marginBottom:'10px'}}>
-                                <div style={{display:'flex',alignItems:'center',gap:'4px',marginBottom:'5px'}}>
-                                  <div style={{width:'6px',height:'6px',borderRadius:'50%',background:bt.color,flexShrink:0}} />
-                                  <span style={{fontSize:'0.7rem',fontWeight:800,color:bt.color}}>{bt.name}</span>
+                              {bt&&<div style={{marginBottom:'14px'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:'4px',marginBottom:'7px'}}>
+                                  <div style={{width:'7px',height:'7px',borderRadius:'50%',background:bt.color,flexShrink:0}} />
+                                  <span style={{fontSize:'0.78rem',fontWeight:800,color:bt.color}}>{bt.name}</span>
                                 </div>
-                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'4px'}}>
+                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'6px'}}>
                                   {bC2.map(({role,pc},i)=>(
                                     <div key={i} style={{position:'relative'}}>
                                       <img src={img(pc.champ)} alt={pc.champ.name} title={`${RI[role]} ${role} · ${pc.champ.name}`}
                                         style={{width:'100%',aspectRatio:'1',borderRadius:'7px',objectFit:'cover',border:`2px solid ${bt.color}44`,display:'block'}} />
-                                      <div style={{position:'absolute',top:'-4px',left:'-4px',width:'14px',height:'14px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${bt.color}66`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.5rem',lineHeight:1}}>{RI[role]}</div>
+                                      <div style={{position:'absolute',top:'-4px',left:'-4px',width:'17px',height:'17px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${bt.color}66`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.62rem',lineHeight:1}}>{RI[role]}</div>
                                     </div>
                                   ))}
                                 </div>
                               </div>}
                               {rt&&<div>
-                                <div style={{display:'flex',alignItems:'center',gap:'4px',marginBottom:'5px'}}>
-                                  <div style={{width:'6px',height:'6px',borderRadius:'50%',background:rt.color,flexShrink:0}} />
-                                  <span style={{fontSize:'0.7rem',fontWeight:800,color:rt.color}}>{rt.name}</span>
+                                <div style={{display:'flex',alignItems:'center',gap:'4px',marginBottom:'7px'}}>
+                                  <div style={{width:'7px',height:'7px',borderRadius:'50%',background:rt.color,flexShrink:0}} />
+                                  <span style={{fontSize:'0.78rem',fontWeight:800,color:rt.color}}>{rt.name}</span>
                                 </div>
-                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'4px'}}>
+                                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'6px'}}>
                                   {rC2.map(({role,pc},i)=>(
                                     <div key={i} style={{position:'relative'}}>
                                       <img src={img(pc.champ)} alt={pc.champ.name} title={`${RI[role]} ${role} · ${pc.champ.name}`}
                                         style={{width:'100%',aspectRatio:'1',borderRadius:'7px',objectFit:'cover',border:`2px solid ${rt.color}44`,display:'block'}} />
-                                      <div style={{position:'absolute',top:'-4px',left:'-4px',width:'14px',height:'14px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${rt.color}66`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.5rem',lineHeight:1}}>{RI[role]}</div>
+                                      <div style={{position:'absolute',top:'-4px',left:'-4px',width:'17px',height:'17px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${rt.color}66`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.62rem',lineHeight:1}}>{RI[role]}</div>
                                     </div>
                                   ))}
                                 </div>
