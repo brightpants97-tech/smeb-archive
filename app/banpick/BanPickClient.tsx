@@ -83,7 +83,7 @@ function ChampGrid({
         )}
       </div>
       {player.champs.length > 0 && (
-        <div style={{ padding:'6px 10px 8px', display:'grid', gridTemplateColumns:'repeat(8,50px)', gap:'5px' }}>
+        <div style={{ padding:'6px 10px 8px', display:'grid', gridTemplateColumns:'repeat(auto-fill,50px)', gap:'5px' }}>
           {player.champs.map(pc => {
             const isSel = picks[player.id] === pc.champ.id;
             const tg = TAGS[pc.tag];
@@ -454,7 +454,7 @@ export default function BanPickClient() {
             const isEditRed  = editSide==='red';
 
             return (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:'16px',alignItems:'start'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.6fr 1.6fr 1fr 1fr',gap:'16px',alignItems:'start'}}>
 
                 {/* ── 블루팀 ── */}
                 <div style={{background:'#ffffff',border:`1.5px solid ${blueTeam?blueTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
