@@ -575,8 +575,9 @@ export default function BanPickClient() {
                 {/* ── 4번째 컬럼: 대전 기록 (sticky) ── */}
                 <div style={{position:'sticky',top:'68px'}}>
                   {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).length>0?(
-                    <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                      <div style={{fontSize:'0.7rem',fontWeight:700,color:T3}}>밴픽조합</div>
+                    <div>
+                      <div style={{fontSize:'0.7rem',fontWeight:700,color:T3,marginBottom:'6px'}}>밴픽조합</div>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
                       {matchRecords.filter(m=>{const ids=new Set([m.blueTeamId,m.redTeamId]);return ids.has(blueTeamId)&&ids.has(redTeamId);}).map(m=>{
                         const bt=getTeam(m.blueTeamId),rt=getTeam(m.redTeamId);
                         const bC2=bt?[...bt.players].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role)).map(p=>p.champs.find(x=>x.champ.id===m.bluePicks[p.id])).filter(Boolean) as PChamp[]:[];
@@ -598,6 +599,7 @@ export default function BanPickClient() {
                           </div>
                         );
                       })}
+                      </div>
                     </div>
                   ):(
                     <div style={{textAlign:'center' as const,padding:'40px 16px',color:T3,fontSize:'0.8rem'}}>
