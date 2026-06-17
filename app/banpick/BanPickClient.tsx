@@ -589,7 +589,7 @@ export default function BanPickClient() {
                           <div key={m.id} style={{
                             background: isActive ? `${A}10` : '#ffffff',
                             border: isActive ? `2px solid ${A}` : `1px solid ${B}`,
-                            borderRadius:'10px',overflow:'hidden',
+                            borderRadius:'12px',overflow:'hidden',
                             boxShadow: isActive ? `0 0 0 3px ${A}26, 0 2px 10px ${A}33` : '0 1px 6px rgba(0,0,0,0.06)',
                             transition:'all 0.15s',
                           }}>
@@ -607,7 +607,7 @@ export default function BanPickClient() {
                                   {bC2.map(({role,pc},i)=>(
                                     <div key={i} style={{position:'relative'}}>
                                       <img src={img(pc.champ)} alt={pc.champ.name} title={`${RI[role]} ${role} · ${pc.champ.name}`}
-                                        style={{width:'100%',aspectRatio:'1',borderRadius:'7px',objectFit:'cover',border:`2px solid ${bt.color}44`,display:'block'}} />
+                                        style={{width:'100%',aspectRatio:'1',borderRadius:'9px',objectFit:'cover',border:`2px solid ${bt.color}44`,display:'block'}} />
                                       <div style={{position:'absolute',top:'-4px',left:'-4px',width:'17px',height:'17px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${bt.color}66`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.62rem',lineHeight:1}}>{RI[role]}</div>
                                     </div>
                                   ))}
@@ -622,14 +622,14 @@ export default function BanPickClient() {
                                   {rC2.map(({role,pc},i)=>(
                                     <div key={i} style={{position:'relative'}}>
                                       <img src={img(pc.champ)} alt={pc.champ.name} title={`${RI[role]} ${role} · ${pc.champ.name}`}
-                                        style={{width:'100%',aspectRatio:'1',borderRadius:'7px',objectFit:'cover',border:`2px solid ${rt.color}44`,display:'block'}} />
+                                        style={{width:'100%',aspectRatio:'1',borderRadius:'9px',objectFit:'cover',border:`2px solid ${rt.color}44`,display:'block'}} />
                                       <div style={{position:'absolute',top:'-4px',left:'-4px',width:'17px',height:'17px',borderRadius:'50%',background:'#fff',border:`1.5px solid ${rt.color}66`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.62rem',lineHeight:1}}>{RI[role]}</div>
                                     </div>
                                   ))}
                                 </div>
                               </div>}
                             </button>
-                            <button onClick={()=>delMatch(m.id)} style={{width:'100%',padding:'3px',background:'transparent',border:'none',borderTop:`1px solid ${B}`,color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.68rem',fontFamily:'inherit'}}>삭제 ✕</button>
+                            <button onClick={()=>delMatch(m.id)} style={{width:'100%',padding:'5px',background:'transparent',border:'none',borderTop:`1px solid ${B}`,color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.72rem',fontFamily:'inherit'}}>삭제 ✕</button>
                           </div>
                         );
                       })}
