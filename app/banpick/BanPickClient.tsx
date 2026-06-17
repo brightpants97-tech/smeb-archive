@@ -469,6 +469,13 @@ export default function BanPickClient() {
                     {blueTeam&&<button onClick={()=>setEditSide(isEditBlue?null:'blue')} style={{...Btn(isEditBlue?blueTeam.color:T2,isEditBlue?`${blueTeam.color}15`:S,isEditBlue?`${blueTeam.color}44`:B,{flexShrink:0})}}>{isEditBlue?'완료':'편집'}</button>}
                     {blueTeam&&!isEditBlue&&<button onClick={()=>{if(confirm(`${blueTeam.name} 팀을 삭제할까요?`))delTeam(blueTeam.id);}} style={{...Btn('rgba(220,50,50,0.8)','rgba(220,50,50,0.07)','rgba(220,50,50,0.2)',{flexShrink:0,padding:'6px 10px'})}}>삭제</button>}
                   </div>
+                  {blueTeam&&isEditBlue&&(
+                    <div style={{padding:'10px 14px',borderBottom:`1px solid ${B}`,display:'flex',gap:'6px',alignItems:'center',background:'rgba(0,0,0,0.015)'}}>
+                      <span style={{fontSize:'0.72rem',color:T3,fontWeight:700,flexShrink:0}}>팀명</span>
+                      <input value={blueTeam.name} onChange={e=>updTeam(blueTeam.id,{name:e.target.value})}
+                        style={{flex:1,background:'#fff',border:`1.5px solid ${blueTeam.color}66`,borderRadius:'8px',padding:'6px 10px',color:T,fontSize:'0.9rem',fontWeight:800}} />
+                    </div>
+                  )}
                   {ROLES.map((role,ri)=>{
                     const p=bSorted.find(x=>x.role===role)||null;
                     return <div key={role} style={{borderTop:ri>0?`1px solid ${B}`:'none'}}><ChampGrid team={blueTeam} player={p} picks={bluePicks} side="blue" isEdit={isEditBlue}
@@ -511,6 +518,13 @@ export default function BanPickClient() {
                     </select>
                     <span style={{fontSize:'0.68rem',fontWeight:800,color:RED_C,letterSpacing:'0.1em',flexShrink:0}}>RED</span>
                   </div>
+                  {redTeam&&isEditRed&&(
+                    <div style={{padding:'10px 14px',borderBottom:`1px solid ${B}`,display:'flex',gap:'6px',alignItems:'center',background:'rgba(0,0,0,0.015)'}}>
+                      <span style={{fontSize:'0.72rem',color:T3,fontWeight:700,flexShrink:0}}>팀명</span>
+                      <input value={redTeam.name} onChange={e=>updTeam(redTeam.id,{name:e.target.value})}
+                        style={{flex:1,background:'#fff',border:`1.5px solid ${redTeam.color}66`,borderRadius:'8px',padding:'6px 10px',color:T,fontSize:'0.9rem',fontWeight:800}} />
+                    </div>
+                  )}
                   {ROLES.map((role,ri)=>{
                     const p=rSorted.find(x=>x.role===role)||null;
                     return <div key={role} style={{borderTop:ri>0?`1px solid ${B}`:'none'}}><ChampGrid team={redTeam} player={p} picks={redPicks} side="red" isEdit={isEditRed}
