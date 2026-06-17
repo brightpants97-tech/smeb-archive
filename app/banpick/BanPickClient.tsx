@@ -454,7 +454,7 @@ export default function BanPickClient() {
             const isEditRed  = editSide==='red';
 
             return (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 250px 230px',gap:'16px',alignItems:'start'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:'16px',alignItems:'start'}}>
 
                 {/* ── 블루팀 ── */}
                 <div style={{background:'#ffffff',border:`1.5px solid ${blueTeam?blueTeam.color+'44':B}`,borderRadius:'16px',overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
