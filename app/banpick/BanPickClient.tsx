@@ -598,13 +598,23 @@ export default function BanPickClient() {
                                 {isActive&&<span style={{fontSize:'0.7rem',flexShrink:0}}>✓</span>}
                                 <div style={{fontWeight:800,fontSize:'0.82rem',color:isActive?A:T,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{m.name}</div>
                               </div>
-                              {bt&&<div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px',flexWrap:'wrap' as const}}>
-                                <span style={{fontSize:'0.68rem',fontWeight:700,color:bt.color,width:'42px',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{bt.name}</span>
-                                {bC2.map((pc,i)=><img key={i} src={img(pc.champ)} alt={pc.champ.name} style={{width:'50px',height:'50px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${bt.color}44`}} />)}
+                              {bt&&<div style={{marginBottom:'10px'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px'}}>
+                                  <div style={{width:'6px',height:'6px',borderRadius:'50%',background:bt.color,flexShrink:0}} />
+                                  <span style={{fontSize:'0.72rem',fontWeight:800,color:bt.color}}>{bt.name}</span>
+                                </div>
+                                <div style={{display:'flex',gap:'5px',flexWrap:'wrap' as const}}>
+                                  {bC2.map((pc,i)=><img key={i} src={img(pc.champ)} alt={pc.champ.name} style={{width:'42px',height:'42px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${bt.color}44`,flexShrink:0}} />)}
+                                </div>
                               </div>}
-                              {rt&&<div style={{display:'flex',alignItems:'center',gap:'5px',flexWrap:'wrap' as const}}>
-                                <span style={{fontSize:'0.68rem',fontWeight:700,color:rt.color,width:'42px',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{rt.name}</span>
-                                {rC2.map((pc,i)=><img key={i} src={img(pc.champ)} alt={pc.champ.name} style={{width:'50px',height:'50px',borderRadius:'8px',objectFit:'cover',border:`2px solid ${rt.color}44`}} />)}
+                              {rt&&<div>
+                                <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'6px'}}>
+                                  <div style={{width:'6px',height:'6px',borderRadius:'50%',background:rt.color,flexShrink:0}} />
+                                  <span style={{fontSize:'0.72rem',fontWeight:800,color:rt.color}}>{rt.name}</span>
+                                </div>
+                                <div style={{display:'flex',gap:'5px',flexWrap:'wrap' as const}}>
+                                  {rC2.map((pc,i)=><img key={i} src={img(pc.champ)} alt={pc.champ.name} style={{width:'42px',height:'42px',borderRadius:'7px',objectFit:'cover',border:`2px solid ${rt.color}44`,flexShrink:0}} />)}
+                                </div>
                               </div>}
                             </button>
                             <button onClick={()=>delMatch(m.id)} style={{width:'100%',padding:'3px',background:'transparent',border:'none',borderTop:`1px solid ${B}`,color:'rgba(180,50,50,0.5)',cursor:'pointer',fontSize:'0.68rem',fontFamily:'inherit'}}>삭제 ✕</button>
