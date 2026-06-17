@@ -486,23 +486,6 @@ export default function BanPickClient() {
                       onDeleteChamp={delPC}
                     /></div>;
                   })}
-                  <div style={{padding:'10px 14px',borderTop:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'6px',background:'rgba(0,0,0,0.02)'}}>
-                    <div style={{display:'flex',gap:'6px'}}>
-                      <input value={blueCompName} onChange={e=>setBlueCompName(e.target.value)} placeholder="조합 이름"
-                        style={{flex:1,background:'#f8f8fb',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 8px',color:T,fontSize:'0.8rem'}} />
-                      <button onClick={()=>{if(blueTeamId)saveComp(blueTeamId,bluePicks,blueCompName,setBlueCompName);}} style={{...Btn('#fff',blueTeam?.color||BLUE_C,'transparent',{flexShrink:0,padding:'5px 10px'})}}>💾</button>
-                    </div>
-                    {blueTeam&&getC(blueTeam.id).length>0&&(
-                      <div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>
-                        {getC(blueTeam.id).map(c=>(
-                          <div key={c.id} style={{display:'flex'}}>
-                            <button onClick={()=>setBluePicks({...c.picks})} style={{padding:'3px 8px',borderRadius:'6px 0 0 6px',border:`1px solid ${blueTeam.color}44`,borderRight:'none',background:`${blueTeam.color}10`,color:blueTeam.color,fontSize:'0.74rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{c.name}</button>
-                            <button onClick={()=>delComp(blueTeam.id,c.id)} style={{padding:'3px 6px',borderRadius:'0 6px 6px 0',border:`1px solid ${blueTeam.color}44`,background:`${blueTeam.color}08`,color:'rgba(200,50,50,0.8)',fontSize:'0.74rem',cursor:'pointer',fontFamily:'inherit'}}>✕</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* ── 레드팀 ── */}
@@ -535,23 +518,6 @@ export default function BanPickClient() {
                       onDeleteChamp={delPC}
                     /></div>;
                   })}
-                  <div style={{padding:'10px 14px',borderTop:`1px solid ${B}`,display:'flex',flexDirection:'column',gap:'6px',background:'rgba(0,0,0,0.02)'}}>
-                    <div style={{display:'flex',gap:'6px'}}>
-                      <button onClick={()=>{if(redTeamId)saveComp(redTeamId,redPicks,redCompName,setRedCompName);}} style={{...Btn('#fff',redTeam?.color||RED_C,'transparent',{flexShrink:0,padding:'5px 10px'})}}>💾</button>
-                      <input value={redCompName} onChange={e=>setRedCompName(e.target.value)} placeholder="조합 이름"
-                        style={{flex:1,background:'#f8f8fb',border:`1px solid ${B}`,borderRadius:'7px',padding:'5px 8px',color:T,fontSize:'0.8rem'}} />
-                    </div>
-                    {redTeam&&getC(redTeam.id).length>0&&(
-                      <div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>
-                        {getC(redTeam.id).map(c=>(
-                          <div key={c.id} style={{display:'flex'}}>
-                            <button onClick={()=>setRedPicks({...c.picks})} style={{padding:'3px 8px',borderRadius:'6px 0 0 6px',border:`1px solid ${redTeam.color}44`,borderRight:'none',background:`${redTeam.color}10`,color:redTeam.color,fontSize:'0.74rem',fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{c.name}</button>
-                            <button onClick={()=>delComp(redTeam.id,c.id)} style={{padding:'3px 6px',borderRadius:'0 6px 6px 0',border:`1px solid ${redTeam.color}44`,background:`${redTeam.color}08`,color:'rgba(200,50,50,0.8)',fontSize:'0.74rem',cursor:'pointer',fontFamily:'inherit'}}>✕</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* ── 우측: 비교 패널 (sticky) ── */}
