@@ -10,6 +10,13 @@ const APPS = [
     desc: '밴픽 조합 분석',
     color: '#A855F7',
   },
+  {
+    href: '/multiview',
+    icon: '📺',
+    title: '멀티뷰',
+    desc: 'SOOP 동시 시청',
+    color: '#EB701A',
+  },
 ];
 
 function AppCard({ app }: { app: typeof APPS[0] }) {
@@ -134,7 +141,7 @@ export default function AppsClient() {
           {APPS.map(app => <AppCard key={app.href} app={app} />)}
 
           {/* 준비 중 */}
-          {[0, 1].map(i => (
+          {[0].map(i => (
             <div key={i} style={{
               background: 'var(--card)',
               border: '1.5px dashed var(--card-border)',
