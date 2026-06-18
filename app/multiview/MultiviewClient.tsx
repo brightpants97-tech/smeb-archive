@@ -5,22 +5,73 @@ const BG     = '#09090F';
 const CARD   = 'rgba(255,255,255,0.03)';
 const BORDER = 'rgba(255,255,255,0.08)';
 const A      = '#EB701A';
-const MAX_STREAMS = 6;
+const MAX_STREAMS = 4;
 const STORAGE_KEY = 'mv-ids';
 
 function extractId(raw: string): string {
   let s = raw.trim();
   if (!s) return '';
-  // 전체 URL을 붙여넣은 경우 아이디만 추출
   const m = s.match(/sooplive\.co\.kr\/(?:[a-zA-Z]+\.)?([a-zA-Z0-9_]+)/) || s.match(/afreecatv\.com\/([a-zA-Z0-9_]+)/);
   if (m) return m[1];
-  // 마지막 슬래시 이후, 쿼리스트링 제거
   s = s.split('?')[0].split('/').filter(Boolean).pop() || s;
   return s.trim();
 }
 
+function StreamTile({
+  id, big, onRemove, onFocus,
+}: { id: string; big: boolean; onRemove: () => void; onFocus: () => void }) {
+  return (
+    <div style={{
+      background: CARD, border: `1px solid ${BORDER}`, borderRadius: big ? '16px' : '12px',
+      overflow: 'hidden', animation: 'fadeUp 0.25s both', flexShrink: 0,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: big ? '11px 16px' : '7px 10px', borderBottom: `1px solid ${BORDER}`,
+      }}>
+        <button
+          onClick={onFocus}
+          disabled={big}
+          title={big ? undefined : '클릭하면 크게 보기'}
+          style={{
+            background: 'none', border: 'none', cursor: big ? 'default' : 'pointer',
+            color: '#fff', fontWeight: 800, fontSize: big ? '0.92rem' : '0.76rem',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontFamily: 'inherit', padding: 0, textAlign: 'left',
+          }}
+        >
+          {!big && '▸ '}{id}
+        </button>
+        <button onClick={onRemove} style={{
+          background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px',
+          width: big ? '24px' : '18px', height: big ? '24px' : '18px', cursor: 'pointer',
+          color: 'rgba(255,255,255,0.5)', fontSize: big ? '0.82rem' : '0.66rem', lineHeight: 1, flexShrink: 0,
+        }}>
+          ✕
+        </button>
+      </div>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
+        <iframe
+          src={`https://play.sooplive.co.kr/${id}/embed`}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+        {!big && (
+          <button onClick={onFocus} title="클릭하면 크게 보기" style={{
+            position: 'absolute', inset: 0, background: 'transparent', border: 'none',
+            cursor: 'pointer',
+          }} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function MultiviewClient() {
   const [ids, setIds] = useState<string[]>([]);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [hydrated, setHydrated] = useState(false);
@@ -39,6 +90,11 @@ export default function MultiviewClient() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch {}
   }, [ids, hydrated]);
 
+  useEffect(() => {
+    if (focusedId && !ids.includes(focusedId)) setFocusedId(ids[0] ?? null);
+    if (!focusedId && ids.length > 0) setFocusedId(ids[0]);
+  }, [ids, focusedId]);
+
   const addId = () => {
     const id = extractId(input);
     if (!id) return;
@@ -50,7 +106,9 @@ export default function MultiviewClient() {
   };
 
   const removeId = (id: string) => setIds(prev => prev.filter(x => x !== id));
-  const clearAll = () => setIds([]);
+  const clearAll = () => { setIds([]); setFocusedId(null); };
+
+  const others = ids.filter(id => id !== focusedId);
 
   return (
     <div style={{ background: BG, minHeight: '100vh', color: '#fff', fontFamily: 'system-ui,sans-serif' }}>
@@ -97,7 +155,7 @@ export default function MultiviewClient() {
             <span>💡</span><span>아이디는 이렇게 찾아요</span>
           </div>
           방송국 주소 <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', color: A, fontWeight: 700 }}>play.sooplive.co.kr/아이디</code> 에서 마지막 부분이 아이디예요.
-          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요.
+          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면을 클릭하면 크게 볼 수 있어요.
         </div>
 
         {/* 입력 영역 */}
@@ -150,7 +208,7 @@ export default function MultiviewClient() {
           </div>
         </div>
 
-        {/* 스트림 그리드 */}
+        {/* 스트림 영역 */}
         {ids.length === 0 ? (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -160,42 +218,38 @@ export default function MultiviewClient() {
             <span style={{ fontSize: '0.92rem', fontWeight: 600 }}>방송 아이디를 입력해 추가해보세요</span>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '16px',
-          }}>
-            {ids.map((id, i) => (
-              <div key={id} style={{
-                background: CARD, border: `1px solid ${BORDER}`, borderRadius: '14px',
-                overflow: 'hidden', animation: `fadeUp 0.25s ${i * 0.04}s both`,
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '9px 14px', borderBottom: `1px solid ${BORDER}`,
-                }}>
-                  <span style={{ fontSize: '0.84rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {id}
-                  </span>
-                  <button onClick={() => removeId(id)} style={{
-                    background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px',
-                    width: '22px', height: '22px', cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
-                    fontSize: '0.78rem', lineHeight: 1, flexShrink: 0,
-                  }}>
-                    ✕
-                  </button>
-                </div>
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
-                  <iframe
-                    src={`https://play.sooplive.co.kr/${id}/embed`}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
-                    allow="autoplay; encrypted-media; fullscreen"
-                    allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* 메인(큰) 화면 */}
+            {focusedId && (
+              <div style={{ maxWidth: '880px', width: '100%', margin: '0 auto' }}>
+                <StreamTile
+                  id={focusedId}
+                  big
+                  onRemove={() => removeId(focusedId)}
+                  onFocus={() => {}}
+                />
               </div>
-            ))}
+            )}
+
+            {/* 나머지 작은 화면들 */}
+            {others.length > 0 && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${Math.min(others.length, 3)}, minmax(180px, 240px))`,
+                gap: '12px',
+                justifyContent: 'center',
+              }}>
+                {others.map(id => (
+                  <StreamTile
+                    key={id}
+                    id={id}
+                    big={false}
+                    onRemove={() => removeId(id)}
+                    onFocus={() => setFocusedId(id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
