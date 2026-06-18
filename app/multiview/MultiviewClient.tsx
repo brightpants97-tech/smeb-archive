@@ -20,6 +20,15 @@ function extractId(raw: string): string {
 function StreamTile({
   id, big, onRemove, onFocus,
 }: { id: string; big: boolean; onRemove: () => void; onFocus: () => void }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const goFullscreen = () => {
+    const el = wrapRef.current;
+    if (!el) return;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
+  };
+
   return (
     <div style={{
       background: CARD, border: `1px solid ${BORDER}`, borderRadius: big ? '16px' : '12px',
@@ -27,7 +36,7 @@ function StreamTile({
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: big ? '11px 16px' : '7px 10px', borderBottom: `1px solid ${BORDER}`,
+        padding: big ? '11px 16px' : '8px 12px', borderBottom: `1px solid ${BORDER}`,
       }}>
         <button
           onClick={onFocus}
@@ -35,22 +44,33 @@ function StreamTile({
           title={big ? undefined : '클릭하면 크게 보기'}
           style={{
             background: 'none', border: 'none', cursor: big ? 'default' : 'pointer',
-            color: '#fff', fontWeight: 800, fontSize: big ? '0.92rem' : '0.76rem',
+            color: '#fff', fontWeight: 800, fontSize: big ? '0.92rem' : '0.8rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            fontFamily: 'inherit', padding: 0, textAlign: 'left',
+            fontFamily: 'inherit', padding: 0, textAlign: 'left', flex: 1,
           }}
         >
           {!big && '▸ '}{id}
         </button>
-        <button onClick={onRemove} style={{
-          background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px',
-          width: big ? '24px' : '18px', height: big ? '24px' : '18px', cursor: 'pointer',
-          color: 'rgba(255,255,255,0.5)', fontSize: big ? '0.82rem' : '0.66rem', lineHeight: 1, flexShrink: 0,
-        }}>
-          ✕
-        </button>
+        <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+          <button onClick={goFullscreen} title="전체화면" style={{
+            background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px',
+            width: big ? '26px' : '20px', height: big ? '26px' : '20px', cursor: 'pointer',
+            color: 'rgba(255,255,255,0.6)', fontSize: big ? '0.8rem' : '0.66rem', lineHeight: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            ⛶
+          </button>
+          <button onClick={onRemove} style={{
+            background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px',
+            width: big ? '26px' : '20px', height: big ? '26px' : '20px', cursor: 'pointer',
+            color: 'rgba(255,255,255,0.5)', fontSize: big ? '0.82rem' : '0.66rem', lineHeight: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            ✕
+          </button>
+        </div>
       </div>
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
+      <div ref={wrapRef} style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
         <iframe
           src={`https://play.sooplive.co.kr/${id}/embed`}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
@@ -60,9 +80,9 @@ function StreamTile({
         />
         {!big && (
           <button onClick={onFocus} title="크게 보기" style={{
-            position: 'absolute', top: '4px', right: '4px', width: '24px', height: '24px',
+            position: 'absolute', top: '4px', right: '4px', width: '26px', height: '26px',
             background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px',
-            cursor: 'pointer', color: '#fff', fontSize: '0.7rem', lineHeight: 1,
+            cursor: 'pointer', color: '#fff', fontSize: '0.76rem', lineHeight: 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
           }}>
             ⤢
@@ -159,7 +179,7 @@ export default function MultiviewClient() {
             <span>💡</span><span>아이디는 이렇게 찾아요</span>
           </div>
           방송국 주소 <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', color: A, fontWeight: 700 }}>play.sooplive.co.kr/아이디</code> 에서 마지막 부분이 아이디예요.
-          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면 모서리의 <span style={{ color: A, fontWeight: 700 }}>⤢</span> 버튼이나 이름을 클릭하면 크게 볼 수 있어요.
+          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면 모서리의 <span style={{ color: A, fontWeight: 700 }}>⤢</span> 버튼이나 이름을 클릭하면 크게 볼 수 있고, <span style={{ color: A, fontWeight: 700 }}>⛶</span> 버튼으로 전체화면도 가능해요.
         </div>
 
         {/* 입력 영역 */}
@@ -225,7 +245,7 @@ export default function MultiviewClient() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* 메인(큰) 화면 */}
             {focusedId && (
-              <div style={{ maxWidth: '880px', width: '100%', margin: '0 auto' }}>
+              <div style={{ maxWidth: '1040px', width: '100%', margin: '0 auto' }}>
                 <StreamTile
                   id={focusedId}
                   big
@@ -239,7 +259,7 @@ export default function MultiviewClient() {
             {others.length > 0 && (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: `repeat(${Math.min(others.length, 3)}, minmax(180px, 240px))`,
+                gridTemplateColumns: `repeat(${Math.min(others.length, 3)}, minmax(260px, 340px))`,
                 gap: '12px',
                 justifyContent: 'center',
               }}>
