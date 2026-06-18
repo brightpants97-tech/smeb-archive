@@ -7,6 +7,9 @@ const BORDER = 'rgba(255,255,255,0.08)';
 const A      = '#EB701A';
 const MAX_STREAMS = 4;
 const STORAGE_KEY = 'mv-ids';
+const PRESET_KEY = 'mv-presets';
+
+interface Preset { id: string; name: string; ids: string[]; }
 
 function extractId(raw: string): string {
   let s = raw.trim();
@@ -101,10 +104,15 @@ export default function MultiviewClient() {
   const [hydrated, setHydrated] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [presetName, setPresetName] = useState('');
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setIds(JSON.parse(saved));
+      const savedPresets = localStorage.getItem(PRESET_KEY);
+      if (savedPresets) setPresets(JSON.parse(savedPresets));
     } catch {}
     setHydrated(true);
   }, []);
@@ -113,6 +121,11 @@ export default function MultiviewClient() {
     if (!hydrated) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch {}
   }, [ids, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try { localStorage.setItem(PRESET_KEY, JSON.stringify(presets)); } catch {}
+  }, [presets, hydrated]);
 
   useEffect(() => {
     if (focusedId && !ids.includes(focusedId)) setFocusedId(ids[0] ?? null);
@@ -131,6 +144,20 @@ export default function MultiviewClient() {
 
   const removeId = (id: string) => setIds(prev => prev.filter(x => x !== id));
   const clearAll = () => { setIds([]); setFocusedId(null); };
+
+  const savePreset = () => {
+    if (ids.length === 0) { setError('저장할 방송이 없어요'); setTimeout(() => setError(''), 2000); return; }
+    const name = presetName.trim() || ids.join(', ');
+    setPresets(prev => [...prev, { id: `${Date.now()}`, name, ids: [...ids] }]);
+    setPresetName('');
+  };
+
+  const loadPreset = (p: Preset) => {
+    setIds([...p.ids]);
+    setFocusedId(p.ids[0] ?? null);
+  };
+
+  const deletePreset = (id: string) => setPresets(prev => prev.filter(p => p.id !== id));
 
   const others = ids.filter(id => id !== focusedId);
 
@@ -179,7 +206,7 @@ export default function MultiviewClient() {
             <span>💡</span><span>아이디는 이렇게 찾아요</span>
           </div>
           방송국 주소 <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', color: A, fontWeight: 700 }}>play.sooplive.co.kr/아이디</code> 에서 마지막 부분이 아이디예요.
-          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면 모서리의 <span style={{ color: A, fontWeight: 700 }}>⤢</span> 버튼이나 이름을 클릭하면 크게 볼 수 있고, <span style={{ color: A, fontWeight: 700 }}>⛶</span> 버튼으로 전체화면도 가능해요.
+          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면 모서리의 <span style={{ color: A, fontWeight: 700 }}>⤢</span> 버튼이나 이름을 클릭하면 크게 볼 수 있고, <span style={{ color: A, fontWeight: 700 }}>⛶</span> 버튼으로 전체화면도 가능해요. 자주 보는 조합은 이름을 붙여 저장해두세요.
         </div>
 
         {/* 입력 영역 */}
@@ -231,6 +258,74 @@ export default function MultiviewClient() {
             )}
           </div>
         </div>
+
+        {/* 현재 구성 저장 */}
+        <div style={{ display: 'flex', gap: '8px', maxWidth: '480px', margin: '0 auto 22px' }}>
+          <input
+            value={presetName}
+            onChange={e => setPresetName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && savePreset()}
+            placeholder="방송국 이름 (예: 스맵 스크림)"
+            style={{
+              flex: 1, background: CARD, border: `1px solid ${BORDER}`, borderRadius: '10px',
+              padding: '9px 14px', color: '#fff', fontSize: '0.82rem', fontWeight: 600,
+            }}
+          />
+          <button
+            onClick={savePreset}
+            disabled={ids.length === 0}
+            style={{
+              padding: '9px 16px', borderRadius: '10px', border: `1px solid ${ids.length ? A + '66' : BORDER}`,
+              cursor: ids.length ? 'pointer' : 'default',
+              background: ids.length ? `${A}18` : 'rgba(255,255,255,0.03)',
+              color: ids.length ? A : 'rgba(255,255,255,0.25)', fontWeight: 800, fontSize: '0.8rem',
+              flexShrink: 0, whiteSpace: 'nowrap',
+            }}
+          >
+            💾 저장
+          </button>
+        </div>
+
+        {/* 내 방송국 목록 */}
+        {presets.length > 0 && (
+          <div style={{ maxWidth: '880px', margin: '0 auto 28px' }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: '8px', textAlign: 'center' }}>
+              📺 내 방송국
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {presets.map(p => (
+                <div key={p.id} style={{
+                  display: 'flex', alignItems: 'center', background: CARD, border: `1px solid ${BORDER}`,
+                  borderRadius: '10px', overflow: 'hidden',
+                }}>
+                  <button
+                    onClick={() => loadPreset(p)}
+                    title={p.ids.join(', ')}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', color: '#fff',
+                      fontWeight: 700, fontSize: '0.8rem', padding: '8px 12px', fontFamily: 'inherit',
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                    }}
+                  >
+                    <span style={{ color: A }}>▶</span>{p.name}
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>({p.ids.length})</span>
+                  </button>
+                  <button
+                    onClick={() => deletePreset(p.id)}
+                    title="삭제"
+                    style={{
+                      background: 'rgba(255,255,255,0.04)', border: 'none', borderLeft: `1px solid ${BORDER}`,
+                      cursor: 'pointer', color: 'rgba(255,120,120,0.7)', fontSize: '0.7rem',
+                      padding: '8px 10px', fontFamily: 'inherit',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 스트림 영역 */}
         {ids.length === 0 ? (
