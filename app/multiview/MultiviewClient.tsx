@@ -87,6 +87,19 @@ export default function MultiviewClient() {
 
       <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '28px clamp(1rem,4vw,2rem) 60px' }}>
 
+        {/* 사용 안내 */}
+        <div style={{
+          maxWidth: '560px', margin: '0 auto 24px', padding: '14px 18px',
+          background: CARD, border: `1px solid ${BORDER}`, borderRadius: '12px',
+          fontSize: '0.78rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.45)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
+            <span>💡</span><span>아이디는 이렇게 찾아요</span>
+          </div>
+          방송국 주소 <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', color: A, fontWeight: 700 }}>play.sooplive.co.kr/아이디</code> 에서 마지막 부분이 아이디예요.
+          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요.
+        </div>
+
         {/* 입력 영역 */}
         <div style={{ marginBottom: '28px' }}>
           <div style={{ display: 'flex', gap: '8px', maxWidth: '480px', margin: '0 auto' }}>
