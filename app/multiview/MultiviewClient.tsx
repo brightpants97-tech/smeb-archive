@@ -59,10 +59,14 @@ function StreamTile({
           referrerPolicy="no-referrer-when-downgrade"
         />
         {!big && (
-          <button onClick={onFocus} title="클릭하면 크게 보기" style={{
-            position: 'absolute', inset: 0, background: 'transparent', border: 'none',
-            cursor: 'pointer',
-          }} />
+          <button onClick={onFocus} title="크게 보기" style={{
+            position: 'absolute', top: '4px', right: '4px', width: '24px', height: '24px',
+            background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px',
+            cursor: 'pointer', color: '#fff', fontSize: '0.7rem', lineHeight: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+          }}>
+            ⤢
+          </button>
         )}
       </div>
     </div>
@@ -155,7 +159,7 @@ export default function MultiviewClient() {
             <span>💡</span><span>아이디는 이렇게 찾아요</span>
           </div>
           방송국 주소 <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', color: A, fontWeight: 700 }}>play.sooplive.co.kr/아이디</code> 에서 마지막 부분이 아이디예요.
-          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면을 클릭하면 크게 볼 수 있어요.
+          전체 방송 링크를 그대로 붙여넣어도 자동으로 아이디만 추출해요. 작은 화면 모서리의 <span style={{ color: A, fontWeight: 700 }}>⤢</span> 버튼이나 이름을 클릭하면 크게 볼 수 있어요.
         </div>
 
         {/* 입력 영역 */}
