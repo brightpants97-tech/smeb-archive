@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
 
-// 스프레드시트 ID (공개 보기 권한 공유 링크 기준)
-const SHEET_ID = '1Zm1VOH4rASeczj1mtxXE1pnafBPQb5x9Tak0cwdq8w4';
+// "Publish to web"으로 발행된 ID — 시트마다 행 구조를 그대로 유지하는 CSV를 받기 위해
+// gviz/tq(이름 기반 조회)가 아닌 이 방식을 사용함. gviz는 날짜/텍스트가 섞인 달력 셀
+// 구조에서 일부 행을 누락시키는 문제가 있어 사용하지 않음.
+const PUB_ID = '2PACX-1vTaVpnVjcIITgQKdNZ2Vojdx7Ik78OviKKLh_-6wWvremg5U0A_-JI0XNONOm7UrXIpWTzWO3Uqs98V';
+
+// 실제 구글시트 탭에서 직접 확인한 GID (브라우저로 각 탭 클릭해 URL의 gid값 확인)
+const GID_MAP: Record<string, number> = {
+  '2026년 6월': 202606,
+  '2026년 7월': 722720095,
+};
 
 // 카테고리 목록
 const CATS = ['방송','개인일정','개인 일정','휴일','선택취소','선택 취소'];
@@ -145,20 +153,18 @@ export async function GET(request: Request) {
   const raw   = searchParams.get('raw') === 'true';
 
   const sheetName = `${year}년 ${month}월`;
+  const gid = GID_MAP[sheetName];
+
+  if (!gid) {
+    return NextResponse.json({ year, month, events: [], error: `${sheetName} 시트 GID 미확인 (관리자에게 등록 요청 필요)` });
+  }
 
   try {
-    // gid 하드코딩 없이 시트 '이름'으로 직접 조회 (월별 GID 관리가 필요 없어짐)
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(sheetName)}`;
+    const url = `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=${gid}`;
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return NextResponse.json({ year, month, events: [], error: `HTTP ${res.status} (시트 "${sheetName}" 없음)` });
+    if (!res.ok) return NextResponse.json({ year, month, events: [], error: `HTTP ${res.status}` });
 
     const text = await res.text();
-
-    // gviz는 시트를 못 찾으면 200을 반환하면서 에러 HTML/JSON을 줄 수 있어 별도 체크
-    if (text.includes('Invalid query') || text.startsWith('<HTML') || text.startsWith('<!DOCTYPE')) {
-      return NextResponse.json({ year, month, events: [], error: `시트 "${sheetName}"를 찾을 수 없음` });
-    }
-
     const rows = parseCSV(text);
 
     if (raw) {
@@ -169,7 +175,7 @@ export async function GET(request: Request) {
     }
 
     const events = parseCalendar(rows);
-    return NextResponse.json({ year, month, events, sheetName });
+    return NextResponse.json({ year, month, events, gid });
   } catch (e) {
     return NextResponse.json({ year, month, events: [], error: String(e) });
   }
