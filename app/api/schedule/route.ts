@@ -1,17 +1,7 @@
 import { NextResponse } from 'next/server';
 
-const PUB_ID = '2PACX-1vTaVpnVjcIITgQKdNZ2Vojdx7Ik78OviKKLh_-6wWvremg5U0A_-JI0XNONOm7UrXIpWTzWO3Uqs98V';
-
-const GID_MAP: Record<string, number> = {
-  '2026년 1월':202601,'2026년 2월':202602,'2026년 3월':202603,
-  '2026년 4월':202604,'2026년 5월':202605,'2026년 6월':202606,
-  '2026년 7월':202607,'2026년 8월':202608,'2026년 9월':202609,
-  '2026년 10월':202610,'2026년 11월':202611,'2026년 12월':202612,
-  '2027년 1월':916286495,'2027년 2월':281248381,'2027년 3월':176728639,
-  '2027년 4월':63389854,'2027년 5월':588668077,'2027년 6월':1057643753,
-  '2027년 7월':179275070,'2027년 8월':816793490,'2027년 9월':1607656807,
-  '2027년 10월':1450126795,'2027년 11월':1950433908,'2027년 12월':673368685,
-};
+// 스프레드시트 ID (공개 보기 권한 공유 링크 기준)
+const SHEET_ID = '1Zm1VOH4rASeczj1mtxXE1pnafBPQb5x9Tak0cwdq8w4';
 
 // 카테고리 목록
 const CATS = ['방송','개인일정','개인 일정','휴일','선택취소','선택 취소'];
@@ -155,18 +145,20 @@ export async function GET(request: Request) {
   const raw   = searchParams.get('raw') === 'true';
 
   const sheetName = `${year}년 ${month}월`;
-  const gid = GID_MAP[sheetName];
-
-  if (!gid) {
-    return NextResponse.json({ year, month, events: [], error: `${sheetName} 시트 없음` });
-  }
 
   try {
-    const url = `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=${gid}`;
+    // gid 하드코딩 없이 시트 '이름'으로 직접 조회 (월별 GID 관리가 필요 없어짐)
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(sheetName)}`;
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return NextResponse.json({ year, month, events: [], error: `HTTP ${res.status}` });
+    if (!res.ok) return NextResponse.json({ year, month, events: [], error: `HTTP ${res.status} (시트 "${sheetName}" 없음)` });
 
     const text = await res.text();
+
+    // gviz는 시트를 못 찾으면 200을 반환하면서 에러 HTML/JSON을 줄 수 있어 별도 체크
+    if (text.includes('Invalid query') || text.startsWith('<HTML') || text.startsWith('<!DOCTYPE')) {
+      return NextResponse.json({ year, month, events: [], error: `시트 "${sheetName}"를 찾을 수 없음` });
+    }
+
     const rows = parseCSV(text);
 
     if (raw) {
@@ -177,7 +169,7 @@ export async function GET(request: Request) {
     }
 
     const events = parseCalendar(rows);
-    return NextResponse.json({ year, month, events, gid });
+    return NextResponse.json({ year, month, events, sheetName });
   } catch (e) {
     return NextResponse.json({ year, month, events: [], error: String(e) });
   }
