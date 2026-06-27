@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-const PUB_ID = '2PACX-1vTaVpnVjcIITgQKdNZ2Vojdx7Ik78OviKKLh_-6wWvremg5U0A_-JI0XNONOm7UrXIpWTzWO3Uqs98V';
+
+const SHEET_ID = '1Zm1VOH4rASeczj1mtxXE1pnafBPQb5x9Tak0cwdq8w4';
 
 function parseCSVText(text: string): string[][] {
   const results: string[][] = [];
@@ -19,16 +20,18 @@ function parseCSVText(text: string): string[][] {
   return results;
 }
 
-export async function GET() {
-  const url = `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=202606`;
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const sheet = searchParams.get('sheet') || '2026년 6월';
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(sheet)}`;
   const r = await fetch(url, { cache: 'no-store' });
   const text = await r.text();
   const rows = parseCSVText(text);
-  // 각 행을 인덱스와 함께 반환 (빈 행 제외)
   const annotated = rows.map((row, i) => ({
     i,
     cells: row,
     hasText: row.some(c => c.trim() && !/^\s*$/.test(c))
   })).filter(r => r.hasText);
-  return NextResponse.json({ total: rows.length, rows: annotated });
+  return NextResponse.json({ sheet, status: r.status, total: rows.length, rows: annotated });
 }
