@@ -221,6 +221,8 @@ export default function FaTeamBuilderClient() {
   }
 
   const MAX_OPEN_POSITIONS = 2;
+  const MIN_LOCK_REQUIRED = POSITIONS.length - MAX_OPEN_POSITIONS;
+  const lockedCount = POSITIONS.filter(p => lockedPos[p] && currentSlots[p]).length;
 
   function generateCombos() {
     const lockedList = POSITIONS.filter(p => lockedPos[p] && currentSlots[p]);
@@ -231,7 +233,7 @@ export default function FaTeamBuilderClient() {
       return;
     }
     if (openList.length > MAX_OPEN_POSITIONS) {
-      alert(`포지션을 최소 ${POSITIONS.length - MAX_OPEN_POSITIONS}개는 고정해주세요. 현재 ${lockedList.length}개 고정됨 (성능을 위한 제한이에요).`);
+      alert(`포지션을 최소 ${MIN_LOCK_REQUIRED}개는 고정해주세요. 현재 ${lockedList.length}개 고정됨.`);
       return;
     }
 
@@ -500,19 +502,51 @@ export default function FaTeamBuilderClient() {
             </div>
 
             <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, boxShadow: ELEVATE }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14, marginBottom: 10 }}>
                 <div>
                   <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>🔒 고정 조합 탐색</h3>
                   <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-secondary, #888)' }}>
-                    슬롯에서 🔓 버튼을 눌러 선수를 고정하면(🔒), 나머지 빈 포지션만 자동으로 조합을 찾아봐요. 최소 3포지션은 고정해야 탐색할 수 있어요.
+                    슬롯에서 🔓 버튼을 눌러 선수를 고정하면(🔒), 나머지 빈 포지션만 자동으로 조합을 찾아봐요.
                   </p>
                 </div>
-                <button
-                  onClick={generateCombos}
-                  style={{ background: '#EB701A', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                >
-                  조합 찾기
-                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: lockedCount >= MIN_LOCK_REQUIRED ? '#16A34A' : 'var(--text-secondary, #888)' }}>
+                      {lockedCount}/{POSITIONS.length} 포지션 고정{lockedCount >= MIN_LOCK_REQUIRED ? ' · 탐색 가능' : ` · ${MIN_LOCK_REQUIRED}개 이상 필요`}
+                    </span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {POSITIONS.map(pos => (
+                        <span
+                          key={pos}
+                          title={`${pos}${lockedPos[pos] ? ' 고정됨' : ''}`}
+                          style={{
+                            width: 12, height: 12, borderRadius: '50%',
+                            background: lockedPos[pos] ? '#EB701A' : 'transparent',
+                            border: `2px solid ${lockedPos[pos] ? '#EB701A' : 'var(--card-border)'}`,
+                            transition: 'all .15s',
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={generateCombos}
+                    disabled={lockedCount < MIN_LOCK_REQUIRED}
+                    style={{
+                      background: lockedCount >= MIN_LOCK_REQUIRED ? '#EB701A' : 'var(--bg)',
+                      color: lockedCount >= MIN_LOCK_REQUIRED ? '#fff' : 'var(--text-secondary, #888)',
+                      border: lockedCount >= MIN_LOCK_REQUIRED ? 'none' : '1px solid var(--card-border)',
+                      borderRadius: 8, padding: '10px 18px', fontWeight: 800, fontSize: 13,
+                      cursor: lockedCount >= MIN_LOCK_REQUIRED ? 'pointer' : 'not-allowed',
+                      whiteSpace: 'nowrap', opacity: lockedCount >= MIN_LOCK_REQUIRED ? 1 : 0.7,
+                      transition: 'all .15s',
+                    }}
+                  >
+                    {lockedCount >= MIN_LOCK_REQUIRED ? '조합 찾기' : `${MIN_LOCK_REQUIRED - lockedCount}개 더 고정 필요`}
+                  </button>
+                </div>
               </div>
 
               {comboRun && (
