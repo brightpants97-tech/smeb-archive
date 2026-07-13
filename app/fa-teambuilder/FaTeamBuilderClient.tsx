@@ -6,6 +6,7 @@ import { TIER_ORDER, tierAtLeast, tierColor } from './tiers';
 
 const POSITIONS: Position[] = ['TOP', 'JGL', 'MID', 'ADC', 'SUP'];
 const TEAM_CAP = 182;
+const NEAR_CAP_TOLERANCE = 3; // 조합 탐색 결과를 "캡 - 3점" 이상인 것만 보여줘서 결과 수를 줄임
 const PAGE_SIZE = 30;
 
 const POS_ICON: Record<Position, string> = {
@@ -176,6 +177,12 @@ export default function FaTeamBuilderClient() {
     setEditingId(null);
   }
 
+  const playersById = useMemo(() => {
+    const map = new Map<string, FaPlayer>();
+    players.forEach(p => map.set(p.id, p));
+    return map;
+  }, [players]);
+
   const positionCounts = useMemo(() => {
     const counts: Record<Position, number> = { TOP: 0, JGL: 0, MID: 0, ADC: 0, SUP: 0 };
     players.forEach(p => { counts[p.position]++; });
@@ -220,7 +227,7 @@ export default function FaTeamBuilderClient() {
     setLockedPos(prev => ({ ...prev, [pos]: !prev[pos] }));
   }
 
-  const MAX_OPEN_POSITIONS = 2;
+  const MAX_OPEN_POSITIONS = 3;
   const MIN_LOCK_REQUIRED = POSITIONS.length - MAX_OPEN_POSITIONS;
   const lockedCount = POSITIONS.filter(p => lockedPos[p] && currentSlots[p]).length;
 
@@ -255,10 +262,12 @@ export default function FaTeamBuilderClient() {
     const totalGenerated = partials.length;
     const results: { slots: Record<Position, string>; total: number; bonus: number }[] = [];
 
-    partials.forEach(c => {
+    // Map 기반 O(1) 조회 — 빈 포지션이 3개(최대 조합 수십만 건)여도 빠르게 처리
+    for (let i = 0; i < partials.length; i++) {
+      const c = partials[i];
       const fullSlots = { ...lockedSlots, ...c } as Record<Position, string>;
-      const objs = POSITIONS.map(pos => players.find(p => p.id === fullSlots[pos]));
-      if (objs.some(p => !p)) return;
+      const objs = POSITIONS.map(pos => playersById.get(fullSlots[pos]));
+      if (objs.some(p => !p)) continue;
       const valid = objs as FaPlayer[];
       const raw = valid.reduce((s, p) => s + p.score, 0);
       const jgl = valid[POSITIONS.indexOf('JGL')];
@@ -266,11 +275,12 @@ export default function FaTeamBuilderClient() {
       const sup = valid[POSITIONS.indexOf('SUP')];
       const bonus = pairBonus(jgl, sup) + pairBonus(adc, sup);
       const eff = raw + bonus;
+      if (eff > TEAM_CAP || eff < TEAM_CAP - NEAR_CAP_TOLERANCE) continue;
       const exPro = valid.filter(p => p.exPro && p.position !== 'SUP').length;
-      if (eff <= TEAM_CAP && exPro <= 1) {
+      if (exPro <= 1) {
         results.push({ slots: fullSlots, total: eff, bonus });
       }
-    });
+    }
 
     results.sort((a, b) => b.total - a.total);
     setComboResults(results.slice(0, 50));
@@ -551,7 +561,7 @@ export default function FaTeamBuilderClient() {
 
               {comboRun && (
                 <div style={{ fontSize: 12, color: 'var(--text-secondary, #888)', marginBottom: 12 }}>
-                  가능한 조합 {comboRun.total.toLocaleString()}개 중 182점 이하 통과 <b style={{ color: 'var(--text)' }}>{comboRun.valid.toLocaleString()}개</b> · 총점 높은 순 상위 {Math.min(50, comboRun.valid)}개 표시
+                  가능한 조합 {comboRun.total.toLocaleString()}개 중 {TEAM_CAP - NEAR_CAP_TOLERANCE}~{TEAM_CAP}점 범위 통과 <b style={{ color: 'var(--text)' }}>{comboRun.valid.toLocaleString()}개</b> · 총점 높은 순 상위 {Math.min(50, comboRun.valid)}개 표시
                 </div>
               )}
 
