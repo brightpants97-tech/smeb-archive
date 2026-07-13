@@ -54,6 +54,9 @@ export default function FaTeamBuilderClient() {
 
   const [currentSlots, setCurrentSlots] = useState<Record<Position, string>>(emptySlots());
   const [currentSixth, setCurrentSixth] = useState('');
+  const [lockedPos, setLockedPos] = useState<Record<Position, boolean>>({ TOP: false, JGL: false, MID: false, ADC: false, SUP: false });
+  const [comboResults, setComboResults] = useState<{ slots: Record<Position, string>; total: number; bonus: number }[]>([]);
+  const [comboRun, setComboRun] = useState<{ total: number; valid: number } | null>(null);
   const [teamName, setTeamName] = useState('');
 
   const [filterPos, setFilterPos] = useState<Position | ''>('');
@@ -207,6 +210,74 @@ export default function FaTeamBuilderClient() {
 
   function pickSlot(pos: Position, playerId: string) {
     setCurrentSlots(prev => ({ ...prev, [pos]: playerId }));
+    setLockedPos(prev => (prev[pos] ? { ...prev, [pos]: false } : prev));
+    setComboResults([]);
+    setComboRun(null);
+  }
+
+  function toggleLock(pos: Position) {
+    if (!currentSlots[pos]) return;
+    setLockedPos(prev => ({ ...prev, [pos]: !prev[pos] }));
+  }
+
+  const MAX_OPEN_POSITIONS = 2;
+
+  function generateCombos() {
+    const lockedList = POSITIONS.filter(p => lockedPos[p] && currentSlots[p]);
+    const openList = POSITIONS.filter(p => !lockedList.includes(p));
+
+    if (openList.length === 0) {
+      alert('모든 포지션이 이미 고정되어 있어요. 조합을 탐색할 빈 포지션이 없어요.');
+      return;
+    }
+    if (openList.length > MAX_OPEN_POSITIONS) {
+      alert(`포지션을 최소 ${POSITIONS.length - MAX_OPEN_POSITIONS}개는 고정해주세요. 현재 ${lockedList.length}개 고정됨 (성능을 위한 제한이에요).`);
+      return;
+    }
+
+    const candidatesByPos: Partial<Record<Position, FaPlayer[]>> = {};
+    openList.forEach(pos => { candidatesByPos[pos] = players.filter(p => p.position === pos); });
+
+    let partials: Partial<Record<Position, string>>[] = [{}];
+    openList.forEach(pos => {
+      const next: Partial<Record<Position, string>>[] = [];
+      (candidatesByPos[pos] || []).forEach(cand => {
+        partials.forEach(base => { next.push({ ...base, [pos]: cand.id }); });
+      });
+      partials = next;
+    });
+
+    const lockedSlots: Partial<Record<Position, string>> = {};
+    lockedList.forEach(pos => { lockedSlots[pos] = currentSlots[pos]; });
+
+    const totalGenerated = partials.length;
+    const results: { slots: Record<Position, string>; total: number; bonus: number }[] = [];
+
+    partials.forEach(c => {
+      const fullSlots = { ...lockedSlots, ...c } as Record<Position, string>;
+      const objs = POSITIONS.map(pos => players.find(p => p.id === fullSlots[pos]));
+      if (objs.some(p => !p)) return;
+      const valid = objs as FaPlayer[];
+      const raw = valid.reduce((s, p) => s + p.score, 0);
+      const jgl = valid[POSITIONS.indexOf('JGL')];
+      const adc = valid[POSITIONS.indexOf('ADC')];
+      const sup = valid[POSITIONS.indexOf('SUP')];
+      const bonus = pairBonus(jgl, sup) + pairBonus(adc, sup);
+      const eff = raw + bonus;
+      const exPro = valid.filter(p => p.exPro && p.position !== 'SUP').length;
+      if (eff <= TEAM_CAP && exPro <= 1) {
+        results.push({ slots: fullSlots, total: eff, bonus });
+      }
+    });
+
+    results.sort((a, b) => b.total - a.total);
+    setComboResults(results.slice(0, 50));
+    setComboRun({ total: totalGenerated, valid: results.length });
+  }
+
+  function saveComboAsTeam(slots: Record<Position, string>) {
+    const name = `조합 ${teams.length + 1}`;
+    setTeams(prev => [...prev, { id: newId('team'), name, slots, sixth: '' }]);
   }
 
   function saveTeam() {
@@ -357,9 +428,9 @@ export default function FaTeamBuilderClient() {
                     key={pos}
                     style={{
                       background: picked ? `${color}0F` : 'var(--card)',
-                      border: `1.5px solid ${picked ? color + '66' : 'var(--card-border)'}`,
+                      border: lockedPos[pos] ? '2px solid #EB701A' : `1.5px solid ${picked ? color + '66' : 'var(--card-border)'}`,
                       borderRadius: 12, padding: 12, minHeight: 156, display: 'flex', flexDirection: 'column',
-                      boxShadow: picked ? `0 0 0 3px ${color}1A, 0 6px 16px ${color}22, ${ELEVATE_SM}` : ELEVATE_SM,
+                      boxShadow: lockedPos[pos] ? `0 0 0 3px rgba(235,112,26,0.15), ${ELEVATE_SM}` : picked ? `0 0 0 3px ${color}1A, 0 6px 16px ${color}22, ${ELEVATE_SM}` : ELEVATE_SM,
                       transition: 'all .15s',
                     }}
                   >
@@ -380,8 +451,20 @@ export default function FaTeamBuilderClient() {
                     <div style={{ marginTop: 'auto' }}>
                       {picked ? (
                         <>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
-                            {picked.name}{picked.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}
+                          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                            <span>{picked.name}{picked.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}</span>
+                            <button
+                              onClick={() => toggleLock(pos)}
+                              title={lockedPos[pos] ? '고정 해제' : '이 선수로 고정'}
+                              style={{
+                                background: lockedPos[pos] ? '#EB701A' : 'var(--bg)',
+                                border: `1px solid ${lockedPos[pos] ? '#EB701A' : 'var(--card-border)'}`,
+                                color: lockedPos[pos] ? '#fff' : 'var(--text-secondary, #888)',
+                                borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11, flexShrink: 0,
+                              }}
+                            >
+                              {lockedPos[pos] ? '🔒' : '🔓'}
+                            </button>
                           </div>
                           <div style={{ fontSize: 20, fontWeight: 800, color }}>
                             {picked.score}점
@@ -412,8 +495,67 @@ export default function FaTeamBuilderClient() {
               <span style={{ fontSize: 10.5, color: 'var(--text-secondary, #888)' }}>총점에 포함되지 않아요</span>
             </div>
 
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #888)', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary, #888)', lineHeight: 1.6, marginBottom: 20 }}>
               시너지 보너스: 정글+서폿 또는 원딜+서폿이 <b>둘 다 S+ 이상</b>이면 −5점, <b>둘 다 A- 이상</b>(S+ 미만)이면 −3점이 총점에서 차감돼요. 두 조합은 동시에 적용될 수 있어요.
+            </div>
+
+            <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, boxShadow: ELEVATE }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>🔒 고정 조합 탐색</h3>
+                  <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-secondary, #888)' }}>
+                    슬롯에서 🔓 버튼을 눌러 선수를 고정하면(🔒), 나머지 빈 포지션만 자동으로 조합을 찾아봐요. 최소 3포지션은 고정해야 탐색할 수 있어요.
+                  </p>
+                </div>
+                <button
+                  onClick={generateCombos}
+                  style={{ background: '#EB701A', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  조합 찾기
+                </button>
+              </div>
+
+              {comboRun && (
+                <div style={{ fontSize: 12, color: 'var(--text-secondary, #888)', marginBottom: 12 }}>
+                  가능한 조합 {comboRun.total.toLocaleString()}개 중 182점 이하 통과 <b style={{ color: 'var(--text)' }}>{comboRun.valid.toLocaleString()}개</b> · 총점 높은 순 상위 {Math.min(50, comboRun.valid)}개 표시
+                </div>
+              )}
+
+              {comboResults.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {comboResults.map((r, idx) => (
+                    <div
+                      key={idx}
+                      className="fatb-row"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+                        background: 'var(--bg)', border: '1px solid var(--card-border)', borderRadius: 10, padding: '8px 12px',
+                      }}
+                    >
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary, #888)', width: 22 }}>#{idx + 1}</span>
+                      {POSITIONS.map(pos => {
+                        const p = players.find(pl => pl.id === r.slots[pos]);
+                        return (
+                          <span key={pos} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                            <span style={{ opacity: 0.6 }}>{POS_ICON[pos]}</span>
+                            <span style={{ fontWeight: lockedPos[pos] ? 800 : 500, color: lockedPos[pos] ? '#EB701A' : 'var(--text)' }}>{p?.name}</span>
+                            {p && <TierBadge tier={p.tier} small />}
+                          </span>
+                        );
+                      })}
+                      <span style={{ marginLeft: 'auto', fontWeight: 800, fontSize: 14, color: '#EB701A' }}>
+                        {r.total}점{r.bonus !== 0 && <span style={{ fontSize: 10, color: '#16A34A', marginLeft: 4 }}>({r.bonus})</span>}
+                      </span>
+                      <button
+                        onClick={() => saveComboAsTeam(r.slots)}
+                        style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        저장
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
