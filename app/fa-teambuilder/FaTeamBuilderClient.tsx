@@ -6,6 +6,15 @@ import { TIER_ORDER, tierAtLeast, tierColor } from './tiers';
 
 const POSITIONS: Position[] = ['TOP', 'JGL', 'MID', 'ADC', 'SUP'];
 const TEAM_CAP = 182;
+const PAGE_SIZE = 30;
+
+const POS_ICON: Record<Position, string> = {
+  TOP: '🛡️',
+  JGL: '🌿',
+  MID: '⚡',
+  ADC: '🏹',
+  SUP: '💊',
+};
 
 const STORAGE_PLAYERS = 'fa-teambuilder-players-v2';
 const STORAGE_TEAMS = 'fa-teambuilder-teams-v2';
@@ -25,10 +34,7 @@ function newId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-// 팀 시너지 보너스 계산 (총점에서 차감되는 형태의 어드밴티지)
-// - 정글+서폿 둘 다 S+ 이상: -5 / 둘 다 A- 이상(S+ 미만): -3
-// - 원딜+서폿 둘 다 S+ 이상: -5 / 둘 다 A- 이상(S+ 미만): -3
-// 두 조합(정글+서폿, 원딜+서폿)은 서로 독립적으로 함께 적용될 수 있음
+// 팀 시너지 보너스: 정글+서폿 또는 원딜+서폿이 둘 다 S+ 이상이면 -5, 둘 다 A- 이상(S+ 미만)이면 -3
 function pairBonus(a?: FaPlayer, b?: FaPlayer): number {
   if (!a || !b) return 0;
   if (tierAtLeast(a.tier, 'S+') && tierAtLeast(b.tier, 'S+')) return -5;
@@ -48,6 +54,7 @@ export default function FaTeamBuilderClient() {
 
   const [filterPos, setFilterPos] = useState<Position | ''>('');
   const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editScore, setEditScore] = useState('');
   const [editTier, setEditTier] = useState('');
@@ -83,6 +90,10 @@ export default function FaTeamBuilderClient() {
     localStorage.setItem(STORAGE_TEAMS, JSON.stringify(teams));
   }, [teams, loaded]);
 
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filterPos, search]);
+
   function upsertPlayer(name: string, position: Position, tier: string, score: number, exPro: boolean) {
     setPlayers(prev => {
       const idx = prev.findIndex(p => p.name === name && p.position === position);
@@ -108,7 +119,6 @@ export default function FaTeamBuilderClient() {
   }
 
   function handleParseBulk() {
-    // 형식: 닉네임 포지션 등급 점수 [프로]
     const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean);
     let added = 0, updated = 0, failed = 0;
     lines.forEach(line => {
@@ -167,6 +177,9 @@ export default function FaTeamBuilderClient() {
     return list;
   }, [players, filterPos, search]);
 
+  const visiblePool = filteredPool.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredPool.length;
+
   const starters = POSITIONS.map(pos => players.find(p => p.id === currentSlots[pos]));
   const [, sJgl, , sAdc, sSup] = starters;
   const rawTotal = starters.reduce((s, p) => s + (p ? p.score : 0), 0);
@@ -211,6 +224,15 @@ export default function FaTeamBuilderClient() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: 'clamp(1.25rem,5vw,3rem)' }}>
+      <style>{`
+        @keyframes synergyPulse {
+          0%   { text-shadow: 0 0 0 rgba(22,163,74,0); }
+          50%  { text-shadow: 0 0 14px rgba(22,163,74,0.55); }
+          100% { text-shadow: 0 0 0 rgba(22,163,74,0); }
+        }
+        .fatb-synergy { animation: synergyPulse 1.8s ease-in-out infinite; }
+        .fatb-row:hover { filter: brightness(0.97); }
+      `}</style>
       <div style={{ maxWidth: '980px', margin: '0 auto' }}>
         <div style={{ marginBottom: '20px' }}>
           <Link
@@ -286,7 +308,10 @@ export default function FaTeamBuilderClient() {
                 <span style={{ fontSize: 12, color: 'var(--text-secondary, #888)' }}>
                   팀 총점 (선발 5인{synergyBonus !== 0 && <span style={{ color: '#16A34A' }}> · 시너지 보너스 {synergyBonus}점 적용됨</span>})
                 </span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: over ? '#E5484D' : 'var(--text)' }}>
+                <span
+                  className={synergyBonus !== 0 ? 'fatb-synergy' : ''}
+                  style={{ fontSize: 22, fontWeight: 800, color: over ? '#E5484D' : synergyBonus !== 0 ? '#16A34A' : 'var(--text)' }}
+                >
                   {effectiveTotal} / {TEAM_CAP}
                   {synergyBonus !== 0 && <span style={{ fontSize: 12, color: 'var(--text-secondary, #888)', fontWeight: 500, marginLeft: 6 }}>(원점수 {rawTotal})</span>}
                 </span>
@@ -312,9 +337,21 @@ export default function FaTeamBuilderClient() {
               {POSITIONS.map(pos => {
                 const picked = players.find(p => p.id === currentSlots[pos]);
                 const options = players.filter(p => p.position === pos).sort((a, b) => b.score - a.score);
+                const color = picked ? tierColor(picked.tier) : undefined;
                 return (
-                  <div key={pos} style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 12, minHeight: 150, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-secondary, #888)', marginBottom: 8 }}>{pos}</div>
+                  <div
+                    key={pos}
+                    style={{
+                      background: picked ? `${color}0F` : 'var(--card)',
+                      border: `1.5px solid ${picked ? color + '66' : 'var(--card-border)'}`,
+                      borderRadius: 12, padding: 12, minHeight: 156, display: 'flex', flexDirection: 'column',
+                      boxShadow: picked ? `0 0 0 3px ${color}1A, 0 6px 16px ${color}22` : 'none',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-secondary, #888)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>{POS_ICON[pos]}</span>{pos}
+                    </div>
                     <select
                       value={currentSlots[pos]}
                       onChange={e => pickSlot(pos, e.target.value)}
@@ -331,9 +368,10 @@ export default function FaTeamBuilderClient() {
                           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
                             {picked.name}{picked.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}
                           </div>
-                          <div style={{ fontSize: 20, fontWeight: 800, color: tierColor(picked.tier) }}>
-                            {picked.score}점 · {picked.tier}
+                          <div style={{ fontSize: 20, fontWeight: 800, color }}>
+                            {picked.score}점
                           </div>
+                          <TierBadge tier={picked.tier} />
                         </>
                       ) : (
                         <div style={{ fontSize: 12, color: 'var(--text-secondary, #888)' }}>선수를 선택하세요</div>
@@ -374,7 +412,7 @@ export default function FaTeamBuilderClient() {
                 </Field>
                 <Field label="포지션" style={{ flex: '0 0 90px' }}>
                   <select value={inPos} onChange={e => setInPos(e.target.value as Position)} style={inputStyle}>
-                    {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                    {POSITIONS.map(p => <option key={p} value={p}>{POS_ICON[p]} {p}</option>)}
                   </select>
                 </Field>
                 <Field label="등급" style={{ flex: '0 0 100px' }}>
@@ -410,32 +448,32 @@ export default function FaTeamBuilderClient() {
               {bulkMsg && <div style={{ fontSize: 12, color: '#16A34A', marginTop: 8 }}>{bulkMsg}</div>}
             </Card>
 
-            <Card title={`FA 선수 목록 (${players.length}명)`}>
+            <Card title={`FA 선수 목록 (${players.length}명 · ${visiblePool.length}명 표시 중)`}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <select value={filterPos} onChange={e => setFilterPos(e.target.value as Position | '')} style={{ ...inputStyle, width: 'auto' }}>
                   <option value="">전체 포지션</option>
-                  {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                  {POSITIONS.map(p => <option key={p} value={p}>{POS_ICON[p]} {p}</option>)}
                 </select>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="닉네임 검색..." style={{ ...inputStyle, width: 'auto', flex: 1, minWidth: 140 }} />
                 <button onClick={resetToSnapshot} style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 7, padding: '8px 12px', fontSize: 11.5, cursor: 'pointer' }}>
                   원본 스냅샷으로 초기화
                 </button>
               </div>
-              <div style={{ maxHeight: 520, overflowY: 'auto' }}>
+              <div style={{ maxHeight: 560, overflowY: 'auto', border: '1px solid var(--card-border)', borderRadius: 10 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>포지션</th>
-                      <th style={thStyle}>닉네임</th>
-                      <th style={thStyle}>등급</th>
-                      <th style={thStyle}>점수</th>
-                      <th style={thStyle}></th>
+                      <th style={{ ...thStyle, position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>포지션</th>
+                      <th style={{ ...thStyle, position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>닉네임</th>
+                      <th style={{ ...thStyle, position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>등급</th>
+                      <th style={{ ...thStyle, position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>점수</th>
+                      <th style={{ ...thStyle, position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPool.map(p => (
+                    {visiblePool.map((p, idx) => (
                       editingId === p.id ? (
-                        <tr key={p.id}>
+                        <tr key={p.id} style={{ background: idx % 2 === 1 ? 'var(--bg)' : 'transparent' }}>
                           <td style={tdStyle}><PosTag pos={p.position} /></td>
                           <td style={tdStyle}>{p.name}</td>
                           <td style={tdStyle}>
@@ -457,11 +495,11 @@ export default function FaTeamBuilderClient() {
                           </td>
                         </tr>
                       ) : (
-                        <tr key={p.id}>
+                        <tr key={p.id} className="fatb-row" style={{ background: idx % 2 === 1 ? 'var(--bg)' : 'transparent' }}>
                           <td style={tdStyle}><PosTag pos={p.position} /></td>
                           <td style={tdStyle}>{p.name}{p.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}</td>
                           <td style={tdStyle}><TierBadge tier={p.tier} /></td>
-                          <td style={{ ...tdStyle, fontWeight: 700 }}>{p.score}</td>
+                          <td style={{ ...tdStyle, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{p.score}</td>
                           <td style={tdStyle}>
                             <div style={{ display: 'flex', gap: 4 }}>
                               <button onClick={() => startEdit(p)} style={{ background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✎</button>
@@ -471,12 +509,22 @@ export default function FaTeamBuilderClient() {
                         </tr>
                       )
                     ))}
-                    {filteredPool.length === 0 && (
+                    {visiblePool.length === 0 && (
                       <tr><td colSpan={5} style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary, #888)' }}>선수가 없어요.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
+              {hasMore && (
+                <div style={{ textAlign: 'center', marginTop: 12 }}>
+                  <button
+                    onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+                    style={{ background: 'var(--bg)', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 8, padding: '9px 20px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    더보기 ({filteredPool.length - visibleCount}명 더 있음)
+                  </button>
+                </div>
+              )}
             </Card>
           </>
         )}
@@ -514,13 +562,13 @@ export default function FaTeamBuilderClient() {
                         {x.p ? x.p.name : <span style={{ color: 'var(--text-secondary, #888)' }}>미정</span>}
                         {x.p && <TierBadge tier={x.p.tier} small />}
                       </span>
-                      <span>{x.p ? x.p.score : '-'}</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{x.p ? x.p.score : '-'}</span>
                     </div>
                   ))}
                   {sixthPlayer && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12.5, opacity: 0.7 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={posTagStyle}>6th</span>{sixthPlayer.name}</span>
-                      <span>{sixthPlayer.score}</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{sixthPlayer.score}</span>
                     </div>
                   )}
                 </div>
@@ -548,22 +596,23 @@ const tdStyle: React.CSSProperties = {
 };
 
 const posTagStyle: React.CSSProperties = {
-  display: 'inline-block', width: 38, textAlign: 'center', fontWeight: 700,
-  fontSize: 11, padding: '3px 0', borderRadius: 5, border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)',
+  display: 'inline-flex', alignItems: 'center', gap: 4, width: 'auto', padding: '3px 7px',
+  fontWeight: 700, fontSize: 11, borderRadius: 5, border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)',
 };
 
 function PosTag({ pos }: { pos: Position }) {
-  return <span style={posTagStyle}>{pos}</span>;
+  return <span style={posTagStyle}>{POS_ICON[pos]} {pos}</span>;
 }
 
+// 등급 배지: 배경을 채운 필(pill) 형태 + 흰 글씨로 어떤 등급이든 대비 확보
 function TierBadge({ tier, small }: { tier: string; small?: boolean }) {
   const color = tierColor(tier);
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      minWidth: small ? 34 : 40, height: small ? 18 : 22, padding: '0 6px',
-      borderRadius: 6, fontWeight: 700, fontSize: small ? 10 : 11.5,
-      background: `${color}26`, color, border: `1px solid ${color}55`,
+      minWidth: small ? 34 : 44, height: small ? 18 : 22, padding: '0 7px',
+      borderRadius: 6, fontWeight: 800, fontSize: small ? 9.5 : 11,
+      background: color, color: '#fff', letterSpacing: '-0.01em',
     }}>
       {tier}
     </span>
