@@ -173,6 +173,12 @@ export default function FaTeamBuilderClient() {
     setEditingId(null);
   }
 
+  const positionCounts = useMemo(() => {
+    const counts: Record<Position, number> = { TOP: 0, JGL: 0, MID: 0, ADC: 0, SUP: 0 };
+    players.forEach(p => { counts[p.position]++; });
+    return counts;
+  }, [players]);
+
   const filteredPool = useMemo(() => {
     let list = players.slice();
     if (filterPos) list = list.filter(p => p.position === filterPos);
@@ -290,6 +296,9 @@ export default function FaTeamBuilderClient() {
 
         {tab === 'builder' && (
           <>
+            <div style={{ marginBottom: 12 }}>
+              <PositionCountStrip counts={positionCounts} />
+            </div>
             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
               <input
                 value={teamName}
@@ -354,8 +363,9 @@ export default function FaTeamBuilderClient() {
                       transition: 'all .15s',
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-secondary, #888)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span>{POS_ICON[pos]}</span>{pos}
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-secondary, #888)', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>{POS_ICON[pos]}</span>{pos}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-secondary, #888)', opacity: 0.7 }}>{positionCounts[pos]}명</span>
                     </div>
                     <select
                       value={currentSlots[pos]}
@@ -454,10 +464,13 @@ export default function FaTeamBuilderClient() {
             </Card>
 
             <Card title={`FA 선수 목록 (${players.length}명 · ${visiblePool.length}명 표시 중)`}>
+              <div style={{ marginBottom: 10 }}>
+                <PositionCountStrip counts={positionCounts} />
+              </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <select value={filterPos} onChange={e => setFilterPos(e.target.value as Position | '')} style={{ ...inputStyle, width: 'auto' }}>
-                  <option value="">전체 포지션</option>
-                  {POSITIONS.map(p => <option key={p} value={p}>{POS_ICON[p]} {p}</option>)}
+                  <option value="">전체 포지션 ({players.length})</option>
+                  {POSITIONS.map(p => <option key={p} value={p}>{POS_ICON[p]} {p} ({positionCounts[p]})</option>)}
                 </select>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="닉네임 검색..." style={{ ...inputStyle, width: 'auto', flex: 1, minWidth: 140 }} />
                 <button onClick={resetToSnapshot} style={{ background: 'transparent', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 7, padding: '8px 12px', fontSize: 11.5, cursor: 'pointer' }}>
@@ -646,6 +659,27 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
     <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, marginBottom: 16, boxShadow: ELEVATE }}>
       <h3 style={{ margin: '0 0 12px', fontSize: 13.5, color: 'var(--text-secondary, #888)', fontWeight: 700 }}>{title}</h3>
       {children}
+    </div>
+  );
+}
+
+function PositionCountStrip({ counts }: { counts: Record<Position, number> }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {POSITIONS.map(pos => (
+        <span
+          key={pos}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 11, fontWeight: 600, color: 'var(--text-secondary, #888)',
+            background: 'var(--bg)', border: '1px solid var(--card-border)',
+            borderRadius: 20, padding: '4px 9px',
+          }}
+        >
+          <span>{POS_ICON[pos]}</span>{pos}
+          <b style={{ color: 'var(--text)', fontWeight: 800 }}>{counts[pos]}</b>
+        </span>
+      ))}
     </div>
   );
 }
