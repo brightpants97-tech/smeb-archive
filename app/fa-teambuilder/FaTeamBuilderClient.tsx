@@ -2,12 +2,13 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { FA_PLAYERS_SNAPSHOT, FaPlayer, Position } from './faPlayers';
+import { TIER_ORDER, tierAtLeast, tierColor } from './tiers';
 
 const POSITIONS: Position[] = ['TOP', 'JGL', 'MID', 'ADC', 'SUP'];
 const TEAM_CAP = 182;
 
-const STORAGE_PLAYERS = 'fa-teambuilder-players';
-const STORAGE_TEAMS = 'fa-teambuilder-teams';
+const STORAGE_PLAYERS = 'fa-teambuilder-players-v2';
+const STORAGE_TEAMS = 'fa-teambuilder-teams-v2';
 
 interface Team {
   id: string;
@@ -20,24 +21,19 @@ function emptySlots(): Record<Position, string> {
   return { TOP: '', JGL: '', MID: '', ADC: '', SUP: '' };
 }
 
-function gradeOf(score: number): 'R' | 'S' | 'A' | 'B' | 'C' {
-  if (score >= 35) return 'R';
-  if (score >= 30) return 'S';
-  if (score >= 24) return 'A';
-  if (score >= 18) return 'B';
-  return 'C';
-}
-
-const GRADE_COLOR: Record<string, string> = {
-  R: '#E5484D',
-  S: '#EB701A',
-  A: '#2F6FED',
-  B: '#60A5FA',
-  C: '#9CA3AF',
-};
-
 function newId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+// 팀 시너지 보너스 계산 (총점에서 차감되는 형태의 어드밴티지)
+// - 정글+서폿 둘 다 S+ 이상: -5 / 둘 다 A- 이상(S+ 미만): -3
+// - 원딜+서폿 둘 다 S+ 이상: -5 / 둘 다 A- 이상(S+ 미만): -3
+// 두 조합(정글+서폿, 원딜+서폿)은 서로 독립적으로 함께 적용될 수 있음
+function pairBonus(a?: FaPlayer, b?: FaPlayer): number {
+  if (!a || !b) return 0;
+  if (tierAtLeast(a.tier, 'S+') && tierAtLeast(b.tier, 'S+')) return -5;
+  if (tierAtLeast(a.tier, 'A-') && tierAtLeast(b.tier, 'A-')) return -3;
+  return 0;
 }
 
 export default function FaTeamBuilderClient() {
@@ -52,15 +48,19 @@ export default function FaTeamBuilderClient() {
 
   const [filterPos, setFilterPos] = useState<Position | ''>('');
   const [search, setSearch] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editScore, setEditScore] = useState('');
+  const [editTier, setEditTier] = useState('');
+  const [editExPro, setEditExPro] = useState(false);
 
   const [inName, setInName] = useState('');
   const [inPos, setInPos] = useState<Position>('TOP');
+  const [inTier, setInTier] = useState<string>('B');
   const [inScore, setInScore] = useState('');
   const [inExPro, setInExPro] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [bulkMsg, setBulkMsg] = useState('');
 
-  // 최초 로드: localStorage에 저장된 값이 있으면 그걸 우선 사용
   useEffect(() => {
     try {
       const p = localStorage.getItem(STORAGE_PLAYERS);
@@ -83,15 +83,15 @@ export default function FaTeamBuilderClient() {
     localStorage.setItem(STORAGE_TEAMS, JSON.stringify(teams));
   }, [teams, loaded]);
 
-  function upsertPlayer(name: string, position: Position, score: number, exPro: boolean) {
+  function upsertPlayer(name: string, position: Position, tier: string, score: number, exPro: boolean) {
     setPlayers(prev => {
       const idx = prev.findIndex(p => p.name === name && p.position === position);
       if (idx >= 0) {
         const next = [...prev];
-        next[idx] = { ...next[idx], score, exPro };
+        next[idx] = { ...next[idx], tier, score, exPro };
         return next;
       }
-      return [...prev, { id: newId('fa'), name, position, score, exPro }];
+      return [...prev, { id: newId('fa'), name, position, tier, score, exPro }];
     });
   }
 
@@ -101,22 +101,24 @@ export default function FaTeamBuilderClient() {
       alert('닉네임과 점수를 정확히 입력해주세요.');
       return;
     }
-    upsertPlayer(inName.trim(), inPos, score, inExPro);
+    upsertPlayer(inName.trim(), inPos, inTier, score, inExPro);
     setInName('');
     setInScore('');
     setInExPro(false);
   }
 
   function handleParseBulk() {
+    // 형식: 닉네임 포지션 등급 점수 [프로]
     const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean);
     let added = 0, updated = 0, failed = 0;
     lines.forEach(line => {
       const exPro = /프로\s*$/.test(line);
       const clean = line.replace(/프로\s*$/, '').trim();
-      const m = clean.match(/^(.+?)\s+(TOP|JGL|MID|ADC|SUP)\s+([\d.]+)$/i);
+      const m = clean.match(/^(.+?)\s+(TOP|JGL|MID|ADC|SUP)\s+([A-Za-z+-]+|Transcended|God|Legendary|Unique|SSR|SR)\s+([\d.]+)$/i);
       if (m) {
+        const tierRaw = TIER_ORDER.find(t => t.toLowerCase() === m[3].toLowerCase()) || m[3];
         const existed = players.some(p => p.name === m[1].trim() && p.position === m[2].toUpperCase());
-        upsertPlayer(m[1].trim(), m[2].toUpperCase() as Position, parseFloat(m[3]), exPro);
+        upsertPlayer(m[1].trim(), m[2].toUpperCase() as Position, tierRaw, parseFloat(m[4]), exPro);
         existed ? updated++ : added++;
       } else {
         failed++;
@@ -124,7 +126,7 @@ export default function FaTeamBuilderClient() {
     });
     const parts = [];
     if (added) parts.push(`${added}명 신규 추가`);
-    if (updated) parts.push(`${updated}명 점수 업데이트`);
+    if (updated) parts.push(`${updated}명 갱신`);
     if (failed) parts.push(`${failed}줄 인식 실패`);
     setBulkMsg(parts.join(' · ') || '인식된 줄이 없어요.');
     if (added || updated) setBulkText('');
@@ -140,6 +142,23 @@ export default function FaTeamBuilderClient() {
     setPlayers(FA_PLAYERS_SNAPSHOT);
   }
 
+  function startEdit(p: FaPlayer) {
+    setEditingId(p.id);
+    setEditScore(String(p.score));
+    setEditTier(p.tier);
+    setEditExPro(p.exPro);
+  }
+
+  function saveEdit(id: string) {
+    const score = parseFloat(editScore);
+    if (isNaN(score) || score < 0) {
+      alert('점수를 정확히 입력해주세요.');
+      return;
+    }
+    setPlayers(prev => prev.map(p => (p.id === id ? { ...p, score, tier: editTier, exPro: editExPro } : p)));
+    setEditingId(null);
+  }
+
   const filteredPool = useMemo(() => {
     let list = players.slice();
     if (filterPos) list = list.filter(p => p.position === filterPos);
@@ -149,12 +168,19 @@ export default function FaTeamBuilderClient() {
   }, [players, filterPos, search]);
 
   const starters = POSITIONS.map(pos => players.find(p => p.id === currentSlots[pos]));
-  const total = starters.reduce((s, p) => s + (p ? p.score : 0), 0);
-  const over = total > TEAM_CAP;
-  const rCount = starters.filter(p => p && gradeOf(p.score) === 'R').length;
+  const [, sJgl, , sAdc, sSup] = starters;
+  const rawTotal = starters.reduce((s, p) => s + (p ? p.score : 0), 0);
+
+  const jglSupBonus = pairBonus(sJgl, sSup);
+  const adcSupBonus = pairBonus(sAdc, sSup);
+  const synergyBonus = jglSupBonus + adcSupBonus;
+  const effectiveTotal = rawTotal + synergyBonus;
+
+  const over = effectiveTotal > TEAM_CAP;
+  const rTierCount = starters.filter(p => p && tierAtLeast(p.tier, 'R')).length;
   const exProCount = starters.filter(p => p && p.exPro && p.position !== 'SUP').length;
   const allFilled = starters.every(Boolean);
-  const pct = Math.min(100, (total / TEAM_CAP) * 100);
+  const pct = Math.min(100, (effectiveTotal / TEAM_CAP) * 100);
 
   function pickSlot(pos: Position, playerId: string) {
     setCurrentSlots(prev => ({ ...prev, [pos]: playerId }));
@@ -185,7 +211,7 @@ export default function FaTeamBuilderClient() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: 'clamp(1.25rem,5vw,3rem)' }}>
-      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '980px', margin: '0 auto' }}>
         <div style={{ marginBottom: '20px' }}>
           <Link
             href="/apps"
@@ -219,7 +245,6 @@ export default function FaTeamBuilderClient() {
           </div>
         </div>
 
-        {/* 탭 */}
         <div style={{ display: 'flex', gap: 4, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 5, marginBottom: 20 }}>
           {(['builder', 'pool', 'saved'] as const).map(t => (
             <button
@@ -258,8 +283,13 @@ export default function FaTeamBuilderClient() {
 
             <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary, #888)' }}>팀 총점 (선발 5인 기준)</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: over ? '#E5484D' : 'var(--text)' }}>{total} / {TEAM_CAP}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary, #888)' }}>
+                  팀 총점 (선발 5인{synergyBonus !== 0 && <span style={{ color: '#16A34A' }}> · 시너지 보너스 {synergyBonus}점 적용됨</span>})
+                </span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: over ? '#E5484D' : 'var(--text)' }}>
+                  {effectiveTotal} / {TEAM_CAP}
+                  {synergyBonus !== 0 && <span style={{ fontSize: 12, color: 'var(--text-secondary, #888)', fontWeight: 500, marginLeft: 6 }}>(원점수 {rawTotal})</span>}
+                </span>
               </div>
               <div style={{ height: 14, background: 'var(--card-border)', borderRadius: 8, overflow: 'hidden' }}>
                 <div style={{
@@ -269,10 +299,12 @@ export default function FaTeamBuilderClient() {
                 }} />
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <Chip ok={!over} okText="✓ 총점 182점 이하" badText="✕ 총점 182점 이하" />
-                <Chip ok={rCount <= 2} okText={`✓ R등급 ${rCount}/2명`} badText={`✕ R등급 ${rCount}/2명`} />
+                <Chip ok={!over} okText={`✓ 총점 182점 이하 (${effectiveTotal})`} badText={`✕ 총점 182점 초과 (${effectiveTotal})`} />
                 <Chip ok={exProCount <= 1} okText={`✓ 전 프로게이머 ${exProCount}/1명 (SUP 제외)`} badText={`✕ 전 프로게이머 ${exProCount}/1명 (SUP 제외)`} />
                 <Chip ok={allFilled} okText="✓ 5포지션 완성" badText={`포지션 ${starters.filter(Boolean).length}/5 선택됨`} neutral={!allFilled} />
+                {jglSupBonus !== 0 && <SynergyChip label={`정글+서폿 시너지 ${jglSupBonus}점`} />}
+                {adcSupBonus !== 0 && <SynergyChip label={`원딜+서폿 시너지 ${adcSupBonus}점`} />}
+                {rTierCount > 0 && <span style={{ fontSize: 11, color: 'var(--text-secondary, #888)' }}>참고: R등급 이상 {rTierCount}명 포함</span>}
               </div>
             </div>
 
@@ -290,7 +322,7 @@ export default function FaTeamBuilderClient() {
                     >
                       <option value="">선택 안 함</option>
                       {options.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.score})</option>
+                        <option key={p.id} value={p.id}>{p.name} ({p.tier}, {p.score})</option>
                       ))}
                     </select>
                     <div style={{ marginTop: 'auto' }}>
@@ -299,8 +331,8 @@ export default function FaTeamBuilderClient() {
                           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
                             {picked.name}{picked.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}
                           </div>
-                          <div style={{ fontSize: 20, fontWeight: 800, color: GRADE_COLOR[gradeOf(picked.score)] }}>
-                            {picked.score}점 · {gradeOf(picked.score)}
+                          <div style={{ fontSize: 20, fontWeight: 800, color: tierColor(picked.tier) }}>
+                            {picked.score}점 · {picked.tier}
                           </div>
                         </>
                       ) : (
@@ -321,10 +353,14 @@ export default function FaTeamBuilderClient() {
               >
                 <option value="">식스맨 없음</option>
                 {sixthOptions.map(p => (
-                  <option key={p.id} value={p.id}>[{p.position}] {p.name} ({p.score})</option>
+                  <option key={p.id} value={p.id}>[{p.position}] {p.name} ({p.tier}, {p.score})</option>
                 ))}
               </select>
               <span style={{ fontSize: 10.5, color: 'var(--text-secondary, #888)' }}>총점에 포함되지 않아요</span>
+            </div>
+
+            <div style={{ fontSize: 11, color: 'var(--text-secondary, #888)', lineHeight: 1.6 }}>
+              시너지 보너스: 정글+서폿 또는 원딜+서폿이 <b>둘 다 S+ 이상</b>이면 −5점, <b>둘 다 A- 이상</b>(S+ 미만)이면 −3점이 총점에서 차감돼요. 두 조합은 동시에 적용될 수 있어요.
             </div>
           </>
         )}
@@ -334,11 +370,16 @@ export default function FaTeamBuilderClient() {
             <Card title="선수 추가">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <Field label="닉네임" style={{ flex: 1, minWidth: 110 }}>
-                  <input value={inName} onChange={e => setInName(e.target.value)} placeholder="후원자 닉네임" style={inputStyle} />
+                  <input value={inName} onChange={e => setInName(e.target.value)} placeholder="닉네임" style={inputStyle} />
                 </Field>
-                <Field label="포지션" style={{ flex: '0 0 100px' }}>
+                <Field label="포지션" style={{ flex: '0 0 90px' }}>
                   <select value={inPos} onChange={e => setInPos(e.target.value as Position)} style={inputStyle}>
                     {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </Field>
+                <Field label="등급" style={{ flex: '0 0 100px' }}>
+                  <select value={inTier} onChange={e => setInTier(e.target.value)} style={inputStyle}>
+                    {TIER_ORDER.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </Field>
                 <Field label="점수" style={{ flex: '0 0 80px' }}>
@@ -357,11 +398,11 @@ export default function FaTeamBuilderClient() {
               <textarea
                 value={bulkText}
                 onChange={e => setBulkText(e.target.value)}
-                placeholder={'한 줄에 한 명씩. 예:\n페이커 MID 40\n쇼메이커 MID 38 프로'}
+                placeholder={'한 줄에 한 명씩. 예:\n페이커 MID S+ 40\n쇼메이커 MID S 38 프로'}
                 style={{ width: '100%', minHeight: 80, background: 'var(--bg)', border: '1px solid var(--card-border)', color: 'var(--text)', borderRadius: 7, padding: 10, fontSize: 12.5, fontFamily: 'monospace', resize: 'vertical' }}
               />
               <div style={{ fontSize: 11, color: 'var(--text-secondary, #888)', margin: '8px 0' }}>
-                형식: &quot;닉네임 포지션 점수&quot; — 맨 뒤에 &quot;프로&quot;라고 적으면 전 프로게이머로 표시돼요. 이미 있는 이름+포지션이면 점수만 갱신돼요.
+                형식: &quot;닉네임 포지션 등급 점수&quot; — 맨 뒤에 &quot;프로&quot;를 붙이면 전 프로게이머로 표시돼요. 이미 있는 이름+포지션이면 갱신돼요.
               </div>
               <button onClick={handleParseBulk} style={{ background: 'var(--bg)', border: '1px solid #EB701A', color: '#EB701A', borderRadius: 7, padding: '8px 16px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
                 일괄 추가
@@ -380,7 +421,7 @@ export default function FaTeamBuilderClient() {
                   원본 스냅샷으로 초기화
                 </button>
               </div>
-              <div style={{ maxHeight: 480, overflowY: 'auto' }}>
+              <div style={{ maxHeight: 520, overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
@@ -393,15 +434,42 @@ export default function FaTeamBuilderClient() {
                   </thead>
                   <tbody>
                     {filteredPool.map(p => (
-                      <tr key={p.id}>
-                        <td style={tdStyle}><PosTag pos={p.position} /></td>
-                        <td style={tdStyle}>{p.name}{p.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}</td>
-                        <td style={tdStyle}><GradeBadge score={p.score} /></td>
-                        <td style={{ ...tdStyle, fontWeight: 700 }}>{p.score}</td>
-                        <td style={tdStyle}>
-                          <button onClick={() => deletePlayer(p.id)} style={{ background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✕</button>
-                        </td>
-                      </tr>
+                      editingId === p.id ? (
+                        <tr key={p.id}>
+                          <td style={tdStyle}><PosTag pos={p.position} /></td>
+                          <td style={tdStyle}>{p.name}</td>
+                          <td style={tdStyle}>
+                            <select value={editTier} onChange={e => setEditTier(e.target.value)} style={{ ...inputStyle, width: 90, padding: '4px 6px' }}>
+                              {TIER_ORDER.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                          </td>
+                          <td style={tdStyle}>
+                            <input value={editScore} onChange={e => setEditScore(e.target.value)} type="number" style={{ ...inputStyle, width: 64, padding: '4px 6px' }} />
+                          </td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                              <label style={{ fontSize: 10, display: 'flex', alignItems: 'center', gap: 3 }}>
+                                <input type="checkbox" checked={editExPro} onChange={e => setEditExPro(e.target.checked)} />프로
+                              </label>
+                              <button onClick={() => saveEdit(p.id)} style={{ background: '#16A34A', border: 'none', color: '#fff', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✓</button>
+                              <button onClick={() => setEditingId(null)} style={{ background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✕</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr key={p.id}>
+                          <td style={tdStyle}><PosTag pos={p.position} /></td>
+                          <td style={tdStyle}>{p.name}{p.exPro && <span style={{ fontSize: 10, color: '#EB701A', border: '1px solid #EB701A', borderRadius: 4, padding: '1px 5px', marginLeft: 6 }}>전 프로</span>}</td>
+                          <td style={tdStyle}><TierBadge tier={p.tier} /></td>
+                          <td style={{ ...tdStyle, fontWeight: 700 }}>{p.score}</td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              <button onClick={() => startEdit(p)} style={{ background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✎</button>
+                              <button onClick={() => deletePlayer(p.id)} style={{ background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✕</button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
                     ))}
                     {filteredPool.length === 0 && (
                       <tr><td colSpan={5} style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary, #888)' }}>선수가 없어요.</td></tr>
@@ -422,19 +490,30 @@ export default function FaTeamBuilderClient() {
             )}
             {teams.map(t => {
               const teamStarters = POSITIONS.map(pos => ({ pos, p: players.find(pl => pl.id === t.slots[pos]) }));
-              const teamTotal = teamStarters.reduce((s, x) => s + (x.p ? x.p.score : 0), 0);
+              const rawT = teamStarters.reduce((s, x) => s + (x.p ? x.p.score : 0), 0);
+              const jP = teamStarters.find(x => x.pos === 'JGL')?.p;
+              const aP = teamStarters.find(x => x.pos === 'ADC')?.p;
+              const sP = teamStarters.find(x => x.pos === 'SUP')?.p;
+              const bonus = pairBonus(jP, sP) + pairBonus(aP, sP);
+              const effT = rawT + bonus;
               const sixthPlayer = players.find(p => p.id === t.sixth);
-              const teamOver = teamTotal > TEAM_CAP;
+              const teamOver = effT > TEAM_CAP;
               return (
                 <div key={t.id} style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, position: 'relative' }}>
                   <button onClick={() => deleteTeam(t.id)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✕</button>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{t.name}</h4>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: teamOver ? '#E5484D' : '#EB701A' }}>{teamTotal}점</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: teamOver ? '#E5484D' : '#EB701A' }}>
+                      {effT}점{bonus !== 0 && <span style={{ fontSize: 10, color: '#16A34A', marginLeft: 4 }}>({bonus})</span>}
+                    </span>
                   </div>
                   {teamStarters.map(x => (
                     <div key={x.pos} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--card-border)', fontSize: 12.5 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><PosTag pos={x.pos} />{x.p ? x.p.name : <span style={{ color: 'var(--text-secondary, #888)' }}>미정</span>}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <PosTag pos={x.pos} />
+                        {x.p ? x.p.name : <span style={{ color: 'var(--text-secondary, #888)' }}>미정</span>}
+                        {x.p && <TierBadge tier={x.p.tier} small />}
+                      </span>
                       <span>{x.p ? x.p.score : '-'}</span>
                     </div>
                   ))}
@@ -477,15 +556,24 @@ function PosTag({ pos }: { pos: Position }) {
   return <span style={posTagStyle}>{pos}</span>;
 }
 
-function GradeBadge({ score }: { score: number }) {
-  const g = gradeOf(score);
-  const color = GRADE_COLOR[g];
+function TierBadge({ tier, small }: { tier: string; small?: boolean }) {
+  const color = tierColor(tier);
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22,
-      borderRadius: 6, fontWeight: 700, fontSize: 12, background: `${color}22`, color,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      minWidth: small ? 34 : 40, height: small ? 18 : 22, padding: '0 6px',
+      borderRadius: 6, fontWeight: 700, fontSize: small ? 10 : 11.5,
+      background: `${color}26`, color, border: `1px solid ${color}55`,
     }}>
-      {g}
+      {tier}
+    </span>
+  );
+}
+
+function SynergyChip({ label }: { label: string }) {
+  return (
+    <span style={{ fontSize: 11, padding: '5px 10px', borderRadius: 20, border: '1px solid #16A34A', color: '#16A34A', background: 'rgba(22,163,74,0.08)' }}>
+      ⚡ {label}
     </span>
   );
 }
