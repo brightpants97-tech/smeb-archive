@@ -17,6 +17,13 @@ const APPS = [
     desc: 'SOOP 동시 시청',
     color: '#EB701A',
   },
+  {
+    href: '/fa-teambuilder',
+    icon: '🎯',
+    title: 'FA 팀빌더',
+    desc: '멸망전 182점 캡 시뮬레이터',
+    color: '#2F6FED',
+  },
 ];
 
 function AppCard({ app }: { app: typeof APPS[0] }) {
