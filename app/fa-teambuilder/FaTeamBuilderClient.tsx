@@ -19,6 +19,10 @@ const POS_ICON: Record<Position, string> = {
 const STORAGE_PLAYERS = 'fa-teambuilder-players-v2';
 const STORAGE_TEAMS = 'fa-teambuilder-teams-v2';
 
+// 카드가 배경 위에 "떠 있는" 느낌을 주기 위한 테두리 링 + 그림자 (라이트/다크 어디서든 자연스럽게 동작)
+const ELEVATE = '0 0 0 1px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.03), 0 8px 20px rgba(0,0,0,0.06)';
+const ELEVATE_SM = '0 0 0 1px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05)';
+
 interface Team {
   id: string;
   name: string;
@@ -247,7 +251,7 @@ export default function FaTeamBuilderClient() {
           </Link>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 10, marginBottom: 20, paddingBottom: 18, borderBottom: '1px solid var(--card-border)' }}>
           <div>
             <p style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.16em', color: '#EB701A', textTransform: 'uppercase', margin: '0 0 8px' }}>
               SMEB ARCHIVE
@@ -261,13 +265,14 @@ export default function FaTeamBuilderClient() {
           </div>
           <div style={{
             background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 20,
+            boxShadow: ELEVATE_SM,
             padding: '6px 14px', fontSize: 12, color: 'var(--text-secondary, #888)',
           }}>
             팀 총점 캡 <b style={{ color: '#EB701A' }}>{TEAM_CAP}점</b> 이하
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 4, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 5, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 5, marginBottom: 20, boxShadow: ELEVATE_SM }}>
           {(['builder', 'pool', 'saved'] as const).map(t => (
             <button
               key={t}
@@ -303,7 +308,7 @@ export default function FaTeamBuilderClient() {
               </button>
             </div>
 
-            <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
+            <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: '16px 18px', marginBottom: 16, boxShadow: ELEVATE }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 12, color: 'var(--text-secondary, #888)' }}>
                   팀 총점 (선발 5인{synergyBonus !== 0 && <span style={{ color: '#16A34A' }}> · 시너지 보너스 {synergyBonus}점 적용됨</span>})
@@ -345,7 +350,7 @@ export default function FaTeamBuilderClient() {
                       background: picked ? `${color}0F` : 'var(--card)',
                       border: `1.5px solid ${picked ? color + '66' : 'var(--card-border)'}`,
                       borderRadius: 12, padding: 12, minHeight: 156, display: 'flex', flexDirection: 'column',
-                      boxShadow: picked ? `0 0 0 3px ${color}1A, 0 6px 16px ${color}22` : 'none',
+                      boxShadow: picked ? `0 0 0 3px ${color}1A, 0 6px 16px ${color}22, ${ELEVATE_SM}` : ELEVATE_SM,
                       transition: 'all .15s',
                     }}
                   >
@@ -382,7 +387,7 @@ export default function FaTeamBuilderClient() {
               })}
             </div>
 
-            <div style={{ background: 'var(--card)', border: '1px dashed var(--card-border)', borderRadius: 12, padding: 12, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ background: 'var(--card)', border: '1px dashed var(--card-border)', borderRadius: 12, padding: 12, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, boxShadow: ELEVATE_SM }}>
               <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-secondary, #888)' }}>6th</span>
               <select
                 value={currentSixth}
@@ -459,7 +464,7 @@ export default function FaTeamBuilderClient() {
                   원본 스냅샷으로 초기화
                 </button>
               </div>
-              <div style={{ maxHeight: 560, overflowY: 'auto', border: '1px solid var(--card-border)', borderRadius: 10 }}>
+              <div style={{ maxHeight: 560, overflowY: 'auto', border: '1px solid var(--card-border)', borderRadius: 10, boxShadow: ELEVATE_SM }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
@@ -547,7 +552,7 @@ export default function FaTeamBuilderClient() {
               const sixthPlayer = players.find(p => p.id === t.sixth);
               const teamOver = effT > TEAM_CAP;
               return (
-                <div key={t.id} style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, position: 'relative' }}>
+                <div key={t.id} style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, position: 'relative', boxShadow: ELEVATE }}>
                   <button onClick={() => deleteTeam(t.id)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: '1px solid var(--card-border)', color: 'var(--text-secondary, #888)', borderRadius: 6, width: 24, height: 24, cursor: 'pointer', fontSize: 11 }}>✕</button>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{t.name}</h4>
@@ -638,7 +643,7 @@ function Chip({ ok, okText, badText, neutral }: { ok: boolean; okText: string; b
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+    <div style={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 14, padding: 16, marginBottom: 16, boxShadow: ELEVATE }}>
       <h3 style={{ margin: '0 0 12px', fontSize: 13.5, color: 'var(--text-secondary, #888)', fontWeight: 700 }}>{title}</h3>
       {children}
     </div>
