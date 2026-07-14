@@ -274,6 +274,12 @@ export default function FaTeamBuilderClient() {
 
   function pickSlot(pos: Position, playerId: string) {
     setCurrentSlots(prev => ({ ...prev, [pos]: playerId }));
+    // 선택 안 함으로 바꾸면 잠금도 자동 해제
+    if (!playerId) {
+      setLockedPos(prev => ({ ...prev, [pos]: false }));
+    }
+    setComboResults([]);
+    setComboPage(0);
   }
 
 
