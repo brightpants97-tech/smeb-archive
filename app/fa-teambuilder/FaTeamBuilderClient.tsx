@@ -246,8 +246,7 @@ export default function FaTeamBuilderClient() {
       const pos = openList[idx];
       for (const pl of openPlayers[idx]) {
         const next = partialScore + pl.score;
-        if (next + 10 * (openList.length - idx - 1) < 180) continue; // 하한 가지치기
-        if (next > TEAM_CAP) continue; // 상한 가지치기
+        if (next > TEAM_CAP) continue;
         partialSlots[pos] = pl.id;
         recurse(idx + 1, next, partialSlots);
       }
