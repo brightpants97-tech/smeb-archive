@@ -238,8 +238,14 @@ export default function FaTeamBuilderClient() {
     const all: { slots: Record<Position, string>; total: number }[] = [];
     function recurse(idx: number, partialScore: number, partialSlots: Record<Position, string>) {
       if (idx === openList.length) {
-        if (partialScore >= 180 && partialScore <= TEAM_CAP) {
-          all.push({ slots: { ...partialSlots }, total: partialScore });
+        // 메인 팀빌더와 동일하게 JGL+SUP, ADC+SUP 페어 보너스 반영
+        const jglPl = players.find(x => x.id === partialSlots['JGL']);
+        const adcPl = players.find(x => x.id === partialSlots['ADC']);
+        const supPl = players.find(x => x.id === partialSlots['SUP']);
+        const bonus = pairBonus(jglPl, supPl) + pairBonus(adcPl, supPl);
+        const actualTotal = partialScore + bonus;
+        if (actualTotal >= 180 && actualTotal <= TEAM_CAP) {
+          all.push({ slots: { ...partialSlots }, total: actualTotal });
         }
         return;
       }
