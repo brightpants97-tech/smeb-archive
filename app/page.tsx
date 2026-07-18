@@ -201,8 +201,8 @@ export default async function Home() {
           .mob-notice-list { gap: 8px !important; }
           .mob-nav { gap: 0.6rem !important; }
           .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
-          .mob-hero { padding: clamp(40px,8vw,80px) 1.2rem !important; }
-          .mob-hero h1 span { font-size: clamp(3.5rem,22vw,8rem) !important; } .mob-hero h1 em { font-size: clamp(2rem,13vw,5rem) !important; }
+          .mob-hero { padding: clamp(20px,5vw,40px) 1.2rem !important; }
+          .mob-hero h1 span { font-size: clamp(2.5rem,15vw,5rem) !important; } .mob-hero h1 em { font-size: clamp(1.5rem,9vw,3rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
           .tools-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; background:rgba(168,85,247,0.12); border:1.5px solid rgba(168,85,247,0.35); color:#A855F7; font-size:0.82rem; font-weight:800; text-decoration:none; transition:all 0.15s; }
@@ -271,15 +271,15 @@ export default async function Home() {
       )}
 
 
-      <section className="mob-hero" style={{padding:'clamp(3rem,8vw,6rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
-        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(2rem,4vw,4rem)',flexWrap:'wrap'}}>
+      <section className="mob-hero" style={{padding:'clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
+        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(1.5rem,3vw,3rem)',flexWrap:'wrap'}}>
           <div style={{flexGrow:1,flexShrink:1,minWidth:'280px'}}>
             <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
-              <span style={{display:'block',fontSize:'clamp(4.5rem,28vw,22rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
-              <em style={{display:'block',fontSize:'clamp(2.8rem,14vw,11rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
+              <span style={{display:'block',fontSize:'clamp(2.8rem,14vw,10rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
+              <em style={{display:'block',fontSize:'clamp(1.8rem,7vw,5.5rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
             </h1>
           </div>
-          <div className="mob-hide hero-card" style={{flexShrink:0,width:'clamp(240px,22vw,300px)'}}>
+          <div className="mob-hide hero-card" style={{flexShrink:0,width:'clamp(200px,18vw,260px)'}}>
             <HeroLiveCard />
           </div>
         </div>
