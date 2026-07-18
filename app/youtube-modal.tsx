@@ -444,43 +444,42 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)', backgroundSize:'36px 36px', pointerEvents:'none' }} />
               <h2 style={{ fontSize: isMobile ? '2rem' : 'clamp(2rem,5vw,4rem)', fontWeight:900, letterSpacing:'-0.06em', lineHeight:1, color:'#1A1A1A', position:'relative', zIndex:1 }}>최신 영상</h2>
             </div>
-            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '0' : '16px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '22px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'transparent' }}>
-              {videos.slice(0, 6).map((video, i) => (
+            <div className="mob-video-grid" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)', gap: isMobile ? '0' : '12px', width:'100%', overflow:'hidden', borderRadius: isMobile ? '22px' : '0', border: isMobile ? '1px solid var(--card-border)' : 'none', background: isMobile ? 'var(--card)' : 'var(--card)', padding: isMobile ? '0' : '16px', borderRadius: isMobile ? '22px' : '20px' }}>
+              {videos.slice(0, isMobile ? 6 : 5).map((video, i) => (
+                isMobile ? (
                 <div key={video.id} onClick={() => setActiveId(video.id)}
-                  className="card fade-in-up"
-                  style={{ cursor:'pointer', transitionDelay:`${(i % 3) * 0.08}s`, display: isMobile ? 'flex' : 'block', flexDirection: 'row', overflow:'hidden', width:'100%', minWidth:0, boxSizing:'border-box', borderRadius: isMobile ? '0' : '16px', border: isMobile ? 'none' : '1px solid var(--card-border)', borderBottom: isMobile && i < 5 ? '1px solid var(--card-border)' : 'none' } as React.CSSProperties}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 16px 40px rgba(0,0,0,0.15)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow=''; }}>
-                  <div style={{ position:'relative', flexShrink: 0, width: isMobile ? '110px' : '100%' }}>
-                    <img src={video.thumbnail} alt={video.title} style={{ width: isMobile ? '110px' : '100%', height: isMobile ? '100%' : 'auto', aspectRatio: '16/9', objectFit:'cover', display:'block' }} />
-                    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0)', transition:'background 0.2s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0.25)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='1'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='rgba(0,0,0,0)'; const btn=(e.currentTarget as HTMLElement).querySelector('.play-btn') as HTMLElement; if(btn) btn.style.opacity='0'; }}>
-                      <div className="play-btn" style={{ width:'44px', height:'44px', borderRadius:'50%', background:'rgba(235,112,26,0.9)', display:'flex', alignItems:'center', justifyContent:'center', opacity:0, transition:'opacity 0.2s' }}>
-                        <span style={{ fontSize:'1rem', marginLeft:'3px', color:'#fff' }}>▶</span>
-                      </div>
+                  className="card"
+                  style={{ cursor:'pointer', display:'flex', flexDirection:'row', overflow:'hidden', width:'100%', minWidth:0, boxSizing:'border-box', borderRadius:'0', border:'none', borderBottom: i < 5 ? '1px solid var(--card-border)' : 'none' } as React.CSSProperties}>
+                  <div style={{ position:'relative', flexShrink:0, width:'110px' }}>
+                    <img src={video.thumbnail} alt={video.title} style={{ width:'110px', height:'100%', aspectRatio:'16/9', objectFit:'cover', display:'block' }} />
+                  </div>
+                  <div style={{ padding:'14px 18px', flex:1, minWidth:0, overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center', gap:'4px' }}>
+                    <p style={{ fontWeight:700, fontSize:'0.88rem', lineHeight:1.35, marginBottom:'4px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
+                    <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                      <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A' }}>👁 {video.views.toLocaleString()}회</span>
+                      <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
                     </div>
                   </div>
-                  {isMobile ? (
-                    <div style={{ padding:'14px 18px', flex:1, minWidth:0, overflow:'hidden', display:'flex', flexDirection:'column', justifyContent:'center', gap:'4px' }}>
-                      <p style={{ fontWeight:700, fontSize:'0.88rem', lineHeight:1.35, marginBottom:'4px', color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                      <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-                        <span style={{ fontSize:'0.78rem', fontWeight:700, color:'#EB701A' }}>👁 {video.views.toLocaleString()}회</span>
-                        <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ padding:'10px 12px 8px', flex:1, minWidth:0, overflow:'hidden' }}>
-                        <p style={{ fontWeight:700, fontSize:'0.85rem', lineHeight:1.35, color:'var(--text)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
-                      </div>
-                      <div style={{ background:'#EB701A', padding:'8px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'6px', flexShrink:0 }}>
-                        <span style={{ fontSize:'0.78rem', fontWeight:800, color:'#fff' }}>👁 {video.views.toLocaleString()}회</span>
-                        <span style={{ fontSize:'0.70rem', color:'rgba(255,255,255,0.8)', fontWeight:500 }}>{new Date(video.publishedAt).toLocaleDateString('ko-KR')}</span>
-                      </div>
-                    </>
-                  )}
                 </div>
+                ) : (
+                <div key={video.id}
+                  className="top10-sm-card"
+                  onClick={() => setActiveId(video.id)}
+                  style={{ cursor:'pointer', display:'flex', flexDirection:'column', gap:'6px', borderRadius:'10px' }}
+                >
+                  <div style={{ position:'relative', width:'100%', aspectRatio:'16/9', borderRadius:'10px', overflow:'hidden', background:'#111', flexShrink:0 }}>
+                    <img src={video.thumbnail} alt={video.title} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                    <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
+                    <div style={{ position:'absolute', bottom:'5px', right:'6px', fontSize:'0.68rem', fontWeight:800, color:'#EB701A' }}>
+                      {video.views >= 10000 ? `${(video.views/10000).toFixed(1)}만` : video.views.toLocaleString()}
+                    </div>
+                    <div style={{ position:'absolute', bottom:'5px', left:'6px', fontSize:'0.65rem', color:'rgba(255,255,255,0.6)' }}>
+                      {new Date(video.publishedAt).toLocaleDateString('ko-KR', {month:'numeric', day:'numeric'})}
+                    </div>
+                  </div>
+                  <p style={{ fontSize:'0.76rem', fontWeight:600, color:'var(--text)', lineHeight:1.35, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{video.title}</p>
+                </div>
+                )
               ))}
             </div>
           </div>
