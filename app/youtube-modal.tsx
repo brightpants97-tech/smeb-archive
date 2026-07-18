@@ -302,141 +302,79 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
     );
   }
 
-  // ── 데스크탑: Apple iPad 그리드 스타일 ──
-  const DPOS: Record<number, React.CSSProperties> = {
-    1: { gridColumn:'1/3', gridRow:'1' },
-    2: { gridColumn:'3', gridRow:'1' },
-    3: { gridColumn:'1', gridRow:'2' },
-    4: { gridColumn:'2', gridRow:'2' },
-    5: { gridColumn:'3', gridRow:'2' },
-    6: { gridColumn:'1', gridRow:'3' },
-    7: { gridColumn:'2/4', gridRow:'3' },
-    8: { gridColumn:'1', gridRow:'4' },
-    9: { gridColumn:'2', gridRow:'4' },
-    10: { gridColumn:'3', gridRow:'4' },
-  };
-
+  // ── 데스크탑: 5열 소형 썸네일 그리드 ──
+  const fmt2 = fmt;
   return (
     <>
       <style>{`
-        @keyframes smebSlideUp {
-          from { opacity:0; transform:translateY(24px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-        .top10-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .top10-card:hover { transform: scale(1.02) !important; box-shadow: 0 20px 48px rgba(0,0,0,0.28) !important; z-index: 10; }
+        .top10-sm-card { transition: transform 0.18s, box-shadow 0.18s; }
+        .top10-sm-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.22) !important; }
       `}</style>
 
       <div style={{
-        display:'grid',
-        gridTemplateColumns:'repeat(3,1fr)',
-        gridAutoRows:'clamp(170px,16vw,230px)',
-        gap:'14px',
-        background:'var(--card)',
-        padding:'16px',
-        borderRadius:'20px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(5, 1fr)',
+        gap: '12px',
+        background: 'var(--card)',
+        padding: '16px',
+        borderRadius: '20px',
       }}>
         {top10.map((video, i) => {
           const rank = i + 1;
-          const isFirst = rank === 1;
-          const delay = `${i * 0.05}s`;
+          const rankColor = rank === 1 ? '#FFB800' : rank === 2 ? '#A0A8B8' : rank === 3 ? '#CD7F32' : 'rgba(0,0,0,0.5)';
+          const ringColor = rank === 1 ? '0 0 0 2px #EB701A' : 'none';
           return (
             <div key={video.id}
-              className="top10-card"
+              className="top10-sm-card"
               onClick={() => onPlay(video.id)}
-              style={{
-                ...DPOS[rank], position:'relative', cursor:'pointer',
-                borderRadius:'16px', overflow:'hidden', background:'#111',
-                animation:`smebSlideUp 0.55s ${delay} cubic-bezier(0.22,1,0.36,1) both`,
-                boxShadow: isFirst ? '0 0 0 2.5px #EB701A, 0 8px 24px rgba(235,112,26,0.2)' : '0 2px 12px rgba(0,0,0,0.18)',
-              }}
+              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '6px', boxShadow: ringColor, borderRadius: '10px' }}
             >
-              <img src={video.thumbnail} alt={video.title}
-                style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', pointerEvents:'none' }} />
-              <div style={{ position:'absolute', inset:0,
-                background:'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }} />
-
-              {/* 순위 배지 */}
-              <div style={{
-                position:'absolute', top:'10px', left:'10px',
-                background: rank===1
-                  ? 'linear-gradient(135deg,#FFE566,#FF8C00)'
-                  : rank===2
-                  ? 'linear-gradient(135deg,#E8ECF0,#8A9AAA)'
-                  : rank===3
-                  ? 'linear-gradient(135deg,#F0A060,#7A3A0A)'
-                  : 'rgba(0,0,0,0.55)',
-                backdropFilter: rank>3 ? 'blur(8px)' : 'none',
-                color: rank===2 ? '#1A1A1A' : '#fff',
-                fontWeight:900,
-                fontSize: rank===1 ? '1.2rem' : rank<=3 ? '1rem' : '0.75rem',
-                width:  rank===1 ? '44px' : rank<=3 ? '36px' : '26px',
-                height: rank===1 ? '44px' : rank<=3 ? '36px' : '26px',
-                borderRadius:'50%',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                letterSpacing:'-0.03em',
-                border: rank===1
-                  ? '2px solid rgba(255,220,80,0.7)'
-                  : rank===2
-                  ? '2px solid rgba(255,255,255,0.55)'
-                  : rank===3
-                  ? '2px solid rgba(240,160,60,0.55)'
-                  : '1.5px solid rgba(255,255,255,0.2)',
-                boxShadow: rank===1
-                  ? '0 0 0 3px rgba(255,190,0,0.28), 0 6px 16px rgba(255,140,0,0.55)'
-                  : rank===2
-                  ? '0 0 0 2px rgba(180,190,200,0.28), 0 4px 10px rgba(0,0,0,0.35)'
-                  : rank===3
-                  ? '0 0 0 2px rgba(180,100,40,0.28), 0 4px 10px rgba(0,0,0,0.35)'
-                  : 'none',
-              }}>{rank}</div>
-
-              {rank<=3 && (
+              {/* 썸네일 */}
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '10px', overflow: 'hidden', background: '#111', flexShrink: 0 }}>
+                <img src={video.thumbnail} alt={video.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                {/* 어두운 오버레이 */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
+                {/* 순위 뱃지 */}
                 <div style={{
-                  position:'absolute', top:'10px', right:'10px',
-                  background: rank===1
-                    ? 'linear-gradient(135deg,#FFE566,#FF8C00)'
-                    : rank===2
-                    ? 'linear-gradient(135deg,#D8DCE4,#8A9AAA)'
-                    : 'linear-gradient(135deg,#F0A060,#7A3A0A)',
-                  color: rank===2 ? '#1A1A1A' : '#fff',
-                  fontSize:'0.52rem', fontWeight:900, padding:'3px 7px',
-                  borderRadius:'5px', letterSpacing:'0.1em',
-                }}>{rank===1 ? '🥇 BEST' : rank===2 ? '🥈 2위' : '🥉 3위'}</div>
-              )}
-
-              {/* 하단 정보 */}
-              <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'14px' }}>
-                <div style={{
-                  fontSize:'clamp(1rem,2vw,1.6rem)', fontWeight:900,
-                  color:'#EB701A', letterSpacing:'-0.03em', lineHeight:1, marginBottom:'4px',
+                  position: 'absolute', top: '5px', left: '6px',
+                  fontSize: rank <= 3 ? '0.78rem' : '0.68rem',
+                  fontWeight: 900, lineHeight: 1,
+                  color: rank === 2 ? '#1A1A1A' : '#fff',
+                  background: rankColor,
+                  padding: rank <= 3 ? '3px 7px' : '2px 6px',
+                  borderRadius: '5px',
+                  letterSpacing: '-0.02em',
                 }}>
-                  {fmt(video.views)}
-                  <span style={{ fontSize:'0.58em', color:'rgba(235,112,26,0.75)', marginLeft:'3px', fontWeight:700 }}>회</span>
+                  {rank === 1 ? '🥇 1' : rank === 2 ? '🥈 2' : rank === 3 ? '🥉 3' : `#${rank}`}
                 </div>
-                <p style={{
-                  fontSize:'0.76rem', fontWeight:600,
-                  color:'rgba(255,255,255,0.9)', lineHeight:1.35,
-                  display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden',
-                } as React.CSSProperties}>{video.title}</p>
+                {/* 조회수 */}
+                <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.68rem', fontWeight: 800, color: '#EB701A' }}>
+                  {fmt2(video.views)}
+                </div>
               </div>
+              {/* 제목 */}
+              <p style={{
+                fontSize: '0.76rem', fontWeight: 600, color: 'var(--text)',
+                lineHeight: 1.35, margin: 0,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              } as React.CSSProperties}>{video.title}</p>
             </div>
           );
         })}
       </div>
 
-      {/* BY THE NUMBERS — Apple 카드 스타일 */}
-      <div style={{ marginTop:'12px', background:'var(--bg-deeper)', borderRadius:'20px', padding:'20px 24px' }}>
-        <p style={{ fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:'14px' }}>BY THE NUMBERS</p>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'14px' }}>
+      {/* BY THE NUMBERS */}
+      <div style={{ marginTop: '10px', background: 'var(--bg-deeper)', borderRadius: '16px', padding: '14px 18px' }}>
+        <p style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '10px' }}>BY THE NUMBERS</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
           {stats.map((s, i) => (
             <div key={i} style={{
-              background:'var(--card)', borderRadius:'16px', padding:'20px 24px',
-              border:'1px solid var(--card-border)',
-              boxShadow:'0 1px 6px rgba(0,0,0,0.06)',
+              background: 'var(--card)', borderRadius: '12px', padding: '12px 16px',
+              border: '1px solid var(--card-border)',
             }}>
-              <p style={{ fontSize:'clamp(1.8rem,3vw,2.6rem)', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'6px' }}>{s.value}</p>
-              <p style={{ fontSize:'0.8rem', color:'var(--text-muted)', fontWeight:500 }}>{s.label}</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1, marginBottom: '4px' }}>{s.value}</p>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</p>
             </div>
           ))}
         </div>
