@@ -327,10 +327,10 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             <div key={video.id}
               className="top10-sm-card"
               onClick={() => onPlay(video.id)}
-              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '6px', boxShadow: ringColor, borderRadius: '10px' }}
+              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: ringColor, borderRadius: '10px', background: 'var(--card)', border: '1px solid var(--card-border)', overflow: 'hidden', paddingBottom: '10px' }}
             >
               {/* 썸네일 */}
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '10px', overflow: 'hidden', background: '#111', flexShrink: 0 }}>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', flexShrink: 0 }}>
                 <img src={video.thumbnail} alt={video.title}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 {/* 어두운 오버레이 */}
@@ -356,7 +356,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
               {/* 제목 */}
               <p style={{
                 fontSize: '0.76rem', fontWeight: 600, color: 'var(--text)',
-                lineHeight: 1.35, margin: 0,
+                lineHeight: 1.4, margin: 0, padding: '0 10px',
                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
               } as React.CSSProperties}>{video.title}</p>
             </div>
