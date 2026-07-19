@@ -302,15 +302,11 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
     );
   }
 
-  // ── 데스크탑: 5열 소형 썸네일 그리드 ──
+  // ── 데스크탑: 5열 소형 썸네일 그리드 (rewind와 동일 스타일) ──
   const fmt2 = fmt;
+  const MEDAL = ['🥇','🥈','🥉'];
   return (
     <>
-      <style>{`
-        .top10-sm-card { transition: transform 0.18s, box-shadow 0.18s; }
-        .top10-sm-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.22) !important; }
-      `}</style>
-
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(5, 1fr)',
@@ -321,32 +317,39 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
       }}>
         {top10.map((video, i) => {
           const rank = i + 1;
+          const isTop3 = rank <= 3;
           const rankColor = rank === 1 ? '#FFB800' : rank === 2 ? '#A0A8B8' : rank === 3 ? '#CD7F32' : 'rgba(0,0,0,0.5)';
-          const ringColor = rank === 1 ? '0 0 0 2px #EB701A' : 'none';
           return (
             <div key={video.id}
-              className="top10-sm-card"
               onClick={() => onPlay(video.id)}
-              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: ringColor, borderRadius: '10px', background: 'var(--card)', border: '1px solid var(--card-border)', overflow: 'hidden', paddingBottom: '10px' }}
+              style={{
+                cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', gap: '8px',
+                background: 'var(--bg-deeper)',
+                border: `1px solid ${isTop3 ? rankColor + '55' : 'var(--card-border)'}`,
+                borderRadius: '10px', overflow: 'hidden', paddingBottom: '10px',
+                boxShadow: isTop3 ? `0 0 0 1px ${rankColor}44` : 'none',
+                transition: 'transform 0.18s, box-shadow 0.18s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(0,0,0,0.18)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = isTop3 ? `0 0 0 1px ${rankColor}44` : 'none'; }}
             >
               {/* 썸네일 */}
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', flexShrink: 0 }}>
                 <img src={video.thumbnail} alt={video.title}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                {/* 어두운 오버레이 */}
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
                 {/* 순위 뱃지 */}
                 <div style={{
                   position: 'absolute', top: '5px', left: '6px',
-                  fontSize: rank <= 3 ? '0.78rem' : '0.68rem',
+                  fontSize: isTop3 ? '0.78rem' : '0.68rem',
                   fontWeight: 900, lineHeight: 1,
                   color: rank === 2 ? '#1A1A1A' : '#fff',
                   background: rankColor,
-                  padding: rank <= 3 ? '3px 7px' : '2px 6px',
-                  borderRadius: '5px',
-                  letterSpacing: '-0.02em',
+                  padding: isTop3 ? '3px 7px' : '2px 6px',
+                  borderRadius: '5px', letterSpacing: '-0.02em',
                 }}>
-                  {rank === 1 ? '🥇 1' : rank === 2 ? '🥈 2' : rank === 3 ? '🥉 3' : `#${rank}`}
+                  {isTop3 ? `${MEDAL[rank-1]} ${rank}` : `#${rank}`}
                 </div>
                 {/* 조회수 */}
                 <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.68rem', fontWeight: 800, color: '#EB701A' }}>
