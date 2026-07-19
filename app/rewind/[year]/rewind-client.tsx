@@ -466,12 +466,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
 // ── TOP10 아이템 ──
 function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: number }) {
   const [hov, setHov] = useState(false);
-  const TOP3_GRAD: Record<number, string> = {
-    1: 'linear-gradient(160deg,#FFE566 0%,#FF8C00 55%,#FFD700 100%)',
-    2: 'linear-gradient(160deg,#FFFFFF 0%,#9AAAB8 55%,#D8DCE4 100%)',
-    3: 'linear-gradient(160deg,#F0A870 0%,#8B4513 55%,#CD7F32 100%)',
-  };
-  const BORDER_COLOR: Record<number, string> = { 1: '#FFB800', 2: '#A0A8B8', 3: '#CD7F32' };
+  const rankColor = rank === 1 ? '#FFB800' : rank === 2 ? '#A0A8B8' : rank === 3 ? '#CD7F32' : 'rgba(0,0,0,0.5)';
   const MEDAL = ['🥇','🥈','🥉'];
   const isTop3 = rank <= 3;
 
@@ -481,43 +476,45 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        display: 'flex', alignItems: 'center', gap: '16px',
-        padding: isTop3 ? '20px 24px' : '16px 24px',
-        borderBottom: rank < 10 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-        borderLeft: isTop3 ? `3.5px solid ${BORDER_COLOR[rank]}` : '3.5px solid transparent',
-        background: hov ? 'rgba(235,112,26,0.07)' : rank === 1 ? 'rgba(255,190,0,0.04)' : 'transparent',
         cursor: 'pointer',
-        transition: 'background 0.15s',
+        display: 'flex', flexDirection: 'column', gap: '8px',
+        background: 'rgba(255,255,255,0.04)',
+        border: `1px solid ${isTop3 ? rankColor + '55' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: '10px', overflow: 'hidden', paddingBottom: '10px',
+        transform: hov ? 'translateY(-3px)' : 'translateY(0)',
+        boxShadow: hov ? '0 10px 28px rgba(0,0,0,0.4)' : isTop3 ? `0 0 0 1px ${rankColor}44` : 'none',
+        transition: 'transform 0.18s, box-shadow 0.18s',
         animation: `rwFadeUp 0.4s ${delay}s both`,
       }}
     >
-      {/* 순위 */}
-      <div style={{ flexShrink: 0, width: isTop3 ? '44px' : '28px', textAlign: 'center' }}>
-        {isTop3 ? (
-          <span style={{
-            fontSize: rank === 1 ? '2.2rem' : rank === 2 ? '1.85rem' : '1.65rem',
-            fontWeight: 900, display: 'block', lineHeight: 1, letterSpacing: '-0.04em',
-            background: TOP3_GRAD[rank],
-            WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-            filter: rank === 1 ? 'drop-shadow(0 2px 8px rgba(255,150,0,0.55))' : 'none',
-          }}>{rank}</span>
-        ) : (
-          <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)' }}>{rank}</span>
-        )}
-      </div>
       {/* 썸네일 */}
-      <div style={{
-        flexShrink: 0, width: '420px', height: '236px', borderRadius: '14px', overflow: 'hidden',
-        boxShadow: rank === 1 ? '0 0 0 2px #FFB800, 0 4px 16px rgba(255,160,0,0.35)' : rank === 2 ? '0 0 0 1.5px #A0A8B8' : rank === 3 ? '0 0 0 1.5px #CD7F32' : 'none',
-      }}>
-        <img src={video.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', flexShrink: 0 }}>
+        <img src={video.thumbnail} alt={video.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
+        {/* 순위 뱃지 */}
+        <div style={{
+          position: 'absolute', top: '5px', left: '6px',
+          fontSize: isTop3 ? '0.78rem' : '0.68rem',
+          fontWeight: 900, lineHeight: 1,
+          color: rank === 2 ? '#1A1A1A' : '#fff',
+          background: rankColor,
+          padding: isTop3 ? '3px 7px' : '2px 6px',
+          borderRadius: '5px', letterSpacing: '-0.02em',
+        }}>
+          {isTop3 ? `${MEDAL[rank-1]} ${rank}` : `#${rank}`}
+        </div>
+        {/* 조회수 */}
+        <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.68rem', fontWeight: 800, color: ORANGE }}>
+          {fmt(video.views)}
+        </div>
       </div>
-      {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: '0.88rem', fontWeight: isTop3 ? 700 : 600, color: 'rgba(255,255,255,0.9)', lineHeight: 1.35, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{video.title}</p>
-        <span style={{ fontSize: '0.75rem', color: ORANGE, fontWeight: 700 }}>{fmt(video.views)}회</span>
-      </div>
-      {isTop3 && <div style={{ flexShrink: 0, fontSize: '1.3rem' }}>{MEDAL[rank - 1]}</div>}
+      {/* 제목 */}
+      <p style={{
+        fontSize: '0.76rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)',
+        lineHeight: 1.4, margin: 0, padding: '0 10px',
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+      } as React.CSSProperties}>{video.title}</p>
     </div>
   );
 }
@@ -801,10 +798,10 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </div>
 
           {top10InView && (
-            <div style={{ background: '#111', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
               {top10.map((v, i) => <Top10Item key={v.id} video={v} rank={i + 1} delay={i * 0.055} />)}
               {top10.length === 0 && (
-                <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>데이터를 불러오는 중이에요</div>
+                <div style={{ gridColumn: '1/-1', padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>데이터를 불러오는 중이에요</div>
               )}
             </div>
           )}
