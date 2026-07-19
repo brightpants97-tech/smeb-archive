@@ -174,7 +174,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
   const totalViews = top10.reduce((s, v) => s + v.views, 0);
   const avgViews = Math.round(totalViews / top10.length);
   const stats = [
-    { label:'요 조회수', value: fmt(totalViews) },
+    { label:'총 조회수', value: fmt(totalViews) },
     { label:'1위 조회수', value: fmt(top10[0].views) },
     { label:'평균 조회수', value: fmt(avgViews) },
   ];
