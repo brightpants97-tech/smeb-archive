@@ -225,15 +225,13 @@ export default async function Home() {
           </svg>
         </a>
         <nav className="mob-nav" style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
-          <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>BEST 10</a>
-          <a href="#videos" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>최신 영상</a>
-          <a href="#schedule" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>일정표</a>
-          <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.92rem',fontWeight:600}}>SOOP 다시보기</a>
+          <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>BEST 10</a>
+          <a href="#schedule" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>일정표</a>
+          <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>SOOP 다시보기</a>
           <a href="/apps" className="tools-btn">🛠️ 도구</a>
           <ThemeToggle />
-          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'linear-gradient(135deg,#EB701A,#ff8c3a)',color:'#fff',padding:'0.55rem 1.3rem',borderRadius:'100px',fontSize:'0.88rem',fontWeight:700,boxShadow:'0 4px 14px rgba(235,112,26,0.35)'}}>YouTube ↗</a>
-          <a href="/rewind/2026" style={{display:'inline-flex',alignItems:'center',gap:'8px',background:'linear-gradient(135deg,#2d1b69,#4a2fa0)',color:'#fff',padding:'0.85rem 2rem',borderRadius:'100px',fontSize:'1.05rem',fontWeight:900,boxShadow:'0 6px 24px rgba(45,27,105,0.6), 0 0 0 1px rgba(255,255,255,0.2)',textDecoration:'none',whiteSpace:'nowrap' as const,border:'1.5px solid rgba(255,255,255,0.25)',letterSpacing:'-0.01em',transition:'all 0.2s'}}>📊 연간결산</a>
-          <a href="https://cafe.naver.com/smebsmeb" target="_blank" className="mob-hide" style={{background:'linear-gradient(135deg,#03C75A,#02b351)',color:'#fff',padding:'0.55rem 1.3rem',borderRadius:'100px',fontSize:'0.88rem',fontWeight:700,boxShadow:'0 4px 14px rgba(3,199,90,0.35)'}}>팬카페 ↗</a>
+          <a href="/rewind/2026" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>연간결산</a>
+          <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'#EB701A',color:'#fff',padding:'0.5rem 1.1rem',borderRadius:'100px',fontSize:'0.85rem',fontWeight:700,textDecoration:'none'}}>YouTube ↗</a>
         </nav>
       </header>
 
@@ -287,28 +285,26 @@ export default async function Home() {
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
-          <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 28px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
-          <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
-          <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1}}>
-            유튜브 <em style={{fontStyle:'italic'}}>TOP 10</em>
-          </h2>
+<div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
+          <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>YOUTUBE</span>
+          <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>유튜브 TOP 10</h2>
         </div>
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
 
           {/* ─── 일정표 ─── */}
           <div id="schedule" style={{marginTop:'56px'}}>
-            <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 20px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
-              <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
-              <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1,margin:0}}>일정표</h2>
+            <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
+              <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>SCHEDULE</span>
+              <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>일정표</h2>
             </div>
             <ScheduleEmbed />
           </div>
 
           {/* ─── SOOP 다시보기 헤더 ─── */}
           <div id="soopcal" style={{marginTop:'56px'}}>
-            <div style={{margin:'0 calc(-1 * clamp(1.5rem,5vw,3rem)) 20px',background:'#EB701A',padding:'28px clamp(1.5rem,5vw,3rem)',overflow:'hidden',position:'relative',borderRadius:'20px'}}>
-              <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}} />
-              <h2 style={{fontSize:'clamp(2rem,5vw,4rem)',fontWeight:900,letterSpacing:'-0.06em',lineHeight:1,color:'#1A1A1A',position:'relative',zIndex:1,margin:0}}>SOOP 다시보기</h2>
+            <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
+              <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>SOOP VOD</span>
+              <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>SOOP 다시보기</h2>
             </div>
             <CalendarSection sortedMonths={sortedMonths} monthMap={monthMap} monthTop5={monthTop5} today={today.toISOString()} />
           </div>
