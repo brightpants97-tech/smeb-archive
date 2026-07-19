@@ -441,9 +441,9 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
         <div style={{ display:'flex', flexDirection:'column', gap: isMobile ? '20px' : '40px' }}>
 
           <div style={{ order: -1 }}>
-            <div style={{ margin: isMobile ? '0 -1.2rem 16px' : '0 calc(-1 * clamp(1.5rem,5vw,3rem)) 20px', background:'#EB701A', padding: isMobile ? '20px 1.2rem' : '28px clamp(1.5rem,5vw,3rem)', overflow:'hidden', position:'relative', borderRadius:'20px' }}>
-              <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px)', backgroundSize:'36px 36px', pointerEvents:'none' }} />
-              <h2 style={{ fontSize: isMobile ? '2rem' : 'clamp(2rem,5vw,4rem)', fontWeight:900, letterSpacing:'-0.06em', lineHeight:1, color:'#1A1A1A', position:'relative', zIndex:1 }}>최신 공지</h2>
+            <div style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom: isMobile ? '16px' : '24px', paddingBottom:'16px', borderBottom:'2px solid #EB701A', width:'fit-content' }}>
+              <span style={{ fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.18em', color:'var(--text-muted)', textTransform:'uppercase' as const }}>NOTICE</span>
+              <h2 style={{ fontSize:'clamp(1.6rem,3.5vw,2.6rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color:'var(--text)', margin:0 }}>최신 공지</h2>
             </div>
             <div style={{ background:'var(--bg-deeper)', borderRadius:'18px', padding: isMobile ? '0' : '12px' }}>
               {isMobile ? (
