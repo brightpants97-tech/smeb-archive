@@ -798,8 +798,55 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </div>
 
           {top10InView && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
-              {top10.map((v, i) => <Top10Item key={v.id} video={v} rank={i + 1} delay={i * 0.055} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'clamp(6px,1vw,10px)' }}>
+              {top10.map((v, i) => {
+                const isTop3 = i < 3;
+                const TOP3_BORDER = ['#FFB800', '#A0A8B8', '#CD7F32'];
+                const TOP3_GLOW   = ['rgba(255,184,0,0.5)', 'rgba(160,168,184,0.4)', 'rgba(205,127,50,0.4)'];
+                const MEDAL = ['🥇','🥈','🥉'];
+                return (
+                  <div key={v.id}
+                    onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
+                    style={{ cursor: 'pointer', animation: `rwFadeUp 0.4s ${i * 0.055}s both` }}
+                  >
+                    <div style={{
+                      borderRadius: 'clamp(8px,1vw,12px)', overflow: 'hidden',
+                      width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
+                      boxShadow: isTop3
+                        ? `0 0 0 2px ${TOP3_BORDER[i]}, 0 4px 16px ${TOP3_GLOW[i]}`
+                        : 'none',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                    }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1)'}
+                    >
+                      <img src={v.thumbnail} alt={v.title}
+                        style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
+                      {/* 순위 뱃지 */}
+                      <div style={{
+                        position:'absolute', top:'6px', left:'7px',
+                        fontSize: isTop3 ? '0.78rem' : '0.68rem',
+                        fontWeight:900, color: i === 1 ? '#1A1A1A' : '#fff',
+                        background: isTop3 ? TOP3_BORDER[i] : 'rgba(0,0,0,0.55)',
+                        padding: isTop3 ? '3px 7px' : '2px 6px',
+                        borderRadius:'5px', letterSpacing:'-0.02em', lineHeight:1,
+                      }}>
+                        {isTop3 ? `${MEDAL[i]} ${i+1}` : `#${i+1}`}
+                      </div>
+                      {/* 조회수 + 제목 */}
+                      <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'8px 10px' }}>
+                        <p style={{
+                          fontSize:'0.74rem', fontWeight:600, color:'rgba(255,255,255,0.92)',
+                          lineHeight:1.35, margin:'0 0 3px',
+                          display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden',
+                        } as React.CSSProperties}>{v.title}</p>
+                        <span style={{ fontSize:'0.65rem', fontWeight:800, color:ORANGE }}>{fmt(v.views)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
               {top10.length === 0 && (
                 <div style={{ gridColumn: '1/-1', padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>데이터를 불러오는 중이에요</div>
               )}
