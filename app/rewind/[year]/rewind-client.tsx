@@ -463,6 +463,198 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
   );
 }
 
+// ── 업로드 캘린더 (히트맵 + 타임라인 팝업) ──
+function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year: number }) {
+  const [activeMonth, setActiveMonth] = useState<number | null>(null);
+  const [hoveredVideo, setHoveredVideo] = useState<{ video: Video; x: number; above: boolean } | null>(null);
+  const tlRef = useRef<HTMLDivElement>(null);
+
+  const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
+
+  function getOpacity(m: MonthData) {
+    if (!m.topVideos.length) return 0.07;
+    const max = Math.max(...m.topVideos.map(v => v.views));
+    if (max > 500000) return 1;
+    if (max > 200000) return 0.75;
+    if (max > 100000) return 0.5;
+    return 0.3;
+  }
+
+  const activeData = monthlyData.find(m => m.month === activeMonth);
+
+  return (
+    <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+
+        {/* 헤더 */}
+        <div style={{ marginBottom: '28px' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Upload Calendar</p>
+          <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '6px' }}>
+            {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.84rem' }}>월을 클릭해 타임라인 보기 · 점에 마우스를 올리면 영상 정보가 나타나요</p>
+        </div>
+
+        {/* 히트맵 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '8px', marginBottom: '12px' }}>
+          {monthlyData.map(m => {
+            const op = getOpacity(m);
+            const isActive = activeMonth === m.month;
+            const hasVideos = m.topVideos.length > 0;
+            return (
+              <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
+                <div
+                  onClick={() => hasVideos && setActiveMonth(isActive ? null : m.month)}
+                  style={{
+                    width: '100%', aspectRatio: '1', borderRadius: '6px',
+                    background: '#EB701A', opacity: op,
+                    cursor: hasVideos ? 'pointer' : 'default',
+                    outline: isActive ? '2.5px solid #EB701A' : '2.5px solid transparent',
+                    outlineOffset: '2px',
+                    transition: 'opacity 0.15s, outline 0.1s',
+                  }}
+                  onMouseEnter={e => { if (hasVideos) (e.currentTarget as HTMLElement).style.opacity = String(Math.min(1, op + 0.2)); }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = String(op); }}
+                  title={hasVideos ? `${m.topVideos.length}개 영상 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
+                />
+                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)' }}>
+                  {m.topVideos.length > 0 ? `${m.topVideos.length}개` : '-'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 범례 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '24px' }}>
+          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>조회수 낮음</span>
+          {[0.3, 0.5, 0.75, 1].map((o, i) => (
+            <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: '#EB701A', opacity: o }} />
+          ))}
+          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>높음</span>
+        </div>
+
+        {/* 타임라인 */}
+        {activeData && (
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px 0 16px', overflow: 'hidden' }}>
+            <div style={{ padding: '0 24px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: ORANGE }}>
+                {MONTH_KO[activeData.month - 1]} — {activeData.topVideos.length}개 영상
+              </span>
+              <button
+                onClick={() => { setActiveMonth(null); setHoveredVideo(null); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '1rem', padding: '2px 6px', fontFamily: 'inherit' }}
+              >✕</button>
+            </div>
+
+            <div ref={tlRef} style={{ overflowX: 'auto', padding: '0 24px' }}>
+              <div style={{ position: 'relative', minWidth: `${Math.max(560, activeData.topVideos.length * 110 + 80)}px`, height: '200px' }}>
+
+                {/* 중앙선 */}
+                <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1.5px', background: 'rgba(255,255,255,0.1)', transform: 'translateY(-50%)' }} />
+
+                {(() => {
+                  const videos = activeData.topVideos;
+                  const W = Math.max(560, videos.length * 110 + 80);
+                  const step = (W - 80) / (videos.length + 1);
+                  const maxV = Math.max(...videos.map(v => v.views), 1);
+
+                  return videos.map((v, i) => {
+                    const x = 40 + step * (i + 1);
+                    const above = i % 2 === 0;
+                    const ratio = v.views / maxV;
+                    const dotSz = ratio > 0.8 ? 11 : ratio > 0.5 ? 8 : 6;
+                    const dotOp = ratio > 0.8 ? 1 : ratio > 0.5 ? 0.75 : 0.45;
+                    const stemH = 48;
+                    const isHov = hoveredVideo?.video.id === v.id;
+
+                    return (
+                      <div
+                        key={v.id}
+                        style={{ position: 'absolute', left: `${x}px`, top: '50%', transform: 'translate(-50%, -50%)', zIndex: isHov ? 5 : 1 }}
+                      >
+                        {/* 위 날짜 또는 아래 날짜 */}
+                        {!above && (
+                          <div style={{ position: 'absolute', bottom: `${dotSz + stemH + 4}px`, left: '50%', transform: 'translateX(-50%)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                            {new Date(v.publishedAt).getDate()}일
+                          </div>
+                        )}
+
+                        {/* 줄기 위 */}
+                        {above && (
+                          <div style={{ position: 'absolute', bottom: `${dotSz / 2}px`, left: '50%', transform: 'translateX(-50%)', width: '1.5px', height: `${stemH}px`, background: `rgba(235,112,26,${dotOp})` }} />
+                        )}
+
+                        {/* 점 */}
+                        <div
+                          onMouseEnter={() => setHoveredVideo({ video: v, x, above })}
+                          onMouseLeave={() => setHoveredVideo(null)}
+                          style={{
+                            width: `${dotSz}px`, height: `${dotSz}px`, borderRadius: '50%',
+                            background: '#EB701A', opacity: dotOp,
+                            cursor: 'pointer', position: 'relative', zIndex: 2,
+                            boxShadow: isHov ? `0 0 0 4px rgba(235,112,26,0.25)` : `0 0 0 ${Math.round(dotSz / 2)}px rgba(235,112,26,${dotOp * 0.2})`,
+                            transform: isHov ? 'scale(1.5)' : 'scale(1)',
+                            transition: 'transform 0.15s, box-shadow 0.15s',
+                          }}
+                        />
+
+                        {/* 줄기 아래 */}
+                        {!above && (
+                          <div style={{ position: 'absolute', top: `${dotSz / 2}px`, left: '50%', transform: 'translateX(-50%)', width: '1.5px', height: `${stemH}px`, background: `rgba(235,112,26,${dotOp})` }} />
+                        )}
+
+                        {/* 날짜 */}
+                        {above && (
+                          <div style={{ position: 'absolute', top: `${dotSz + stemH + 4}px`, left: '50%', transform: 'translateX(-50%)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                            {new Date(v.publishedAt).getDate()}일
+                          </div>
+                        )}
+
+                        {/* 팝업 */}
+                        {isHov && (() => {
+                          const popW = 180;
+                          const tlW = Math.max(560, videos.length * 110 + 80);
+                          let left = -popW / 2;
+                          if (x + left < 8) left = 8 - x;
+                          if (x + left + popW > tlW - 8) left = tlW - 8 - x - popW;
+                          const top = above ? -(stemH + 145) : dotSz + stemH + 18;
+                          return (
+                            <div style={{
+                              position: 'absolute', left: `${left}px`, top: `${top}px`,
+                              width: `${popW}px`, background: '#1e1e1e',
+                              border: '1px solid rgba(235,112,26,0.45)', borderRadius: '10px',
+                              overflow: 'hidden', pointerEvents: 'none', zIndex: 20,
+                              animation: 'rwFadeUp 0.15s both',
+                            }}>
+                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', overflow: 'hidden' }}>
+                                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.68rem', fontWeight: 900, color: '#EB701A' }}>{fmt(v.views)}</div>
+                              </div>
+                              <div style={{ padding: '8px 10px 10px' }}>
+                                <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', margin: '0 0 3px', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title}</p>
+                                <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)' }}>
+                                  {new Date(v.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} · {fmt(v.views)} 조회
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // ── TOP10 아이템 ──
 function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: number }) {
   const [hov, setHov] = useState(false);
@@ -767,6 +959,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
       {/* ───────────────── ② - 조회수 비교 차트 ───────────────── */}
       <ChartSection monthlyData={monthlyData} validYears={validYears} year={year} />
+
+      {/* ───────────────── ②-b 업로드 캘린더 ───────────────── */}
+      <UploadCalendar monthlyData={monthlyData} year={year} />
 
       {/* ───────────────── ③ 월별 하이라이트 ───────────────── */}
       <section ref={monthRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
