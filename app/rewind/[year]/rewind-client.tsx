@@ -465,8 +465,11 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
 
 // ── 업로드 캘린더 (히트맵 + 타임라인 팝업) ──
 function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year: number }) {
-  const [activeMonth, setActiveMonth] = useState<number | null>(null);
+  const firstMonth = monthlyData.find(m => m.topVideos.length > 0)?.month ?? null;
+  const [activeMonth, setActiveMonth] = useState<number | null>(firstMonth);
+  const [hovered, setHovered] = useState<string | null>(null);
   const tlRef = useRef<HTMLDivElement>(null);
+  const [scrollable, setScrollable] = useState({ left: false, right: false });
 
   const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
@@ -480,11 +483,49 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
     return 0.3;
   }
 
+  function tier(ratio: number) {
+    if (ratio > 0.7) return { dot: '#FFB800', stem: '#FFB800', border: 'rgba(255,184,0,0.55)', card: 'rgba(255,184,0,0.06)' };
+    if (ratio > 0.35) return { dot: ORANGE, stem: ORANGE, border: 'rgba(235,112,26,0.45)', card: 'rgba(235,112,26,0.05)' };
+    return { dot: 'rgba(255,255,255,0.32)', stem: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.1)', card: 'rgba(255,255,255,0.03)' };
+  }
+
+  function updateScrollState() {
+    const el = tlRef.current;
+    if (!el) return;
+    setScrollable({ left: el.scrollLeft > 8, right: el.scrollLeft < el.scrollWidth - el.clientWidth - 8 });
+  }
+
+  useEffect(() => {
+    const el = tlRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    setTimeout(updateScrollState, 100);
+    return () => el.removeEventListener('scroll', updateScrollState);
+  }, [activeMonth]);
+
+  function scroll(dir: 'left' | 'right') {
+    const el = tlRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
+  }
+
   const activeData = monthlyData.find(m => m.month === activeMonth);
+  const CARD_W = 148;
+  const STEM_H = 40;
+  const CARD_H = Math.round(CARD_W * 9 / 16) + 56;
+  const TL_HEIGHT = CARD_H * 2 + STEM_H * 2 + 20;
 
   return (
     <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+        <style>{`
+          .tl-wrap::-webkit-scrollbar { display: none; }
+          .tl-wrap { -ms-overflow-style: none; scrollbar-width: none; }
+          .tl-card { transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; }
+          .tl-card:hover { transform: scale(1.1) !important; z-index: 30 !important; }
+          .scroll-btn { transition: background 0.15s, opacity 0.15s; }
+          .scroll-btn:hover { background: rgba(235,112,26,0.25) !important; }
+        `}</style>
 
         {/* 헤더 */}
         <div style={{ marginBottom: '28px' }}>
@@ -492,7 +533,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
           <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '6px' }}>
             {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일 클릭 시 유튜브로 이동</p>
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
         </div>
 
         {/* 히트맵 */}
@@ -512,10 +553,9 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                     cursor: hasVideos ? 'pointer' : 'default',
                     outline: isActive ? '2.5px solid #EB701A' : '2.5px solid transparent',
                     outlineOffset: '2px',
-                    transition: 'opacity 0.15s, outline 0.1s',
+                    transition: 'opacity 0.15s, outline 0.1s, transform 0.1s',
+                    transform: isActive ? 'scale(1.08)' : 'scale(1)',
                   }}
-                  onMouseEnter={e => { if (hasVideos) (e.currentTarget as HTMLElement).style.opacity = String(Math.min(1, op + 0.2)); }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = String(op); }}
                   title={hasVideos ? `${m.topVideos.length}개 영상 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
                 />
                 <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)' }}>
@@ -527,8 +567,8 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
         </div>
 
         {/* 범례 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '24px' }}>
-          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>조회수 낮음</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px' }}>
+          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>낮음</span>
           {[0.3, 0.5, 0.75, 1].map((o, i) => (
             <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: '#EB701A', opacity: o }} />
           ))}
@@ -537,118 +577,150 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
 
         {/* 타임라인 */}
         {activeData && (
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px 0 20px', overflow: 'hidden' }}>
-            <div style={{ padding: '0 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: ORANGE }}>
-                {MONTH_KO[activeData.month - 1]} — {activeData.topVideos.length}개 영상
-              </span>
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '20px 0 24px' }}>
+
+            {/* 헤더 */}
+            <div style={{ padding: '0 28px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <span style={{ fontSize: '0.92rem', fontWeight: 700, color: ORANGE }}>
+                  {MONTH_KO[activeData.month - 1]} · {activeData.topVideos.length}개 영상
+                </span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[{ label: '금', color: '#FFB800' }, { label: '오렌지', color: ORANGE }, { label: '회색', color: 'rgba(255,255,255,0.38)' }].map((c, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: [10,8,6][i] + 'px', height: [10,8,6][i] + 'px', borderRadius: '50%', background: c.color }} />
+                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{['상위','중간','하위'][i]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <button
                 onClick={() => setActiveMonth(null)}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '1rem', padding: '2px 6px', fontFamily: 'inherit' }}
-              >✕</button>
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit' }}
+              >닫기</button>
             </div>
 
-            <div ref={tlRef} style={{ overflowX: 'auto', padding: '0 24px 4px' }}>
-              {(() => {
-                const videos = activeData.topVideos;
-                const CARD_W = 130;
-                const GAP = 16;
-                const W = Math.max(600, videos.length * (CARD_W + GAP) + 80);
-                const step = (W - 80) / (videos.length + 1);
-                const maxV = Math.max(...videos.map(v => v.views), 1);
+            {/* 스크롤 컨트롤 */}
+            <div style={{ position: 'relative' }}>
+              {/* 왼쪽 화살표 */}
+              {scrollable.left && (
+                <button
+                  className="scroll-btn"
+                  onClick={() => scroll('left')}
+                  style={{
+                    position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)',
+                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '50%', width: '40px', height: '40px',
+                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >‹</button>
+              )}
+              {/* 오른쪽 화살표 */}
+              {scrollable.right && (
+                <button
+                  className="scroll-btn"
+                  onClick={() => scroll('right')}
+                  style={{
+                    position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)',
+                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '50%', width: '40px', height: '40px',
+                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >›</button>
+              )}
+              {/* 왼쪽 페이드 */}
+              {scrollable.left && (
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to right, rgba(0,0,0,0.4), transparent)', zIndex: 10, pointerEvents: 'none', borderRadius: '0 0 0 20px' }} />
+              )}
+              {/* 오른쪽 페이드 */}
+              {scrollable.right && (
+                <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent)', zIndex: 10, pointerEvents: 'none', borderRadius: '0 0 20px 0' }} />
+              )}
 
-                // 3단계 컬러: 금(상위 30%) / 오렌지(중간) / 회색(하위)
-                function tier(ratio: number) {
-                  if (ratio > 0.7) return { dot: '#FFB800', stem: '#FFB800', border: 'rgba(255,184,0,0.6)', card: 'rgba(255,184,0,0.08)' };
-                  if (ratio > 0.35) return { dot: ORANGE, stem: ORANGE, border: 'rgba(235,112,26,0.5)', card: 'rgba(235,112,26,0.07)' };
-                  return { dot: 'rgba(255,255,255,0.35)', stem: 'rgba(255,255,255,0.2)', border: 'rgba(255,255,255,0.12)', card: 'rgba(255,255,255,0.04)' };
-                }
+              {/* 타임라인 스크롤 영역 */}
+              <div
+                ref={tlRef}
+                className="tl-wrap"
+                style={{
+                  overflowX: 'auto',
+                  overflowY: 'visible',
+                  padding: `20px 32px`,
+                }}
+              >
+                {(() => {
+                  const videos = activeData.topVideos;
+                  const W = Math.max(700, videos.length * (CARD_W + 28) + 120);
+                  const step = (W - 100) / (videos.length + 1);
+                  const maxV = Math.max(...videos.map(v => v.views), 1);
 
-                const STEM_H = 36;
-                const CARD_H = CARD_W * 9 / 16 + 44; // 16:9 + 텍스트
+                  return (
+                    <div style={{ position: 'relative', minWidth: `${W}px`, height: `${TL_HEIGHT}px` }}>
+                      {/* 중앙선 */}
+                      <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1.5px', background: 'rgba(255,255,255,0.08)', transform: 'translateY(-50%)' }} />
 
-                return (
-                  <div style={{ position: 'relative', minWidth: `${W}px`, height: `${CARD_H * 2 + STEM_H * 2 + 20}px` }}>
-                    {/* 중앙선 */}
-                    <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1.5px', background: 'rgba(255,255,255,0.1)', transform: 'translateY(-50%)' }} />
+                      {videos.map((v, i) => {
+                        const x = 50 + step * (i + 1);
+                        const above = i % 2 === 0;
+                        const ratio = v.views / maxV;
+                        const t = tier(ratio);
+                        const dotSz = ratio > 0.7 ? 14 : ratio > 0.35 ? 10 : 7;
+                        const isHov = hovered === v.id;
 
-                    {videos.map((v, i) => {
-                      const x = 40 + step * (i + 1);
-                      const above = i % 2 === 0;
-                      const ratio = v.views / maxV;
-                      const t = tier(ratio);
-                      const dotSz = ratio > 0.7 ? 12 : ratio > 0.35 ? 9 : 6;
-                      const centerY = '50%';
+                        return (
+                          <div key={v.id} style={{ position: 'absolute', left: `${x}px`, top: '50%', transform: 'translate(-50%, -50%)', zIndex: isHov ? 50 : 1 }}>
+                            {/* 줄기 */}
+                            <div style={{
+                              position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+                              width: '1.5px', height: `${STEM_H}px`, background: t.stem,
+                              ...(above ? { bottom: `${dotSz / 2}px` } : { top: `${dotSz / 2}px` }),
+                            }} />
 
-                      return (
-                        <div key={v.id} style={{ position: 'absolute', left: `${x}px`, top: centerY, transform: 'translate(-50%, -50%)' }}>
-                          {/* 줄기 */}
-                          <div style={{
-                            position: 'absolute',
-                            left: '50%', transform: 'translateX(-50%)',
-                            width: '1.5px', height: `${STEM_H}px`,
-                            background: t.stem,
-                            ...(above ? { bottom: `${dotSz / 2}px` } : { top: `${dotSz / 2}px` }),
-                          }} />
-
-                          {/* 점 */}
-                          <div style={{
-                            width: `${dotSz}px`, height: `${dotSz}px`, borderRadius: '50%',
-                            background: t.dot, position: 'relative', zIndex: 2,
-                            boxShadow: `0 0 0 ${Math.ceil(dotSz / 2)}px ${t.dot.replace(')', ',0.18)').replace('rgba', 'rgba').replace('#', 'rgba(')}`,
-                          }} />
-
-                          {/* 썸네일 카드 */}
-                          <div
-                            onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
-                            style={{
-                              position: 'absolute',
-                              left: `${-CARD_W / 2}px`,
-                              ...(above
-                                ? { bottom: `${dotSz / 2 + STEM_H + 6}px` }
-                                : { top: `${dotSz / 2 + STEM_H + 6}px` }),
-                              width: `${CARD_W}px`,
-                              background: t.card,
-                              border: `1px solid ${t.border}`,
-                              borderRadius: '8px', overflow: 'hidden',
-                              cursor: 'pointer',
+                            {/* 점 */}
+                            <div style={{
+                              width: `${dotSz}px`, height: `${dotSz}px`, borderRadius: '50%',
+                              background: t.dot, position: 'relative', zIndex: 2,
+                              boxShadow: `0 0 0 ${Math.ceil(dotSz / 2)}px ${t.dot === '#FFB800' ? 'rgba(255,184,0,0.2)' : t.dot === ORANGE ? 'rgba(235,112,26,0.2)' : 'rgba(255,255,255,0.08)'}`,
                               transition: 'transform 0.15s',
-                            }}
-                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)'}
-                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1)'}
-                          >
-                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
-                              <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                              <div style={{ position: 'absolute', bottom: '4px', right: '5px', fontSize: '0.6rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
-                            </div>
-                            <div style={{ padding: '5px 7px 7px' }}>
-                              <p style={{ fontSize: '0.68rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', lineHeight: 1.3, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title}</p>
-                              <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', marginTop: '2px', display: 'block' }}>
-                                {new Date(v.publishedAt).getDate()}일
-                              </span>
+                              transform: isHov ? 'scale(1.6)' : 'scale(1)',
+                            }} />
+
+                            {/* 썸네일 카드 */}
+                            <div
+                              className="tl-card"
+                              onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
+                              onMouseEnter={() => setHovered(v.id)}
+                              onMouseLeave={() => setHovered(null)}
+                              style={{
+                                position: 'absolute',
+                                left: `${-CARD_W / 2}px`,
+                                ...(above
+                                  ? { bottom: `${dotSz / 2 + STEM_H + 10}px` }
+                                  : { top: `${dotSz / 2 + STEM_H + 10}px` }),
+                                width: `${CARD_W}px`,
+                                background: t.card,
+                                border: `1px solid ${isHov ? t.dot : t.border}`,
+                                borderRadius: '10px', overflow: 'hidden',
+                                transformOrigin: above ? 'bottom center' : 'top center',
+                              }}
+                            >
+                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
+                                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
+                                <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
+                              </div>
+                              <div style={{ padding: '7px 9px 9px' }}>
+                                <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.32)' }}>{new Date(v.publishedAt).getDate()}일</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* 컬러 범례 */}
-            <div style={{ padding: '12px 24px 0', display: 'flex', gap: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FFB800' }} />
-                <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)' }}>상위 30% 조회</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: ORANGE }} />
-                <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)' }}>중간</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.35)' }} />
-                <span style={{ fontSize: '0.66rem', color: 'rgba(255,255,255,0.4)' }}>하위</span>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -657,6 +729,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
     </section>
   );
 }
+
 
 // ── TOP10 아이템 ──
 function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: number }) {
