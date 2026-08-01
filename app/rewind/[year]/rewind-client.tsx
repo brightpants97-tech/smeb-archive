@@ -411,7 +411,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
       </div>
 
       {/* 최대 10개 하이라이트 */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'clamp(6px,1vw,10px)', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(6px,1vw,12px)', minWidth: 0 }}>
         {Array.from({ length: Math.min(videos.length, 10) }, (_, i) => i).map(i => {
           const v  = videos[i];
           const ri = RANK_INFO[i];
@@ -1004,61 +1004,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             </div>
           </div>
 
-          {/* ── SOOP 그룹 ── */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(30,120,255,0.1)', border: '1px solid rgba(30,120,255,0.22)', borderRadius: '100px', padding: '3px 10px' }}>
-                <span style={{ fontSize: '0.6rem' }}>●</span>
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#60a8ff', letterSpacing: '0.06em' }}>SOOP</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}>
-              <StatCard value={stats.soopBroadcasts} label="방송 횟수"    suffix="개" delay={0}   active={statsInView} />
-              <StatCard value={stats.broadcastHours} label="총 방송 시간" suffix="h"  delay={150} active={statsInView} subText={`${Math.floor(stats.broadcastHours / 24).toLocaleString('ko-KR')}일`} />
-            </div>
-          </div>
 
-          {/* ── 올해의 영상 TOP3 ── */}
-          {top10[0] && (
-            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
-              {top10.slice(0, 3).map((v, i) => {
-                const MEDAL   = ['🥇','🥈','🥉'][i];
-                const COLOR   = ['#FFB800','#A0A8B8','#CD7F32'][i];
-                const BORDER  = [`rgba(255,190,0,0.25)`,`rgba(160,168,184,0.2)`,`rgba(205,127,50,0.2)`][i];
-                const BG      = [`rgba(255,190,0,0.05)`,`rgba(160,168,184,0.03)`,`rgba(205,127,50,0.03)`][i];
-                const BGHOV   = [`rgba(255,190,0,0.1)`,`rgba(160,168,184,0.07)`,`rgba(205,127,50,0.07)`][i];
-                return (
-                  <a key={v.id}
-                    href={`https://youtube.com/watch?v=${v.id}`}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: BG, border: `1px solid ${BORDER}`, borderRadius: '16px', textDecoration: 'none', transition: 'border-color 0.2s, background 0.2s' }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = BGHOV; }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = BG; }}
-                  >
-                    {/* 순위 */}
-                    <div style={{ flexShrink: 0, width: '36px', textAlign: 'center' as const }}>
-                      <span style={{ fontSize: i === 0 ? '1.8rem' : '1.4rem', lineHeight: 1 }}>{MEDAL}</span>
-                    </div>
-                    {/* 썸네일 */}
-                    <div style={{ flexShrink: 0, width: '200px', aspectRatio: '16/9', borderRadius: '10px', overflow: 'hidden', position: 'relative', background: '#0a0a0a', boxShadow: `0 0 0 1.5px ${BORDER}` }}>
-                      <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.12)' }} />
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>▶</div>
-                    </div>
-                    {/* 텍스트 */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: '0.62rem', fontWeight: 700, color: COLOR, letterSpacing: '0.1em', textTransform: 'uppercase' as const, display: 'block', marginBottom: '6px' }}>{i + 1}위 · 올해의 영상</span>
-                      <p style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', lineHeight: 1.45, margin: '0 0 8px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{v.title}</p>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontSize: '0.62rem', opacity: 0.6 }}>👁</span>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 800, color: COLOR }}>{fmt(v.views)}회 조회</span>
-                      </div>
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-          )}
 
           {/* ── 가장 바빴던 달 ── */}
           <div style={{ marginTop: '12px', padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', gap: '16px', width: '100%', boxSizing: 'border-box' as const }}>
@@ -1074,9 +1020,6 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         </div>
       </section>
 
-
-      {/* ───────────────── ② - 조회수 비교 차트 ───────────────── */}
-      <ChartSection monthlyData={monthlyData} validYears={validYears} year={year} />
 
       {/* ───────────────── ②-b 업로드 캘린더 ───────────────── */}
       <UploadCalendar monthlyData={monthlyData} year={year} />
@@ -1111,7 +1054,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </div>
 
           {top10InView && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'clamp(6px,1vw,10px)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(6px,1vw,12px)' }}>
               {top10.map((v, i) => {
                 const isTop3 = i < 3;
                 const TOP3_BORDER = ['#FFB800', '#A0A8B8', '#CD7F32'];
