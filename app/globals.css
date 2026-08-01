@@ -35,14 +35,15 @@ body {
   flex-direction: column !important;
 }
 
-/* 5열 그리드 내 img: 항상 16:9 고정 */
-[style*="grid-template-columns: repeat(5, 1fr)"] > div [style*="aspect-ratio"],
-[style*="grid-template-columns: repeat(5, 1fr)"] > div [style*="padding-bottom"] {
-  flex-shrink: 0 !important;
+/* 5열 그리드 썸네일: aspect-ratio → padding-bottom 56.25% 강제 전환 */
+[style*="grid-template-columns: repeat(5, 1fr)"] > div > div:first-child {
+  aspect-ratio: unset !important;
+  height: 0 !important;
+  padding-bottom: 56.25% !important;
+  position: relative !important;
   width: 100% !important;
   overflow: hidden !important;
-  aspect-ratio: 16/9 !important;
-  height: auto !important;
+  flex-shrink: 0 !important;
 }
 
 /* 그리드 자동 행 높이 통일 */
