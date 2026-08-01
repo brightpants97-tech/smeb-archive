@@ -439,7 +439,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
                   : isHov ? '0 8px 24px rgba(0,0,0,0.5)' : 'none',
                 transition: 'transform 0.2s, box-shadow 0.2s',
               }}>
-                <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src={v.thumbnail} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 50%)' }} />
                 {/* 순위 배지 */}
                 <div style={{ position: 'absolute', top: '6px', left: '6px', background: ri.grad, color: ri.tc, fontSize: 'clamp(0.52rem,0.9vw,0.65rem)', fontWeight: 900, padding: '2px 8px', borderRadius: '100px', whiteSpace: 'nowrap' as const }}>
@@ -615,7 +615,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
             >
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
                 <img src={preview.video.thumbnail} alt={preview.video.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EB701A', letterSpacing: '-0.03em' }}>{fmt2(preview.video.views)}</span>
@@ -763,7 +763,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                               }}
                             >
                               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: 'var(--rw-thumb)' }}>
-                                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                <img src={v.thumbnail} alt={v.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
                                 <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
                               </div>
@@ -805,7 +805,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
         display: 'flex', flexDirection: 'column', gap: '8px',
         background: 'var(--rw-card)',
         border: `1px solid ${isTop3 ? rankColor + '55' : 'rgba(255,255,255,0.07)'}`,
-        borderRadius: '10px', overflow: 'hidden', paddingBottom: '10px',
+        borderRadius: '10px', overflow: 'hidden',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
         boxShadow: hov ? '0 10px 28px rgba(0,0,0,0.4)' : isTop3 ? `0 0 0 1px ${rankColor}44` : 'none',
         transition: 'transform 0.18s, box-shadow 0.18s',
