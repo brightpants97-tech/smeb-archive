@@ -26,17 +26,25 @@ body {
 }
 
 
-/* ── 월별 TOP10 썸네일 크기 강제 통일 ── */
-.rw-top10-thumb {
-  position: relative;
-  width: 100%;
-  padding-bottom: 56.25%;
-  height: 0 !important;
-  overflow: hidden;
-  background: #111;
-  flex-shrink: 0;
+/* ── 월별 TOP10 카드 높이/썸네일 통일 ── */
+
+/* 5열 그리드 내 모든 카드: 최소 높이 통일 */
+[style*="grid-template-columns: repeat(5, 1fr)"] > div {
+  min-height: 158px;
+  display: flex !important;
+  flex-direction: column !important;
 }
-.rw-top10-thumb img {
+
+/* 5열 그리드 내 img: 항상 16:9 고정 */
+[style*="grid-template-columns: repeat(5, 1fr)"] > div [style*="aspect-ratio"],
+[style*="grid-template-columns: repeat(5, 1fr)"] > div [style*="padding-bottom"] {
+  flex-shrink: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* 썸네일 img: 컨테이너 꽉 채움 */
+[style*="grid-template-columns: repeat(5, 1fr)"] > div img {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
