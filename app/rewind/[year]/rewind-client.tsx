@@ -874,12 +874,14 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           --rw-card: rgba(255,255,255,0.04); --rw-thumb: #0a0a0a;
         }
         [data-rw="light"] {
-          --rw-bg: #f6f4ef; --rw-bg2: #eceae4; --rw-bg3: rgba(18,18,16,0.04); --rw-bg4: rgba(18,18,16,0.07);
-          --rw-border: rgba(18,18,16,0.1); --rw-border2: rgba(18,18,16,0.18);
-          --rw-text: #121210; --rw-text2: rgba(18,18,16,0.65); --rw-text3: rgba(18,18,16,0.42); --rw-text4: rgba(18,18,16,0.24);
-          --rw-card: rgba(18,18,16,0.04); --rw-thumb: #e0ded8;
+          --rw-bg: #f5f3ee; --rw-bg2: #e8e5dd; --rw-bg3: rgba(18,18,16,0.06); --rw-bg4: rgba(18,18,16,0.1);
+          --rw-border: rgba(18,18,16,0.18); --rw-border2: rgba(18,18,16,0.32);
+          --rw-text: #121210; --rw-text2: rgba(18,18,16,0.72); --rw-text3: rgba(18,18,16,0.5); --rw-text4: rgba(18,18,16,0.32);
+          --rw-card: rgba(18,18,16,0.06); --rw-thumb: #d8d5cc;
+          --rw-nav-bg: rgba(255,252,246,0.96); --rw-nav-border: rgba(18,18,16,0.14);
+          --rw-btn-bg: rgba(18,18,16,0.08); --rw-btn-border: rgba(18,18,16,0.22); --rw-btn-color: #121210;
         }
-        [data-rw="light"] section { border-color: rgba(18,18,16,0.08) !important; }
+        [data-rw="light"] section { border-color: rgba(18,18,16,0.14) !important; }
         @keyframes rwFadeUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
         @keyframes rwScale    { from { opacity:0; transform:scale(0.82); } to { opacity:1; transform:scale(1); } }
         @keyframes rwGlow     { 0%,100%{filter:drop-shadow(0 0 32px rgba(235,112,26,0.45));} 50%{filter:drop-shadow(0 0 72px rgba(235,112,26,0.85));} }
@@ -899,7 +901,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(235,112,26,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(235,112,26,0.04) 1px,transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none' }} />
 
         {/* 상단 바: 홈 + 연도 네비 */}
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px clamp(1.2rem,4vw,3rem)', zIndex: 100, flexWrap: 'wrap' as const, gap: '12px', background: lightMode ? 'rgba(246,244,239,0.9)' : 'rgba(11,11,11,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px clamp(1.2rem,4vw,3rem)', zIndex: 100, flexWrap: 'wrap' as const, gap: '12px', background: lightMode ? 'var(--rw-nav-bg)' : 'rgba(11,11,11,0.88)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: lightMode ? '1px solid var(--rw-nav-border)' : '1px solid rgba(255,255,255,0.07)' }}>
           {/* 로고 + 홈 버튼 묶음 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', opacity: 0.9, transition: 'opacity 0.2s' }}
@@ -918,9 +920,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             <a href="/"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: 'rgba(255,255,255,0.75)',
+                background: 'var(--rw-btn-bg)',
+                border: '1px solid var(--rw-btn-border)',
+                color: 'var(--rw-btn-color)',
                 padding: '5px 12px', borderRadius: '100px',
                 textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700,
                 transition: 'all 0.18s', whiteSpace: 'nowrap' as const,
@@ -952,9 +954,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
                   style={{
                     padding: '6px 16px', borderRadius: '100px', textDecoration: 'none',
                     fontSize: '0.82rem', fontWeight: 800, transition: 'all 0.18s',
-                    background: isActive ? ORANGE : 'rgba(255,255,255,0.07)',
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
-                    border: `1px solid ${isActive ? ORANGE : 'rgba(255,255,255,0.1)'}`,
+                    background: isActive ? ORANGE : 'var(--rw-btn-bg)',
+                    color: isActive ? '#fff' : 'var(--rw-text2)',
+                    border: `1px solid ${isActive ? ORANGE : 'var(--rw-btn-border)'}`,
                     boxShadow: isActive ? '0 0 16px rgba(235,112,26,0.4)' : 'none',
                   }}
                   onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.color='#fff'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; }}}
@@ -990,10 +992,10 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         style={{
           position: 'fixed', top: '14px', right: 'clamp(1.2rem,4vw,3rem)',
           zIndex: 200,
-          background: lightMode ? 'rgba(18,18,16,0.85)' : 'rgba(255,255,255,0.15)',
+          background: lightMode ? '#121210' : 'rgba(255,255,255,0.15)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          border: lightMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.3)',
+          border: lightMode ? '1px solid #121210' : '1px solid rgba(255,255,255,0.3)',
           color: '#fff',
           borderRadius: '100px', padding: '7px 16px',
           fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer',
