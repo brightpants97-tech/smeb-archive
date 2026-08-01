@@ -372,21 +372,6 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
             })}
           </div>
 
-          {/* 라이트/다크 토글 */}
-          <button
-            onClick={() => setLightMode((m: boolean) => !m)}
-            style={{
-              background: lightMode ? '#121210' : 'rgba(255,255,255,0.1)',
-              border: `1px solid ${lightMode ? 'rgba(18,18,16,0.2)' : 'rgba(255,255,255,0.2)'}`,
-              color: lightMode ? '#fff' : 'rgba(255,255,255,0.85)',
-              borderRadius: '100px', padding: '6px 14px',
-              fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
-              fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
-              transition: 'all 0.2s',
-            }}
-          >
-            {lightMode ? '🌙 다크' : '☀️ 라이트'}
-          </button>
         </div>
       </div>
     </div>
@@ -996,6 +981,24 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
               >{year + 1} →</a>
             )}
           </div>
+
+          {/* ☀️ 라이트/다크 토글 */}
+          <button
+            onClick={() => setLightMode((m: boolean) => !m)}
+            style={{
+              background: lightMode ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.12)',
+              border: `1.5px solid ${lightMode ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)'}`,
+              color: lightMode ? '#121210' : '#fff',
+              borderRadius: '100px', padding: '7px 16px',
+              fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer',
+              fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
+              transition: 'all 0.2s', flexShrink: 0,
+              display: 'flex', alignItems: 'center', gap: '6px',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            {lightMode ? '🌙 다크' : '☀️ 라이트'}
+          </button>
         </div>
 
         {/* 연도 + 카피 */}
