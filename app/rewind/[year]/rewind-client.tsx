@@ -815,7 +815,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       {/* 썸네일 */}
       <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', flexShrink: 0 }}>
         <img src={video.thumbnail} alt={video.title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
         {/* 순위 뱃지 */}
         <div style={{
