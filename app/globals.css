@@ -24,3 +24,22 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* ── 월별 TOP10 썸네일 크기 강제 통일 ── */
+.rw-top10-thumb {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0 !important;
+  overflow: hidden;
+  background: #111;
+  flex-shrink: 0;
+}
+.rw-top10-thumb img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
