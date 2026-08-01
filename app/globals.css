@@ -41,6 +41,13 @@ body {
   flex-shrink: 0 !important;
   width: 100% !important;
   overflow: hidden !important;
+  aspect-ratio: 16/9 !important;
+  height: auto !important;
+}
+
+/* 그리드 자동 행 높이 통일 */
+[style*="grid-template-columns: repeat(5, 1fr)"] {
+  align-items: stretch !important;
 }
 
 /* 썸네일 img: 컨테이너 꽉 채움 */
