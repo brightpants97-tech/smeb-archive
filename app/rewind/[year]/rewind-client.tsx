@@ -499,10 +499,24 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
     return 0.3;
   }
 
+  // 보색(오렌지 #EB701A → 보색 #00C9FF) + 시인성 강화 요소
+  const COMP = '#00C9FF'; // 오렌지 보색: 전기 청록
   function tier(ratio: number) {
-    if (ratio > 0.7) return { dot: '#FFB800', stem: '#FFB800', border: 'rgba(255,184,0,0.55)', card: 'rgba(255,184,0,0.06)' };
-    if (ratio > 0.35) return { dot: ORANGE, stem: ORANGE, border: 'rgba(235,112,26,0.45)', card: 'rgba(235,112,26,0.05)' };
-    return { dot: 'rgba(255,255,255,0.32)', stem: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.1)', card: 'rgba(255,255,255,0.03)' };
+    if (ratio > 0.7) return {
+      dot: COMP, stem: COMP,
+      border: 'rgba(0,201,255,0.7)', card: 'rgba(0,201,255,0.07)',
+      hot: true, glow: '0 0 0 2px rgba(0,201,255,0.35), 0 0 16px rgba(0,201,255,0.2)',
+    };
+    if (ratio > 0.35) return {
+      dot: ORANGE, stem: ORANGE,
+      border: 'rgba(235,112,26,0.45)', card: 'rgba(235,112,26,0.05)',
+      hot: false, glow: 'none',
+    };
+    return {
+      dot: 'var(--rw-text4)', stem: 'var(--rw-text4)',
+      border: 'var(--rw-border)', card: 'var(--rw-bg3)',
+      hot: false, glow: 'none',
+    };
   }
 
   function updateScrollState() {
@@ -644,7 +658,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   {MONTH_KO[activeData.month - 1]} · {activeData.topVideos.length}개 영상
                 </span>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  {[{ label: '금', color: '#FFB800' }, { label: '오렌지', color: ORANGE }, { label: '회색', color: 'var(--rw-text3)' }].map((c, i) => (
+                  {[{ label: 'HOT', color: COMP }, { label: '오렌지', color: ORANGE }, { label: '회색', color: 'var(--rw-text3)' }].map((c, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <div style={{ width: [10,8,6][i] + 'px', height: [10,8,6][i] + 'px', borderRadius: '50%', background: c.color }} />
                       <span style={{ fontSize: '0.62rem', color: 'var(--rw-text3)' }}>{['상위','중간','하위'][i]}</span>
@@ -723,7 +737,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                         const above = i % 2 === 0;
                         const ratio = v.views / maxV;
                         const t = tier(ratio);
-                        const dotSz = ratio > 0.7 ? 14 : ratio > 0.35 ? 10 : 7;
+                        const dotSz = ratio > 0.7 ? 16 : ratio > 0.35 ? 10 : 7;
                         const isHov = preview?.video.id === v.id;
 
                         return (
@@ -886,6 +900,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         @keyframes rwGlow     { 0%,100%{filter:drop-shadow(0 0 32px rgba(235,112,26,0.45));} 50%{filter:drop-shadow(0 0 72px rgba(235,112,26,0.85));} }
         @keyframes rwBounce   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
         @keyframes rwHeartbeat{ 0%,100%{transform:scale(1);} 30%{transform:scale(1.18);} 60%{transform:scale(1.05);} }
+        @keyframes rwHotPulse { 0%,100%{box-shadow:0 0 0 2px rgba(0,201,255,0.35),0 0 16px rgba(0,201,255,0.2);} 50%{box-shadow:0 0 0 3px rgba(0,201,255,0.6),0 0 28px rgba(0,201,255,0.4);} }
+        @keyframes rwHotShimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
       `}</style>
 
       {/* ───────────────── ① 오프닝 ───────────────── */}
