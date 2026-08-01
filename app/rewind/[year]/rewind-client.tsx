@@ -758,7 +758,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                                 width: `${CARD_W}px`,
                                 background: t.card,
                                 border: `1px solid ${isHov ? t.dot : t.border}`,
-                                borderRadius: '10px', overflow: 'hidden',
+                                borderRadius: '10px', overflow: 'hidden', minHeight: '158px',
                                 transformOrigin: above ? 'bottom center' : 'top center',
                               }}
                             >
