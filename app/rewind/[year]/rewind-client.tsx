@@ -54,7 +54,7 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
   useEffect(() => { if (active) { const t = setTimeout(() => setGo(true), delay); return () => clearTimeout(t); } }, [active, delay]);
   const count = useCountUp(value, 2400, go);
   return (
-    <div style={{ textAlign: 'center', padding: '24px 16px', background: 'rgba(235,112,26,0.05)', border: '1px solid rgba(235,112,26,0.13)', borderRadius: '20px', flex: 1, minWidth: '140px', overflow: 'hidden' }}>
+    <div style={{ textAlign: 'center', padding: '24px 16px', background: 'rgba(235,112,26,0.07)', border: '1px solid rgba(235,112,26,0.13)', borderRadius: '20px', flex: 1, minWidth: '140px', overflow: 'hidden' }}>
       <div style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', fontWeight: 900, letterSpacing: '-0.03em', color: ORANGE, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' as const, overflow: 'hidden', wordBreak: 'break-all' as const }}>
         {fmt(count)}{suffix}
       </div>
@@ -63,11 +63,11 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
           background: 'rgba(235,112,26,0.1)', border: '1px solid rgba(235,112,26,0.2)',
           borderRadius: '100px', padding: '2px 10px',
         }}>
-          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>≈</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--rw-text3)' }}>≈</span>
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>{subText}</span>
         </div>
       )}
-      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: '0.8rem', color: 'var(--rw-text2)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
     </div>
   );
 }
@@ -120,7 +120,7 @@ function YearCompareChart({ validYears, currentYear }: { validYears: number[]; c
       </div>
 
       {loading ? (
-        <div style={{ height: `${BAR_H + 52}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>
+        <div style={{ height: `${BAR_H + 52}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--rw-text3)', fontSize: '0.85rem' }}>
           데이터 불러오는 중...
         </div>
       ) : (
@@ -130,7 +130,7 @@ function YearCompareChart({ validYears, currentYear }: { validYears: number[]; c
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', pointerEvents: 'none', paddingBottom: '52px' }}>
               {[100, 75, 50, 25, 0].map(pct => (
                 <div key={pct} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', width: '40px', textAlign: 'right' as const, flexShrink: 0 }}>
+                  <span style={{ fontSize: '0.62rem', color: 'var(--rw-text4)', width: '40px', textAlign: 'right' as const, flexShrink: 0 }}>
                     {pct > 0 ? fmtShort(Math.round(maxVal * pct / 100)) : '0'}
                   </span>
                   <div style={{ flex: 1, height: '1px', background: pct === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)' }} />
@@ -173,7 +173,7 @@ function YearCompareChart({ validYears, currentYear }: { validYears: number[]; c
                         <div style={{
                           position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)',
                           fontSize: '0.7rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
-                          color: '#fff', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+                          color: 'var(--rw-text)', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
                           padding: '2px 7px', borderRadius: '4px',
                           border: isPeak ? '1px solid rgba(255,184,0,0.5)' : '1px solid rgba(255,255,255,0.15)',
                           pointerEvents: 'none', letterSpacing: '-0.02em',
@@ -205,7 +205,7 @@ function YearCompareChart({ validYears, currentYear }: { validYears: number[]; c
               })}
             </div>
           </div>
-          <p style={{ marginTop: '12px', fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center' as const }}>
+          <p style={{ marginTop: '12px', fontSize: '0.72rem', color: 'var(--rw-text4)', textAlign: 'center' as const }}>
             ● 현재 연도 · 👑 최고 기록 · 클릭하면 해당 연도 리와인드로 이동
           </p>
         </div>
@@ -219,16 +219,16 @@ function YearCompareChart({ validYears, currentYear }: { validYears: number[]; c
 function ChartSection({ monthlyData, validYears, year }: { monthlyData: MonthData[]; validYears: number[]; year: number }) {
   const [tab, setTab] = useState<'monthly' | 'yearly'>('monthly');
   return (
-    <section style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Views Analysis</p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '16px' }}>
-            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
+            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1 }}>
               {tab === 'monthly' ? <>월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교</> : <>연도별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>조회수</em> 비교</>}
             </h2>
             {/* 탭 */}
-            <div style={{ display: 'flex', gap: '0', background: 'rgba(255,255,255,0.06)', borderRadius: '14px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', gap: '0', background: 'var(--rw-bg4)', borderRadius: '14px', padding: '4px', border: '1px solid var(--rw-border)' }}>
               {([['monthly', '📅 월별'], ['yearly', '📊 연도별']] as const).map(([t, label]) => (
                 <button key={t} onClick={() => setTab(t)} style={{
                   padding: '10px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer',
@@ -246,7 +246,7 @@ function ChartSection({ monthlyData, validYears, year }: { monthlyData: MonthDat
               ))}
             </div>
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>
+          <p style={{ color: 'var(--rw-text3)', fontSize: '0.88rem', marginTop: '10px' }}>
             {tab === 'monthly' ? '월별 유튜브 총 조회수 추이' : '연도별 유튜브 조회수 비교'}
           </p>
         </div>
@@ -294,7 +294,7 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', pointerEvents: 'none', paddingBottom: '52px' }}>
             {[100, 75, 50, 25, 0].map(pct => (
               <div key={pct} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', width: '40px', textAlign: 'right' as const, flexShrink: 0 }}>
+                <span style={{ fontSize: '0.62rem', color: 'var(--rw-text4)', width: '40px', textAlign: 'right' as const, flexShrink: 0 }}>
                   {pct > 0 ? fmtShort(Math.round(maxVal * pct / 100)) : '0'}
                 </span>
                 <div style={{ flex: 1, height: '1px', background: pct === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)' }} />
@@ -338,7 +338,7 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
                       <div style={{
                         position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)',
                         fontSize: '0.7rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
-                        color: '#fff',
+                        color: 'var(--rw-text)',
                         background: 'rgba(0,0,0,0.55)',
                         backdropFilter: 'blur(4px)',
                         padding: '2px 7px', borderRadius: '4px',
@@ -371,6 +371,22 @@ function MonthlyChart({ monthlyData }: { monthlyData: MonthData[] }) {
               );
             })}
           </div>
+
+          {/* 라이트/다크 토글 */}
+          <button
+            onClick={() => setLightMode((m: boolean) => !m)}
+            style={{
+              background: lightMode ? '#121210' : 'rgba(255,255,255,0.1)',
+              border: `1px solid ${lightMode ? 'rgba(18,18,16,0.2)' : 'rgba(255,255,255,0.2)'}`,
+              color: lightMode ? '#fff' : 'rgba(255,255,255,0.85)',
+              borderRadius: '100px', padding: '6px 14px',
+              fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+              fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
+              transition: 'all 0.2s',
+            }}
+          >
+            {lightMode ? '🌙 다크' : '☀️ 라이트'}
+          </button>
         </div>
       </div>
     </div>
@@ -400,7 +416,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
     <div style={{
       display: 'flex', alignItems: 'flex-start', gap: 'clamp(12px,2vw,24px)',
       padding: '18px 0',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      borderBottom: '1px solid var(--rw-border)',
       animation: `rwFadeUp 0.4s ${idx * 0.045}s both`,
     }}>
       {/* 월 라벨 */}
@@ -431,7 +447,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
               {/* 썸네일 */}
               <div style={{
                 borderRadius: 'clamp(8px,1vw,12px)', overflow: 'hidden',
-                width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
+                width: '100%', aspectRatio: '16/9', position: 'relative', background: 'var(--rw-thumb)',
                 transform: isHov ? 'scale(1.04)' : 'scale(1)',
                 boxShadow: isTop3
                   ? `0 0 0 2px ${TOP3_BORDER[i]}, 0 4px 16px ${TOP3_GLOW[i]}`
@@ -455,7 +471,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
               </p>
             </div>
           ) : (
-            <div key={i} style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'clamp(8px,1vw,12px)', background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.07)' }} />
+            <div key={i} style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'clamp(8px,1vw,12px)', background: 'var(--rw-bg3)', border: '1px dashed rgba(255,255,255,0.07)' }} />
           );
         })}
       </div>
@@ -516,7 +532,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
   const TL_HEIGHT = CARD_H * 2 + STEM_H * 2 + 20;
 
   return (
-    <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+    <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)', background: 'rgba(0,0,0,0.15)' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
         <style>{`
           .tl-wrap::-webkit-scrollbar { display: none; }
@@ -530,10 +546,10 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
         {/* 헤더 */}
         <div style={{ marginBottom: '28px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Upload Calendar</p>
-          <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '6px' }}>
+          <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1, marginBottom: '6px' }}>
             {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
+          <p style={{ color: 'var(--rw-text3)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
         </div>
 
         {/* 히트맵 */}
@@ -544,7 +560,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
             const hasVideos = m.topVideos.length > 0;
             return (
               <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
+                <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
                 <div
                   onClick={() => hasVideos && setActiveMonth(isActive ? null : m.month)}
                   style={{
@@ -558,7 +574,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   }}
                   title={hasVideos ? `${m.topVideos.length}개 영상 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
                 />
-                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)' }}>
+                <span style={{ fontSize: '0.6rem', color: 'var(--rw-text4)' }}>
                   {m.topVideos.length > 0 ? `${m.topVideos.length}개` : '-'}
                 </span>
               </div>
@@ -568,11 +584,11 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
 
         {/* 범례 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px' }}>
-          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>낮음</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>낮음</span>
           {[0.3, 0.5, 0.75, 1].map((o, i) => (
             <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: '#EB701A', opacity: o }} />
           ))}
-          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>높음</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>높음</span>
         </div>
 
 
@@ -604,12 +620,12 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EB701A', letterSpacing: '-0.03em' }}>{fmt2(preview.video.views)}</span>
-                  <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>조회</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--rw-text2)' }}>조회</span>
                 </div>
               </div>
               <div style={{ padding: '12px 16px 16px' }}>
-                <p style={{ fontSize: '0.92rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{preview.video.title}</p>
-                <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.38)' }}>
+                <p style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--rw-text)', lineHeight: 1.4, margin: '0 0 6px' }}>{preview.video.title}</p>
+                <span style={{ fontSize: '0.76rem', color: 'var(--rw-text3)' }}>
                   {new Date(preview.video.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 업로드
                 </span>
               </div>
@@ -619,7 +635,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
 
         {/* 타임라인 */}
         {activeData && (
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '20px 0 24px' }}>
+          <div style={{ background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '20px', padding: '20px 0 24px' }}>
 
             {/* 헤더 */}
             <div style={{ padding: '0 28px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -628,17 +644,17 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   {MONTH_KO[activeData.month - 1]} · {activeData.topVideos.length}개 영상
                 </span>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  {[{ label: '금', color: '#FFB800' }, { label: '오렌지', color: ORANGE }, { label: '회색', color: 'rgba(255,255,255,0.38)' }].map((c, i) => (
+                  {[{ label: '금', color: '#FFB800' }, { label: '오렌지', color: ORANGE }, { label: '회색', color: 'var(--rw-text3)' }].map((c, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <div style={{ width: [10,8,6][i] + 'px', height: [10,8,6][i] + 'px', borderRadius: '50%', background: c.color }} />
-                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{['상위','중간','하위'][i]}</span>
+                      <span style={{ fontSize: '0.62rem', color: 'var(--rw-text3)' }}>{['상위','중간','하위'][i]}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <button
                 onClick={() => setActiveMonth(null)}
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit' }}
+                style={{ background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', color: 'var(--rw-text3)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit' }}
               >닫기</button>
             </div>
 
@@ -651,9 +667,9 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   onClick={() => scroll('left')}
                   style={{
                     position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid var(--rw-border2)',
                     borderRadius: '50%', width: '40px', height: '40px',
-                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
+                    color: 'var(--rw-text)', fontSize: '1rem', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >‹</button>
@@ -665,9 +681,9 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   onClick={() => scroll('right')}
                   style={{
                     position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid var(--rw-border2)',
                     borderRadius: '50%', width: '40px', height: '40px',
-                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
+                    color: 'var(--rw-text)', fontSize: '1rem', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >›</button>
@@ -747,14 +763,14 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                                 transformOrigin: above ? 'bottom center' : 'top center',
                               }}
                             >
-                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
+                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: 'var(--rw-thumb)' }}>
                                 <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
                                 <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
                               </div>
                               <div style={{ padding: '7px 9px 9px' }}>
-                                <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.32)' }}>{new Date(v.publishedAt).getDate()}일</span>
+                                <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--rw-text)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getDate()}일</span>
                               </div>
                             </div>
                           </div>
@@ -788,7 +804,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       style={{
         cursor: 'pointer',
         display: 'flex', flexDirection: 'column', gap: '8px',
-        background: 'rgba(255,255,255,0.04)',
+        background: 'var(--rw-card)',
         border: `1px solid ${isTop3 ? rankColor + '55' : 'rgba(255,255,255,0.07)'}`,
         borderRadius: '10px', overflow: 'hidden', paddingBottom: '10px',
         transform: hov ? 'translateY(-3px)' : 'translateY(0)',
@@ -821,7 +837,7 @@ function Top10Item({ video, rank, delay }: { video: Video; rank: number; delay: 
       </div>
       {/* 제목 */}
       <p style={{
-        fontSize: '0.76rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)',
+        fontSize: '0.76rem', fontWeight: 600, color: 'var(--rw-text)',
         lineHeight: 1.4, margin: 0, padding: '0 10px',
         display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
       } as React.CSSProperties}>{video.title}</p>
@@ -847,10 +863,24 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
   const [monthRef, monthInView] = useInView(0.05);
   const [top10Ref, top10InView] = useInView(0.05);
   const [endRef, endInView]     = useInView(0.2);
+  const [lightMode, setLightMode] = useState(false);
 
   return (
-    <div style={{ background: DARK, color: '#fff', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,sans-serif', overflowX: 'hidden' }}>
+    <div data-rw={lightMode ? 'light' : 'dark'} style={{ background: 'var(--rw-bg)', color: 'var(--rw-text)', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,sans-serif', overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
       <style>{`
+        [data-rw="dark"] {
+          --rw-bg: #0b0b0b; --rw-bg2: #111; --rw-bg3: rgba(255,255,255,0.03); --rw-bg4: rgba(255,255,255,0.06);
+          --rw-border: rgba(255,255,255,0.08); --rw-border2: rgba(255,255,255,0.14);
+          --rw-text: #fff; --rw-text2: rgba(255,255,255,0.65); --rw-text3: rgba(255,255,255,0.38); --rw-text4: rgba(255,255,255,0.22);
+          --rw-card: rgba(255,255,255,0.04); --rw-thumb: #0a0a0a;
+        }
+        [data-rw="light"] {
+          --rw-bg: #f6f4ef; --rw-bg2: #eceae4; --rw-bg3: rgba(18,18,16,0.04); --rw-bg4: rgba(18,18,16,0.07);
+          --rw-border: rgba(18,18,16,0.1); --rw-border2: rgba(18,18,16,0.18);
+          --rw-text: #121210; --rw-text2: rgba(18,18,16,0.65); --rw-text3: rgba(18,18,16,0.42); --rw-text4: rgba(18,18,16,0.24);
+          --rw-card: rgba(18,18,16,0.04); --rw-thumb: #e0ded8;
+        }
+        [data-rw="light"] section { border-color: rgba(18,18,16,0.08) !important; }
         @keyframes rwFadeUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
         @keyframes rwScale    { from { opacity:0; transform:scale(0.82); } to { opacity:1; transform:scale(1); } }
         @keyframes rwGlow     { 0%,100%{filter:drop-shadow(0 0 32px rgba(235,112,26,0.45));} 50%{filter:drop-shadow(0 0 72px rgba(235,112,26,0.85));} }
@@ -868,7 +898,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(235,112,26,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(235,112,26,0.04) 1px,transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none' }} />
 
         {/* 상단 바: 홈 + 연도 네비 */}
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px clamp(1.2rem,4vw,3rem)', zIndex: 100, flexWrap: 'wrap' as const, gap: '12px', background: 'rgba(11,11,11,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px clamp(1.2rem,4vw,3rem)', zIndex: 100, flexWrap: 'wrap' as const, gap: '12px', background: lightMode ? 'rgba(246,244,239,0.9)' : 'rgba(11,11,11,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {/* 로고 + 홈 버튼 묶음 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
             <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', opacity: 0.9, transition: 'opacity 0.2s' }}
@@ -937,14 +967,14 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
             {validYears.indexOf(year) > 0 && (
               <a href={`/rewind/${year - 1}`}
-                style={{ padding: '6px 14px', borderRadius: '100px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.18s' }}
+                style={{ padding: '6px 14px', borderRadius: '100px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700, color: 'var(--rw-text3)', background: 'var(--rw-bg4)', border: '1px solid var(--rw-border)', transition: 'all 0.18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='#fff'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.06)'; }}
               >← {year - 1}</a>
             )}
             {validYears.indexOf(year) < validYears.length - 1 && (
               <a href={`/rewind/${year + 1}`}
-                style={{ padding: '6px 14px', borderRadius: '100px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.18s' }}
+                style={{ padding: '6px 14px', borderRadius: '100px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700, color: 'var(--rw-text3)', background: 'var(--rw-bg4)', border: '1px solid var(--rw-border)', transition: 'all 0.18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='#fff'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.06)'; }}
               >{year + 1} →</a>
@@ -975,16 +1005,16 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         {/* 스크롤 인디케이터 */}
         <div style={{ position: 'absolute', bottom: '44px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px', animation: 'rwFadeUp 1s 1.2s both' }}>
           <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>스크롤</span>
-          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '1.1rem', animation: 'rwBounce 1.6s ease-in-out infinite' }}>↓</div>
+          <div style={{ color: 'var(--rw-text4)', fontSize: '1.1rem', animation: 'rwBounce 1.6s ease-in-out infinite' }}>↓</div>
         </div>
       </section>
 
       {/* ───────────────── ② 숫자로 보는 한 해 ───────────────── */}
-      <section ref={statsRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <section ref={statsRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ marginBottom: '48px', animation: statsInView ? 'rwFadeUp 0.6s both' : 'none' }}>
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Year in Numbers</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
+            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1 }}>
               숫자로 보는 <em style={{ color: ORANGE, fontStyle: 'italic' }}>{year}</em>
             </h2>
           </div>
@@ -1007,12 +1037,12 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
 
           {/* ── 가장 바빴던 달 ── */}
-          <div style={{ marginTop: '12px', padding: '18px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', gap: '16px', width: '100%', boxSizing: 'border-box' as const }}>
+          <div style={{ marginTop: '12px', padding: '18px 20px', background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '16px', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', gap: '16px', width: '100%', boxSizing: 'border-box' as const }}>
             <div>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>가장 바빴던 달</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--rw-text3)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>가장 바빴던 달</div>
               <div style={{ fontSize: '2rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7 }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--rw-text3)', lineHeight: 1.7 }}>
               <div><span style={{ color: '#ff6b6b' }}>YT</span> {stats.peakMonth.ytCount}개</div>
               <div><span style={{ color: '#60a8ff' }}>SOOP</span> {stats.peakMonth.soopCount}개</div>
             </div>
@@ -1025,14 +1055,14 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       <UploadCalendar monthlyData={monthlyData} year={year} />
 
       {/* ───────────────── ③ 월별 하이라이트 ───────────────── */}
-      <section ref={monthRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)' }}>
+      <section ref={monthRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)', background: 'rgba(255,255,255,0.01)' }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
           <div style={{ marginBottom: '48px', animation: monthInView ? 'rwFadeUp 0.6s both' : 'none' }}>
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Monthly TOP 10</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
+            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1 }}>
               월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>TOP 10</em>
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>각 달의 최다 조회 영상 TOP 10 · 클릭하면 유튜브로 이동해요</p>
+            <p style={{ color: 'var(--rw-text3)', fontSize: '0.88rem', marginTop: '10px' }}>각 달의 최다 조회 영상 TOP 10 · 클릭하면 유튜브로 이동해요</p>
           </div>
           {monthInView && (
             <div style={{ display: 'flex', flexDirection: 'column' as const }}>
@@ -1043,14 +1073,14 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       </section>
 
       {/* ───────────────── ④ 올해의 TOP10 ───────────────── */}
-      <section ref={top10Ref as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <section ref={top10Ref as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto' }}>
           <div style={{ marginBottom: '40px', animation: top10InView ? 'rwFadeUp 0.6s both' : 'none' }}>
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Annual TOP 10</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1 }}>
+            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1 }}>
               {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>TOP 10</em>
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.88rem', marginTop: '10px' }}>연간 기준 최다 조회수 영상</p>
+            <p style={{ color: 'var(--rw-text3)', fontSize: '0.88rem', marginTop: '10px' }}>연간 기준 최다 조회수 영상</p>
           </div>
 
           {top10InView && (
@@ -1067,7 +1097,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
                   >
                     <div style={{
                       borderRadius: 'clamp(8px,1vw,12px)', overflow: 'hidden',
-                      width: '100%', aspectRatio: '16/9', position: 'relative', background: '#0a0a0a',
+                      width: '100%', aspectRatio: '16/9', position: 'relative', background: 'var(--rw-thumb)',
                       boxShadow: isTop3
                         ? `0 0 0 2px ${TOP3_BORDER[i]}, 0 4px 16px ${TOP3_GLOW[i]}`
                         : 'none',
@@ -1104,7 +1134,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
                 );
               })}
               {top10.length === 0 && (
-                <div style={{ gridColumn: '1/-1', padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>데이터를 불러오는 중이에요</div>
+                <div style={{ gridColumn: '1/-1', padding: '60px', textAlign: 'center', color: 'var(--rw-text3)', fontSize: '0.9rem' }}>데이터를 불러오는 중이에요</div>
               )}
             </div>
           )}
@@ -1115,7 +1145,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       <section ref={endRef as React.RefObject<HTMLElement>} style={{
         minHeight: '80vh',
         display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid var(--rw-border)',
         background: `radial-gradient(ellipse 65% 55% at 50% 100%, rgba(235,112,26,0.16) 0%, transparent 70%)`,
         padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)',
         textAlign: 'center' as const,
@@ -1127,7 +1157,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         <div style={{ position: 'relative', zIndex: 1, animation: endInView ? 'rwFadeUp 0.8s both' : 'none' }}>
           <div style={{ fontSize: '3.5rem', marginBottom: '20px', display: 'inline-block', animation: endInView ? 'rwHeartbeat 1.8s 0.5s ease-in-out infinite' : 'none' }}>🧡</div>
 
-          <h2 style={{ fontSize: 'clamp(2.2rem,7vw,5rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '20px' }}>
+          <h2 style={{ fontSize: 'clamp(2.2rem,7vw,5rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1, marginBottom: '20px' }}>
             {year}년도<br />
             <em style={{ color: ORANGE, fontStyle: 'italic' }}>고마웠어요</em>
           </h2>
@@ -1141,12 +1171,12 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           {/* 버튼 */}
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' as const }}>
             <a href="/"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: ORANGE, color: '#fff', padding: '14px 30px', borderRadius: '100px', textDecoration: 'none', fontWeight: 700, fontSize: '0.92rem', transition: 'opacity 0.2s, transform 0.2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: ORANGE, color: 'var(--rw-text)', padding: '14px 30px', borderRadius: '100px', textDecoration: 'none', fontWeight: 700, fontSize: '0.92rem', transition: 'opacity 0.2s, transform 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity='0.88'; (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity='1'; (e.currentTarget as HTMLElement).style.transform='none'; }}
             >← 스맵 아카이브 홈</a>
             <a href="https://www.sooplive.com/townboy" target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.06)', color: '#fff', padding: '14px 30px', borderRadius: '100px', textDecoration: 'none', fontWeight: 700, fontSize: '0.92rem', border: '1px solid rgba(255,255,255,0.1)', transition: 'background 0.2s, transform 0.2s' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--rw-bg4)', color: 'var(--rw-text)', padding: '14px 30px', borderRadius: '100px', textDecoration: 'none', fontWeight: 700, fontSize: '0.92rem', border: '1px solid var(--rw-border)', transition: 'background 0.2s, transform 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.transform='none'; }}
             >SOOP 바로가기 →</a>
@@ -1165,9 +1195,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           position: 'fixed', bottom: '28px', left: '24px', zIndex: 999,
           display: 'inline-flex', alignItems: 'center', gap: '7px',
           background: 'rgba(15,15,15,0.85)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          border: '1px solid var(--rw-border2)',
           backdropFilter: 'blur(16px)',
-          color: '#fff', padding: '10px 18px', borderRadius: '100px',
+          color: 'var(--rw-text)', padding: '10px 18px', borderRadius: '100px',
           textDecoration: 'none', fontSize: '0.92rem', fontWeight: 700,
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           transition: 'all 0.2s',
