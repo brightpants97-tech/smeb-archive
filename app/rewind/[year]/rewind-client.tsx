@@ -467,7 +467,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
 function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year: number }) {
   const firstMonth = monthlyData.find(m => m.topVideos.length > 0)?.month ?? null;
   const [activeMonth, setActiveMonth] = useState<number | null>(firstMonth);
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ video: Video; rect: DOMRect; above: boolean } | null>(null);
   const tlRef = useRef<HTMLDivElement>(null);
   const [scrollable, setScrollable] = useState({ left: false, right: false });
 
@@ -575,6 +575,48 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
           <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>높음</span>
         </div>
 
+
+        {/* fixed 프리뷰 카드 */}
+        {preview && (() => {
+          const fmt2 = fmt;
+          const r = preview.rect;
+          const PW = 260;
+          const PH = Math.round(PW * 9 / 16) + 80;
+          const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
+          const top = preview.above
+            ? r.top - PH - 14
+            : r.bottom + 14;
+          return (
+            <div
+              onMouseEnter={() => {}}
+              style={{
+                position: 'fixed', left: `${left}px`, top: `${Math.max(8, top)}px`,
+                width: `${PW}px`, zIndex: 9999, pointerEvents: 'none',
+                background: '#1a1a1a', border: '1px solid rgba(235,112,26,0.5)',
+                borderRadius: '12px', overflow: 'hidden',
+                animation: 'rwFadeUp 0.18s cubic-bezier(0.34,1.56,0.64,1) both',
+                boxShadow: '0 20px 48px rgba(0,0,0,0.6)',
+              }}
+            >
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                <img src={preview.video.thumbnail} alt={preview.video.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
+                <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EB701A', letterSpacing: '-0.03em' }}>{fmt2(preview.video.views)}</span>
+                  <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>조회</span>
+                </div>
+              </div>
+              <div style={{ padding: '10px 12px 12px' }}>
+                <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{preview.video.title}</p>
+                <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.38)' }}>
+                  {new Date(preview.video.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 업로드
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* 타임라인 */}
         {activeData && (
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '20px 0 24px' }}>
@@ -650,7 +692,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                 }}
               >
                 {(() => {
-                  const videos = activeData.topVideos;
+                  const videos = [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
                   const W = Math.max(700, videos.length * (CARD_W + 28) + 120);
                   const step = (W - 100) / (videos.length + 1);
                   const maxV = Math.max(...videos.map(v => v.views), 1);
@@ -666,7 +708,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                         const ratio = v.views / maxV;
                         const t = tier(ratio);
                         const dotSz = ratio > 0.7 ? 14 : ratio > 0.35 ? 10 : 7;
-                        const isHov = hovered === v.id;
+                        const isHov = preview?.video.id === v.id;
 
                         return (
                           <div key={v.id} style={{ position: 'absolute', left: `${x}px`, top: '50%', transform: 'translate(-50%, -50%)', zIndex: isHov ? 50 : 1 }}>
@@ -683,15 +725,15 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                               background: t.dot, position: 'relative', zIndex: 2,
                               boxShadow: `0 0 0 ${Math.ceil(dotSz / 2)}px ${t.dot === '#FFB800' ? 'rgba(255,184,0,0.2)' : t.dot === ORANGE ? 'rgba(235,112,26,0.2)' : 'rgba(255,255,255,0.08)'}`,
                               transition: 'transform 0.15s',
-                              transform: isHov ? 'scale(1.6)' : 'scale(1)',
+                              transform: isHov ? 'scale(1.5)' : 'scale(1)',
                             }} />
 
                             {/* 썸네일 카드 */}
                             <div
                               className="tl-card"
                               onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
-                              onMouseEnter={() => setHovered(v.id)}
-                              onMouseLeave={() => setHovered(null)}
+                              onMouseEnter={(e) => setPreview({ video: v, rect: e.currentTarget.getBoundingClientRect(), above })}
+                              onMouseLeave={() => setPreview(null)}
                               style={{
                                 position: 'absolute',
                                 left: `${-CARD_W / 2}px`,
