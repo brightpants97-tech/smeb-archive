@@ -980,24 +980,31 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.06)'; }}
               >{year + 1} →</a>
             )}
-            {/* ☀️/🌙 테마 */}
-            <button
-              onClick={() => setLightMode((m) => !m)}
-              style={{
-                background: lightMode ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.12)',
-                border: '1px solid ' + (lightMode ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.25)'),
-                color: lightMode ? '#121210' : '#fff',
-                borderRadius: '100px', padding: '6px 14px',
-                fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer',
-                fontFamily: 'inherit', whiteSpace: 'nowrap',
-                transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '5px',
-              }}
-            >
-              {lightMode ? '🌙 다크' : '☀️ 라이트'}
-            </button>
           </div>
 
         </div>
+
+      {/* 독립 fixed 테마 토글 */}
+      <button
+        onClick={() => setLightMode((m: boolean) => !m)}
+        style={{
+          position: 'fixed', top: '14px', right: 'clamp(1.2rem,4vw,3rem)',
+          zIndex: 200,
+          background: lightMode ? 'rgba(18,18,16,0.85)' : 'rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: lightMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.3)',
+          color: '#fff',
+          borderRadius: '100px', padding: '7px 16px',
+          fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer',
+          fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
+          transition: 'all 0.2s',
+          display: 'flex', alignItems: 'center', gap: '5px',
+        }}
+      >
+        {lightMode ? '🌙 다크' : '☀️ 라이트'}
+      </button>
+
 
         {/* 연도 + 카피 */}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1, padding: '0 2rem' }}>
