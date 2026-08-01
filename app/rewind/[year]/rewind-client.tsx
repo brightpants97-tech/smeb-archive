@@ -493,6 +493,14 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
 }
 
 
+interface Props {
+  year: number;
+  validYears: number[];
+  stats: RewindStats;
+  monthlyData: MonthData[];
+  top10: Video[];
+}
+
 export default function RewindClient({ year, validYears, stats, monthlyData, top10 }: Props) {
   // 현재 연도면 경과 일수, 과거 연도면 윤년 여부 반영한 연간 일수
   const dayCount = (() => {
