@@ -580,7 +580,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
         {preview && (() => {
           const fmt2 = fmt;
           const r = preview.rect;
-          const PW = 260;
+          const PW = 400;
           const PH = Math.round(PW * 9 / 16) + 80;
           const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
           const top = preview.above
@@ -603,13 +603,13 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EB701A', letterSpacing: '-0.03em' }}>{fmt2(preview.video.views)}</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EB701A', letterSpacing: '-0.03em' }}>{fmt2(preview.video.views)}</span>
                   <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>조회</span>
                 </div>
               </div>
-              <div style={{ padding: '10px 12px 12px' }}>
-                <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{preview.video.title}</p>
-                <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.38)' }}>
+              <div style={{ padding: '12px 16px 16px' }}>
+                <p style={{ fontSize: '0.92rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{preview.video.title}</p>
+                <span style={{ fontSize: '0.76rem', color: 'rgba(255,255,255,0.38)' }}>
                   {new Date(preview.video.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 업로드
                 </span>
               </div>
@@ -963,10 +963,10 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
           {/* 배지 */}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '28px', flexWrap: 'wrap' as const, animation: 'rwFadeUp 0.7s 0.65s both' }}>
-            <span style={{ background: 'rgba(235,112,26,0.14)', border: '1px solid rgba(235,112,26,0.28)', color: ORANGE, padding: '6px 18px', borderRadius: '100px', fontSize: '0.82rem', fontWeight: 700 }}>
+            <span style={{ background: 'rgba(235,112,26,0.14)', border: '1px solid rgba(235,112,26,0.28)', color: ORANGE, padding: '6px 18px', borderRadius: '100px', fontSize: '0.92rem', fontWeight: 700 }}>
               유튜브 {stats.ytUploads}개 업로드
             </span>
-            <span style={{ background: 'rgba(30,120,255,0.1)', border: '1px solid rgba(30,120,255,0.22)', color: '#60a8ff', padding: '6px 18px', borderRadius: '100px', fontSize: '0.82rem', fontWeight: 700 }}>
+            <span style={{ background: 'rgba(30,120,255,0.1)', border: '1px solid rgba(30,120,255,0.22)', color: '#60a8ff', padding: '6px 18px', borderRadius: '100px', fontSize: '0.92rem', fontWeight: 700 }}>
               SOOP {stats.soopBroadcasts}개 방송
             </span>
           </div>
@@ -1225,7 +1225,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           border: '1px solid rgba(255,255,255,0.15)',
           backdropFilter: 'blur(16px)',
           color: '#fff', padding: '10px 18px', borderRadius: '100px',
-          textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
+          textDecoration: 'none', fontSize: '0.92rem', fontWeight: 700,
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           transition: 'all 0.2s',
           whiteSpace: 'nowrap' as const,
