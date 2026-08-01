@@ -1,6 +1,6 @@
 {
   "name": "smeb-archive",
-  "version": "0.1.0",
+  "version": "0.1.99",
   "private": true,
   "scripts": {
     "dev": "next dev",
