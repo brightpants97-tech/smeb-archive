@@ -478,10 +478,10 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
                 padding: '6px 8px 8px',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical' as const,
+                WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 minHeight: '2.3rem',
-              }}>
+              } as React.CSSProperties}>
                 {v.title}
               </p>
             </div>
