@@ -1,4 +1,4 @@
-'use client';
+'use client'; // build:1785597211
 import { useState, useEffect, useRef } from 'react';
 import type { Video, MonthData, RewindStats } from './page';
 
