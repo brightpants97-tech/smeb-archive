@@ -496,7 +496,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
 function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year: number }) {
   const firstMonth = monthlyData.find(m => m.topVideos.length > 0)?.month ?? null;
   const [activeMonth, setActiveMonth] = useState<number | null>(firstMonth);
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<{ id: string; rect: DOMRect; above: boolean } | null>(null);
   const tlRef = useRef<HTMLDivElement>(null);
   const [scrollable, setScrollable] = useState({ left: false, right: false });
 
@@ -695,7 +695,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                         const ratio = v.views / maxV;
                         const t = tier(ratio);
                         const dotSz = ratio > 0.7 ? 14 : ratio > 0.35 ? 10 : 7;
-                        const isHov = hovered === v.id;
+                        const isHov = hovered?.id === v.id;
 
                         return (
                           <div key={v.id} style={{ position: 'absolute', left: `${x}px`, top: '50%', transform: 'translate(-50%, -50%)', zIndex: isHov ? 50 : 1 }}>
@@ -719,7 +719,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                             <div
                               className="tl-card"
                               onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
-                              onMouseEnter={() => setHovered(v.id)}
+                              onMouseEnter={(e) => setHovered({ id: v.id, rect: (e.currentTarget as HTMLElement).getBoundingClientRect(), above })}
                               onMouseLeave={() => setHovered(null)}
                               style={{
                                 position: 'absolute',
@@ -754,6 +754,44 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
             </div>
           </div>
         )}
+
+        {/* ── 타임라인 호버 프리뷰 팝업 (position: fixed) ── */}
+        {hovered && (() => {
+          const activeVideos = monthlyData.find(m => m.month === activeMonth)?.topVideos ?? [];
+          const v = activeVideos.find(x => x.id === hovered.id);
+          if (!v) return null;
+          const PW = 400;
+          const r = hovered.rect;
+          const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
+          const top = hovered.above ? r.top - (PW * 9 / 16) - 90 : r.bottom + 14;
+          const fmt2 = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
+          return (
+            <div style={{
+              position: 'fixed', left: `${left}px`, top: `${Math.max(8, top)}px`,
+              width: `${PW}px`, zIndex: 9999, pointerEvents: 'none',
+              background: '#1e1e1e', border: '1px solid rgba(235,112,26,0.5)',
+              borderRadius: '12px', overflow: 'hidden',
+              boxShadow: '0 20px 48px rgba(0,0,0,0.7)',
+              animation: 'rwFadeUp 0.18s cubic-bezier(0.34,1.56,0.64,1) both',
+            }}>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                <img src={v.thumbnail} alt={v.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
+                <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 900, color: ORANGE, letterSpacing: '-0.03em' }}>{fmt2(v.views)}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>조회</span>
+                </div>
+              </div>
+              <div style={{ padding: '10px 14px 14px' }}>
+                <p style={{ fontSize: '0.88rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{v.title}</p>
+                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
+                  {new Date(v.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 업로드
+                </span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </section>
   );
