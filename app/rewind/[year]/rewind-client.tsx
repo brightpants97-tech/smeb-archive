@@ -1074,8 +1074,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       </section>
 
       {/* ───────────────── ④ 올해의 TOP10 ───────────────── */}
-      <section ref={top10Ref as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+      <section ref={top10Ref as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,3rem)', borderTop: '1px solid var(--rw-border)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ marginBottom: '40px', animation: top10InView ? 'rwFadeUp 0.6s both' : 'none' }}>
             <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Annual TOP 10</p>
             <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1 }}>
@@ -1085,7 +1085,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </div>
 
           {top10InView && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(6px,1vw,12px)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(8px,1.2vw,16px)' }}>
               {top10.map((v, i) => {
                 const isTop3 = i < 3;
                 const TOP3_BORDER = ['#FFB800', '#A0A8B8', '#CD7F32'];
