@@ -614,11 +614,27 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                 <span style={{ fontSize: '0.92rem', fontWeight: 700, color: ORANGE }}>
                   {MONTH_KO[activeData.month - 1]} · {activeData.topVideos.length}개 영상
                 </span>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {[{ label: '금', color: '#FFB800' }, { label: '오렌지', color: ORANGE }, { label: '회색', color: 'rgba(255,255,255,0.38)' }].map((c, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: [10,8,6][i] + 'px', height: [10,8,6][i] + 'px', borderRadius: '50%', background: c.color }} />
-                      <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)' }}>{['상위','중간','하위'][i]}</span>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' as const }}>
+                  {[
+                    { label: '상위 30%', color: COMP,                     bg: 'rgba(0,201,255,0.12)',   border: 'rgba(0,201,255,0.4)',   dot: 11, glow: true },
+                    { label: '중간',     color: ORANGE,                    bg: 'rgba(235,112,26,0.1)',   border: 'rgba(235,112,26,0.35)', dot: 9,  glow: false },
+                    { label: '하위',     color: 'rgba(255,255,255,0.42)',  bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', dot: 7, glow: false },
+                  ].map((t, i) => (
+                    <div key={i} style={{
+                      background: t.bg,
+                      border: `1px solid ${t.border}`,
+                      borderRadius: '7px',
+                      padding: '4px 10px',
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                    }}>
+                      <div style={{
+                        width: `${t.dot}px`, height: `${t.dot}px`,
+                        borderRadius: '50%', background: t.color, flexShrink: 0,
+                        boxShadow: t.glow ? '0 0 6px rgba(0,201,255,0.55)' : 'none',
+                      }} />
+                      <span style={{ fontSize: '0.7rem', fontWeight: i === 0 ? 700 : 600, color: t.color, whiteSpace: 'nowrap' as const }}>
+                        {t.label}
+                      </span>
                     </div>
                   ))}
                 </div>
