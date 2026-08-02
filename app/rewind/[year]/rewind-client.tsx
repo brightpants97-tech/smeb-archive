@@ -695,7 +695,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                 }}
               >
                 {(() => {
-                  const videos = activeData.topVideos;
+                  const videos = [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
                   const W = Math.max(700, videos.length * (CARD_W + 28) + 120);
                   const step = (W - 100) / (videos.length + 1);
                   const maxV = Math.max(...videos.map(v => v.views), 1);
