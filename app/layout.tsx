@@ -7,8 +7,7 @@ export const metadata: Metadata = {
   keywords: ["스맵", "스맵 아카이브", "송경호", "smeb", "smeb archive", "스맵 유튜브", "스맵 다시보기", "스맵 SOOP", "롤 스트리머", "스맵 팬카페", "스맵 멸망전", "스맵 연간결산", "League of Legends streamer", "스맵 방송", "스맵 스트리머"],
   authors: [{ name: "SMEB Archive" }],
   verification: {
-    // 네이버 서치어드바이저 인증코드 - searchadvisor.naver.com에서 발급 후 여기에 입력
-    // other: { "naver-site-verification": "인증코드입력" }
+    other: { "naver-site-verification": "62f57cfd1c88b7dd2931c03b413032af4b3cca47" },
   },
   creator: "SMEB Archive",
   openGraph: {
