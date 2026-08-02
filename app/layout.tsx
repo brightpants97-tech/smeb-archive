@@ -6,8 +6,8 @@ export const metadata: Metadata = {
   description: "전 프로게이머 스맵(송경호) 팬 아카이브. 유튜브 월별 TOP 10, SOOP 다시보기 캘린더, 최신 공지를 한눈에.",
   keywords: ["스맵", "스맵 아카이브", "송경호", "smeb", "smeb archive", "스맵 유튜브", "스맵 다시보기", "스맵 SOOP", "롤 스트리머", "스맵 팬카페", "스맵 멸망전", "스맵 연간결산", "League of Legends streamer", "스맵 방송", "스맵 스트리머"],
   authors: [{ name: "SMEB Archive" }],
-  verification: {
-    other: { "naver-site-verification": "62f57cfd1c88b7dd2931c03b413032af4b3cca47" },
+  other: {
+    "naver-site-verification": "62f57cfd1c88b7dd2931c03b413032af4b3cca47",
   },
   creator: "SMEB Archive",
   openGraph: {
