@@ -64,7 +64,7 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
           borderRadius: '100px', padding: '2px 10px',
         }}>
           <span style={{ fontSize: '0.7rem', color: 'var(--rw-text3)' }}>≈</span>
-          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>{subText}</span>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rw-text2)' }}>{subText}</span>
         </div>
       )}
       <div style={{ fontSize: '0.8rem', color: 'var(--rw-text2)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
@@ -545,7 +545,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
   const TL_HEIGHT = CARD_H * 2 + STEM_H * 2 + 20;
 
   return (
-    <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+    <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)', background: 'var(--rw-bg3)' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
         <style>{`
           .tl-wrap::-webkit-scrollbar { display: none; }
@@ -562,7 +562,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
           <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '6px' }}>
             {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
+          <p style={{ color: 'var(--rw-text3)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
         </div>
 
         {/* 히트맵 */}
@@ -573,7 +573,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
             const hasVideos = m.topVideos.length > 0;
             return (
               <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
+                <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
                 <div
                   onClick={() => hasVideos && setActiveMonth(isActive ? null : m.month)}
                   style={{
@@ -587,7 +587,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   }}
                   title={hasVideos ? `${m.topVideos.length}개 영상 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
                 />
-                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)' }}>
+                <span style={{ fontSize: '0.6rem', color: 'var(--rw-text4)' }}>
                   {m.topVideos.length > 0 ? `${m.topVideos.length}개` : '-'}
                 </span>
               </div>
@@ -597,16 +597,16 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
 
         {/* 범례 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px' }}>
-          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>낮음</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>낮음</span>
           {[0.3, 0.5, 0.75, 1].map((o, i) => (
             <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: '#EB701A', opacity: o }} />
           ))}
-          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>높음</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>높음</span>
         </div>
 
         {/* 타임라인 */}
         {activeData && (
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '20px 0 24px' }}>
+          <div style={{ background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '20px', padding: '20px 0 24px' }}>
 
             {/* 헤더 */}
             <div style={{ padding: '0 28px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -618,7 +618,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   {[
                     { label: '상위 30%', color: COMP,                     bg: 'rgba(0,201,255,0.12)',   border: 'rgba(0,201,255,0.4)',   dot: 11, glow: true },
                     { label: '중간',     color: ORANGE,                    bg: 'rgba(235,112,26,0.1)',   border: 'rgba(235,112,26,0.35)', dot: 9,  glow: false },
-                    { label: '하위',     color: 'rgba(255,255,255,0.42)',  bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', dot: 7, glow: false },
+                    { label: '하위',     color: 'var(--rw-text3)',  bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', dot: 7, glow: false },
                   ].map((t, i) => (
                     <div key={i} style={{
                       background: t.bg,
@@ -641,7 +641,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
               </div>
               <button
                 onClick={() => setActiveMonth(null)}
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit' }}
+                style={{ background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', color: 'var(--rw-text3)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit' }}
               >닫기</button>
             </div>
 
@@ -654,7 +654,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   onClick={() => scroll('left')}
                   style={{
                     position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid var(--rw-border2)',
                     borderRadius: '50%', width: '40px', height: '40px',
                     color: '#fff', fontSize: '1rem', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -668,7 +668,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   onClick={() => scroll('right')}
                   style={{
                     position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid var(--rw-border2)',
                     borderRadius: '50%', width: '40px', height: '40px',
                     color: '#fff', fontSize: '1rem', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -703,7 +703,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                   return (
                     <div style={{ position: 'relative', minWidth: `${W}px`, height: `${TL_HEIGHT}px` }}>
                       {/* 중앙선 */}
-                      <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1.5px', background: 'rgba(255,255,255,0.08)', transform: 'translateY(-50%)' }} />
+                      <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1.5px', background: 'var(--rw-bg4)', transform: 'translateY(-50%)' }} />
 
                       {videos.map((v, i) => {
                         const x = 50 + step * (i + 1);
@@ -757,7 +757,7 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                               </div>
                               <div style={{ padding: '7px 9px 9px' }}>
                                 <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.32)' }}>{new Date(v.publishedAt).getDate()}일</span>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getDate()}일</span>
                               </div>
                             </div>
                           </div>
@@ -796,12 +796,12 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '1.4rem', fontWeight: 900, color: ORANGE, letterSpacing: '-0.03em' }}>{fmt2(v.views)}</span>
-                  <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>조회</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--rw-text2)' }}>조회</span>
                 </div>
               </div>
               <div style={{ padding: '10px 14px 14px' }}>
                 <p style={{ fontSize: '0.88rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{v.title}</p>
-                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--rw-text3)' }}>
                   {new Date(v.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 업로드
                 </span>
               </div>
@@ -988,7 +988,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           <div style={{ fontSize: 'clamp(6rem, 24vw, 17rem)', fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 0.85, color: ORANGE, fontStyle: 'italic', animation: 'rwScale 0.85s cubic-bezier(0.22,1,0.36,1) both, rwGlow 3.5s 0.85s ease-in-out infinite' }}>
             {year}
           </div>
-          <div style={{ fontSize: 'clamp(1rem, 2.8vw, 1.7rem)', fontWeight: 700, color: 'rgba(255,255,255,0.82)', marginTop: '20px', letterSpacing: '-0.02em', animation: 'rwFadeUp 0.7s 0.45s both' }}>
+          <div style={{ fontSize: 'clamp(1rem, 2.8vw, 1.7rem)', fontWeight: 700, color: 'var(--rw-text)', marginTop: '20px', letterSpacing: '-0.02em', animation: 'rwFadeUp 0.7s 0.45s both' }}>
             {`스맵과 함께한 ${dayCount}일`}
           </div>
 
@@ -1005,7 +1005,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
         {/* 스크롤 인디케이터 */}
         <div style={{ position: 'absolute', bottom: '44px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '8px', animation: 'rwFadeUp 1s 1.2s both' }}>
-          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>스크롤</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text4)', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>스크롤</span>
           <div style={{ color: 'var(--rw-text4)', fontSize: '1.1rem', animation: 'rwBounce 1.6s ease-in-out infinite' }}>↓</div>
         </div>
       </section>
@@ -1163,7 +1163,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             <em style={{ color: ORANGE, fontStyle: 'italic' }}>고마웠어요</em>
           </h2>
 
-          <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.42)', maxWidth: '380px', lineHeight: 1.75, marginBottom: '52px' }}>
+          <p style={{ fontSize: '1rem', color: 'var(--rw-text3)', maxWidth: '380px', lineHeight: 1.75, marginBottom: '52px' }}>
             스맵과 함께한 {year}년 {dayCount}일,<br />
             모든 순간이 이 아카이브에 담겼어요.<br />
             {validYears.includes(year + 1) ? `${year + 1}년에도 함께해요.` : '앞으로도 함께해요.'}
