@@ -91,7 +91,7 @@ export default function ScheduleEmbed() {
         {/* 요일 헤더 */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(0,0,0,0.08)', background:'rgba(0,0,0,0.025)' }}>
           {DAY_KO.map((d, i) => (
-            <div key={d} style={{ padding:'11px 0', textAlign:'center', fontSize:'0.78rem', fontWeight:800,
+            <div key={d} style={{ padding:'8px 0', textAlign:'center', fontSize:'0.78rem', fontWeight:800,
               color: i===0 ? '#C83232' : i===6 ? '#2052C8' : '#666' }}>
               {d}
             </div>
@@ -115,7 +115,7 @@ export default function ScheduleEmbed() {
               <div key={idx}
                 onClick={() => day && setSelected(isSel ? null : day)}
                 style={{
-                  minHeight:'96px', padding:'0',
+                  minHeight:'64px', padding:'0',
                   borderRight: idx%7===6 ? 'none' : '1px solid rgba(0,0,0,0.06)',
                   borderBottom: idx<cells.length-7 ? '1px solid rgba(0,0,0,0.06)' : 'none',
                   display:'flex', flexDirection:'column',
