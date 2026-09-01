@@ -1,172 +1,104 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
 
 const APPS = [
   {
     href: '/fa-teambuilder',
-    icon: '🎯',
     title: 'FA 팀빌더',
-    desc: '멸망전 182점 캡 시뮬레이터',
+    tag: '시뮬레이터',
+    desc: '멸망전 182점 캡 기준 최적 팀 조합을 시뮬레이션',
     color: '#2F6FED',
   },
 ];
 
-function AppCard({ app }: { app: typeof APPS[0] }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Link href={app.href} style={{ textDecoration: 'none' }}>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          background: 'var(--card)',
-          border: `1.5px solid ${hovered ? app.color + '66' : 'var(--card-border)'}`,
-          borderRadius: '20px',
-          padding: '28px 20px 22px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '16px',
-          cursor: 'pointer',
-          transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-          boxShadow: hovered ? `0 12px 32px ${app.color}22` : 'none',
-          transition: 'all 0.18s ease',
-        }}
-      >
-        {/* 도형 아이콘 */}
-        <div style={{
-          width: '76px',
-          height: '76px',
-          borderRadius: '20px',
-          background: hovered ? `${app.color}28` : `${app.color}14`,
-          border: `2px solid ${hovered ? app.color + '77' : app.color + '33'}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '2.2rem',
-          transition: 'all 0.18s ease',
-          boxShadow: hovered ? `0 0 20px ${app.color}33` : 'none',
-        }}>
-          {app.icon}
-        </div>
-
-        {/* 텍스트 */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            fontWeight: 900,
-            fontSize: '0.96rem',
-            color: 'var(--text)',
-            letterSpacing: '-0.02em',
-            marginBottom: '5px',
-          }}>
-            {app.title}
-          </div>
-          <div style={{
-            fontSize: '0.72rem',
-            fontWeight: 600,
-            color: app.color,
-            opacity: hovered ? 1 : 0.7,
-            transition: 'opacity 0.18s',
-          }}>
-            {app.desc}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 export default function AppsClient() {
   return (
-    <div style={{
+    <main style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
-      padding: 'clamp(2rem,6vw,4rem) clamp(1.5rem,5vw,3rem)',
+      background: 'var(--bg, #0b0b0b)',
+      padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)',
+      fontFamily: 'system-ui,-apple-system,sans-serif',
     }}>
-      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-
-        {/* 홈 링크 */}
-        <div style={{ marginBottom: '32px' }}>
-          <Link href="/" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            fontSize: '0.82rem', fontWeight: 700,
-            color: 'var(--text-secondary, #888)',
-            textDecoration: 'none', opacity: 0.7,
-            transition: 'opacity 0.15s',
-          }}>
-            ← 홈으로
-          </Link>
-        </div>
+      <div style={{ maxWidth: '680px', margin: '0 auto' }}>
 
         {/* 헤더 */}
-        <div style={{ marginBottom: '48px' }}>
-          <p style={{
-            fontSize: '0.76rem',
-            fontWeight: 800,
-            letterSpacing: '0.16em',
-            color: '#EB701A',
-            textTransform: 'uppercase' as const,
-            marginBottom: '10px',
-            margin: '0 0 10px',
-          }}>SMEB Archive</p>
-          <h1 style={{
-            fontSize: 'clamp(2rem,5vw,3rem)',
-            fontWeight: 900,
-            letterSpacing: '-0.05em',
-            lineHeight: 1,
-            margin: '0 0 12px',
-            color: 'var(--text)',
-          }}>도구</h1>
-          <p style={{
-            fontSize: '0.9rem',
-            color: 'var(--text-secondary, #888)',
-            margin: 0,
-          }}>스맵 팀 운영을 위한 도구 모음</p>
+        <div style={{ marginBottom: '40px' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', color: '#EB701A', marginBottom: '8px' }}>
+            TOOLS
+          </p>
+          <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', margin: 0, lineHeight: 1.1 }}>
+            도구
+          </h1>
+          <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.4)', marginTop: '10px' }}>
+            스맵 아카이브 전용 유틸리티
+          </p>
         </div>
 
-        {/* 앱 그리드 */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 180px))',
-          gap: '16px',
-        }}>
-          {APPS.map(app => <AppCard key={app.href} app={app} />)}
-
-          {/* 준비 중 */}
-          {[0].map(i => (
-            <div key={i} style={{
-              background: 'var(--card)',
-              border: '1.5px dashed var(--card-border)',
-              borderRadius: '20px',
-              padding: '28px 20px 22px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-              opacity: 0.3,
-            }}>
+        {/* 앱 목록 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {APPS.map(app => (
+            <Link key={app.href} href={app.href} style={{ textDecoration: 'none' }}>
               <div style={{
-                width: '76px',
-                height: '76px',
-                borderRadius: '20px',
-                background: 'rgba(128,128,128,0.08)',
-                border: '2px dashed rgba(128,128,128,0.2)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'rgba(255,255,255,0.03)',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.6rem',
-                color: '#888',
-              }}>+</div>
-              <div style={{
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                color: 'var(--text)',
-              }}>준비 중</div>
-            </div>
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = app.color + '55';
+                el.style.background = 'rgba(255,255,255,0.05)';
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'rgba(255,255,255,0.08)';
+                el.style.background = 'rgba(255,255,255,0.03)';
+              }}>
+                {/* 왼쪽 컬러 액센트 */}
+                <div style={{ width: '4px', background: app.color, flexShrink: 0 }} />
+
+                {/* 본문 */}
+                <div style={{ flex: 1, padding: '22px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
+                        {app.title}
+                      </span>
+                      <span style={{
+                        fontSize: '0.68rem', fontWeight: 700,
+                        background: app.color + '22',
+                        color: app.color,
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                      }}>
+                        {app.tag}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
+                      {app.desc}
+                    </p>
+                  </div>
+
+                  <div style={{
+                    flexShrink: 0,
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 14px',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    color: 'rgba(255,255,255,0.7)',
+                    whiteSpace: 'nowrap' as const,
+                  }}>
+                    열기 →
+                  </div>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
