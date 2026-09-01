@@ -21,6 +21,23 @@ export default function AppsClient() {
     }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
 
+        {/* 홈 버튼 */}
+        <div style={{ marginBottom: '32px' }}>
+          <Link href="/" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)',
+            textDecoration: 'none', padding: '6px 12px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '100px',
+            transition: 'color 0.15s, border-color 0.15s',
+          }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#fff'; el.style.borderColor = 'rgba(255,255,255,0.25)'; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.45)'; el.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+          >
+            ← 홈으로
+          </Link>
+        </div>
+
         {/* 헤더 */}
         <div style={{ marginBottom: '40px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', color: '#EB701A', marginBottom: '8px' }}>
