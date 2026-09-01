@@ -3,7 +3,6 @@ import CalendarSection from './calendar-section';
 import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
-import HeroLiveCard from './hero-live-card';
 import ScheduleEmbed from './schedule-embed';
 
 const getYoutubeVideos = unstable_cache(async () => {
@@ -276,11 +275,7 @@ export default async function Home() {
               <span style={{display:'block',fontSize:'clamp(2.8rem,14vw,10rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
               <em style={{display:'block',fontSize:'clamp(1.8rem,7vw,5.5rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
             </h1>
-          </div>
-          <div className="mob-hide hero-card" style={{flexShrink:0,width:'clamp(200px,18vw,260px)'}}>
-            <HeroLiveCard />
-          </div>
-        </div>
+          </div>        </div>
       </section>
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
