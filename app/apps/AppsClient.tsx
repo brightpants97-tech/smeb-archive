@@ -4,20 +4,6 @@ import { useState } from 'react';
 
 const APPS = [
   {
-    href: '/banpick',
-    icon: '⚔️',
-    title: '팀 관리',
-    desc: '밴픽 조합 분석',
-    color: '#A855F7',
-  },
-  {
-    href: '/multiview',
-    icon: '📺',
-    title: '멀티뷰',
-    desc: 'SOOP 동시 시청',
-    color: '#EB701A',
-  },
-  {
     href: '/fa-teambuilder',
     icon: '🎯',
     title: 'FA 팀빌더',
