@@ -66,8 +66,7 @@ export default function HamburgerMenu() {
             { href:'#videos',  label:'유튜브',    desc:'이번 달 전체 영상' },
             { href:'#soopcal', label:'다시보기',  desc:'SOOP 다시보기 캘린더' },
             { href:'/apps', label:'도구', desc:'스맵 팀 운영 도구 모음' },
-            { href:'/banpick', label:'팀 관리', desc:'밴픽 조합 분석' },
-            { href:'/teambuilder', label:'팀빌더', desc:'멸망전 팀 구성 도우미' },
+            { href:'/fa-teambuilder', label:'FA 팀빌더', desc:'멸망전 182점 캡 시뮬레이터' },
           ].map(item => (
             <a key={item.href} href={item.href} onClick={close}
               style={{ display:'flex', flexDirection:'column', gap:'2px', padding:'16px 24px', textDecoration:'none', borderBottom:'1px solid var(--card-border)', transition:'background 0.15s' }}
