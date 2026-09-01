@@ -4,6 +4,7 @@ import type { Video, MonthData, RewindStats } from './page';
 
 const ORANGE = '#EB701A';
 const DARK   = '#0b0b0b';
+const COMP   = '#00C9FF'; // 오렌지 보색: 전기 청록
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
 function fmt(n: number) { return n.toLocaleString('ko-KR'); }
