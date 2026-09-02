@@ -306,30 +306,16 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="sec-footer" style={{borderTop:'1px solid rgba(255,255,255,0.08)',padding:'2rem clamp(1.2rem,5vw,3rem)'}}>
-        <div style={{maxWidth:'1400px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px'}}>
-          {/* 왼쪽: 로고 + 설명 */}
+      <footer className="sec-footer" style={{borderTop:'1px solid rgba(255,255,255,0.08)',padding:'1.6rem clamp(1.2rem,5vw,3rem)'}}>
+        <div style={{maxWidth:'1400px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap' as const,gap:'12px'}}>
           <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
             <span style={{fontSize:'1rem',fontWeight:900,letterSpacing:'-0.03em',color:'#fff'}}>SMEB<span style={{color:'#EB701A'}}>.</span></span>
             <span style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.25)',borderLeft:'1px solid rgba(255,255,255,0.12)',paddingLeft:'10px'}}>스맵 송경호 아카이브</span>
           </div>
-          {/* 오른쪽: 아이콘 링크 */}
-          <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
-            <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" title="YouTube" style={{color:'rgba(255,255,255,0.35)',transition:'color 0.15s',display:'flex'}}
-              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color='#EB701A'}
-              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.35)'}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
-            </a>
-            <a href="https://www.sooplive.com/station/townboy" target="_blank" title="SOOP" style={{color:'rgba(255,255,255,0.35)',transition:'color 0.15s',fontSize:'0.75rem',fontWeight:700,letterSpacing:'0.04em'}}
-              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color='#EB701A'}
-              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.35)'}>
-              SOOP
-            </a>
-            <a href="https://cafe.naver.com/smebsmeb" target="_blank" title="팬카페" style={{color:'rgba(255,255,255,0.35)',transition:'color 0.15s',display:'flex'}}
-              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color='#EB701A'}
-              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.35)'}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
-            </a>
+          <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
+            <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{fontSize:'0.78rem',fontWeight:600,color:'rgba(255,255,255,0.35)',textDecoration:'none'}}>YouTube</a>
+            <a href="https://www.sooplive.com/station/townboy" target="_blank" style={{fontSize:'0.78rem',fontWeight:600,color:'rgba(255,255,255,0.35)',textDecoration:'none'}}>SOOP</a>
+            <a href="https://cafe.naver.com/smebsmeb" target="_blank" style={{fontSize:'0.78rem',fontWeight:600,color:'rgba(255,255,255,0.35)',textDecoration:'none'}}>팬카페</a>
           </div>
         </div>
       </footer>
