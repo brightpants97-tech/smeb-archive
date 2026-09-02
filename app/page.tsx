@@ -172,7 +172,8 @@ export default async function Home() {
         .card:hover{transform:translateY(-6px) scale(1.01);box-shadow:var(--card-shadow-hover);}
         .notice-card{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--card);border-radius:var(--radius-card,24px);border:1px solid var(--card-border);box-shadow:var(--card-shadow);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);text-decoration:none;transition:transform 0.2s cubic-bezier(0.22,1,0.36,1),box-shadow 0.2s cubic-bezier(0.22,1,0.36,1);color:inherit;}
         .notice-card:hover{transform:translateY(-4px) scale(1.01);box-shadow:var(--card-shadow-hover);}
-        .site-header{background:var(--header-bg);border-bottom:1px solid var(--header-border);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);transition:background 0.3s,border-color 0.3s;}
+        .site-header{background:transparent;border-bottom:1px solid transparent;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transition:background 0.35s,border-color 0.35s,backdrop-filter 0.35s,-webkit-backdrop-filter 0.35s;}
+        .site-header.scrolled{background:var(--header-bg);border-bottom:1px solid var(--header-border);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);}
         .sec-title{color:var(--text-inv);transition:color 0.3s;}
         .sec-sub-text{color:var(--text-sub);transition:color 0.3s;}
         .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;background:rgba(235,112,26,0.08);padding:4px 10px 4px 8px;border-radius:100px;}
