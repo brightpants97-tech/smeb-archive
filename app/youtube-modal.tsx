@@ -441,53 +441,34 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
               <span style={{ fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.18em', color:'var(--text-muted)', textTransform:'uppercase' as const }}>NOTICE</span>
               <h2 style={{ fontSize:'clamp(1.6rem,3.5vw,2.6rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color:'var(--text)', margin:0 }}>최신 공지</h2>
             </div>
-            <div style={{ background:'var(--bg-deeper)', borderRadius:'18px', padding: isMobile ? '0' : '12px' }}>
+            <div>
               {isMobile ? (
-                <div style={{ background:'var(--card)', borderRadius:'18px', overflow:'hidden', border:'1px solid var(--card-border)', boxShadow:'0 2px 16px rgba(0,0,0,0.06)' }}>
+                <div style={{ background:'var(--card)', borderRadius:'12px', overflow:'hidden', border:'1px solid var(--card-border)' }}>
                   {notices.map((n, ni) => (
                     <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display:'flex', alignItems:'center', gap:'14px', padding:'14px 16px', borderBottom: ni < notices.length - 1 ? '1px solid var(--card-border)' : 'none', textDecoration:'none', color:'inherit', background:'transparent', transition:'background 0.15s' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background='rgba(235,112,26,0.06)'}
+                      style={{ display:'flex', alignItems:'center', gap:'12px', padding:'14px 16px', borderBottom: ni < notices.length - 1 ? '1px solid var(--card-border)' : 'none', textDecoration:'none', color:'inherit', background:'transparent', transition:'background 0.12s' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background='rgba(235,112,26,0.04)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background='transparent'}
                     >
-                      <div style={{ flexShrink:0, width:'44px', height:'44px', borderRadius:'12px', background:'rgba(235,112,26,0.1)', border:'1px solid rgba(235,112,26,0.2)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'1px' }}>
-                        <span style={{ fontSize:'0.65rem', fontWeight:700, color:'#EB701A', lineHeight:1 }}>{n.date.split('-')[1]}월</span>
-                        <span style={{ fontSize:'1rem', fontWeight:900, color:'#EB701A', lineHeight:1 }}>{n.date.split('-')[2]}</span>
-                      </div>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontSize:'0.85rem', fontWeight:700, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:0, marginBottom:'3px' }}>{n.title}</p>
-                        <div style={{ display:'flex', gap:'8px' }}>
-                          <span style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>❤️ {n.likes}</span>
-                          <span style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>💬 {n.comments}</span>
-                        </div>
+                        <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', display:'block', marginBottom:'3px' }}>{n.date.split('-')[1]}월 {n.date.split('-')[2]}일</span>
+                        <p style={{ fontSize:'0.86rem', fontWeight:700, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:0 }}>{n.title}</p>
                       </div>
-                      <span style={{ flexShrink:0, fontSize:'0.9rem', color:'var(--text-muted)' }}>›</span>
+                      <span style={{ flexShrink:0, fontSize:'0.82rem', color:'var(--text-muted)' }}>›</span>
                     </a>
                   ))}
                 </div>
               ) : (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'14px' }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'12px' }}>
                   {notices.map((n, ni) => (
                     <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display:'flex', flexDirection:'column', gap:'10px', padding:'20px 22px', background:'var(--card)', borderRadius:'16px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', boxShadow:'0 1px 6px rgba(0,0,0,0.06)', transition:'transform 0.18s, box-shadow 0.18s' } as React.CSSProperties}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 10px 28px rgba(0,0,0,0.1)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=''; (e.currentTarget as HTMLElement).style.boxShadow='0 1px 6px rgba(0,0,0,0.06)'; }}
+                      style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'18px 20px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', transition:'border-color 0.15s, transform 0.15s' } as React.CSSProperties}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor='rgba(235,112,26,0.4)'; (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor='var(--card-border)'; (e.currentTarget as HTMLElement).style.transform=''; }}
                     >
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <div style={{ display:'inline-flex', alignItems:'center', gap:'6px', background:'rgba(235,112,26,0.08)', border:'1px solid rgba(235,112,26,0.18)', borderRadius:'100px', padding:'4px 10px' }}>
-                          <span style={{ width:'6px', height:'6px', borderRadius:'50%', background:'#EB701A', display:'inline-block', flexShrink:0 }} />
-                          <span style={{ fontSize:'0.72rem', fontWeight:700, color:'#EB701A' }}>{n.date.split('-')[1]}월 {n.date.split('-')[2]}일</span>
-                        </div>
-                        <div style={{ display:'flex', gap:'8px', fontSize:'0.72rem', color:'var(--text-muted)' }}>
-                          <span>❤️ {n.likes}</span>
-                          <span>💬 {n.comments}</span>
-                        </div>
-                      </div>
-                      <p style={{ fontWeight:700, fontSize:'0.92rem', color:'var(--text)', lineHeight:1.4, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.title}</p>
-                      <p style={{ fontSize:'0.78rem', color:'var(--text-muted)', lineHeight:1.55, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.summary}</p>
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', paddingTop:'8px', borderTop:'1px solid var(--card-border)' }}>
-                        <span style={{ fontSize:'0.72rem', color:'#EB701A', fontWeight:700 }}>공지 보기 →</span>
-                      </div>
+                      <span style={{ fontSize:'0.68rem', color:'var(--text-muted)', fontWeight:500 }}>{n.date.split('-')[1]}월 {n.date.split('-')[2]}일</span>
+                      <p style={{ fontWeight:700, fontSize:'0.9rem', color:'var(--text)', lineHeight:1.4, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.title}</p>
+                      <p style={{ fontSize:'0.76rem', color:'var(--text-muted)', lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.summary}</p>
                     </a>
                   ))}
                 </div>
