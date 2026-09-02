@@ -458,7 +458,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                   <div key={d} style={{
                     textAlign:'center', padding: isMobile ? '8px 0' : '10px 0',
                     fontSize: isMobile ? '0.65rem' : '0.73rem', fontWeight:700,
-                    color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--text-muted)',
+                    color: i === 0 ? '#B84444' : i === 6 ? '#6B7A9F' : 'var(--text-muted)',
                     borderRight: i < 6 ? '1px solid var(--card-border)' : 'none',
                   }}>{d}</div>
                 ))}
@@ -499,7 +499,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                           minWidth:'22px', width:'22px', height:'22px', flexShrink:0,
                           borderRadius:'50%',
                           background: isToday ? '#EB701A' : 'transparent',
-                          color: isToday ? '#fff' : col === 0 ? '#ef4444' : col === 6 ? '#3b82f6' : 'var(--text-muted)',
+                          color: isToday ? '#fff' : col === 0 ? '#B84444' : col === 6 ? '#6B7A9F' : 'var(--text-muted)',
                           display:'flex', alignItems:'center', justifyContent:'center',
                           boxShadow: isToday ? '0 2px 8px rgba(235,112,26,0.35)' : 'none',
                         }}>{day}</span>
