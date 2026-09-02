@@ -284,7 +284,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
 
         {/* BY THE NUMBERS */}
         <div style={{ marginTop:'12px', borderTop:'1px solid var(--card-border)', paddingTop:'12px' }}>
-          <p style={{ fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'var(--text-muted)', marginBottom:'10px' }}>BY THE NUMBERS</p>
+          <p style={{ fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase' as const, color:'var(--text-muted)', marginBottom:'10px' }}>BY THE NUMBERS</p>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
             {stats.map((s, i) => (
               <div key={i} style={{ textAlign:'center' as const, borderRight: i < stats.length-1 ? '1px solid var(--card-border)' : 'none', padding:'6px 0' }}>
