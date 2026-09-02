@@ -287,7 +287,7 @@ export default async function Home() {
           <YoutubeSection videos={videos} top10={top10} notices={notices} monthlyTop10={monthlyTop10} today={today.toISOString()} />
 
           {/* ─── 일정표 ─── */}
-          <div id="schedule" style={{marginTop:'56px'}}>
+          <div id="schedule" style={{marginTop:'0',paddingTop:'48px',borderTop:'1px solid var(--card-border)'}}>
             <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
               <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>SCHEDULE</span>
               <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>일정표</h2>
@@ -296,7 +296,7 @@ export default async function Home() {
           </div>
 
           {/* ─── SOOP 다시보기 헤더 ─── */}
-          <div id="soopcal" style={{marginTop:'56px'}}>
+          <div id="soopcal" style={{marginTop:'0',paddingTop:'48px',borderTop:'1px solid var(--card-border)'}}>
             <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
               <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>SOOP VOD</span>
               <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>SOOP 다시보기</h2>
