@@ -282,18 +282,14 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
           })}
         </div>
 
-        {/* BY THE NUMBERS — Apple 카드 스타일 */}
-        <div style={{ marginTop:'16px', background:'var(--bg-deeper)', borderRadius:'24px', padding:'16px' }}>
-          <p style={{ fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--text-muted)', marginBottom:'12px' }}>BY THE NUMBERS</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px' }}>
+        {/* BY THE NUMBERS */}
+        <div style={{ marginTop:'12px', borderTop:'1px solid var(--card-border)', paddingTop:'12px' }}>
+          <p style={{ fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'var(--text-muted)', marginBottom:'10px' }}>BY THE NUMBERS</p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
             {stats.map((s, i) => (
-              <div key={i} style={{
-                background:'var(--card)', borderRadius:'22px', padding:'14px 10px',
-                textAlign:'center', border:'1px solid var(--card-border)',
-                boxShadow:'0 1px 4px rgba(0,0,0,0.05)',
-              }}>
-                <p style={{ fontSize:'1.3rem', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, marginBottom:'4px' }}>{s.value}</p>
-                <p style={{ fontSize:'0.62rem', color:'var(--text-muted)', fontWeight:500 }}>{s.label}</p>
+              <div key={i} style={{ textAlign:'center' as const, borderRight: i < stats.length-1 ? '1px solid var(--card-border)' : 'none', padding:'6px 0' }}>
+                <p style={{ fontSize:'1.5rem', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, margin:0 }}>{s.value}</p>
+                <p style={{ fontSize:'0.6rem', color:'var(--text-muted)', fontWeight:500, marginTop:'4px' }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -368,16 +364,13 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
       </div>
 
       {/* BY THE NUMBERS */}
-      <div style={{ marginTop: '10px', background: 'var(--bg-deeper)', borderRadius: '16px', padding: '14px 18px' }}>
-        <p style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '10px' }}>BY THE NUMBERS</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
+      <div style={{ marginTop: '8px', borderTop: '1px solid var(--card-border)', paddingTop: '16px', paddingBottom: '4px' }}>
+        <p style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: '12px' }}>BY THE NUMBERS</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
           {stats.map((s, i) => (
-            <div key={i} style={{
-              background: 'var(--card)', borderRadius: '12px', padding: '12px 16px',
-              border: '1px solid var(--card-border)',
-            }}>
-              <p style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1, marginBottom: '4px' }}>{s.value}</p>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</p>
+            <div key={i} style={{ borderRight: i < stats.length-1 ? '1px solid var(--card-border)' : 'none', padding: '0 24px 0 0', marginRight: i < stats.length-1 ? '24px' : '0' }}>
+              <p style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--text)', lineHeight: 1, margin: 0 }}>{s.value}</p>
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '5px' }}>{s.label}</p>
             </div>
           ))}
         </div>
