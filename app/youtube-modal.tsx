@@ -367,7 +367,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
 
       {/* BY THE NUMBERS */}
       <div style={{ marginTop: '8px', borderTop: '1px solid var(--card-border)', paddingTop: '16px', paddingBottom: '4px' }}>
-        <p style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: '12px' }}>BY THE NUMBERS</p>
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: '12px' }}>BY THE NUMBERS</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
           {stats.map((s, i) => (
             <div key={i} style={{ borderRight: i < stats.length-1 ? '1px solid var(--card-border)' : 'none', padding: '0 24px 0 0', marginRight: i < stats.length-1 ? '24px' : '0' }}>
@@ -439,7 +439,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
         <div style={{ display:'flex', flexDirection:'column', gap: isMobile ? '20px' : '40px' }}>
 
           <div style={{ order: -1 }}>
-            <div style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom: isMobile ? '16px' : '24px', paddingBottom:'16px', borderBottom:'2px solid #EB701A', width:'fit-content' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom: '24px', paddingBottom:'16px', borderBottom:'2px solid #EB701A', width:'fit-content' }}>
               <span style={{ fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.18em', color:'var(--text-muted)', textTransform:'uppercase' as const }}>NOTICE</span>
               <h2 style={{ fontSize:'clamp(1.6rem,3.5vw,2.6rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color:'var(--text)', margin:0 }}>최신 공지</h2>
             </div>
