@@ -54,7 +54,18 @@ export default function RootLayout({
       <meta name="googlebot" content="index, follow" />
       <meta name="naverbot" content="index, follow" />
       <meta name="yeti" content="index, follow" />
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Script strategy="afterInteractive">{`
+          (function(){
+            var h=document.querySelector('.site-header');
+            if(!h)return;
+            function check(){if(window.scrollY>60)h.classList.add('scrolled');else h.classList.remove('scrolled');}
+            window.addEventListener('scroll',check,{passive:true});
+            check();
+          })();
+        `}</Script>
+      </body>
     </html>
   );
 }
