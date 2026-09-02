@@ -6,10 +6,10 @@ const DAY_KO  = ['일','월','화','수','목','금','토'];
 const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
 const CAT: Record<string, { color:string; light:string; label:string }> = {
-  '방송':      { color:'#D4620A', light:'#FFF3E8', label:'📺 방송' },
-  '개인일정':  { color:'#2252CC', light:'#EAF0FF', label:'🗓 개인일정' },
-  '개인 일정': { color:'#2252CC', light:'#EAF0FF', label:'🗓 개인일정' },
-  '휴일':      { color:'#1A7A28', light:'#E4F5E7', label:'🏖 휴일' },
+  '방송':      { color:'#EB701A', light:'#FFF3E8', label:'📺 방송' },
+  '개인일정':  { color:'#6B7A9F', light:'#F0F1F7', label:'🗓 개인일정' },
+  '개인 일정': { color:'#6B7A9F', light:'#F0F1F7', label:'🗓 개인일정' },
+  '휴일':      { color:'#6B8F71', light:'#EFF5F0', label:'🏖 휴일' },
 };
 
 interface Event { date: number; category: string | null; texts: string[]; }
@@ -92,7 +92,7 @@ export default function ScheduleEmbed() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(0,0,0,0.08)', background:'rgba(0,0,0,0.025)' }}>
           {DAY_KO.map((d, i) => (
             <div key={d} style={{ padding:'8px 0', textAlign:'center', fontSize:'0.78rem', fontWeight:800,
-              color: i===0 ? '#C83232' : i===6 ? '#2052C8' : '#666' }}>
+              color: i===0 ? '#B84444' : i===6 ? '#2052C8' : '#666' }}>
               {d}
             </div>
           ))}
@@ -144,7 +144,7 @@ export default function ScheduleEmbed() {
                         background: isToday ? ACCENT : 'transparent',
                         fontSize:'0.95rem',
                         fontWeight: isToday ? 800 : 300,
-                        color: isToday ? '#fff' : isSun ? '#C83232' : isSat ? '#2052C8' : hasContent ? 'var(--text)' : 'var(--text-muted)',
+                        color: isToday ? '#fff' : isSun ? '#B84444' : isSat ? '#6B7A9F' : hasContent ? 'var(--text)' : 'var(--text-muted)',
                         flexShrink:0,
                       }}>
                         {day}
