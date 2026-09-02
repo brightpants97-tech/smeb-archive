@@ -88,20 +88,33 @@ body {
   margin: 0;
 }
 
-/* ── 네비 스크롤 전환 ── */
+/* ── 네비 스크롤 전환 (CSS Scroll-Driven + fallback) ── */
+@keyframes nav-appear {
+  from {
+    background: rgba(0,0,0,0);
+    border-bottom-color: transparent;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  to {
+    background: var(--header-bg);
+    border-bottom-color: var(--header-border);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+}
+
 .site-header {
-  transition: background 0.35s ease, border-color 0.35s ease,
-              backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease;
+  animation: nav-appear linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0px 80px;
 }
-.site-header.scrolled {
-  background: var(--header-bg) !important;
-  border-bottom-color: var(--header-border) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-}
-.site-header:not(.scrolled) {
-  background: rgba(0,0,0,0) !important;
-  border-bottom-color: transparent !important;
-  backdrop-filter: blur(0px) !important;
-  -webkit-backdrop-filter: blur(0px) !important;
+
+/* scroll-driven 미지원 브라우저: 투명→반투명으로 고정 */
+@supports not (animation-timeline: scroll()) {
+  .site-header {
+    background: var(--header-bg) !important;
+    border-bottom-color: var(--header-border) !important;
+    backdrop-filter: blur(20px) saturate(160%) !important;
+  }
 }
