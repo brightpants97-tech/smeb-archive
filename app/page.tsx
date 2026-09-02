@@ -204,8 +204,7 @@ export default async function Home() {
           .mob-hero h1 span { font-size: clamp(1.8rem,10vw,3rem) !important; } .mob-hero h1 em { font-size: clamp(1.1rem,6vw,2rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
-          .tools-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; background:rgba(168,85,247,0.12); border:1.5px solid rgba(168,85,247,0.35); color:#A855F7; font-size:0.82rem; font-weight:800; text-decoration:none; transition:all 0.15s; }
-          .tools-btn:hover { background:rgba(168,85,247,0.22); }
+          /* tools-btn 제거됨 */
           .gemini-step-row { gap: 10px !important; }
           @media (max-width: 960px) {
             .hero-card { display: none !important; }
@@ -223,13 +222,10 @@ export default async function Home() {
             <text x="2" y="93" fontFamily="'Paperlogy',sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="var(--text-muted)">ARCHIVE</text>
           </svg>
         </a>
-        <nav className="mob-nav" style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
-          <a href="#top3" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>BEST 10</a>
-          <a href="#schedule" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>일정표</a>
-          <a href="#soopcal" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>SOOP 다시보기</a>
-          <a href="/apps" className="tools-btn">🛠️ 도구</a>
-          <ThemeToggle />
+        <nav className="mob-nav" style={{display:'flex',gap:'1.4rem',alignItems:'center'}}>
           <a href="/rewind/2026" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>연간결산</a>
+          <a href="/apps" className="nav-link mob-hide" style={{fontSize:'0.88rem',fontWeight:600}}>도구</a>
+          <ThemeToggle />
           <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{background:'#EB701A',color:'#fff',padding:'0.5rem 1.1rem',borderRadius:'100px',fontSize:'0.85rem',fontWeight:700,textDecoration:'none'}}>YouTube ↗</a>
         </nav>
       </header>
