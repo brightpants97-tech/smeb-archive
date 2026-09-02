@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  generateBuildId: async () => "1788324923",
+  generateBuildId: async () => "1788367377",
 };
 
 export default nextConfig;
