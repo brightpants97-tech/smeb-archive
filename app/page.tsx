@@ -280,7 +280,7 @@ export default async function Home() {
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
-<div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
+<div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
           <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>YOUTUBE</span>
           <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>유튜브 TOP 10</h2>
         </div>
@@ -288,7 +288,7 @@ export default async function Home() {
 
           {/* ─── 일정표 ─── */}
           <div id="schedule" style={{marginTop:'0',paddingTop:'48px',borderTop:'1px solid var(--card-border)'}}>
-            <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
+            <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
               <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>SCHEDULE</span>
               <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>일정표</h2>
             </div>
@@ -297,7 +297,7 @@ export default async function Home() {
 
           {/* ─── SOOP 다시보기 헤더 ─── */}
           <div id="soopcal" style={{marginTop:'0',paddingTop:'48px',borderTop:'1px solid var(--card-border)'}}>
-            <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
+            <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'2px solid #EB701A',width:'fit-content'}}>
               <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>SOOP VOD</span>
               <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>SOOP 다시보기</h2>
             </div>
