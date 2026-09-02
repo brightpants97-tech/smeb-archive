@@ -217,10 +217,10 @@ export default async function Home() {
       <header className="site-header" style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:'72px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
         <a href="/" style={{textDecoration:'none',display:'flex',alignItems:'center'}}>
           <svg width="120" height="32" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-label="SMEB Archive">
-            <text x="0" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="var(--text-inv)">SME</text>
-            <text x="192" y="76" fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
+            <text x="0" y="76" fontFamily="'Paperlogy',sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="var(--text-inv)">SME</text>
+            <text x="192" y="76" fontFamily="'Paperlogy',sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
             <rect x="0" y="80" width="248" height="2.5" fill="var(--text-inv)" rx="1.5"/>
-            <text x="2" y="93" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="var(--text-muted)">ARCHIVE</text>
+            <text x="2" y="93" fontFamily="'Paperlogy',sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="var(--text-muted)">ARCHIVE</text>
           </svg>
         </a>
         <nav className="mob-nav" style={{display:'flex',gap:'1.2rem',alignItems:'center'}}>
