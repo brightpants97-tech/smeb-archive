@@ -142,9 +142,9 @@ export default function ScheduleEmbed() {
                         display:'inline-flex', alignItems:'center', justifyContent:'center',
                         width:'26px', height:'26px', borderRadius:'50%',
                         background: isToday ? ACCENT : 'transparent',
-                        fontSize:'0.88rem',
-                        fontWeight: isToday ? 900 : hasContent ? 700 : 400,
-                        color: isToday ? '#fff' : isSun ? '#C83232' : isSat ? '#2052C8' : hasContent ? '#111' : '#C0C0C0',
+                        fontSize:'0.95rem',
+                        fontWeight: isToday ? 800 : 300,
+                        color: isToday ? '#fff' : isSun ? '#C83232' : isSat ? '#2052C8' : hasContent ? 'var(--text)' : 'var(--text-muted)',
                         flexShrink:0,
                       }}>
                         {day}
@@ -163,8 +163,8 @@ export default function ScheduleEmbed() {
                       {/* 텍스트 미리보기 (최대 2줄) */}
                       {previewTexts.map((t, ti) => (
                         <div key={ti} style={{
-                          fontSize:'0.7rem', fontWeight:500, lineHeight:1.35,
-                          color:'#333',
+                          fontSize:'0.68rem', fontWeight:700, lineHeight:1.3,
+                          color:'var(--text)',
                           overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis',
                         }}>
                           {t}
