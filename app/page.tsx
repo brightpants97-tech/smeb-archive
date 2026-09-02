@@ -201,7 +201,7 @@ export default async function Home() {
           .mob-nav { gap: 0.6rem !important; }
           .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
           .mob-hero { padding: clamp(20px,5vw,40px) 1.2rem !important; }
-          .mob-hero h1 span { font-size: clamp(2.5rem,15vw,5rem) !important; } .mob-hero h1 em { font-size: clamp(1.5rem,9vw,3rem) !important; }
+          .mob-hero h1 span { font-size: clamp(1.8rem,10vw,3rem) !important; } .mob-hero h1 em { font-size: clamp(1.1rem,6vw,2rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
           .tools-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; background:rgba(168,85,247,0.12); border:1.5px solid rgba(168,85,247,0.35); color:#A855F7; font-size:0.82rem; font-weight:800; text-decoration:none; transition:all 0.15s; }
@@ -268,14 +268,16 @@ export default async function Home() {
       )}
 
 
-      <section className="mob-hero" style={{padding:'clamp(1.5rem,4vw,3rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
-        <div className="fade-in-up" style={{display:'flex',alignItems:'center',gap:'clamp(1.5rem,3vw,3rem)',flexWrap:'wrap'}}>
-          <div style={{flexGrow:1,flexShrink:1,minWidth:'280px'}}>
-            <h1 style={{margin:0,lineHeight:0.86,fontWeight:900}}>
-              <span style={{display:'block',fontSize:'clamp(2.8rem,14vw,10rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
-              <em style={{display:'block',fontSize:'clamp(1.8rem,7vw,5.5rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.05em'}}>ARCHIVE</em>
+      <section className="mob-hero" style={{padding:'clamp(1rem,2.5vw,1.8rem) clamp(1rem,3vw,2.5rem)',background:'#0d0d0d',position:'relative',overflow:'hidden'}}>
+        <div className="fade-in-up" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'1rem',flexWrap:'wrap' as const}}>
+          <div>
+            <h1 style={{margin:0,lineHeight:1,fontWeight:900,display:'flex',alignItems:'baseline',gap:'clamp(0.4rem,1vw,0.7rem)',flexWrap:'wrap' as const}}>
+              <span style={{fontSize:'clamp(2rem,6vw,4rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
+              <em style={{fontSize:'clamp(1.2rem,3.5vw,2.4rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.04em',opacity:0.9}}>ARCHIVE</em>
             </h1>
-          </div>        </div>
+            <p style={{margin:'6px 0 0',fontSize:'clamp(0.7rem,1.5vw,0.82rem)',color:'rgba(255,255,255,0.35)',letterSpacing:'0.04em'}}>스맵 송경호 팬 아카이브</p>
+          </div>
+        </div>
       </section>
 
       <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
