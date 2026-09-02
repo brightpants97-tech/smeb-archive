@@ -310,6 +310,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         background: 'var(--card)',
         padding: '16px',
         borderRadius: '20px',
+        alignItems: 'stretch',
       }}>
         {top10.map((video, i) => {
           const rank = i + 1;
@@ -323,7 +324,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                 display: 'flex', flexDirection: 'column', gap: '8px',
                 background: 'var(--bg-deeper)',
                 border: `1px solid ${isTop3 ? rankColor + '55' : 'var(--card-border)'}`,
-                borderRadius: '10px', overflow: 'hidden', paddingBottom: '10px',
+                borderRadius: '10px', overflow: 'hidden',
                 boxShadow: isTop3 ? `0 0 0 1px ${rankColor}44` : 'none',
                 transition: 'transform 0.18s, box-shadow 0.18s',
               }}
@@ -355,8 +356,9 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
               {/* 제목 */}
               <p style={{
                 fontSize: '0.76rem', fontWeight: 600, color: 'var(--text)',
-                lineHeight: 1.4, margin: 0, padding: '0 10px',
+                lineHeight: 1.4, margin: 0, padding: '6px 10px 8px',
                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                minHeight: '2.2rem',
               } as React.CSSProperties}>{video.title}</p>
             </div>
           );
