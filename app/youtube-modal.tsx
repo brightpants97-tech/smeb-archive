@@ -363,6 +363,40 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             </div>
           );
         })}
+
+        {/* 빈 자리 placeholder */}
+        {Array.from({ length: Math.max(0, 10 - top10.length) }).map((_, i) => (
+          <div key={`ph-${i}`} style={{
+            borderRadius: '10px',
+            border: '1px dashed var(--card-border)',
+            background: 'var(--bg-deeper)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}>
+            {/* 썸네일 영역 */}
+            <div style={{
+              width: '100%',
+              aspectRatio: '16/9',
+              background: 'var(--card)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <span style={{
+                fontSize: '0.65rem',
+                color: 'var(--text-muted)',
+                fontWeight: 600,
+                letterSpacing: '0.06em',
+              }}>집계 중</span>
+            </div>
+            {/* 제목 영역 */}
+            <div style={{
+              padding: '6px 10px 8px',
+              minHeight: '2.2rem',
+            }} />
+          </div>
+        ))}
       </div>
 
       {/* BY THE NUMBERS */}
