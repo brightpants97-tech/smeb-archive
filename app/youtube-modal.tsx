@@ -151,9 +151,10 @@ function MonthPicker({
               style={{
                 padding:'4px 12px', borderRadius:'100px', cursor:'pointer',
                 fontWeight: isSelected ? 700 : 500, fontSize:'0.8rem', transition:'all 0.15s',
-                background: isSelected ? '#1A1A1A' : 'var(--card)',
-                color: isSelected ? '#fff' : 'var(--text)',
-                border: isSelected ? '1px solid #1A1A1A' : BORDER,
+                background: isSelected ? '#EB701A' : 'var(--card)',
+                color: isSelected ? '#fff' : 'var(--text-muted)',
+                border: isSelected ? '1px solid #EB701A' : BORDER,
+                boxShadow: isSelected ? '0 4px 14px rgba(235,112,26,0.25)' : 'none',
               }}>
               {mo}월
             </button>
