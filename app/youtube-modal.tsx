@@ -498,3 +498,21 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
 
 
 
+        {Array.from({ length: Math.max(0, 10 - top10.length) }).map((_, gi) => (
+          <div key={`ghost-${gi}`} style={{
+            borderRadius: '10px',
+            overflow: 'hidden',
+            border: '1.5px dashed var(--card-border)',
+            background: 'transparent',
+            display: 'flex',
+            flexDirection: 'column',
+            opacity: 0.5,
+          }}>
+            <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0, background: 'var(--card)' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.2rem', opacity: 0.4 }}>⏳</span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, padding: '8px 10px', textAlign: 'center' as const }}>집계 중</p>
+          </div>
+        ))}
