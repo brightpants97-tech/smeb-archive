@@ -498,9 +498,9 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'12px' }}>
                   {notices.map((n, ni) => (
                     <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'18px 20px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', transition:'border-color 0.15s, transform 0.15s' } as React.CSSProperties}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor='rgba(235,112,26,0.4)'; (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor='var(--card-border)'; (e.currentTarget as HTMLElement).style.transform=''; }}
+                      style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'18px 20px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', transition:'border-color 0.18s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s' } as React.CSSProperties}
+                      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='rgba(235,112,26,0.45)'; el.style.transform='translateY(-4px)'; el.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)'; }}
+                      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='var(--card-border)'; el.style.transform=''; el.style.boxShadow=''; }}
                     >
                       <span style={{ fontSize:'0.68rem', color:'var(--text-muted)', fontWeight:500 }}>{n.date.split('-')[1]}월 {n.date.split('-')[2]}일</span>
                       <p style={{ fontWeight:700, fontSize:'0.9rem', color:'var(--text)', lineHeight:1.4, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.title}</p>
