@@ -158,7 +158,7 @@ export default async function Home() {
   return (
     <>
       <style>{`
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+        @import url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css');
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
         html{scroll-behavior:smooth;overflow-x:hidden;}
         body{font-family:'Paperlogy',-apple-system,sans-serif;transition:background 0.3s,color 0.3s;overflow-x:hidden;}
