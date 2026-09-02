@@ -435,7 +435,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
       <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} isMobile={isMobile} />
 
       {/* ── 최신 공지 ── */}
-      <div id="videos" className="sec-light" style={{ margin: isMobile ? '20px 0 0' : '40px calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding: isMobile ? '0' : '40px clamp(1.5rem, 5vw, 3rem)' }}>
+      <div id="videos" className="sec-light" style={{ margin: isMobile ? '20px 0 0' : '0 calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding: isMobile ? '48px 0 0' : '48px clamp(1.5rem, 5vw, 3rem) 40px', borderTop: isMobile ? '1px solid var(--card-border)' : '1px solid var(--card-border)' }}>
         <div style={{ display:'flex', flexDirection:'column', gap: isMobile ? '20px' : '40px' }}>
 
           <div style={{ order: -1 }}>
