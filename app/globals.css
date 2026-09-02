@@ -61,3 +61,29 @@ body {
   height: 100% !important;
   object-fit: cover !important;
 }
+
+/* ── 섹션 헤더 통일 패턴 ── */
+.sec-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #EB701A;
+  width: fit-content;
+}
+.sec-heading-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.sec-heading h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+  margin: 0;
+}
