@@ -87,3 +87,21 @@ body {
   color: var(--text);
   margin: 0;
 }
+
+/* ── 네비 스크롤 전환 ── */
+.site-header {
+  transition: background 0.35s ease, border-color 0.35s ease,
+              backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease;
+}
+.site-header.scrolled {
+  background: var(--header-bg) !important;
+  border-bottom-color: var(--header-border) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+}
+.site-header:not(.scrolled) {
+  background: rgba(0,0,0,0) !important;
+  border-bottom-color: transparent !important;
+  backdrop-filter: blur(0px) !important;
+  -webkit-backdrop-filter: blur(0px) !important;
+}
