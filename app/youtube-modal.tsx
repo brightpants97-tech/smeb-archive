@@ -504,10 +504,10 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='var(--card-border)'; el.style.transform=''; el.style.boxShadow=''; }}
                     >
                       <span style={{ fontSize:'0.68rem', color:'var(--text-muted)', fontWeight:500 }}>{n.date.split('-')[1]}월 {n.date.split('-')[2]}일</span>
-                      <p style={{ fontWeight:700, fontSize:'0.9rem', color:'var(--text)', lineHeight:1.4, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.title}</p>
-                      {n.summary && (
-                        <p style={{ fontSize:'0.76rem', color:'var(--text-muted)', lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.summary}</p>
-                      )}
+                      {/* 제목: 1줄이든 2줄이든 항상 2줄 높이만큼 확보해 카드 높이 통일 */}
+                      <p style={{ fontWeight:700, fontSize:'0.9rem', color:'var(--text)', lineHeight:1.4, height:'2.8em', margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.title}</p>
+                      {/* 요약: 내용이 없어도 자리(1줄)는 항상 확보 */}
+                      <p style={{ fontSize:'0.76rem', color:'var(--text-muted)', lineHeight:1.5, height:'1.5em', margin:0, display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.summary || '\u00A0'}</p>
                     </a>
                   ))}
                 </div>
