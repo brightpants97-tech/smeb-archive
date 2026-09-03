@@ -62,13 +62,13 @@ export default function ScheduleEmbed() {
       {/* 컨트롤 바 */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', flexWrap:'wrap', gap:'10px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-          <button onClick={prev} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>‹</button>
+          <button onClick={prev} style={{ width:'44px', height:'44px', borderRadius:'10px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.3rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>‹</button>
           <span style={{ fontWeight:900, fontSize:'1.05rem', color:'var(--text)', minWidth:'90px', textAlign:'center' as const }}>
             {MONTH_KO[month-1]} {year}
           </span>
-          <button onClick={next} style={{ width:'34px', height:'34px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
+          <button onClick={next} style={{ width:'44px', height:'44px', borderRadius:'10px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:'pointer', fontSize:'1.3rem', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>›</button>
           <button onClick={fetchData} disabled={loading} title="새로고침"
-            style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'0.85rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.4:1 }}>
+            style={{ width:'44px', height:'44px', borderRadius:'10px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.4:1 }}>
             🔄
           </button>
           {loading && <span style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>로딩 중...</span>}
