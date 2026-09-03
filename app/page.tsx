@@ -202,6 +202,27 @@ export default async function Home() {
           .mob-nav { gap: 0.6rem !important; }
           .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
           .mob-hero { padding: clamp(20px,5vw,40px) 1.2rem !important; }
+          .mob-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 80% at 15% 50%, rgba(235,112,26,0.12) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+          }
+          .mob-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 128px 128px;
+            opacity: 0.35;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+            z-index: 0;
+          }
+          .mob-hero > * { position: relative; z-index: 1; }
           .mob-hero h1 span { font-size: clamp(1.8rem,10vw,3rem) !important; } .mob-hero h1 em { font-size: clamp(1.1rem,6vw,2rem) !important; }
           .mob-section { padding: 0 1.2rem !important; }
           .mob-cal-section { padding: 24px 1.2rem 40px !important; }
