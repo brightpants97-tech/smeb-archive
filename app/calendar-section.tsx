@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Props {
@@ -11,10 +11,10 @@ interface Props {
 
 // 슬라이드오버 패널
 function DayPanel({
-  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext,
+  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile,
 }: {
   date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
-  onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean;
+  onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean; isMobile: boolean;
 }) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -32,6 +32,20 @@ function DayPanel({
   const [visible, setVisible] = useState(false);
   useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
 
+  // 스크롤 가능 여부 감지 (하단 페이드 힌트용)
+  const listRef = useRef<HTMLDivElement>(null);
+  const [canScrollMore, setCanScrollMore] = useState(false);
+  const handleScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    setCanScrollMore(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
+  };
+  useEffect(() => {
+    // 목록(날짜)이 바뀔 때마다 스크롤 가능 여부 재계산
+    const id = requestAnimationFrame(handleScroll);
+    return () => cancelAnimationFrame(id);
+  }, [vods]);
+
   const handleClose = () => {
     setVisible(false);
     setTimeout(onClose, 280);
@@ -48,7 +62,7 @@ function DayPanel({
       style={{
         position: 'fixed', inset: 0, zIndex: 99998,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px',
+        padding: isMobile ? '12px' : '24px',
         background: visible ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0)',
         backdropFilter: visible ? 'blur(4px)' : 'none',
         WebkitBackdropFilter: visible ? 'blur(4px)' : 'none',
@@ -120,49 +134,73 @@ function DayPanel({
         </div>
 
         {/* 목록 */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
-            <a
-              key={i}
-              href={`https://vod.sooplive.com/player/${vod.id}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{
-                display: 'flex', gap: '12px', alignItems: 'flex-start',
-                padding: '12px', borderRadius: '12px',
-                border: '1px solid var(--card-border)',
-                background: 'var(--bg-deeper)',
-                textDecoration: 'none', color: 'var(--text)',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.transform = '';
-                (e.currentTarget as HTMLElement).style.boxShadow = '';
-              }}
-            >
-              {vod.thumb && (
-                <img
-                  src={vod.thumb} alt=""
-                  style={{ width: '96px', aspectRatio: '16/9', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                />
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <span style={{
-                  display: 'inline-block', fontSize: '0.62rem', fontWeight: 700,
-                  background: 'rgba(235,112,26,0.12)', color: '#EB701A',
-                  padding: '1px 6px', borderRadius: '4px', marginBottom: '4px',
-                }}>{i + 1}</span>
-                <p style={{ fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>{vod.title}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {vod.views != null && <span>👁 {Number(vod.views).toLocaleString()}회</span>}
-                  {vod.duration ? <span>🕐 {fmtDuration(vod.duration)}</span> : null}
+        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+          <div
+            ref={listRef}
+            onScroll={handleScroll}
+            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+          >
+            {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
+              <a
+                key={i}
+                href={`https://vod.sooplive.com/player/${vod.id}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', gap: '12px', alignItems: 'flex-start',
+                  padding: '12px', borderRadius: '12px',
+                  border: '1px solid var(--card-border)',
+                  background: 'var(--bg-deeper)',
+                  textDecoration: 'none', color: 'var(--text)',
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.transform = '';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '';
+                }}
+              >
+                {vod.thumb ? (
+                  <img
+                    src={vod.thumb} alt=""
+                    style={{ width: '96px', aspectRatio: '16/9', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '96px', aspectRatio: '16/9', borderRadius: '8px', flexShrink: 0,
+                    background: 'var(--card)', border: '1px solid var(--card-border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.2rem', color: 'var(--text-muted)', opacity: 0.6,
+                  }}>🎬</div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{
+                    display: 'inline-block', fontSize: '0.62rem', fontWeight: 700,
+                    background: 'rgba(235,112,26,0.12)', color: '#EB701A',
+                    padding: '1px 6px', borderRadius: '4px', marginBottom: '4px',
+                  }}>{i + 1}</span>
+                  <p style={{ fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>
+                    {vod.title}
+                    <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="새 탭에서 SOOP으로 이동">↗</span>
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    {vod.views != null && <span>👁 {Number(vod.views).toLocaleString()}회</span>}
+                    {vod.duration ? <span>🕐 {fmtDuration(vod.duration)}</span> : null}
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+              </a>
+            ))}
+          </div>
+          {/* 스크롤 가능함을 알리는 하단 페이드 힌트 */}
+          {canScrollMore && (
+            <div style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0, height: '36px',
+              background: 'linear-gradient(to bottom, transparent, var(--card))',
+              pointerEvents: 'none',
+            }} />
+          )}
         </div>
       </div>
     </div>,
@@ -382,6 +420,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           onNext={() => navigatePanel(1)}
           hasPrev={vodDays.indexOf(Number(panelDay.date.split('-')[2])) > 0}
           hasNext={vodDays.indexOf(Number(panelDay.date.split('-')[2])) < vodDays.length - 1}
+          isMobile={isMobile}
         />
       )}
 
