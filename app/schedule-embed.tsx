@@ -73,16 +73,6 @@ export default function ScheduleEmbed() {
           </button>
           {loading && <span style={{ fontSize:'0.7rem', color:'#999' }}>로딩 중...</span>}
         </div>
-        <div style={{ display:'flex', gap:'10px', flexWrap:'wrap' }}>
-          {Object.entries(CAT)
-            .filter(([,s], i, arr) => arr.findIndex(([,x]) => x.label === s.label) === i)
-            .map(([k, s]) => (
-              <div key={k} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.72rem', fontWeight:700, color:s.color }}>
-                <div style={{ width:'10px', height:'3px', borderRadius:'2px', background:s.color }} />
-                {s.label}
-              </div>
-          ))}
-        </div>
       </div>
 
       {/* 달력 */}
@@ -184,6 +174,18 @@ export default function ScheduleEmbed() {
             );
           })}
         </div>
+      </div>
+
+      {/* 범례 (달력 아래) */}
+      <div style={{ display:'flex', gap:'14px', flexWrap:'wrap', justifyContent:'center', marginTop:'14px' }}>
+        {Object.entries(CAT)
+          .filter(([,s], i, arr) => arr.findIndex(([,x]) => x.label === s.label) === i)
+          .map(([k, s]) => (
+            <div key={k} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.75rem', fontWeight:700, color:s.color }}>
+              <div style={{ width:'10px', height:'3px', borderRadius:'2px', background:s.color }} />
+              {s.label}
+            </div>
+        ))}
       </div>
 
       {/* 클릭 시 확장 상세 패널 */}
