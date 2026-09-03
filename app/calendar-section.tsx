@@ -42,6 +42,8 @@ function DayPanel({
       onClick={handleClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 99998,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px',
         background: visible ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0)',
         backdropFilter: visible ? 'blur(4px)' : 'none',
         WebkitBackdropFilter: visible ? 'blur(4px)' : 'none',
@@ -51,13 +53,16 @@ function DayPanel({
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          position: 'absolute', top: 0, right: 0, bottom: 0,
-          width: '100%', maxWidth: '420px',
+          position: 'relative',
+          width: '100%', maxWidth: '480px', maxHeight: '82vh',
+          borderRadius: '20px',
           background: 'var(--card)',
-          boxShadow: '-8px 0 48px rgba(0,0,0,0.28)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
           display: 'flex', flexDirection: 'column',
-          transform: visible ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
+          overflow: 'hidden',
+          transform: visible ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(12px)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 0.24s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s',
         }}
       >
         {/* 헤더 */}
@@ -88,7 +93,7 @@ function DayPanel({
         </div>
 
         {/* 목록 */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
             <a
               key={i}
