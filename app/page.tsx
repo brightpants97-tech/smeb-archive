@@ -122,6 +122,7 @@ export default async function Home() {
   };
 
   const [videos, soopData, notices, liveStatus] = await Promise.all([getYoutubeVideos(), getAllVods(), getNotices(), getLiveStatus()]);
+  const footerYear = new Date().getFullYear();
   const vods: any[] = soopData.vods || [];
   const today = new Date();
   const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -332,9 +333,10 @@ export default async function Home() {
 
       <footer className="sec-footer" style={{borderTop:'1px solid rgba(255,255,255,0.08)',padding:'1.6rem clamp(1.2rem,5vw,3rem)'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap' as const,gap:'12px'}}>
-          <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap' as const}}>
             <span style={{fontSize:'1rem',fontWeight:900,letterSpacing:'-0.03em',color:'#fff'}}>SMEB<span style={{color:'#EB701A'}}>.</span></span>
             <span style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.25)',borderLeft:'1px solid rgba(255,255,255,0.12)',paddingLeft:'10px'}}>스맵 송경호 아카이브</span>
+            <span style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.2)',borderLeft:'1px solid rgba(255,255,255,0.12)',paddingLeft:'10px'}}>© {footerYear} · 비공식 팬 사이트</span>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:'20px'}}>
             <a href="https://www.youtube.com/@smeb2774/videos" target="_blank" style={{fontSize:'0.78rem',fontWeight:600,color:'rgba(255,255,255,0.35)',textDecoration:'none'}}>YouTube</a>
