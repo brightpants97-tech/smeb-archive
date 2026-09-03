@@ -365,8 +365,8 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
           );
         })}
 
-        {/* 빈 자리 placeholder */}
-        {Array.from({ length: Math.max(0, 10 - top10.length) }).map((_, i) => (
+        {/* 빈 자리 placeholder: 항상 10칸을 채우지 않고, 현재 진행 중인 행만 자연스럽게 채움 */}
+        {Array.from({ length: Math.max(0, Math.min(10, Math.ceil(top10.length / 5) * 5) - top10.length) }).map((_, i) => (
           <div key={`ph-${i}`} style={{
             borderRadius: '10px',
             border: '1px dashed var(--card-border)',
