@@ -98,7 +98,11 @@ const getNotices = unstable_cache(async () => {
       const isGenericTitle = !n.title_name || n.title_name === '공지' || n.title_name.length <= 2;
       const firstSentence = rawText.split(/[.!?\n]/)[0].trim().slice(0, 50);
       const title = isGenericTitle ? (firstSentence || n.title_name) : n.title_name;
-      return { id: n.title_no, title, summary: rawText.slice(0, 120), date: n.reg_date?.split(' ')[0] || '', likes: n.count?.like_cnt || 0, comments: n.count?.comment_cnt || 0, url: `https://www.sooplive.com/station/${BJID}/post/${n.title_no}` };
+      // 제목이 본문에서 따온 경우, 요약은 제목과 겹치지 않도록 그 뒤에 이어지는 내용을 사용
+      const summary = isGenericTitle
+        ? rawText.slice(title.length).replace(/^[.!?\s]+/, '').slice(0, 120)
+        : rawText.slice(0, 120);
+      return { id: n.title_no, title, summary, date: n.reg_date?.split(' ')[0] || '', likes: n.count?.like_cnt || 0, comments: n.count?.comment_cnt || 0, url: `https://www.sooplive.com/station/${BJID}/post/${n.title_no}` };
     });
   } catch { return []; }
 }, ['notices-v3'], { revalidate: 300 });

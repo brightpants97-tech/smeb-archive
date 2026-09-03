@@ -505,7 +505,9 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                     >
                       <span style={{ fontSize:'0.68rem', color:'var(--text-muted)', fontWeight:500 }}>{n.date.split('-')[1]}월 {n.date.split('-')[2]}일</span>
                       <p style={{ fontWeight:700, fontSize:'0.9rem', color:'var(--text)', lineHeight:1.4, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.title}</p>
-                      <p style={{ fontSize:'0.76rem', color:'var(--text-muted)', lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.summary}</p>
+                      {n.summary && (
+                        <p style={{ fontSize:'0.76rem', color:'var(--text-muted)', lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical', overflow:'hidden' } as React.CSSProperties}>{n.summary}</p>
+                      )}
                     </a>
                   ))}
                 </div>
