@@ -474,7 +474,7 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
         <div style={{ display:'flex', flexDirection:'column', gap: isMobile ? '20px' : '40px' }}>
 
           <div style={{ order: -1 }}>
-            <div style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom: '24px', paddingBottom:'16px', borderBottom:'2px solid #EB701A', width:'fit-content' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:'4px', marginBottom: '24px', paddingBottom:'16px', borderBottom:'3px solid #EB701A', width:'fit-content' }}>
               <span style={{ fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.18em', color:'var(--text-muted)', textTransform:'uppercase' as const }}>NOTICE</span>
               <h2 style={{ fontSize:'clamp(1.6rem,3.5vw,2.6rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color:'var(--text)', margin:0 }}>최신 공지</h2>
             </div>
