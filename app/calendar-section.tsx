@@ -11,19 +11,24 @@ interface Props {
 
 // 슬라이드오버 패널
 function DayPanel({
-  date, vods, onClose, fmtDuration,
+  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext,
 }: {
   date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
+  onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean;
 }) {
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev();
+      if (e.key === 'ArrowRight' && hasNext) onNext();
+    };
     document.addEventListener('keydown', handleKey);
     document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [onClose, onPrev, onNext, hasPrev, hasNext]);
   const [visible, setVisible] = useState(false);
   useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
 
@@ -68,14 +73,36 @@ function DayPanel({
         {/* 헤더 */}
         <div style={{
           padding: '20px 20px 16px', borderBottom: '1px solid var(--card-border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: '10px',
         }}>
-          <div>
-            <p style={{ fontSize: '0.72rem', color: '#EB701A', fontWeight: 700, marginBottom: '2px', letterSpacing: '0.04em' }}>다시보기</p>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>{label}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <button
+              onClick={onPrev} disabled={!hasPrev} title="이전 날"
+              style={{
+                width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+                border: '1px solid var(--card-border)', background: 'var(--bg-deeper)',
+                color: 'var(--text)', cursor: hasPrev ? 'pointer' : 'default',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.95rem', fontWeight: 700, opacity: hasPrev ? 1 : 0.3,
+              }}
+            >‹</button>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: '0.72rem', color: '#EB701A', fontWeight: 700, marginBottom: '2px', letterSpacing: '0.04em' }}>다시보기</p>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)', margin: 0, whiteSpace: 'nowrap' }}>{label}</h3>
+            </div>
+            <button
+              onClick={onNext} disabled={!hasNext} title="다음 날"
+              style={{
+                width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+                border: '1px solid var(--card-border)', background: 'var(--bg-deeper)',
+                color: 'var(--text)', cursor: hasNext ? 'pointer' : 'default',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.95rem', fontWeight: 700, opacity: hasNext ? 1 : 0.3,
+              }}
+            >›</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: 'rgba(235,112,26,0.12)', color: '#EB701A', padding: '4px 10px', borderRadius: '100px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, background: 'rgba(235,112,26,0.12)', color: '#EB701A', padding: '4px 10px', borderRadius: '100px', whiteSpace: 'nowrap' }}>
               총 {vods.length}개
             </span>
             <button
@@ -321,6 +348,23 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     setPanelDay({ date: dateStr, vods });
   };
 
+  // 다시보기가 있는 날짜만 오름차순 정렬 (모달 내 이전/다음 날 이동에 사용)
+  const vodDays = useMemo(() => {
+    return Object.keys(calData).map(Number).filter(d => (calData[d] || []).length > 0).sort((a, b) => a - b);
+  }, [calData]);
+
+  const navigatePanel = (dir: 1 | -1) => {
+    if (!panelDay) return;
+    const currentDay = Number(panelDay.date.split('-')[2]);
+    const idx = vodDays.indexOf(currentDay);
+    if (idx === -1) return;
+    const nextIdx = idx + dir;
+    if (nextIdx < 0 || nextIdx >= vodDays.length) return;
+    const nextDay = vodDays[nextIdx];
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
+    setPanelDay({ date: dateStr, vods: calData[nextDay] });
+  };
+
   const BORDER = '1px solid var(--card-border)';
   const GRID = 'repeat(7, minmax(0, 1fr))';
 
@@ -334,6 +378,10 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           vods={panelDay.vods}
           onClose={() => setPanelDay(null)}
           fmtDuration={fmtDuration}
+          onPrev={() => navigatePanel(-1)}
+          onNext={() => navigatePanel(1)}
+          hasPrev={vodDays.indexOf(Number(panelDay.date.split('-')[2])) > 0}
+          hasNext={vodDays.indexOf(Number(panelDay.date.split('-')[2])) < vodDays.length - 1}
         />
       )}
 
