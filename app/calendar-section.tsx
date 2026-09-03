@@ -411,6 +411,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                 const isSelected = ym === validSelectedMonth;
                 return (
                   <button key={ym} onClick={() => setSelectedMonth(ym)}
+                    title={cnt > 0 ? `${mo}월 다시보기 ${cnt}개 있음` : `${mo}월 다시보기 없음`}
                     style={{
                       padding:'5px 13px', borderRadius:'100px', cursor:'pointer',
                       fontWeight: isSelected ? 700 : 500, fontSize:'0.8rem', transition:'all 0.15s', position:'relative',
@@ -426,6 +427,11 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                   </button>
                 );
               })}
+              {/* 점 표시 범례 */}
+              <span style={{ display:'inline-flex', alignItems:'center', gap:'4px', fontSize:'0.68rem', color:'var(--text-muted)', marginLeft:'6px' }}>
+                <span style={{ width:'6px', height:'6px', borderRadius:'50%', background:'#EB701A', display:'inline-block' }} />
+                다시보기 있음
+              </span>
             </div>
           </div>
 
