@@ -376,7 +376,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           {/* ── 연도 + 월 탭 그룹 ── */}
           <div style={{ background:'var(--bg-deeper)', borderRadius:'18px', padding:'16px', marginBottom:'20px' }}>
             {/* 연도 */}
-            <div style={{ display:'flex', gap:'6px', marginBottom:'12px', flexWrap:'wrap', alignItems:'center' }}>
+            <div style={{ display:'flex', gap:'8px', marginBottom:'14px', flexWrap:'wrap', alignItems:'center' }}>
               <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px', letterSpacing:'0.06em', textTransform:'uppercase' }}>연도</span>
               {years.map(y => (
                 <button key={y} onClick={() => {
@@ -390,11 +390,11 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                   }
                 }}
                 style={{
-                  padding:'6px 18px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize:'0.88rem', transition:'all 0.15s',
-                  background: selectedYear === y ? '#EB701A' : 'var(--card)',
+                  padding:'5px 14px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize:'0.9rem', transition:'all 0.15s',
+                  background: selectedYear === y ? '#EB701A' : 'transparent',
                   color: selectedYear === y ? '#fff' : 'var(--text-muted)',
-                  boxShadow: selectedYear === y ? '0 4px 14px rgba(235,112,26,0.3)' : 'none',
-                  border: selectedYear === y ? '1px solid #EB701A' : '1px solid var(--card-border)',
+                  boxShadow: 'none',
+                  border: selectedYear === y ? '1px solid #EB701A' : '1px solid transparent',
                 }}>
                   {y}년
                 </button>
