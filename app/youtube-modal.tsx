@@ -131,17 +131,17 @@ function MonthPicker({
           }}
             style={{
               padding: isMob ? '4px 12px' : '5px 16px', borderRadius:'100px', cursor:'pointer', fontWeight:700, fontSize: isMob ? '0.78rem' : '0.85rem', transition:'all 0.15s',
-              background: selectedYear === y ? '#EB701A' : 'var(--card)',
+              background: selectedYear === y ? '#EB701A' : 'transparent',
               color: selectedYear === y ? '#fff' : 'var(--text-muted)',
-              border: selectedYear === y ? '1px solid #EB701A' : BORDER,
-              boxShadow: selectedYear === y ? '0 4px 14px rgba(235,112,26,0.3)' : 'none',
+              border: selectedYear === y ? '1px solid #EB701A' : '1px solid transparent',
+              boxShadow: 'none',
             }}>
             {y}년
           </button>
         ))}
       </div>
       {/* 월 탭 */}
-      <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'10px 14px', background:'var(--bg-deeper)', borderRadius:'12px', overflowX:'auto' }}>
+      <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'8px 0', overflowX:'auto' }}>
         <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px' }}>월</span>
         {monthsInYear.sort().map(ym => {
           const mo = parseInt(ym.split('-')[1]);
@@ -151,10 +151,10 @@ function MonthPicker({
               style={{
                 padding:'4px 12px', borderRadius:'100px', cursor:'pointer',
                 fontWeight: isSelected ? 700 : 500, fontSize:'0.8rem', transition:'all 0.15s',
-                background: isSelected ? '#EB701A' : 'var(--card)',
+                background: isSelected ? '#EB701A' : 'transparent',
                 color: isSelected ? '#fff' : 'var(--text-muted)',
-                border: isSelected ? '1px solid #EB701A' : BORDER,
-                boxShadow: isSelected ? '0 4px 14px rgba(235,112,26,0.25)' : 'none',
+                border: isSelected ? '1px solid #EB701A' : '1px solid transparent',
+                boxShadow: 'none',
               }}>
               {mo}월
             </button>
