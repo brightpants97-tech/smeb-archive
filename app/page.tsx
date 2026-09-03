@@ -198,7 +198,7 @@ export default async function Home() {
           .mob-video-grid .card:nth-child(n+4) { display: none !important; }
           .mob-notice-list .notice-card:nth-child(n+3) { display: none !important; }
           .mob-video-grid { gap: 6px !important; }
-          .mob-notice-list { gap: 8px !important; }
+          .mob-notice-list { gap: 14px !important; }
           .mob-nav { gap: 0.6rem !important; }
           .mob-nav a, .mob-nav button { font-size: 0.72rem !important; padding: 0.35rem 0.7rem !important; }
           .mob-hero { padding: clamp(20px,5vw,40px) 1.2rem !important; }
