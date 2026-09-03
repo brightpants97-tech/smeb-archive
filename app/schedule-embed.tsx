@@ -71,18 +71,18 @@ export default function ScheduleEmbed() {
             style={{ width:'32px', height:'32px', borderRadius:'8px', border:'1.5px solid var(--card-border)', background:'var(--card)', color:'var(--text)', cursor:loading?'wait':'pointer', fontSize:'0.85rem', display:'flex', alignItems:'center', justifyContent:'center', opacity:loading?0.4:1 }}>
             🔄
           </button>
-          {loading && <span style={{ fontSize:'0.7rem', color:'#999' }}>로딩 중...</span>}
+          {loading && <span style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>로딩 중...</span>}
         </div>
       </div>
 
       {/* 달력 */}
-      <div style={{ border:'1.5px solid rgba(0,0,0,0.1)', borderRadius:'12px', overflow:'hidden', background:'#fff' }}>
+      <div style={{ border:'1.5px solid var(--card-border)', borderRadius:'12px', overflow:'hidden', background:'var(--card)' }}>
 
         {/* 요일 헤더 */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid rgba(0,0,0,0.08)', background:'rgba(0,0,0,0.025)' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:'1px solid var(--card-border)', background:'var(--bg-deeper)' }}>
           {DAY_KO.map((d, i) => (
             <div key={d} style={{ padding:'8px 0', textAlign:'center', fontSize:'0.78rem', fontWeight:800,
-              color: i===0 ? '#B84444' : i===6 ? '#2052C8' : '#666' }}>
+              color: i===0 ? 'var(--sun)' : i===6 ? 'var(--sat)' : 'var(--text-muted)' }}>
               {d}
             </div>
           ))}
@@ -106,20 +106,20 @@ export default function ScheduleEmbed() {
                 onClick={() => day && setSelected(isSel ? null : day)}
                 style={{
                   minHeight:'64px', padding:'0',
-                  borderRight: idx%7===6 ? 'none' : '1px solid rgba(0,0,0,0.06)',
-                  borderBottom: idx<cells.length-7 ? '1px solid rgba(0,0,0,0.06)' : 'none',
+                  borderRight: idx%7===6 ? 'none' : '1px solid var(--card-border)',
+                  borderBottom: idx<cells.length-7 ? '1px solid var(--card-border)' : 'none',
                   display:'flex', flexDirection:'column',
                   background: isSel
-                    ? (catS ? catS.color + '22' : '#FFE8D6')  // 선택: 카테고리 색 더 진하게
+                    ? (catS ? catS.color + '2E' : ACCENT + '2E')  // 선택: 카테고리 색 더 진하게
                     : catS
-                      ? catS.light                              // 카테고리 있는 날: 연한 틴트
-                      : '#fff',                                 // 일반: 흰색
+                      ? catS.color + '17'                        // 카테고리 있는 날: 연한 틴트 (테마 무관 알파블렌딩)
+                      : 'transparent',                            // 일반: 컨테이너 배경(var(--card))이 비침
                   cursor: day ? 'pointer' : 'default',
                   transition:'background 0.1s',
                   position:'relative', overflow:'hidden',
                 }}
-                onMouseEnter={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.color + '18' : '#F5F5F5'; }}
-                onMouseLeave={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.light : '#fff'; }}
+                onMouseEnter={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.color + '22' : 'var(--bg-deeper)'; }}
+                onMouseLeave={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.color + '17' : 'transparent'; }}
               >
                 {day && (
                   <>
@@ -134,7 +134,7 @@ export default function ScheduleEmbed() {
                         background: isToday ? ACCENT : 'transparent',
                         fontSize:'0.95rem',
                         fontWeight: isToday ? 800 : 300,
-                        color: isToday ? '#fff' : isSun ? '#B84444' : isSat ? '#6B7A9F' : hasContent ? 'var(--text)' : 'var(--text-muted)',
+                        color: isToday ? '#fff' : isSun ? 'var(--sun)' : isSat ? 'var(--sat)' : hasContent ? 'var(--text)' : 'var(--text-muted)',
                         flexShrink:0,
                       }}>
                         {day}
@@ -163,7 +163,7 @@ export default function ScheduleEmbed() {
 
                       {/* 더보기 표시 */}
                       {extraCount > 0 && (
-                        <span style={{ fontSize:'0.62rem', color: catS ? catS.color : '#999', fontWeight:700 }}>
+                        <span style={{ fontSize:'0.62rem', color: catS ? catS.color : 'var(--text-muted)', fontWeight:700 }}>
                           +{extraCount}개 더보기
                         </span>
                       )}
@@ -192,13 +192,13 @@ export default function ScheduleEmbed() {
       {selected && selEv && (
         <div style={{
           marginTop:'12px', borderRadius:'12px', overflow:'hidden',
-          border:`1.5px solid ${selCat ? selCat.color + '44' : 'rgba(0,0,0,0.1)'}`,
+          border:`1.5px solid ${selCat ? selCat.color + '44' : 'var(--card-border)'}`,
           animation:'expandDown 0.18s both',
         }}>
           {/* 헤더 */}
           <div style={{
             padding:'12px 16px',
-            background: selCat ? selCat.color : '#555',
+            background: selCat ? selCat.color : 'var(--text-muted)',
             display:'flex', alignItems:'center', justifyContent:'space-between',
           }}>
             <div style={{ display:'flex', alignItems:'center', gap:'8px', flexWrap:'wrap' }}>
@@ -221,18 +221,18 @@ export default function ScheduleEmbed() {
           </div>
 
           {/* 텍스트 목록 */}
-          <div style={{ background:'#fff', padding:'12px 16px', display:'flex', flexDirection:'column', gap:'6px' }}>
+          <div style={{ background:'var(--card)', padding:'12px 16px', display:'flex', flexDirection:'column', gap:'6px' }}>
             {selEv.texts.length > 0 ? selEv.texts.map((t, i) => (
               <div key={i} style={{
                 display:'flex', alignItems:'flex-start', gap:'10px',
                 padding:'10px 14px', borderRadius:'9px',
-                background: selCat ? selCat.light : '#F5F5F5',
-                borderLeft:`3px solid ${selCat ? selCat.color : '#CCC'}`,
+                background: selCat ? selCat.color + '17' : 'var(--bg-deeper)',
+                borderLeft:`3px solid ${selCat ? selCat.color : 'var(--card-border)'}`,
               }}>
-                <span style={{ fontSize:'0.9rem', lineHeight:1.6, color:'#111', fontWeight:500 }}>{t}</span>
+                <span style={{ fontSize:'0.9rem', lineHeight:1.6, color:'var(--text)', fontWeight:500 }}>{t}</span>
               </div>
             )) : (
-              <p style={{ color:'#999', fontSize:'0.85rem', margin:0 }}>내용 없음</p>
+              <p style={{ color:'var(--text-muted)', fontSize:'0.85rem', margin:0 }}>내용 없음</p>
             )}
           </div>
         </div>
