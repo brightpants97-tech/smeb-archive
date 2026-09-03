@@ -297,7 +297,7 @@ export default async function Home() {
               <span style={{fontSize:'clamp(2rem,6vw,4rem)',color:'#EB701A',letterSpacing:'-0.04em'}}>SMEB</span>
               <em style={{fontSize:'clamp(1.2rem,3.5vw,2.4rem)',color:'#ffffff',fontStyle:'italic',letterSpacing:'-0.04em',opacity:0.9}}>ARCHIVE</em>
             </h1>
-            <p style={{margin:'6px 0 0',fontSize:'clamp(0.7rem,1.5vw,0.82rem)',color:'rgba(255,255,255,0.35)',letterSpacing:'0.04em'}}>스맵 송경호 팬 아카이브</p>
+            <p style={{margin:'6px 0 0',fontSize:'clamp(0.76rem,1.6vw,0.9rem)',fontWeight:500,color:'rgba(255,255,255,0.62)',letterSpacing:'0.04em'}}>스맵 송경호 팬 아카이브</p>
           </div>
         </div>
       </section>
