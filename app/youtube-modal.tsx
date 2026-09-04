@@ -143,6 +143,23 @@ function MonthPicker({
       {/* 월 탭 */}
       <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', alignItems:'center', padding:'8px 0', overflowX:'auto' }}>
         <span style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--text-muted)', marginRight:'4px' }}>월</span>
+        {(() => {
+          const allKey = `${selectedYear}-00`;
+          const isAllSelected = selectedMonth === allKey;
+          return (
+            <button onClick={() => onSelect(allKey)}
+              style={{
+                padding:'4px 12px', borderRadius:'100px', cursor:'pointer',
+                fontWeight: isAllSelected ? 700 : 500, fontSize:'0.8rem', transition:'all 0.15s',
+                background: isAllSelected ? '#EB701A' : 'transparent',
+                color: isAllSelected ? '#fff' : 'var(--text-muted)',
+                border: isAllSelected ? '1px solid #EB701A' : '1px solid var(--card-border)',
+                boxShadow: 'none',
+              }}>
+              전체
+            </button>
+          );
+        })()}
         {monthsInYear.sort().map(ym => {
           const mo = parseInt(ym.split('-')[1]);
           const isSelected = ym === selectedMonth;
@@ -414,9 +431,21 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
     availableMonths.includes(currentMonth) ? currentMonth : (availableMonths[0] || currentMonth)
   );
 
-  const selectedTop10 = monthlyTop10[selectedMonth] || [];
+  const isYearAll = selectedMonth.endsWith('-00');
+  const selectedYear = selectedMonth.slice(0, 4);
+
+  // 연도 전체 TOP 10 (해당 연도 모든 영상 중 조회수 상위 10개)
+  const yearTop10 = useMemo(() => {
+    if (!isYearAll) return [];
+    return [...videos]
+      .filter(v => v.publishedAt?.startsWith(selectedYear))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+  }, [videos, isYearAll, selectedYear]);
+
+  const selectedTop10 = isYearAll ? yearTop10 : (monthlyTop10[selectedMonth] || []);
   const [y, m] = selectedMonth.split('-');
-  const monthLabel = `${y}년 ${parseInt(m)}월`;
+  const monthLabel = isYearAll ? `${y}년 전체` : `${y}년 ${parseInt(m)}월`;
 
   return (
     <>
