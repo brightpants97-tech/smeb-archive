@@ -230,10 +230,10 @@ function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; f
   const [y, m] = month.split('-');
   const label = `${y}년 ${parseInt(m)}월`;
 
-  const RANK_COLORS = ['#EB701A', '#C0C0C0', '#CD7F32', 'var(--text-muted)', 'var(--text-muted)'];
+  const RANK_COLORS = ['#EB701A', '#8A8A8A', '#CD7F32', 'var(--text-muted)', 'var(--text-muted)'];
   const RANK_BG = [
     'linear-gradient(135deg,rgba(235,112,26,0.18),rgba(235,112,26,0.06))',
-    'linear-gradient(135deg,rgba(192,192,192,0.14),rgba(192,192,192,0.04))',
+    'linear-gradient(135deg,rgba(140,140,140,0.20),rgba(140,140,140,0.07))',
     'linear-gradient(135deg,rgba(205,127,50,0.14),rgba(205,127,50,0.04))',
     'rgba(0,0,0,0)',
     'rgba(0,0,0,0)',

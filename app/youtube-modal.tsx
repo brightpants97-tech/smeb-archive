@@ -202,8 +202,8 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             const rank = i + 1;
             const isFirst = rank === 1;
             const isTop3 = rank <= 3;
-            const rowBg   = rank===1 ? 'rgba(255,190,0,0.06)' : rank===2 ? 'rgba(160,168,180,0.05)' : rank===3 ? 'rgba(180,110,50,0.05)' : 'transparent';
-            const rowHover = rank===1 ? 'rgba(255,180,0,0.11)' : rank===2 ? 'rgba(160,168,180,0.09)' : rank===3 ? 'rgba(180,110,50,0.09)' : 'rgba(235,112,26,0.08)';
+            const rowBg   = rank===1 ? 'rgba(255,190,0,0.06)' : rank===2 ? 'rgba(192,192,192,0.08)' : rank===3 ? 'rgba(180,110,50,0.05)' : 'transparent';
+            const rowHover = rank===1 ? 'rgba(255,180,0,0.11)' : rank===2 ? 'rgba(192,192,192,0.14)' : rank===3 ? 'rgba(180,110,50,0.09)' : 'rgba(235,112,26,0.08)';
             return (
               <div key={video.id}
                 onClick={() => onPlay(video.id)}
@@ -211,7 +211,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                   display:'flex', alignItems:'center', gap:'12px',
                   padding: isTop3 ? '12px 14px' : '10px 14px',
                   borderBottom: i < top10.length - 1 ? '1px solid var(--card-border)' : 'none',
-                  borderLeft: rank===1 ? '3.5px solid #FFB800' : rank===2 ? '3.5px solid #A0A8B8' : rank===3 ? '3.5px solid #CD7F32' : '3.5px solid transparent',
+                  borderLeft: rank===1 ? '3.5px solid #FFB800' : rank===2 ? '3.5px solid #C0C0C0' : rank===3 ? '3.5px solid #CD7F32' : '3.5px solid transparent',
                   cursor:'pointer',
                   background: rowBg,
                   animation:`listFadeIn 0.4s ${i * 0.04}s both`,
@@ -316,7 +316,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
         {top10.map((video, i) => {
           const rank = i + 1;
           const isTop3 = rank <= 3;
-          const rankColor = rank === 1 ? '#FFB800' : rank === 2 ? '#A0A8B8' : rank === 3 ? '#CD7F32' : 'rgba(0,0,0,0.5)';
+          const rankColor = rank === 1 ? '#FFB800' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'rgba(0,0,0,0.5)';
           return (
             <div key={video.id}
               onClick={() => onPlay(video.id)}
