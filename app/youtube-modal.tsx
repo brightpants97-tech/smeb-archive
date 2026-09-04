@@ -1,6 +1,36 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+
+// ── 스크롤 진입 시 0→목표값으로 올라가는 카운트업 ──────────────────────────
+function CountUp({ value, formatFn, duration = 900 }: { value: number; formatFn: (n: number) => string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [display, setDisplay] = useState(0);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !startedRef.current) {
+        startedRef.current = true;
+        const start = performance.now();
+        const animate = (now: number) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+          setDisplay(Math.round(value * eased));
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+        obs.disconnect();
+      }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [value, duration]);
+
+  return <span ref={ref}>{formatFn(display)}</span>;
+}
 
 interface Video {
   id: string;
@@ -284,7 +314,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                     whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
                   }}>{video.title}</p>
                   <span style={{ fontSize:'0.72rem', color:'#EB701A', fontWeight:700 }}>
-                    {fmt(video.views)}회
+                    <CountUp value={video.views} formatFn={fmt} />회
                   </span>
                 </div>
                 {/* 재생 아이콘 */}
@@ -355,7 +385,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                 </div>
                 {/* 조회수 */}
                 <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.68rem', fontWeight: 800, color: '#EB701A' }}>
-                  {fmt2(video.views)}
+                  <CountUp value={video.views} formatFn={fmt2} />
                 </div>
               </div>
               {/* 제목 */}

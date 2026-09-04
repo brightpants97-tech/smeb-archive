@@ -9,6 +9,36 @@ interface Props {
   today: string;
 }
 
+// ── 스크롤 진입 시 0→목표값으로 올라가는 카운트업 ──────────────────────────
+function CountUp({ value, formatFn, duration = 900 }: { value: number; formatFn: (n: number) => string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [display, setDisplay] = useState(0);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !startedRef.current) {
+        startedRef.current = true;
+        const start = performance.now();
+        const animate = (now: number) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+          setDisplay(Math.round(value * eased));
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+        obs.disconnect();
+      }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [value, duration]);
+
+  return <span ref={ref}>{formatFn(display)}</span>;
+}
+
 // ─── SOOP VOD 재생 팝업 ────────────────────────────────────────────────────────
 function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onClose: () => void }) {
   useEffect(() => {
@@ -267,7 +297,7 @@ function DayPanel({
                     <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="클릭해서 바로 재생">▶</span>
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {vod.views != null && <span>👁 {Number(vod.views).toLocaleString()}회</span>}
+                    {vod.views != null && <span>👁 <CountUp value={Number(vod.views)} formatFn={n => n.toLocaleString()} />회</span>}
                     {vod.duration ? <span>🕐 {fmtDuration(vod.duration)}</span> : null}
                   </div>
                 </div>
@@ -351,7 +381,7 @@ function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <p style={{ fontSize: '1rem', fontWeight: 800, lineHeight: 1.4, color: 'var(--text)', marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top1.title}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EB701A' }}>👁 {Number(top1.views).toLocaleString()}회</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EB701A' }}>👁 <CountUp value={Number(top1.views)} formatFn={n => n.toLocaleString()} />회</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{top1.date}</span>
             {top1.duration ? <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🕐 {fmtDuration(top1.duration)}</span> : null}
           </div>
@@ -373,7 +403,7 @@ function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vod.title}</p>
                 <div style={{ display: 'flex', gap: '10px', fontSize: '0.71rem', color: 'var(--text-muted)' }}>
-                  <span>👁 {Number(vod.views).toLocaleString()}회</span>
+                  <span>👁 <CountUp value={Number(vod.views)} formatFn={n => n.toLocaleString()} />회</span>
                   <span>{vod.date}</span>
                 </div>
               </div>
