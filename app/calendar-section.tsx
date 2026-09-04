@@ -9,13 +9,81 @@ interface Props {
   today: string;
 }
 
+// ─── SOOP VOD 재생 팝업 ────────────────────────────────────────────────────────
+function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onClose: () => void }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+
+  const handleClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 220);
+  };
+
+  return createPortal(
+    <div
+      onClick={handleClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px',
+        background: visible ? 'rgba(0,0,0,0.78)' : 'rgba(0,0,0,0)',
+        backdropFilter: visible ? 'blur(6px)' : 'none',
+        WebkitBackdropFilter: visible ? 'blur(6px)' : 'none',
+        transition: 'background 0.25s, backdrop-filter 0.25s',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'relative', width: '100%', maxWidth: '960px',
+          background: '#000', borderRadius: '16px', overflow: 'hidden',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+          transform: visible ? 'scale(1)' : 'scale(0.95)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform 0.25s cubic-bezier(0.22,1,0.36,1), opacity 0.2s',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 16px', background: '#111' }}>
+          <p style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 700, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</p>
+          <button
+            onClick={handleClose}
+            style={{
+              flexShrink: 0, width: '28px', height: '28px', borderRadius: '50%',
+              border: 'none', background: 'rgba(255,255,255,0.12)', color: '#fff',
+              cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >✕</button>
+        </div>
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
+          <iframe
+            src={`https://vod.sooplive.com/player/${id}/embed?autoPlay=true&showChat=false&mutePlay=false`}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+            allow="autoplay; encrypted-media; fullscreen"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // 슬라이드오버 패널
 function DayPanel({
-  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile, origin,
+  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile, origin, onPlayVod,
 }: {
   date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean; isMobile: boolean;
-  origin: { x: number; y: number } | null;
+  origin: { x: number; y: number } | null; onPlayVod: (id: string, title: string) => void;
 }) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -150,16 +218,16 @@ function DayPanel({
             style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
-              <a
+              <div
                 key={i}
-                href={`https://vod.sooplive.com/player/${vod.id}`}
-                target="_blank" rel="noopener noreferrer"
+                onClick={() => onPlayVod(vod.id, vod.title)}
                 style={{
                   display: 'flex', gap: '12px', alignItems: 'flex-start',
                   padding: '12px', borderRadius: '12px',
                   border: '1px solid var(--card-border)',
                   background: 'var(--bg-deeper)',
                   textDecoration: 'none', color: 'var(--text)',
+                  cursor: 'pointer',
                   transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
                 onMouseEnter={e => {
@@ -196,14 +264,14 @@ function DayPanel({
                   </span>
                   <p style={{ fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>
                     {vod.title}
-                    <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="새 탭에서 SOOP으로 이동">↗</span>
+                    <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="클릭해서 바로 재생">▶</span>
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                     {vod.views != null && <span>👁 {Number(vod.views).toLocaleString()}회</span>}
                     {vod.duration ? <span>🕐 {fmtDuration(vod.duration)}</span> : null}
                   </div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
           {/* 스크롤 가능함을 알리는 하단 페이드 힌트 */}
@@ -222,7 +290,7 @@ function DayPanel({
 }
 
 // ─── 이달의 TOP 5 컴포넌트 ─────────────────────────────────────────────────────
-function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; fmtDuration: (s: number) => string }) {
+function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month: string; fmtDuration: (s: number) => string; onPlayVod: (id: string, title: string) => void }) {
   const [hovered, setHovered] = useState<number | null>(null);
 
   if (!vods || vods.length === 0) return null;
@@ -260,15 +328,14 @@ function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; f
       </div>
 
       {/* 1위 카드 (크게) */}
-      <a
-        href={`https://vod.sooplive.com/player/${top1.id}`}
-        target="_blank" rel="noopener noreferrer"
+      <div
+        onClick={() => onPlayVod(top1.id, top1.title)}
         style={{
           display: 'flex', gap: '16px', alignItems: 'stretch',
           padding: '16px', borderRadius: '16px', marginBottom: '10px',
           border: '1.5px solid rgba(235,112,26,0.35)',
           background: 'linear-gradient(135deg,rgba(235,112,26,0.12),rgba(235,112,26,0.04))',
-          textDecoration: 'none', color: 'var(--text)',
+          textDecoration: 'none', color: 'var(--text)', cursor: 'pointer',
           transition: 'transform 0.18s, box-shadow 0.18s',
           transform: hovered === 0 ? 'translateY(-3px)' : 'none',
           boxShadow: hovered === 0 ? '0 12px 32px rgba(235,112,26,0.2)' : '0 4px 16px rgba(235,112,26,0.08)',
@@ -290,15 +357,15 @@ function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; f
           </div>
         </div>
         <div style={{ fontSize: '1.6rem', alignSelf: 'flex-start', marginTop: '-4px', opacity: 0.9 }}>👑</div>
-      </a>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {rest.map((vod, idx) => {
           const rank = idx + 2;
           const isHov = hovered === rank;
           return (
-            <a key={vod.id} href={`https://vod.sooplive.com/player/${vod.id}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${rank <= 3 ? 'rgba(192,192,192,0.25)' : 'var(--card-border)'}`, background: RANK_BG[idx + 1], textDecoration: 'none', color: 'var(--text)', transition: 'transform 0.15s, box-shadow 0.15s', transform: isHov ? 'translateX(4px)' : 'none', boxShadow: isHov ? '0 4px 16px rgba(0,0,0,0.1)' : 'none' }}
+            <div key={vod.id} onClick={() => onPlayVod(vod.id, vod.title)}
+              style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${rank <= 3 ? 'rgba(192,192,192,0.25)' : 'var(--card-border)'}`, background: RANK_BG[idx + 1], textDecoration: 'none', color: 'var(--text)', cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s', transform: isHov ? 'translateX(4px)' : 'none', boxShadow: isHov ? '0 4px 16px rgba(0,0,0,0.1)' : 'none' }}
               onMouseEnter={() => setHovered(rank)} onMouseLeave={() => setHovered(null)}
             >
               <span style={{ fontSize: '1.1rem', fontWeight: 900, color: RANK_COLORS[idx + 1], width: '28px', textAlign: 'center', flexShrink: 0 }}>{rank}</span>
@@ -310,7 +377,7 @@ function MonthTop5({ vods, month, fmtDuration }: { vods: any[]; month: string; f
                   <span>{vod.date}</span>
                 </div>
               </div>
-            </a>
+            </div>
           );
         })}
       </div>
@@ -342,6 +409,8 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
   const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const [search, setSearch] = useState('');
   const [panelDay, setPanelDay] = useState<{ date: string; vods: any[]; origin?: { x: number; y: number } } | null>(null);
+  const [playingVod, setPlayingVod] = useState<{ id: string; title: string } | null>(null);
+  const openVod = (id: string, title: string) => setPlayingVod({ id, title });
 
   const monthsInYear = useMemo(() => {
     return sortedMonths.filter(m => m.startsWith(selectedYear));
@@ -435,6 +504,15 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           hasNext={vodDays.indexOf(Number(panelDay.date.split('-')[2])) < vodDays.length - 1}
           isMobile={isMobile}
           origin={panelDay.origin || null}
+          onPlayVod={openVod}
+        />
+      )}
+
+      {playingVod && (
+        <VodPlayerModal
+          id={playingVod.id}
+          title={playingVod.title}
+          onClose={() => setPlayingVod(null)}
         />
       )}
 
@@ -463,8 +541,8 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           </p>
           <div style={{ background:'var(--bg-deeper)', borderRadius:'18px', padding:'12px', display:'flex', flexDirection:'column', gap:'8px' }}>
             {filteredBySearch?.map(({ date, vod }, i) => (
-              <a key={i} href={`https://vod.sooplive.com/player/${vod.id}`} target="_blank" rel="noopener noreferrer"
-                style={{ display:'flex', gap:'12px', alignItems:'center', padding:'12px 14px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'var(--text)', transition:'transform 0.15s', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}
+              <div key={i} onClick={() => openVod(vod.id, vod.title)}
+                style={{ display:'flex', gap:'12px', alignItems:'center', padding:'12px 14px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'var(--text)', cursor:'pointer', transition:'transform 0.15s', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform=''}>
                 {vod.thumb && <img src={vod.thumb} alt="" style={{ width:'100px', borderRadius:'8px', flexShrink:0, objectFit:'cover', aspectRatio:'16/9' }} />}
@@ -473,7 +551,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                   <p style={{ fontSize:'0.9rem', fontWeight:600, marginBottom:'4px', color:'var(--text)' }}>{vod.title}</p>
                   <p style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>👁 {vod.views?.toLocaleString()}회{vod.duration ? ` · ${fmtDuration(vod.duration)}` : ''}</p>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         </div>
@@ -542,7 +620,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           </div>
 
           {/* ── 이달의 TOP 5 ── */}
-          <MonthTop5 vods={top5} month={validSelectedMonth} fmtDuration={fmtDuration} />
+          <MonthTop5 vods={top5} month={validSelectedMonth} fmtDuration={fmtDuration} onPlayVod={openVod} />
 
           {/* ── 캘린더 헤더 ── */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'12px' }}>
