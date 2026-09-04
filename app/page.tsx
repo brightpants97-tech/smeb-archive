@@ -66,7 +66,7 @@ const getAllVods = unstable_cache(async () => {
   if (!first.contents.length) return { vods: [], months: [] };
   for (const v of first.contents) {
     if (v.ucc?.fileType !== 'REVIEW') continue;
-    allReviews.push({ id: v.titleNo, title: v.titleName, thumb: v.ucc?.thumb || '', date: v.regDate?.split(' ')[0] || '', views: v.count?.readCnt || 0, duration: v.ucc?.totalFileDuration || 0 });
+    allReviews.push({ id: v.titleNo, title: v.titleName, thumb: v.ucc?.thumb || '', date: v.regDate?.split(' ')[0] || '', time: (v.regDate?.split(' ')[1] || '').slice(0, 5), views: v.count?.readCnt || 0, duration: v.ucc?.totalFileDuration || 0 });
   }
   const CHUNK = 10; let p = 2;
   while (p <= totalPages) {
@@ -75,7 +75,7 @@ const getAllVods = unstable_cache(async () => {
     for (const { contents } of results) {
       for (const v of contents) {
         if (v.ucc?.fileType !== 'REVIEW') continue;
-        allReviews.push({ id: v.titleNo, title: v.titleName, thumb: v.ucc?.thumb || '', date: v.regDate?.split(' ')[0] || '', views: v.count?.readCnt || 0, duration: v.ucc?.totalFileDuration || 0 });
+        allReviews.push({ id: v.titleNo, title: v.titleName, thumb: v.ucc?.thumb || '', date: v.regDate?.split(' ')[0] || '', time: (v.regDate?.split(' ')[1] || '').slice(0, 5), views: v.count?.readCnt || 0, duration: v.ucc?.totalFileDuration || 0 });
       }
     }
     p += CHUNK;

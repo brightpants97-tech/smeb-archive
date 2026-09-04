@@ -11,10 +11,11 @@ interface Props {
 
 // 슬라이드오버 패널
 function DayPanel({
-  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile,
+  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile, origin,
 }: {
   date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean; isMobile: boolean;
+  origin: { x: number; y: number } | null;
 }) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -56,6 +57,14 @@ function DayPanel({
     return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
   })();
 
+  // 클릭한 날짜 셀 위치에서 모달이 확장되어 나오는 것처럼 보이도록 초기 transform 계산
+  const originTransform = (() => {
+    if (!origin || typeof window === 'undefined') return 'scale(0.94) translateY(12px)';
+    const dx = origin.x - window.innerWidth / 2;
+    const dy = origin.y - window.innerHeight / 2;
+    return `translate(${dx}px, ${dy}px) scale(0.35)`;
+  })();
+
   return createPortal(
     <div
       onClick={handleClose}
@@ -79,9 +88,9 @@ function DayPanel({
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
-          transform: visible ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(12px)',
+          transform: visible ? 'translate(0,0) scale(1)' : originTransform,
           opacity: visible ? 1 : 0,
-          transition: 'transform 0.24s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s',
+          transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.22s',
         }}
       >
         {/* 헤더 */}
@@ -177,10 +186,14 @@ function DayPanel({
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{
-                    display: 'inline-block', fontSize: '0.62rem', fontWeight: 700,
-                    background: 'rgba(235,112,26,0.12)', color: '#EB701A',
-                    padding: '1px 6px', borderRadius: '4px', marginBottom: '4px',
-                  }}>{i + 1}</span>
+                    display: 'inline-flex', alignItems: 'center', gap: '3px',
+                    fontSize: '0.62rem', fontWeight: 700,
+                    background: 'var(--card)', color: 'var(--text-muted)',
+                    border: '1px solid var(--card-border)',
+                    padding: '1px 6px', borderRadius: '100px', marginBottom: '4px',
+                  }} title="인기순이 아닌 방송 시작 순서입니다">
+                    {vod.time ? `🕐 ${vod.time} 시작` : `${i + 1}번째 방송`}
+                  </span>
                   <p style={{ fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>
                     {vod.title}
                     <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="새 탭에서 SOOP으로 이동">↗</span>
@@ -328,7 +341,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
   const [selectedYear, setSelectedYear] = useState(defaultYear);
   const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const [search, setSearch] = useState('');
-  const [panelDay, setPanelDay] = useState<{ date: string; vods: any[] } | null>(null);
+  const [panelDay, setPanelDay] = useState<{ date: string; vods: any[]; origin?: { x: number; y: number } } | null>(null);
 
   const monthsInYear = useMemo(() => {
     return sortedMonths.filter(m => m.startsWith(selectedYear));
@@ -380,10 +393,10 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
   };
 
-  const openPanel = (day: number, vods: any[]) => {
+  const openPanel = (day: number, vods: any[], origin?: { x: number; y: number }) => {
     if (vods.length === 0) return;
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    setPanelDay({ date: dateStr, vods });
+    setPanelDay({ date: dateStr, vods, origin });
   };
 
   // 다시보기가 있는 날짜만 오름차순 정렬 (모달 내 이전/다음 날 이동에 사용)
@@ -400,7 +413,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     if (nextIdx < 0 || nextIdx >= vodDays.length) return;
     const nextDay = vodDays[nextIdx];
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
-    setPanelDay({ date: dateStr, vods: calData[nextDay] });
+    setPanelDay({ date: dateStr, vods: calData[nextDay], origin: panelDay.origin });
   };
 
   const BORDER = '1px solid var(--card-border)';
@@ -421,6 +434,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           hasPrev={vodDays.indexOf(Number(panelDay.date.split('-')[2])) > 0}
           hasNext={vodDays.indexOf(Number(panelDay.date.split('-')[2])) < vodDays.length - 1}
           isMobile={isMobile}
+          origin={panelDay.origin || null}
         />
       )}
 
@@ -577,7 +591,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                   const isLastRow = cellIndex >= lastRowStart;
                   const hasVods = vods.length > 0;
                   return (
-                    <div key={day} onClick={() => openPanel(day, vods)}
+                    <div key={day} onClick={(e) => openPanel(day, vods, { x: e.clientX, y: e.clientY })}
                       style={{
                         background:'var(--card)', minHeight: isMobile ? '48px' : '88px',
                         padding: isMobile ? '4px' : '8px', overflow:'hidden', minWidth:0,
