@@ -270,23 +270,26 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                 {/* 순위 */}
                 <div style={{ flexShrink:0, width: isTop3 ? '42px' : '28px', textAlign:'center', lineHeight:1 }}>
                   {rank===1 ? (
-                    <span style={{
+                    <span className="rank-badge-pop" style={{
                       fontSize:'2.2rem', fontWeight:900, display:'block', lineHeight:1, letterSpacing:'-0.04em',
                       background:'linear-gradient(160deg,#FFE566 0%,#FF8C00 55%,#FFD700 100%)',
                       WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent',
                       filter:'drop-shadow(0 2px 6px rgba(255,150,0,0.5))',
+                      animationDelay:`${i * 70}ms`,
                     }}>1</span>
                   ) : rank===2 ? (
-                    <span style={{
+                    <span className="rank-badge-pop" style={{
                       fontSize:'1.85rem', fontWeight:900, display:'block', lineHeight:1, letterSpacing:'-0.04em',
                       background:'linear-gradient(160deg,#FFFFFF 0%,#9AAAB8 55%,#D8DCE4 100%)',
                       WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent',
+                      animationDelay:`${i * 70}ms`,
                     }}>2</span>
                   ) : rank===3 ? (
-                    <span style={{
+                    <span className="rank-badge-pop" style={{
                       fontSize:'1.65rem', fontWeight:900, display:'block', lineHeight:1, letterSpacing:'-0.04em',
                       background:'linear-gradient(160deg,#F0A870 0%,#8B4513 55%,#CD7F32 100%)',
                       WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent',
+                      animationDelay:`${i * 70}ms`,
                     }}>3</span>
                   ) : (
                     <span style={{
@@ -372,7 +375,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
                 {/* 순위 뱃지 */}
-                <div style={{
+                <div className="rank-badge-pop" style={{
                   position: 'absolute', top: '5px', left: '6px',
                   fontSize: isTop3 ? '0.78rem' : '0.68rem',
                   fontWeight: 900, lineHeight: 1,
@@ -380,6 +383,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                   background: rankColor,
                   padding: isTop3 ? '3px 7px' : '2px 6px',
                   borderRadius: '5px', letterSpacing: '-0.02em',
+                  animationDelay: `${i * 70}ms`,
                 }}>
                   {isTop3 ? `${MEDAL[rank-1]} ${rank}` : `#${rank}`}
                 </div>

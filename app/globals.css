@@ -110,6 +110,17 @@ body {
   animation-range: 0px 80px;
 }
 
+/* 순위 배지 등장 시 통통 튀는 스프링 모션 */
+@keyframes badge-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  55%  { transform: scale(1.2); opacity: 1; }
+  75%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.rank-badge-pop {
+  animation: badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 /* scroll-driven 미지원 브라우저: 투명→반투명으로 고정 */
 @supports not (animation-timeline: scroll()) {
   .site-header {
