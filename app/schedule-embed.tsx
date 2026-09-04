@@ -103,6 +103,7 @@ export default function ScheduleEmbed() {
 
             return (
               <div key={idx}
+                className="cal-ink-cell"
                 onClick={() => day && setSelected(isSel ? null : day)}
                 style={{
                   minHeight:'64px', padding:'0',
@@ -118,15 +119,21 @@ export default function ScheduleEmbed() {
                   transition:'background 0.1s',
                   position:'relative', overflow:'hidden',
                 }}
-                onMouseEnter={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.color + '22' : 'var(--bg-deeper)'; }}
+                onMouseEnter={e => {
+                  if (!day) return;
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  (e.currentTarget as HTMLElement).style.setProperty('--mx', `${e.clientX - rect.left}px`);
+                  (e.currentTarget as HTMLElement).style.setProperty('--my', `${e.clientY - rect.top}px`);
+                  if (!isSel) (e.currentTarget as HTMLElement).style.background = catS ? catS.color + '22' : 'var(--bg-deeper)';
+                }}
                 onMouseLeave={e => { if(day && !isSel)(e.currentTarget as HTMLElement).style.background= catS ? catS.color + '17' : 'transparent'; }}
               >
                 {day && (
                   <>
                     {/* 상단 컬러 바 */}
-                    <div style={{ height:'4px', background: catS ? catS.color : 'transparent', flexShrink:0 }} />
+                    <div style={{ height:'4px', background: catS ? catS.color : 'transparent', flexShrink:0, position:'relative', zIndex:1 }} />
 
-                    <div style={{ padding:'6px 7px 7px', display:'flex', flexDirection:'column', gap:'3px', flex:1 }}>
+                    <div style={{ padding:'6px 7px 7px', display:'flex', flexDirection:'column', gap:'3px', flex:1, position:'relative', zIndex:1 }}>
                       {/* 날짜 숫자 */}
                       <div style={{
                         display:'inline-flex', alignItems:'center', justifyContent:'center',
