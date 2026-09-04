@@ -301,7 +301,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="top3" className="sec-main mob-section" style={{padding:'0 clamp(1.5rem,5vw,3rem) 0'}}>
+      <section id="top3" className="sec-main mob-section" style={{padding:'48px clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
 <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'3px solid #EB701A',width:'fit-content'}}>
           <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>YOUTUBE</span>
