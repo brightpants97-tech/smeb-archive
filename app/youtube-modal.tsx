@@ -282,19 +282,6 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             );
           })}
         </div>
-
-        {/* BY THE NUMBERS */}
-        <div style={{ marginTop:'12px', borderTop:'1px solid var(--card-border)', paddingTop:'12px' }}>
-          <p style={{ fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase' as const, color:'var(--text-muted)', marginBottom:'16px' }}>BY THE NUMBERS</p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
-            {stats.map((s, i) => (
-              <div key={i} style={{ textAlign:'center' as const, borderRight: i < stats.length-1 ? '1px solid var(--card-border)' : 'none', padding:'6px 0' }}>
-                <p style={{ fontSize:'1.5rem', fontWeight:900, letterSpacing:'-0.04em', color:'var(--text)', lineHeight:1, margin:0 }}>{s.value}</p>
-                <p style={{ fontSize:'0.6rem', color:'var(--text-muted)', fontWeight:500, marginTop:'4px' }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </>
     );
   }
@@ -398,19 +385,6 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             }} />
           </div>
         ))}
-      </div>
-
-      {/* BY THE NUMBERS */}
-      <div style={{ marginTop: '8px', borderTop: '1px solid var(--card-border)', paddingTop: '16px', paddingBottom: '4px' }}>
-        <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: '16px' }}>BY THE NUMBERS</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
-          {stats.map((s, i) => (
-            <div key={i} style={{ borderRight: i < stats.length-1 ? '1px solid var(--card-border)' : 'none', padding: '0 24px 0 0', marginRight: i < stats.length-1 ? '24px' : '0' }}>
-              <p style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--text)', lineHeight: 1, margin: 0 }}>{s.value}</p>
-              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '5px' }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </>
   );
