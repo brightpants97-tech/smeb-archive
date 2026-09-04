@@ -586,10 +586,10 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
                     transition: 'opacity 0.15s, outline 0.1s, transform 0.1s',
                     transform: isActive ? 'scale(1.08)' : 'scale(1)',
                   }}
-                  title={hasVideos ? `${m.topVideos.length}개 영상 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
+                  title={hasVideos ? `${m.ytCount}개 업로드 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
                 />
                 <span style={{ fontSize: '0.6rem', color: 'var(--rw-text4)' }}>
-                  {m.topVideos.length > 0 ? `${m.topVideos.length}개` : '-'}
+                  {m.ytCount > 0 ? `${m.ytCount}개` : '-'}
                 </span>
               </div>
             );
@@ -613,7 +613,12 @@ function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year:
             <div style={{ padding: '0 28px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <span style={{ fontSize: '0.92rem', fontWeight: 700, color: ORANGE }}>
-                  {MONTH_KO[activeData.month - 1]} · {activeData.topVideos.length}개 영상
+                  {MONTH_KO[activeData.month - 1]} · {activeData.ytCount}개 업로드
+                  {activeData.ytCount > activeData.topVideos.length && (
+                    <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--rw-text3)', marginLeft: '6px' }}>
+                      (조회수 상위 {activeData.topVideos.length}개 표시)
+                    </span>
+                  )}
                 </span>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' as const }}>
                   {[
