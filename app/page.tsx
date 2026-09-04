@@ -9,9 +9,7 @@ const getYoutubeVideos = unstable_cache(async () => {
   try {
     const KEY = process.env.YOUTUBE_API_KEY!;
     const CH  = process.env.YOUTUBE_CHANNEL_ID!;
-    const now       = new Date();
-    const thisYear  = now.getFullYear();
-    const cutoffISO = `${thisYear - 1}-01-01T00:00:00Z`;
+    const cutoffISO = `2021-01-01T00:00:00Z`;
     const chRes = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${CH}&key=${KEY}`,
       { cache: 'no-store' }
