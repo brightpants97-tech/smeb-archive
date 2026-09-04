@@ -188,6 +188,9 @@ export default async function Home() {
         .nav-link{color:var(--nav-text);transition:color 0.3s;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
+        /* 헤더 로고 hover 시 좌→우로 훑는 셔터/샤인 효과 */
+        .logo-shine-rect{ transform:translateX(-120px); transition:transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+        .logo-link:hover .logo-shine-rect{ transform:translateX(360px); }
         
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
@@ -239,12 +242,27 @@ export default async function Home() {
       <ScrollObserver />
       <div style={{height:'72px'}} />
       <header className="site-header" style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:'72px',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 clamp(1rem,4vw,3rem)',boxShadow:'0 1px 20px rgba(0,0,0,0.08)'}}>
-        <a href="/" style={{textDecoration:'none',display:'flex',alignItems:'center'}}>
+        <a href="/" className="logo-link" style={{textDecoration:'none',display:'flex',alignItems:'center'}}>
           <svg width="120" height="32" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-label="SMEB Archive">
+            <defs>
+              <clipPath id="logoTextClip">
+                <text x="0" y="76" fontFamily="'Paperlogy',sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3">SME</text>
+                <text x="192" y="76" fontFamily="'Paperlogy',sans-serif" fontWeight="900" fontSize="84">B</text>
+              </clipPath>
+              <linearGradient id="logoShineGrad" x1="0" y1="0" x2="1" y2="0.15">
+                <stop offset="0%" stopColor="#fff" stopOpacity="0" />
+                <stop offset="50%" stopColor="#fff" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
             <text x="0" y="76" fontFamily="'Paperlogy',sans-serif" fontWeight="900" fontSize="84" letterSpacing="-3" fill="var(--text-inv)">SME</text>
             <text x="192" y="76" fontFamily="'Paperlogy',sans-serif" fontWeight="900" fontSize="84" fill="#EB701A">B</text>
             <rect x="0" y="80" width="248" height="2.5" fill="var(--text-inv)" rx="1.5"/>
             <text x="2" y="93" fontFamily="'Paperlogy',sans-serif" fontWeight="400" fontSize="11" letterSpacing="4" fill="var(--text-muted)">ARCHIVE</text>
+            {/* hover 시 텍스트 위로 훑고 지나가는 샤인 (텍스트 모양으로 클립됨) */}
+            <g clipPath="url(#logoTextClip)">
+              <rect className="logo-shine-rect" x="-120" y="0" width="90" height="90" fill="url(#logoShineGrad)" />
+            </g>
           </svg>
         </a>
         <nav className="mob-nav" style={{display:'flex',gap:'1.4rem',alignItems:'center'}}>
