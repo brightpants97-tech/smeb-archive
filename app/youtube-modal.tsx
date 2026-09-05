@@ -273,6 +273,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
             const rowHover = rank===1 ? 'rgba(255,180,0,0.11)' : rank===2 ? 'rgba(192,192,192,0.14)' : rank===3 ? 'rgba(180,110,50,0.09)' : 'rgba(235,112,26,0.08)';
             return (
               <div key={video.id}
+                className="thumb-zoom-row"
                 onClick={() => onPlay(video.id)}
                 style={{
                   display:'flex', alignItems:'center', gap:'12px',
@@ -320,7 +321,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                 </div>
                 {/* 썸네일 */}
                 <div style={{ flexShrink:0, width:'80px', height:'45px', borderRadius:'12px', overflow:'hidden', position:'relative' }}>
-                  <img src={video.thumbnail} alt={video.title}
+                  <img src={video.thumbnail} alt={video.title} className="thumb-zoom-img"
                     style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                   {isFirst && (
                     <div style={{
@@ -376,6 +377,7 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
           const rankColor = rank === 1 ? '#FFB800' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'rgba(0,0,0,0.5)';
           return (
             <div key={video.id}
+              className="thumb-zoom-row"
               onClick={() => onPlay(video.id)}
               style={{
                 cursor: 'pointer',
@@ -390,8 +392,8 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = isTop3 ? `0 0 0 1px ${rankColor}44` : 'none'; }}
             >
               {/* 썸네일 */}
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', flexShrink: 0 }}>
-                <img src={video.thumbnail} alt={video.title}
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#111', flexShrink: 0, overflow: 'hidden' }}>
+                <img src={video.thumbnail} alt={video.title} className="thumb-zoom-img"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
                 {/* 순위 뱃지 */}
@@ -542,7 +544,8 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                 <div style={{ background:'var(--card)', borderRadius:'12px', overflow:'hidden', border:'1px solid var(--card-border)' }}>
                   {notices.map((n, ni) => (
                     <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display:'flex', alignItems:'center', gap:'12px', padding:'14px 16px', borderBottom: ni < notices.length - 1 ? '1px solid var(--card-border)' : 'none', textDecoration:'none', color:'inherit', background:'transparent', transition:'background 0.12s' }}
+                      className="notice-fade-in"
+                      style={{ display:'flex', alignItems:'center', gap:'12px', padding:'14px 16px', borderBottom: ni < notices.length - 1 ? '1px solid var(--card-border)' : 'none', textDecoration:'none', color:'inherit', background:'transparent', transition:'background 0.12s', animationDelay:`${ni * 100}ms` } as React.CSSProperties}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background='rgba(235,112,26,0.04)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background='transparent'}
                     >
@@ -558,7 +561,8 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'12px' }}>
                   {notices.map((n, ni) => (
                     <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'18px 20px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', transition:'border-color 0.18s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s' } as React.CSSProperties}
+                      className="notice-fade-in"
+                      style={{ display:'flex', flexDirection:'column', gap:'8px', padding:'18px 20px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'inherit', transition:'border-color 0.18s, transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s', animationDelay:`${ni * 100}ms` } as React.CSSProperties}
                       onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='rgba(235,112,26,0.45)'; el.style.transform='translateY(-4px)'; el.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)'; }}
                       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='var(--card-border)'; el.style.transform=''; el.style.boxShadow=''; }}
                     >
