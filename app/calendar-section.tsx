@@ -534,21 +534,50 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
     setPanelDay({ date: dateStr, vods, origin });
   };
 
-  // 다시보기가 있는 날짜만 오름차순 정렬 (모달 내 이전/다음 날 이동에 사용)
-  const vodDays = useMemo(() => {
-    return Object.keys(calData).map(Number).filter(d => (calData[d] || []).length > 0).sort((a, b) => a - b);
-  }, [calData]);
+  // 특정 월(YYYY-MM)에서 다시보기가 있는 날짜만 오름차순 정렬해서 반환
+  const getVodDays = (ym: string) => {
+    const data = monthMap[ym] || {};
+    return Object.keys(data).map(Number).filter(d => (data[d] || []).length > 0).sort((a, b) => a - b);
+  };
+
+  // 현재 팝업이 보여주고 있는 날짜의 월 (달력 탭에서 선택한 월과 다를 수 있음 - 팝업 안에서 다른 달로 넘어갔을 때)
+  const panelYm = panelDay ? panelDay.date.slice(0, 7) : validSelectedMonth;
+  const panelDayNum = panelDay ? Number(panelDay.date.split('-')[2]) : 0;
+  const panelVodDays = useMemo(() => getVodDays(panelYm), [panelYm, monthMap]);
+  const panelMonthIdx = sortedMonths.indexOf(panelYm);
+  const panelDayIdx = panelVodDays.indexOf(panelDayNum);
+
+  const hasPrevDay = panelDayIdx > 0 || panelMonthIdx > 0;
+  const hasNextDay = panelDayIdx < panelVodDays.length - 1 || (panelMonthIdx !== -1 && panelMonthIdx < sortedMonths.length - 1);
 
   const navigatePanel = (dir: 1 | -1) => {
     if (!panelDay) return;
-    const currentDay = Number(panelDay.date.split('-')[2]);
-    const idx = vodDays.indexOf(currentDay);
-    if (idx === -1) return;
-    const nextIdx = idx + dir;
-    if (nextIdx < 0 || nextIdx >= vodDays.length) return;
-    const nextDay = vodDays[nextIdx];
-    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
-    setPanelDay({ date: dateStr, vods: calData[nextDay], origin: panelDay.origin });
+    const nextIdx = panelDayIdx + dir;
+
+    if (nextIdx >= 0 && nextIdx < panelVodDays.length) {
+      // 같은 달 안에서 이동
+      const nextDay = panelVodDays[nextIdx];
+      const dateStr = `${panelYm}-${String(nextDay).padStart(2, '0')}`;
+      setPanelDay({ date: dateStr, vods: (monthMap[panelYm] || {})[nextDay], origin: panelDay.origin });
+      return;
+    }
+
+    // 달 경계를 넘어 인접 월로 이동 (혹시 빈 월이 끼어 있을 경우를 대비해 최대 24개월까지 탐색)
+    let mIdx = panelMonthIdx;
+    for (let i = 0; i < 24; i++) {
+      mIdx += dir;
+      if (mIdx < 0 || mIdx >= sortedMonths.length) return; // 더 이상 이동할 데이터 없음
+      const ym = sortedMonths[mIdx];
+      const days = getVodDays(ym);
+      if (days.length === 0) continue;
+      const targetDay = dir === 1 ? days[0] : days[days.length - 1];
+      const dateStr = `${ym}-${String(targetDay).padStart(2, '0')}`;
+      setPanelDay({ date: dateStr, vods: (monthMap[ym] || {})[targetDay], origin: panelDay.origin });
+      // 달력 탭도 같이 이동한 월로 맞춰줌
+      setSelectedMonth(ym);
+      setSelectedYear(ym.slice(0, 4));
+      return;
+    }
   };
 
   const BORDER = '1px solid var(--card-border)';
@@ -566,8 +595,8 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           fmtDuration={fmtDuration}
           onPrev={() => navigatePanel(-1)}
           onNext={() => navigatePanel(1)}
-          hasPrev={vodDays.indexOf(Number(panelDay.date.split('-')[2])) > 0}
-          hasNext={vodDays.indexOf(Number(panelDay.date.split('-')[2])) < vodDays.length - 1}
+          hasPrev={hasPrevDay}
+          hasNext={hasNextDay}
           isMobile={isMobile}
           origin={panelDay.origin || null}
           onPlayVod={openVod}
