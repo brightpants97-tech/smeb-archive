@@ -39,6 +39,36 @@ function CountUp({ value, formatFn, duration = 900 }: { value: number; formatFn:
   return <span ref={ref}>{formatFn(display)}</span>;
 }
 
+// ── 조회수·재생시간을 아이콘 chip 스타일로 보여주는 공용 컴포넌트 ──────────────
+function VodStats({ views, duration, fmtDuration, size = 'sm' }: {
+  views?: number | null; duration?: number; fmtDuration: (s: number) => string; size?: 'sm' | 'md';
+}) {
+  const fontSize = size === 'md' ? '0.82rem' : '0.72rem';
+  const iconSize = size === 'md' ? 13 : 11;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '11px', flexWrap: 'wrap' }}>
+      {views != null && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize, fontWeight: 700, color: '#EB701A' }}>
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-7.5 11-7.5S23 12 23 12s-4 7.5-11 7.5S1 12 1 12Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <CountUp value={views} formatFn={n => n.toLocaleString()} />회
+        </span>
+      )}
+      {duration ? (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize, fontWeight: 500, color: 'var(--text-muted)' }}>
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3.5 2" />
+          </svg>
+          {fmtDuration(duration)}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 // ─── SOOP VOD 재생 팝업 ────────────────────────────────────────────────────────
 function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onClose: () => void }) {
   useEffect(() => {
@@ -298,10 +328,7 @@ function DayPanel({
                     {vod.title}
                     <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="클릭해서 바로 재생">▶</span>
                   </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {vod.views != null && <span>👁 <CountUp value={Number(vod.views)} formatFn={n => n.toLocaleString()} />회</span>}
-                    {vod.duration ? <span>🕐 {fmtDuration(vod.duration)}</span> : null}
-                  </div>
+                  <VodStats views={vod.views} duration={vod.duration} fmtDuration={fmtDuration} size="sm" />
                 </div>
               </div>
             ))}
@@ -386,10 +413,9 @@ function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month
         )}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <p style={{ fontSize: '1rem', fontWeight: 800, lineHeight: 1.4, color: 'var(--text)', marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top1.title}</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EB701A' }}>👁 <CountUp value={Number(top1.views)} formatFn={n => n.toLocaleString()} />회</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+            <VodStats views={Number(top1.views)} duration={top1.duration} fmtDuration={fmtDuration} size="md" />
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{top1.date}</span>
-            {top1.duration ? <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🕐 {fmtDuration(top1.duration)}</span> : null}
           </div>
         </div>
         <div style={{ fontSize: '1.6rem', alignSelf: 'flex-start', marginTop: '-4px', opacity: 0.9 }}>👑</div>
@@ -412,9 +438,9 @@ function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vod.title}</p>
-                <div style={{ display: 'flex', gap: '10px', fontSize: '0.71rem', color: 'var(--text-muted)' }}>
-                  <span>👁 <CountUp value={Number(vod.views)} formatFn={n => n.toLocaleString()} />회</span>
-                  <span>{vod.date}</span>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <VodStats views={Number(vod.views)} duration={vod.duration} fmtDuration={fmtDuration} size="sm" />
+                  <span style={{ fontSize: '0.71rem', color: 'var(--text-muted)' }}>{vod.date}</span>
                 </div>
               </div>
             </div>
@@ -593,7 +619,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                 <div>
                   <p style={{ fontSize:'0.72rem', color:'#EB701A', fontWeight:700, marginBottom:'4px' }}>{date}</p>
                   <p style={{ fontSize:'0.9rem', fontWeight:600, marginBottom:'4px', color:'var(--text)' }}>{vod.title}</p>
-                  <p style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>👁 {vod.views?.toLocaleString()}회{vod.duration ? ` · ${fmtDuration(vod.duration)}` : ''}</p>
+                  <VodStats views={Number(vod.views)} duration={vod.duration} fmtDuration={fmtDuration} size="sm" />
                 </div>
               </div>
             ))}
