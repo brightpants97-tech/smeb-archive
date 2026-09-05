@@ -451,11 +451,8 @@ function Top10Grid({ top10, onPlay, isMobile }: { top10: Video[]; onPlay: (id: s
                 letterSpacing: '0.06em',
               }}>집계 중</span>
             </div>
-            {/* 제목 영역 */}
-            <div style={{
-              padding: '6px 10px 8px',
-              minHeight: '2.2rem',
-            }} />
+            {/* 제목 영역 (실제 카드와 높이가 다를 때 남는 여백을 채움) */}
+            <div style={{ flex: 1 }} />
           </div>
         ))}
       </div>
