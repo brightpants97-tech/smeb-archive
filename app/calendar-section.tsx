@@ -216,7 +216,7 @@ function DayPanel({
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-          display: 'flex', flexDirection: 'column',
+          display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)',
           overflow: 'hidden',
           transform: visible ? 'translate(0,0) scale(1)' : originTransform,
           opacity: visible ? 1 : 0,
@@ -226,7 +226,7 @@ function DayPanel({
         {/* 헤더 */}
         <div style={{
           padding: '20px 20px 16px', borderBottom: '1px solid var(--card-border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: '10px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <button
@@ -273,7 +273,7 @@ function DayPanel({
         </div>
 
         {/* 목록 */}
-        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+        <div style={{ position: 'relative', minHeight: 0 }}>
           <div
             ref={listRef}
             onScroll={handleScroll}
