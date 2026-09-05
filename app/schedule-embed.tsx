@@ -21,6 +21,7 @@ export default function ScheduleEmbed() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<number | null>(null);
+  const [dir, setDir] = useState<1 | -1>(1);
 
   const fetchData = () => {
     setLoading(true); setSelected(null);
@@ -32,8 +33,8 @@ export default function ScheduleEmbed() {
 
   useEffect(() => { fetchData(); }, [year, month]);
 
-  const prev = () => { if(month===1){setYear(y=>y-1);setMonth(12);}else setMonth(m=>m-1); };
-  const next = () => { if(month===12){setYear(y=>y+1);setMonth(1);}else setMonth(m=>m+1); };
+  const prev = () => { setDir(-1); if(month===1){setYear(y=>y-1);setMonth(12);}else setMonth(m=>m-1); };
+  const next = () => { setDir(1); if(month===12){setYear(y=>y+1);setMonth(1);}else setMonth(m=>m+1); };
 
   const firstDay    = new Date(year, month-1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -89,7 +90,7 @@ export default function ScheduleEmbed() {
         </div>
 
         {/* 날짜 셀 */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
+        <div key={`${year}-${month}`} className={dir === 1 ? 'cal-slide-next' : 'cal-slide-prev'} style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)' }}>
           {cells.map((day, idx) => {
             const ev      = day ? eMap[day] : null;
             const catS    = getCat(ev);

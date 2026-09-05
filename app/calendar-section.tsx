@@ -614,8 +614,8 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
       )}
 
       {/* ── 검색창 ── */}
-      <div style={{ marginBottom:'20px', position:'relative' }}>
-        <span style={{ position:'absolute', left:'14px', top:'50%', transform:'translateY(-50%)', fontSize:'1rem', pointerEvents:'none' }}>🔍</span>
+      <div className="vod-search-wrap" style={{ marginBottom:'20px', position:'relative' }}>
+        <span style={{ position:'absolute', left:'14px', top:'50%', transform:'translateY(-50%)', fontSize:'1rem', pointerEvents:'none', transition:'filter 0.25s' }}>🔍</span>
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="다시보기 제목 검색..."
           style={{
@@ -623,10 +623,21 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
             borderRadius:'14px', border:'1px solid var(--card-border)',
             background:'var(--card)', color:'var(--text)', fontSize:'0.9rem',
             outline:'none', boxShadow:'0 1px 6px rgba(0,0,0,0.06)',
-            transition:'box-shadow 0.2s',
+            transition:'box-shadow 0.25s, border-color 0.25s, transform 0.25s',
+            transform:'scale(1)',
           }}
-          onFocus={e => (e.currentTarget as HTMLElement).style.boxShadow='0 0 0 3px rgba(235,112,26,0.2)'}
-          onBlur={e => (e.currentTarget as HTMLElement).style.boxShadow='0 1px 6px rgba(0,0,0,0.06)'}
+          onFocus={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.boxShadow='0 0 0 3px rgba(235,112,26,0.2)';
+            el.style.borderColor='#EB701A';
+            el.style.transform='scale(1.01)';
+          }}
+          onBlur={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.boxShadow='0 1px 6px rgba(0,0,0,0.06)';
+            el.style.borderColor='var(--card-border)';
+            el.style.transform='scale(1)';
+          }}
         />
       </div>
 

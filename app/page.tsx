@@ -185,7 +185,24 @@ export default async function Home() {
         .fade-in-up{opacity:0;transform:translateY(32px);transition:opacity 0.65s cubic-bezier(0.22,1,0.36,1),transform 0.65s cubic-bezier(0.22,1,0.36,1);}
         .fade-in-up.visible{opacity:1;transform:translateY(0);}
         .logo-text{color:var(--text-inv);transition:color 0.3s;}
-        .nav-link{color:var(--nav-text);transition:color 0.3s;}
+        .nav-link{
+          color:var(--nav-text);
+          transition:color 0.3s;
+          position:relative;
+          text-decoration:none;
+        }
+        .nav-link::after{
+          content:'';
+          position:absolute;
+          left:0; bottom:-3px;
+          width:100%; height:1.5px;
+          background:#EB701A;
+          transform:scaleX(0);
+          transform-origin:left;
+          transition:transform 0.25s ease-out;
+        }
+        .nav-link:hover{color:var(--text);}
+        .nav-link:hover::after{transform:scaleX(1);}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
         @keyframes scroll-bounce{0%,100%{transform:translateY(0);opacity:0.5;}50%{transform:translateY(6px);opacity:1;}}
         .scroll-hint{animation:scroll-bounce 1.8s ease-in-out infinite;}
