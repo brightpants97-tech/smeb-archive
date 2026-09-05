@@ -141,6 +141,26 @@ body {
   opacity: 1;
 }
 
+/* VOD 썸네일 hover 시 재생 아이콘 오버레이 */
+.vod-thumb-wrap { position: relative; overflow: hidden; }
+.vod-thumb-wrap::before {
+  content: '▶';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.28);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.vod-thumb-wrap:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
 /* scroll-driven 미지원 브라우저: 투명→반투명으로 고정 */
 @supports not (animation-timeline: scroll()) {
   .site-header {

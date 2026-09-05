@@ -270,10 +270,12 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <img
-                    src={vod.thumb} alt=""
-                    style={{ width: '96px', aspectRatio: '16/9', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                  />
+                  <div className="vod-thumb-wrap" style={{ width: '96px', aspectRatio: '16/9', borderRadius: '8px', flexShrink: 0 }}>
+                    <img
+                      src={vod.thumb} alt=""
+                      style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }}
+                    />
+                  </div>
                 ) : (
                   <div style={{
                     width: '96px', aspectRatio: '16/9', borderRadius: '8px', flexShrink: 0,
@@ -377,7 +379,11 @@ function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month
           <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#EB701A', lineHeight: 1 }}>1</span>
           <span style={{ fontSize: '0.55rem', fontWeight: 700, color: '#EB701A', letterSpacing: '0.06em' }}>위</span>
         </div>
-        {top1.thumb && (<img src={top1.thumb} alt="" style={{ width: '140px', aspectRatio: '16/9', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} />)}
+        {top1.thumb && (
+          <div className="vod-thumb-wrap" style={{ width: '140px', aspectRatio: '16/9', borderRadius: '10px', flexShrink: 0 }}>
+            <img src={top1.thumb} alt="" style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }} />
+          </div>
+        )}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <p style={{ fontSize: '1rem', fontWeight: 800, lineHeight: 1.4, color: 'var(--text)', marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{top1.title}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
@@ -399,7 +405,11 @@ function MonthTop5({ vods, month, fmtDuration, onPlayVod }: { vods: any[]; month
               onMouseEnter={() => setHovered(rank)} onMouseLeave={() => setHovered(null)}
             >
               <span style={{ fontSize: '1.1rem', fontWeight: 900, color: RANK_COLORS[idx + 1], width: '28px', textAlign: 'center', flexShrink: 0 }}>{rank}</span>
-              {vod.thumb && (<img src={vod.thumb} alt="" style={{ width: '72px', aspectRatio: '16/9', borderRadius: '7px', objectFit: 'cover', flexShrink: 0 }} />)}
+              {vod.thumb && (
+                <div className="vod-thumb-wrap" style={{ width: '72px', aspectRatio: '16/9', borderRadius: '7px', flexShrink: 0 }}>
+                  <img src={vod.thumb} alt="" style={{ width: '100%', height: '100%', borderRadius: '7px', objectFit: 'cover' }} />
+                </div>
+              )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vod.title}</p>
                 <div style={{ display: 'flex', gap: '10px', fontSize: '0.71rem', color: 'var(--text-muted)' }}>
@@ -575,7 +585,11 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
                 style={{ display:'flex', gap:'12px', alignItems:'center', padding:'12px 14px', background:'var(--card)', borderRadius:'12px', border:'1px solid var(--card-border)', textDecoration:'none', color:'var(--text)', cursor:'pointer', transition:'transform 0.15s', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform=''}>
-                {vod.thumb && <img src={vod.thumb} alt="" style={{ width:'100px', borderRadius:'8px', flexShrink:0, objectFit:'cover', aspectRatio:'16/9' }} />}
+                {vod.thumb && (
+                  <div className="vod-thumb-wrap" style={{ width:'100px', borderRadius:'8px', flexShrink:0, aspectRatio:'16/9' }}>
+                    <img src={vod.thumb} alt="" style={{ width:'100%', height:'100%', borderRadius:'8px', objectFit:'cover' }} />
+                  </div>
+                )}
                 <div>
                   <p style={{ fontSize:'0.72rem', color:'#EB701A', fontWeight:700, marginBottom:'4px' }}>{date}</p>
                   <p style={{ fontSize:'0.9rem', fontWeight:600, marginBottom:'4px', color:'var(--text)' }}>{vod.title}</p>
