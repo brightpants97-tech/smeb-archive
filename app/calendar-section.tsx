@@ -277,7 +277,7 @@ function DayPanel({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
               <div
@@ -287,15 +287,14 @@ function DayPanel({
                   position: 'relative',
                   width: '100%', aspectRatio: '16/9',
                   borderRadius: '14px',
-                  border: '1px solid var(--card-border)',
                   overflow: 'hidden',
                   cursor: 'pointer',
                   flexShrink: 0,
                   transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(0,0,0,0.14)';
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 22px rgba(0,0,0,0.18)';
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLElement).style.transform = '';
@@ -324,7 +323,11 @@ function DayPanel({
                   background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
                   pointerEvents: 'none',
                 }}>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0, wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+                  <p style={{
+                    fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0,
+                    wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  } as React.CSSProperties}>
                     {vod.title}
                   </p>
                 </div>
