@@ -59,17 +59,37 @@ interface Props {
 }
 
 function VideoModal({ activeId, onClose }: { activeId: string; onClose: () => void }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+
+  const handleClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 260);
+  };
+
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
     document.addEventListener('keydown', handleKey);
     document.body.style.overflow = 'hidden';
     return () => { document.removeEventListener('keydown', handleKey); document.body.style.overflow = ''; };
-  }, [onClose]);
+  }, []);
 
   return createPortal(
-    <div onClick={onClose} style={{ position:'fixed', top:0, left:0, width:'100vw', height:'100vh', zIndex:99999, background:'rgba(0,0,0,0.9)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'24px' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width:'100%', maxWidth:'960px', position:'relative' }}>
-        <button onClick={onClose}
+    <div onClick={handleClose} style={{
+      position:'fixed', top:0, left:0, width:'100vw', height:'100vh', zIndex:99999,
+      background: visible ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0)',
+      backdropFilter: visible ? 'blur(16px)' : 'blur(0px)',
+      WebkitBackdropFilter: visible ? 'blur(16px)' : 'blur(0px)',
+      transition: 'background 0.4s ease-out, backdrop-filter 0.6s ease-out',
+      display:'flex', alignItems:'center', justifyContent:'center', padding:'24px',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width:'100%', maxWidth:'960px', position:'relative',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(16px)',
+        transition: 'opacity 0.3s ease-out, transform 0.35s cubic-bezier(0.22,1,0.36,1)',
+      }}>
+        <button onClick={handleClose}
           style={{ position:'absolute', top:'-48px', right:0, background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)', color:'#fff', borderRadius:'10px', padding:'8px 18px', cursor:'pointer', fontSize:'0.85rem', fontWeight:700 }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.22)'}
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.12)'}>
