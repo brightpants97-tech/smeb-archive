@@ -277,7 +277,7 @@ function DayPanel({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', scrollSnapType: 'y proximity' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
               <div
@@ -291,6 +291,8 @@ function DayPanel({
                   overflow: 'hidden',
                   cursor: 'pointer',
                   transition: 'transform 0.15s, box-shadow 0.15s',
+                  scrollSnapAlign: 'start',
+                  scrollMarginTop: '14px',
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
@@ -302,7 +304,7 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ width: '100%', aspectRatio: '16/9' }}>
+                  <div className="vod-thumb-wrap" style={{ width: '100%', height: '220px' }}>
                     <img
                       src={vod.thumb} alt=""
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -310,7 +312,7 @@ function DayPanel({
                   </div>
                 ) : (
                   <div style={{
-                    width: '100%', aspectRatio: '16/9',
+                    width: '100%', height: '220px',
                     background: 'var(--card)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6,
@@ -323,7 +325,7 @@ function DayPanel({
                   }} title="인기순이 아닌 방송 시작 순서입니다">
                     {vod.time ? `${vod.time} 시작` : `${i + 1}번째 방송`}
                   </span>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.45, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.45, color: '#EB701A', marginBottom: '6px', wordBreak: 'break-all' }}>
                     {vod.title}
                   </p>
                   <VodStats views={vod.views} duration={vod.duration} fmtDuration={fmtDuration} size="xs" />
