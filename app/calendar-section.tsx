@@ -66,9 +66,9 @@ function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onC
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '24px',
         background: visible ? 'rgba(0,0,0,0.78)' : 'rgba(0,0,0,0)',
-        backdropFilter: visible ? 'blur(6px)' : 'none',
-        WebkitBackdropFilter: visible ? 'blur(6px)' : 'none',
-        transition: 'background 0.25s, backdrop-filter 0.25s',
+        backdropFilter: visible ? 'blur(9px)' : 'blur(0px)',
+        WebkitBackdropFilter: visible ? 'blur(9px)' : 'blur(0px)',
+        transition: 'background 0.4s ease-out, backdrop-filter 0.6s ease-out',
       }}
     >
       <div
@@ -171,9 +171,9 @@ function DayPanel({
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: isMobile ? '12px' : '24px',
         background: visible ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0)',
-        backdropFilter: visible ? 'blur(4px)' : 'none',
-        WebkitBackdropFilter: visible ? 'blur(4px)' : 'none',
-        transition: 'background 0.28s, backdrop-filter 0.28s',
+        backdropFilter: visible ? 'blur(7px)' : 'blur(0px)',
+        WebkitBackdropFilter: visible ? 'blur(7px)' : 'blur(0px)',
+        transition: 'background 0.35s ease-out, backdrop-filter 0.55s ease-out',
       }}
     >
       <div
