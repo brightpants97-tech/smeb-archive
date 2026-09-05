@@ -41,14 +41,16 @@ function CountUp({ value, formatFn, duration = 900 }: { value: number; formatFn:
 
 // ── 조회수·재생시간을 아이콘 chip 스타일로 보여주는 공용 컴포넌트 ──────────────
 function VodStats({ views, duration, fmtDuration, size = 'sm' }: {
-  views?: number | null; duration?: number; fmtDuration: (s: number) => string; size?: 'sm' | 'md';
+  views?: number | null; duration?: number; fmtDuration: (s: number) => string; size?: 'xs' | 'sm' | 'md';
 }) {
-  const fontSize = size === 'md' ? '0.82rem' : '0.72rem';
-  const iconSize = size === 'md' ? 13 : 11;
+  const fontSize = size === 'md' ? '0.82rem' : size === 'sm' ? '0.72rem' : '0.68rem';
+  const iconSize = size === 'md' ? 13 : size === 'sm' ? 11 : 10;
+  const viewsColor = size === 'xs' ? 'var(--text-muted)' : '#EB701A';
+  const viewsWeight = size === 'xs' ? 500 : 700;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '11px', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: size === 'xs' ? '8px' : '11px', flexWrap: 'wrap' }}>
       {views != null && (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize, fontWeight: 700, color: '#EB701A' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize, fontWeight: viewsWeight, color: viewsColor }}>
           <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 12s4-7.5 11-7.5S23 12 23 12s-4 7.5-11 7.5S1 12 1 12Z" />
             <circle cx="12" cy="12" r="3" />
@@ -300,35 +302,31 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ width: '140px', aspectRatio: '16/9', borderRadius: '9px', flexShrink: 0 }}>
+                  <div className="vod-thumb-wrap" style={{ width: '190px', aspectRatio: '16/9', borderRadius: '10px', flexShrink: 0 }}>
                     <img
                       src={vod.thumb} alt=""
-                      style={{ width: '100%', height: '100%', borderRadius: '9px', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }}
                     />
                   </div>
                 ) : (
                   <div style={{
-                    width: '140px', aspectRatio: '16/9', borderRadius: '9px', flexShrink: 0,
+                    width: '190px', aspectRatio: '16/9', borderRadius: '10px', flexShrink: 0,
                     background: 'var(--card)', border: '1px solid var(--card-border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.4rem', color: 'var(--text-muted)', opacity: 0.6,
+                    fontSize: '1.6rem', color: 'var(--text-muted)', opacity: 0.6,
                   }}>🎬</div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '3px',
-                    fontSize: '0.62rem', fontWeight: 700,
-                    background: 'var(--card)', color: 'var(--text-muted)',
-                    border: '1px solid var(--card-border)',
-                    padding: '1px 6px', borderRadius: '100px', marginBottom: '4px',
+                    fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)',
+                    opacity: 0.75, marginBottom: '3px', display: 'block',
                   }} title="인기순이 아닌 방송 시작 순서입니다">
-                    {vod.time ? `🕐 ${vod.time} 시작` : `${i + 1}번째 방송`}
+                    {vod.time ? `${vod.time} 시작` : `${i + 1}번째 방송`}
                   </span>
-                  <p style={{ fontSize: '1.02rem', fontWeight: 700, lineHeight: 1.5, color: 'var(--text)', marginBottom: '7px', wordBreak: 'break-all' }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.45, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>
                     {vod.title}
-                    <span style={{ marginLeft: '5px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }} title="클릭해서 바로 재생">▶</span>
                   </p>
-                  <VodStats views={vod.views} duration={vod.duration} fmtDuration={fmtDuration} size="sm" />
+                  <VodStats views={vod.views} duration={vod.duration} fmtDuration={fmtDuration} size="xs" />
                 </div>
               </div>
             ))}
