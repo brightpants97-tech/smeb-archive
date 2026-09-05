@@ -284,17 +284,17 @@ function DayPanel({
                 key={i}
                 onClick={() => onPlayVod(vod.id, vod.title)}
                 style={{
-                  display: 'flex', gap: '12px', alignItems: 'flex-start',
-                  padding: '12px', borderRadius: '12px',
+                  display: 'flex', flexDirection: 'column',
+                  borderRadius: '14px',
                   border: '1px solid var(--card-border)',
                   background: 'var(--bg-deeper)',
-                  textDecoration: 'none', color: 'var(--text)',
+                  overflow: 'hidden',
                   cursor: 'pointer',
                   transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)';
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(0,0,0,0.14)';
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLElement).style.transform = '';
@@ -302,21 +302,21 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ width: '190px', aspectRatio: '16/9', borderRadius: '10px', flexShrink: 0 }}>
+                  <div className="vod-thumb-wrap" style={{ width: '100%', aspectRatio: '16/9' }}>
                     <img
                       src={vod.thumb} alt=""
-                      style={{ width: '100%', height: '100%', borderRadius: '10px', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     />
                   </div>
                 ) : (
                   <div style={{
-                    width: '190px', aspectRatio: '16/9', borderRadius: '10px', flexShrink: 0,
-                    background: 'var(--card)', border: '1px solid var(--card-border)',
+                    width: '100%', aspectRatio: '16/9',
+                    background: 'var(--card)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.6rem', color: 'var(--text-muted)', opacity: 0.6,
+                    fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6,
                   }}>🎬</div>
                 )}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ padding: '12px 14px' }}>
                   <span style={{
                     fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)',
                     opacity: 0.75, marginBottom: '3px', display: 'block',
