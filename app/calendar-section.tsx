@@ -284,14 +284,14 @@ function DayPanel({
                 key={i}
                 onClick={() => onPlayVod(vod.id, vod.title)}
                 style={{
-                  display: 'flex', flexDirection: 'column',
+                  position: 'relative',
+                  width: '100%', aspectRatio: '16/9',
                   borderRadius: '14px',
                   border: '1px solid var(--card-border)',
-                  background: 'var(--bg-deeper)',
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  transition: 'transform 0.15s, box-shadow 0.15s',
                   flexShrink: 0,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
@@ -303,7 +303,7 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ width: '100%', height: '220px', flexShrink: 0 }}>
+                  <div className="vod-thumb-wrap" style={{ position: 'absolute', inset: 0 }}>
                     <img
                       src={vod.thumb} alt=""
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -311,23 +311,22 @@ function DayPanel({
                   </div>
                 ) : (
                   <div style={{
-                    width: '100%', height: '220px', flexShrink: 0,
+                    position: 'absolute', inset: 0,
                     background: 'var(--card)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6,
                   }}>🎬</div>
                 )}
-                <div style={{ padding: '12px 14px' }}>
-                  <span style={{
-                    fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)',
-                    opacity: 0.75, marginBottom: '3px', display: 'block',
-                  }} title="인기순이 아닌 방송 시작 순서입니다">
-                    {vod.time ? `${vod.time} 시작` : `${i + 1}번째 방송`}
-                  </span>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.45, color: '#EB701A', marginBottom: '6px', wordBreak: 'break-all' }}>
+                {/* 제목 오버레이 (하단 그라데이션 스크림 위) */}
+                <div style={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0,
+                  padding: '28px 14px 12px',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
+                  pointerEvents: 'none',
+                }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0, wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
                     {vod.title}
                   </p>
-                  <VodStats views={vod.views} duration={vod.duration} fmtDuration={fmtDuration} size="xs" />
                 </div>
               </div>
             ))}
