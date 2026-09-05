@@ -397,7 +397,7 @@ function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
   const videos = (data.topVideos || data.top3).slice(0, 10);
   if (!videos.length) return null;
 
-  const RANK_COLOR = ['#FFB800', '#A0A8B8', '#CD7F32'];
+  const RANK_COLOR = ['#FFB800', '#C0C0C0', '#CD7F32'];
   const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
 
   return (
@@ -845,6 +845,11 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
   const [endRef, endInView]     = useInView(0.2);
   const [lightMode, setLightMode] = useState(false);
 
+  // 월별 TOP10 탭 - 데이터가 있는 달만, 기본값은 가장 최근 달
+  const monthsWithData = monthlyData.filter(m => (m.topVideos || m.top3 || []).length > 0);
+  const [selectedMonthTab, setSelectedMonthTab] = useState<number | null>(null);
+  const activeMonthNum = selectedMonthTab ?? (monthsWithData[monthsWithData.length - 1]?.month ?? null);
+
   return (
     <div data-rw={lightMode ? 'light' : 'dark'} style={{ background: 'var(--rw-bg)', color: 'var(--rw-text)', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,sans-serif', overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
       <style>{`
@@ -1072,9 +1077,30 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             <p style={{ color: 'var(--rw-text3)', fontSize: '0.88rem', marginTop: '10px' }}>각 달의 최다 조회 영상 TOP 10 · 클릭하면 유튜브로 이동해요</p>
           </div>
           {monthInView && (
-            <div style={{ display: 'flex', flexDirection: 'column' as const }}>
-              {monthlyData.map((m, i) => <MonthRow key={m.key} data={m} idx={i} />)}
-            </div>
+            <>
+              {/* 월 탭 */}
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px', marginBottom: '28px' }}>
+                {monthsWithData.map(m => {
+                  const isActive = m.month === activeMonthNum;
+                  return (
+                    <button key={m.key} onClick={() => setSelectedMonthTab(m.month)}
+                      style={{
+                        padding: '8px 18px', borderRadius: '100px', cursor: 'pointer',
+                        fontSize: '0.85rem', fontWeight: 800, fontFamily: 'inherit',
+                        background: isActive ? ORANGE : 'var(--rw-btn-bg, var(--rw-bg4))',
+                        color: isActive ? '#fff' : 'var(--rw-text2)',
+                        border: `1px solid ${isActive ? ORANGE : 'var(--rw-border)'}`,
+                        boxShadow: isActive ? '0 0 16px rgba(235,112,26,0.35)' : 'none',
+                        transition: 'all 0.18s',
+                      }}
+                    >{MONTH_KO[m.month - 1]}</button>
+                  );
+                })}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' as const }} key={activeMonthNum}>
+                {monthlyData.filter(m => m.month === activeMonthNum).map((m, i) => <MonthRow key={m.key} data={m} idx={i} />)}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -1094,8 +1120,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(8px,1.2vw,16px)' }}>
               {top10.map((v, i) => {
                 const isTop3 = i < 3;
-                const TOP3_BORDER = ['#FFB800', '#A0A8B8', '#CD7F32'];
-                const TOP3_GLOW   = ['rgba(255,184,0,0.5)', 'rgba(160,168,184,0.4)', 'rgba(205,127,50,0.4)'];
+                const TOP3_BORDER = ['#FFB800', '#C0C0C0', '#CD7F32'];
+                const TOP3_GLOW   = ['rgba(255,184,0,0.5)', 'rgba(192,192,192,0.45)', 'rgba(205,127,50,0.4)'];
                 const MEDAL = ['🥇','🥈','🥉'];
                 return (
                   <div key={v.id}
