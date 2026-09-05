@@ -277,7 +277,7 @@ function DayPanel({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', scrollSnapType: 'y proximity' }}
+            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
               <div
@@ -291,8 +291,6 @@ function DayPanel({
                   overflow: 'hidden',
                   cursor: 'pointer',
                   transition: 'transform 0.15s, box-shadow 0.15s',
-                  scrollSnapAlign: 'start',
-                  scrollMarginTop: '14px',
                   flexShrink: 0,
                 }}
                 onMouseEnter={e => {
