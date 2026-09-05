@@ -277,7 +277,7 @@ function DayPanel({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
               <div
