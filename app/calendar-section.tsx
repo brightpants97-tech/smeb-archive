@@ -210,7 +210,7 @@ function DayPanel({
         onClick={e => e.stopPropagation()}
         style={{
           position: 'relative',
-          width: '100%', maxWidth: '480px', maxHeight: '82vh',
+          width: '100%', maxWidth: '580px', maxHeight: '82vh',
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
@@ -300,18 +300,18 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ width: '96px', aspectRatio: '16/9', borderRadius: '8px', flexShrink: 0 }}>
+                  <div className="vod-thumb-wrap" style={{ width: '140px', aspectRatio: '16/9', borderRadius: '9px', flexShrink: 0 }}>
                     <img
                       src={vod.thumb} alt=""
-                      style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', borderRadius: '9px', objectFit: 'cover' }}
                     />
                   </div>
                 ) : (
                   <div style={{
-                    width: '96px', aspectRatio: '16/9', borderRadius: '8px', flexShrink: 0,
+                    width: '140px', aspectRatio: '16/9', borderRadius: '9px', flexShrink: 0,
                     background: 'var(--card)', border: '1px solid var(--card-border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.2rem', color: 'var(--text-muted)', opacity: 0.6,
+                    fontSize: '1.4rem', color: 'var(--text-muted)', opacity: 0.6,
                   }}>🎬</div>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -324,9 +324,9 @@ function DayPanel({
                   }} title="인기순이 아닌 방송 시작 순서입니다">
                     {vod.time ? `🕐 ${vod.time} 시작` : `${i + 1}번째 방송`}
                   </span>
-                  <p style={{ fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.4, color: 'var(--text)', marginBottom: '6px', wordBreak: 'break-all' }}>
+                  <p style={{ fontSize: '1.02rem', fontWeight: 700, lineHeight: 1.5, color: 'var(--text)', marginBottom: '7px', wordBreak: 'break-all' }}>
                     {vod.title}
-                    <span style={{ marginLeft: '5px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }} title="클릭해서 바로 재생">▶</span>
+                    <span style={{ marginLeft: '5px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }} title="클릭해서 바로 재생">▶</span>
                   </p>
                   <VodStats views={vod.views} duration={vod.duration} fmtDuration={fmtDuration} size="sm" />
                 </div>
