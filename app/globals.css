@@ -161,6 +161,15 @@ body {
   transform: scale(1);
 }
 
+/* 월/전체 탭 전환 시 콘텐츠 크로스페이드 */
+@keyframes content-crossfade {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.month-content-fade {
+  animation: content-crossfade 0.35s ease-out both;
+}
+
 /* scroll-driven 미지원 브라우저: 투명→반투명으로 고정 */
 @supports not (animation-timeline: scroll()) {
   .site-header {

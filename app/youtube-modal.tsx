@@ -493,18 +493,20 @@ export default function YoutubeSection({ videos, top10, notices, monthlyTop10, t
       />
 
       {/* ── 선택된 달 TOP 10 ── */}
-      <div style={{ marginBottom:'8px', display:'flex', alignItems:'center', gap:'10px' }}>
-        <span style={{
-          fontSize:'0.72rem', fontWeight:800, color:'#EB701A',
-          background:'rgba(235,112,26,0.1)', border:'1px solid rgba(235,112,26,0.25)',
-          padding:'4px 12px', borderRadius:'100px', letterSpacing:'0.06em',
-        }}>
-          🏆 {monthLabel} TOP {selectedTop10.length}
-        </span>
-        <span style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>조회수 기준</span>
-      </div>
+      <div key={selectedMonth} className="month-content-fade">
+        <div style={{ marginBottom:'8px', display:'flex', alignItems:'center', gap:'10px' }}>
+          <span style={{
+            fontSize:'0.72rem', fontWeight:800, color:'#EB701A',
+            background:'rgba(235,112,26,0.1)', border:'1px solid rgba(235,112,26,0.25)',
+            padding:'4px 12px', borderRadius:'100px', letterSpacing:'0.06em',
+          }}>
+            🏆 {monthLabel} TOP {selectedTop10.length}
+          </span>
+          <span style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>조회수 기준</span>
+        </div>
 
-      <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} isMobile={isMobile} />
+        <Top10Grid top10={selectedTop10} onPlay={id => setActiveId(id)} isMobile={isMobile} />
+      </div>
 
       {/* ── 최신 공지 ── */}
       <div id="videos" className="sec-light" style={{ margin: isMobile ? '20px 0 0' : '0 calc(-1 * clamp(1.5rem, 5vw, 3rem)) 0', padding: isMobile ? '48px 0 0' : '48px clamp(1.5rem, 5vw, 3rem) 40px', borderTop: isMobile ? '1px solid var(--card-border)' : '1px solid var(--card-border)' }}>
