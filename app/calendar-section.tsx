@@ -290,15 +290,16 @@ function DayPanel({
                   overflow: 'hidden',
                   cursor: 'pointer',
                   flexShrink: 0,
-                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 0 0 0px rgba(235,112,26,0)',
+                  transition: 'transform 0.15s, box-shadow 0.2s',
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 22px rgba(0,0,0,0.18)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 2px #EB701A, 0 8px 22px rgba(0,0,0,0.18)';
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLElement).style.transform = '';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 0px rgba(235,112,26,0)';
                 }}
               >
                 {vod.thumb ? (
