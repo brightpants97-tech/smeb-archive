@@ -187,6 +187,8 @@ export default async function Home() {
         .logo-text{color:var(--text-inv);transition:color 0.3s;}
         .nav-link{color:var(--nav-text);transition:color 0.3s;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+        @keyframes scroll-bounce{0%,100%{transform:translateY(0);opacity:0.5;}50%{transform:translateY(6px);opacity:1;}}
+        .scroll-hint{animation:scroll-bounce 1.8s ease-in-out infinite;}
 
         /* 헤더 로고 hover 시 좌→우로 훑는 셔터/샤인 효과 */
         .logo-shine-rect{ transform:translateX(-120px); transition:transform 0.7s cubic-bezier(0.22,1,0.36,1); }
@@ -316,6 +318,11 @@ export default async function Home() {
             </h1>
             <p style={{margin:'6px 0 0',fontSize:'clamp(0.76rem,1.6vw,0.9rem)',fontWeight:500,color:'rgba(255,255,255,0.62)',letterSpacing:'0.04em'}}>스맵 송경호 팬 아카이브</p>
           </div>
+        </div>
+        {/* 스크롤 유도 힌트 */}
+        <div className="scroll-hint mob-hide" style={{position:'absolute',left:'50%',bottom:'10px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',pointerEvents:'none'}}>
+          <span style={{fontSize:'0.62rem',color:'rgba(255,255,255,0.45)',letterSpacing:'0.1em'}}>SCROLL</span>
+          <span style={{fontSize:'0.9rem',color:'rgba(255,255,255,0.5)',lineHeight:1}}>↓</span>
         </div>
       </section>
 
