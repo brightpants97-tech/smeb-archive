@@ -293,6 +293,7 @@ function DayPanel({
                   transition: 'transform 0.15s, box-shadow 0.15s',
                   scrollSnapAlign: 'start',
                   scrollMarginTop: '14px',
+                  flexShrink: 0,
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
@@ -304,7 +305,7 @@ function DayPanel({
                 }}
               >
                 {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ width: '100%', height: '220px' }}>
+                  <div className="vod-thumb-wrap" style={{ width: '100%', height: '220px', flexShrink: 0 }}>
                     <img
                       src={vod.thumb} alt=""
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -312,7 +313,7 @@ function DayPanel({
                   </div>
                 ) : (
                   <div style={{
-                    width: '100%', height: '220px',
+                    width: '100%', height: '220px', flexShrink: 0,
                     background: 'var(--card)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6,
