@@ -393,110 +393,13 @@ const RANK_INFO = [
   { medal: '10', grad: 'transparent', tc: 'rgba(255,255,255,0.5)' },
 ];
 
-function MonthRow({ data, idx }: { data: MonthData; idx: number }) {
-  const videos = (data.topVideos || data.top3).slice(0, 10);
-  if (!videos.length) return null;
 
-  const RANK_COLOR = ['#FFB800', '#C0C0C0', '#CD7F32'];
-  const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
-
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'flex-start',
-      gap: 'clamp(12px,2vw,24px)',
-      padding: '20px 0',
-      borderBottom: '1px solid var(--rw-border)',
-      animation: `rwFadeUp 0.4s ${idx * 0.045}s both`,
-    }}>
-      {/* 월 라벨 */}
-      <div style={{ flexShrink: 0, width: 'clamp(34px,5vw,52px)', paddingTop: '8px', textAlign: 'center' as const }}>
-        <span style={{ fontSize: 'clamp(0.7rem,1.2vw,0.85rem)', fontWeight: 800, color: ORANGE, display: 'block' }}>
-          {MONTH_KO[data.month - 1]}
-        </span>
-      </div>
-
-      {/* 5열 그리드 */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(6px,1vw,10px)', minWidth: 0 }}>
-        {videos.map((v, i) => {
-          const isTop3 = i < 3;
-          const borderColor = isTop3 ? RANK_COLOR[i] : 'rgba(255,255,255,0.08)';
-          const glow = isTop3 ? `0 0 0 1.5px ${RANK_COLOR[i]}55` : 'none';
-
-          return (
-            <div
-              key={v.id}
-              onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
-              style={{
-                cursor: 'pointer',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                border: `1px solid ${borderColor}`,
-                boxShadow: glow,
-                background: 'var(--rw-bg2)',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                (e.currentTarget as HTMLElement).style.boxShadow = isTop3 ? `0 0 0 2px ${RANK_COLOR[i]}, 0 8px 20px rgba(0,0,0,0.3)` : '0 8px 20px rgba(0,0,0,0.3)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLElement).style.boxShadow = glow;
-              }}
-            >
-              {/* 썸네일 16:9 고정 */}
-              <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0, background: '#111', flexShrink: 0 }}>
-                <img
-                  src={v.thumbnail}
-                  alt={v.title}
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  loading="lazy"
-                />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
-                {/* 순위 뱃지 */}
-                <span style={{
-                  position: 'absolute', top: '5px', left: '5px',
-                  fontSize: '0.65rem', fontWeight: 900, lineHeight: 1,
-                  background: isTop3 ? RANK_COLOR[i] : 'rgba(0,0,0,0.55)',
-                  color: i === 1 ? '#111' : '#fff',
-                  padding: '2px 6px', borderRadius: '4px',
-                }}>
-                  {isTop3 ? `${i + 1}위` : `${i + 1}`}
-                </span>
-                {/* 조회수 */}
-                <span style={{ position: 'absolute', bottom: '4px', right: '5px', fontSize: '0.62rem', fontWeight: 800, color: ORANGE }}>
-                  {fmt(v.views)}
-                </span>
-              </div>
-
-              {/* 제목 */}
-              <p style={{
-                fontSize: '0.72rem', fontWeight: 600,
-                color: 'var(--rw-text)',
-                lineHeight: 1.35, margin: 0,
-                padding: '6px 8px 8px',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                minHeight: '2.3rem',
-              } as React.CSSProperties}>
-                {v.title}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-
-function UploadCalendar({ monthlyData, year }: { monthlyData: MonthData[]; year: number }) {
+function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: MonthData[]; year: number; defaultMonth?: number | null }) {
   const firstMonth = monthlyData.find(m => m.topVideos.length > 0)?.month ?? null;
-  const [activeMonth, setActiveMonth] = useState<number | null>(firstMonth);
+  const initialMonth = (defaultMonth != null && monthlyData.some(m => m.month === defaultMonth && m.topVideos.length > 0))
+    ? defaultMonth
+    : firstMonth;
+  const [activeMonth, setActiveMonth] = useState<number | null>(initialMonth);
   const [hovered, setHovered] = useState<{ id: string; rect: DOMRect; above: boolean } | null>(null);
   const tlRef = useRef<HTMLDivElement>(null);
   const [scrollable, setScrollable] = useState({ left: false, right: false });
@@ -840,15 +743,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
     return Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
   })();
   const [statsRef, statsInView] = useInView(0.2);
-  const [monthRef, monthInView] = useInView(0.05);
   const [top10Ref, top10InView] = useInView(0.05);
   const [endRef, endInView]     = useInView(0.2);
   const [lightMode, setLightMode] = useState(false);
-
-  // 월별 TOP10 탭 - 데이터가 있는 달만, 기본값은 가장 최근 달
-  const monthsWithData = monthlyData.filter(m => (m.topVideos || m.top3 || []).length > 0);
-  const [selectedMonthTab, setSelectedMonthTab] = useState<number | null>(null);
-  const activeMonthNum = selectedMonthTab ?? (monthsWithData[monthsWithData.length - 1]?.month ?? null);
 
   return (
     <div data-rw={lightMode ? 'light' : 'dark'} style={{ background: 'var(--rw-bg)', color: 'var(--rw-text)', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,sans-serif', overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
@@ -1021,6 +918,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         </div>
       </section>
 
+      {/* ───────────────── ②-b 업로드 캘린더 (메인 콘텐츠 - 통계보다 먼저 배치) ───────────────── */}
+      <UploadCalendar monthlyData={monthlyData} year={year} defaultMonth={stats.peakMonth.month} />
+
       {/* ───────────────── ② 숫자로 보는 한 해 ───────────────── */}
       <section ref={statsRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -1062,48 +962,6 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         </div>
       </section>
 
-
-      {/* ───────────────── ②-b 업로드 캘린더 ───────────────── */}
-      <UploadCalendar monthlyData={monthlyData} year={year} />
-
-      {/* ───────────────── ③ 월별 하이라이트 ───────────────── */}
-      <section ref={monthRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)', background: 'rgba(255,255,255,0.01)' }}>
-        <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '48px', animation: monthInView ? 'rwFadeUp 0.6s both' : 'none' }}>
-            <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Monthly TOP 10</p>
-            <h2 style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--rw-text)', lineHeight: 1.1 }}>
-              월별 <em style={{ color: ORANGE, fontStyle: 'italic' }}>TOP 10</em>
-            </h2>
-            <p style={{ color: 'var(--rw-text3)', fontSize: '0.88rem', marginTop: '10px' }}>각 달의 최다 조회 영상 TOP 10 · 클릭하면 유튜브로 이동해요</p>
-          </div>
-          {monthInView && (
-            <>
-              {/* 월 탭 */}
-              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px', marginBottom: '28px' }}>
-                {monthsWithData.map(m => {
-                  const isActive = m.month === activeMonthNum;
-                  return (
-                    <button key={m.key} onClick={() => setSelectedMonthTab(m.month)}
-                      style={{
-                        padding: '8px 18px', borderRadius: '100px', cursor: 'pointer',
-                        fontSize: '0.85rem', fontWeight: 800, fontFamily: 'inherit',
-                        background: isActive ? ORANGE : 'var(--rw-btn-bg, var(--rw-bg4))',
-                        color: isActive ? '#fff' : 'var(--rw-text2)',
-                        border: `1px solid ${isActive ? ORANGE : 'var(--rw-border)'}`,
-                        boxShadow: isActive ? '0 0 16px rgba(235,112,26,0.35)' : 'none',
-                        transition: 'all 0.18s',
-                      }}
-                    >{MONTH_KO[m.month - 1]}</button>
-                  );
-                })}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' as const }} key={activeMonthNum}>
-                {monthlyData.filter(m => m.month === activeMonthNum).map((m, i) => <MonthRow key={m.key} data={m} idx={i} />)}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
 
       {/* ───────────────── ④ 올해의 TOP10 ───────────────── */}
       <section ref={top10Ref as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,3rem)', borderTop: '1px solid var(--rw-border)' }}>
