@@ -400,6 +400,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
     ? defaultMonth
     : firstMonth;
   const [activeMonth, setActiveMonth] = useState<number | null>(initialMonth);
+  const [dir, setDir] = useState<1 | -1>(1);
   const [hovered, setHovered] = useState<{ id: string; rect: DOMRect; above: boolean } | null>(null);
   const tlRef = useRef<HTMLDivElement>(null);
   const [scrollable, setScrollable] = useState({ left: false, right: false });
@@ -443,6 +444,11 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
   }
 
   const activeData = monthlyData.find(m => m.month === activeMonth);
+  const monthsWithVideos = monthlyData.filter(m => m.topVideos.length > 0).map(m => m.month);
+  const activeIdx = activeMonth != null ? monthsWithVideos.indexOf(activeMonth) : -1;
+  const goToMonth = (m: number, direction: 1 | -1) => { setDir(direction); setActiveMonth(m); };
+  const goPrevMonth = () => { if (activeIdx > 0) goToMonth(monthsWithVideos[activeIdx - 1], -1); };
+  const goNextMonth = () => { if (activeIdx !== -1 && activeIdx < monthsWithVideos.length - 1) goToMonth(monthsWithVideos[activeIdx + 1], 1); };
   const CARD_W = 148;
   const STEM_H = 40;
   const CARD_H = Math.round(CARD_W * 9 / 16) + 56;
@@ -479,7 +485,11 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
               <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
                 <div
-                  onClick={() => hasVideos && setActiveMonth(isActive ? null : m.month)}
+                  onClick={() => hasVideos && setActiveMonth(prev => {
+                    if (isActive) return null;
+                    setDir(prev != null && m.month < prev ? -1 : 1);
+                    return m.month;
+                  })}
                   style={{
                     width: '100%', aspectRatio: '1', borderRadius: '6px',
                     background: '#EB701A', opacity: op,
@@ -510,7 +520,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
 
         {/* 타임라인 */}
         {activeData && (
-          <div style={{ background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '20px', padding: '20px 0 24px' }}>
+          <div key={activeMonth} className={dir === 1 ? 'cal-slide-next' : 'cal-slide-prev'} style={{ background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '20px', padding: '20px 0 24px' }}>
 
             {/* 헤더 */}
             <div style={{ padding: '0 28px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -548,10 +558,38 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                   ))}
                 </div>
               </div>
-              <button
-                onClick={() => setActiveMonth(null)}
-                style={{ background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', color: 'var(--rw-text3)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit' }}
-              >닫기</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={goPrevMonth}
+                  disabled={activeIdx <= 0}
+                  title="이전 달"
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)',
+                    color: 'var(--rw-text2)', cursor: activeIdx > 0 ? 'pointer' : 'default',
+                    fontSize: '1rem', fontWeight: 700, fontFamily: 'inherit',
+                    opacity: activeIdx > 0 ? 1 : 0.3,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >‹</button>
+                <button
+                  onClick={goNextMonth}
+                  disabled={activeIdx === -1 || activeIdx >= monthsWithVideos.length - 1}
+                  title="다음 달"
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)',
+                    color: 'var(--rw-text2)', cursor: (activeIdx !== -1 && activeIdx < monthsWithVideos.length - 1) ? 'pointer' : 'default',
+                    fontSize: '1rem', fontWeight: 700, fontFamily: 'inherit',
+                    opacity: (activeIdx !== -1 && activeIdx < monthsWithVideos.length - 1) ? 1 : 0.3,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >›</button>
+                <button
+                  onClick={() => setActiveMonth(null)}
+                  style={{ background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', color: 'var(--rw-text3)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit', marginLeft: '4px' }}
+                >닫기</button>
+              </div>
             </div>
 
             {/* 스크롤 컨트롤 */}
