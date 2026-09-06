@@ -806,7 +806,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         [data-rw="light"] section { border-color: rgba(18,18,16,0.14) !important; }
         @keyframes rwFadeUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
         @keyframes rwScale    { from { opacity:0; transform:scale(0.82); } to { opacity:1; transform:scale(1); } }
-        @keyframes rwGlow     { 0%,100%{filter:drop-shadow(0 0 32px rgba(235,112,26,0.45));} 50%{filter:drop-shadow(0 0 72px rgba(235,112,26,0.85));} }
+        @keyframes rwGlow     { 0%,100%{filter:drop-shadow(0 0 32px rgba(255,255,255,0.5)) drop-shadow(0 0 70px rgba(255,210,140,0.4));} 50%{filter:drop-shadow(0 0 60px rgba(255,255,255,0.9)) drop-shadow(0 0 120px rgba(255,210,140,0.65));} }
         @keyframes rwBounce   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
         @keyframes rwHeartbeat{ 0%,100%{transform:scale(1);} 30%{transform:scale(1.18);} 60%{transform:scale(1.05);} }
         @keyframes rwHotPulse { 0%,100%{box-shadow:0 0 0 2px rgba(0,201,255,0.35),0 0 16px rgba(0,201,255,0.2);} 50%{box-shadow:0 0 0 3px rgba(0,201,255,0.6),0 0 28px rgba(0,201,255,0.4);} }
@@ -932,7 +932,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
         {/* 연도 + 카피 */}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1, padding: '0 2rem' }}>
-          <div style={{ fontSize: 'clamp(6rem, 24vw, 17rem)', fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 0.85, color: ORANGE, fontStyle: 'italic', animation: 'rwScale 0.85s cubic-bezier(0.22,1,0.36,1) both, rwGlow 3.5s 0.85s ease-in-out infinite' }}>
+          <div style={{ fontSize: 'clamp(6rem, 24vw, 17rem)', fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 0.85, color: '#fff', fontStyle: 'italic', animation: 'rwScale 0.85s cubic-bezier(0.22,1,0.36,1) both, rwGlow 3.5s 0.85s ease-in-out infinite' }}>
             {year}
           </div>
           <div style={{ fontSize: 'clamp(1rem, 2.8vw, 1.7rem)', fontWeight: 700, color: 'var(--rw-text)', marginTop: '20px', letterSpacing: '-0.02em', animation: 'rwFadeUp 0.7s 0.45s both' }}>
