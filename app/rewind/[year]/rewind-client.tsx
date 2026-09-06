@@ -786,8 +786,9 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
   const [lightMode, setLightMode] = useState(false);
 
   return (
-    <div data-rw={lightMode ? 'light' : 'dark'} style={{ background: 'var(--rw-bg)', color: 'var(--rw-text)', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,sans-serif', overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
+    <div data-rw={lightMode ? 'light' : 'dark'} style={{ background: 'var(--rw-bg)', color: 'var(--rw-text)', minHeight: '100vh', fontFamily: "'Pretendard', system-ui, -apple-system, sans-serif", overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
       <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
         [data-rw="dark"] {
           --rw-bg: #0b0b0b; --rw-bg2: #111; --rw-bg3: rgba(255,255,255,0.03); --rw-bg4: rgba(255,255,255,0.06);
           --rw-border: rgba(255,255,255,0.08); --rw-border2: rgba(255,255,255,0.14);
