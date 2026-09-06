@@ -9,6 +9,13 @@ const APPS = [
     desc: '멸망전 182점 캡 기준 최적 팀 조합을 시뮬레이션',
     color: '#2F6FED',
   },
+  {
+    href: '/fc-record',
+    title: 'FC 온라인 상대전적',
+    tag: 'FC 온라인',
+    desc: '상대 스트리머와의 전적과 그날 서로 사용한 스쿼드를 확인',
+    color: '#2FAE6B',
+  },
 ];
 
 export default function AppsClient() {
