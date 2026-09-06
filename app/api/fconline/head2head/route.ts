@@ -78,12 +78,7 @@ function extractResult(detail: any, matchtype: number) {
   return { info };
 }
 
-const getHead2Head = unstable_cache(
-  async (meNickname: string, opponentNickname: string) => {
-    if (!NEXON_KEY) {
-      return { error: 'NEXON_API_KEY가 설정되어 있지 않습니다. Vercel 프로젝트 환경변수에 NEXON_API_KEY를 추가해주세요.' };
-    }
-
+async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     const [meOuid, oppOuid] = await Promise.all([getOuid(meNickname), getOuid(opponentNickname)]);
     if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
     if (!oppOuid) return { error: `'${opponentNickname}' 닉네임을 찾을 수 없어요.` };
@@ -149,10 +144,24 @@ const getHead2Head = unstable_cache(
       matches,
       searchedDepth: SEARCH_DEPTH,
     };
-  },
+}
+
+// 성공한 결과만 10분 캐시 (에러 응답은 캐시하지 않음 - 키 설정 직후 등 일시적 오류가
+// 그대로 굳어버리는 것을 방지)
+const getHead2HeadCached = unstable_cache(
+  fetchHead2Head,
   ['fconline-head2head'],
-  { revalidate: 600 } // 10분 - 새 경기가 반영되는 주기
+  { revalidate: 600 }
 );
+
+async function getHead2Head(meNickname: string, opponentNickname: string) {
+  if (!NEXON_KEY) {
+    return { error: 'NEXON_API_KEY가 설정되어 있지 않습니다. Vercel 프로젝트 환경변수에 NEXON_API_KEY를 추가해주세요.' };
+  }
+  const result = await fetchHead2Head(meNickname, opponentNickname);
+  if ((result as any).error) return result; // 에러는 캐시하지 않고 바로 반환
+  return getHead2HeadCached(meNickname, opponentNickname);
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
