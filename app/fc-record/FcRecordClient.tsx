@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const PITCH = '#2FAE6B';
@@ -200,14 +200,26 @@ export default function FcRecordClient() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [opponents, setOpponents] = useState<{ nickname: string; count: number; lastDate: string }[] | null>(null);
+  const [opponentsLoading, setOpponentsLoading] = useState(true);
 
-  const search = async () => {
-    if (!nickname.trim()) return;
+  useEffect(() => {
+    fetch('/api/fconline/head2head?list=1')
+      .then(res => res.json())
+      .then(data => { if (!data.error) setOpponents(data.opponents); })
+      .catch(() => {})
+      .finally(() => setOpponentsLoading(false));
+  }, []);
+
+  const search = async (nick?: string) => {
+    const target = (nick ?? nickname).trim();
+    if (!target) return;
+    setNickname(target);
     setLoading(true);
     setErrorMsg(null);
     setResult(null);
     try {
-      const res = await fetch(`/api/fconline/head2head?opponent=${encodeURIComponent(nickname.trim())}`);
+      const res = await fetch(`/api/fconline/head2head?opponent=${encodeURIComponent(target)}`);
       const data = await res.json();
       if (!res.ok || data.error) {
         setErrorMsg(data.error || '조회에 실패했어요.');
@@ -259,7 +271,7 @@ export default function FcRecordClient() {
               color: '#fff', fontSize: '0.95rem', outline: 'none', fontFamily: 'inherit',
             }}
           />
-          <button onClick={search} disabled={loading || !nickname.trim()} style={{
+          <button onClick={() => search()} disabled={loading || !nickname.trim()} style={{
             padding: '14px 24px', borderRadius: '12px', border: 'none',
             background: loading || !nickname.trim() ? 'rgba(255,255,255,0.08)' : PITCH,
             color: loading || !nickname.trim() ? 'rgba(255,255,255,0.4)' : '#04140d',
@@ -269,6 +281,39 @@ export default function FcRecordClient() {
             {loading ? '조회 중...' : '전적 조회'}
           </button>
         </div>
+
+        {/* 커스텀에서 붙었던 상대 - 클릭하면 바로 검색 */}
+        {!opponentsLoading && opponents && opponents.length > 0 && (
+          <div style={{ marginBottom: '28px' }}>
+            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>
+              최근 커스텀에서 붙었던 상대 · 클릭하면 바로 검색해요
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px' }}>
+              {opponents.map(o => (
+                <button
+                  key={o.nickname}
+                  onClick={() => search(o.nickname)}
+                  disabled={loading}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '7px 14px', borderRadius: '100px',
+                    background: nickname === o.nickname ? PITCH : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${nickname === o.nickname ? PITCH : 'rgba(255,255,255,0.12)'}`,
+                    color: nickname === o.nickname ? '#04140d' : '#fff',
+                    fontSize: '0.82rem', fontWeight: 700, fontFamily: 'inherit',
+                    cursor: loading ? 'default' : 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {o.nickname}
+                  <span style={{
+                    fontSize: '0.68rem', fontWeight: 700,
+                    color: nickname === o.nickname ? 'rgba(4,20,13,0.6)' : 'rgba(255,255,255,0.4)',
+                  }}>{o.count}경기</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 에러 */}
         {errorMsg && (

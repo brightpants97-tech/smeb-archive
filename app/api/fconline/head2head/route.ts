@@ -89,6 +89,52 @@ function extractResult(detail: any, matchtype: number) {
   return { info };
 }
 
+// 최근 경기 상세 스캔 결과를 공유 캐시로 저장 - 상대전적 검색과 '최근 붙었던 상대' 목록이
+// 이 하나의 스캔 결과를 같이 재사용해서 넥슨 API 호출을 중복으로 쓰지 않게 함.
+const getRecentMatchesRaw = unstable_cache(
+  async (meOuid: string) => {
+    const results: { matchType: number; detail: any }[] = [];
+    for (const matchtype of MATCH_TYPES) {
+      const ids = await getMatchIds(meOuid, matchtype, SEARCH_DEPTH);
+      const CHUNK = 10;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        const details = await Promise.all(chunk.map(getMatchDetail));
+        for (const detail of details) {
+          if (detail && extractResult(detail, matchtype)) results.push({ matchType: matchtype, detail });
+        }
+      }
+    }
+    return results;
+  },
+  ['fconline-recent-matches'],
+  { revalidate: 1800 } // 30분 - 상대 검색/목록이 이 캐시를 공유해서 API 호출을 아낌
+);
+
+// 최근 스캔된 경기들에서 me를 뺀 상대들을 뽑아 등장 횟수/최근 날짜로 집계
+async function fetchOpponentsList(meNickname: string) {
+  const meOuid = await getOuid(meNickname);
+  if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
+
+  const raw = await getRecentMatchesRaw(meOuid);
+  const map = new Map<string, { nickname: string; count: number; lastDate: string }>();
+
+  for (const { detail } of raw) {
+    const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
+    if (!opp?.nickname) continue;
+    const existing = map.get(opp.ouid);
+    if (existing) {
+      existing.count += 1;
+      if (detail.matchDate > existing.lastDate) existing.lastDate = detail.matchDate;
+    } else {
+      map.set(opp.ouid, { nickname: opp.nickname, count: 1, lastDate: detail.matchDate });
+    }
+  }
+
+  const opponents = [...map.values()].sort((a, b) => (b.count - a.count) || (a.lastDate < b.lastDate ? 1 : -1));
+  return { meNickname, opponents, searchedDepth: SEARCH_DEPTH };
+}
+
 async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     // 두 조회를 동시에 쏘면 개발단계 키 rate limit에 걸리기 쉬워 순차로 진행
     const meOuid = await getOuid(meNickname);
@@ -97,56 +143,43 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     if (!oppOuid) return { error: `'${opponentNickname}' 닉네임을 찾을 수 없어요.` };
 
     const spidMap = await getSpidMap();
+    const raw = await getRecentMatchesRaw(meOuid); // 상대 목록 API와 공유되는 캐시된 스캔 결과
 
     const matches: any[] = [];
     let win = 0, lose = 0, draw = 0;
 
-    for (const matchtype of MATCH_TYPES) {
-      const ids = await getMatchIds(meOuid, matchtype, SEARCH_DEPTH);
+    for (const { matchType, detail } of raw) {
+      const info = detail.matchInfo;
+      const me = info.find((p: any) => p.ouid === meOuid);
+      const opp = info.find((p: any) => p.ouid === oppOuid);
+      if (!me || !opp) continue; // 이 경기엔 그 상대가 없었음
 
-      // match-detail 호출을 너무 한꺼번에 몰아치지 않도록 어느 정도 나눠서 처리
-      const CHUNK = 10;
-      for (let i = 0; i < ids.length; i += CHUNK) {
-        const chunk = ids.slice(i, i + CHUNK);
-        const details = await Promise.all(chunk.map(getMatchDetail));
+      const meDetail = me.matchDetail || {};
+      const oppDetail = opp.matchDetail || {};
+      const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
+      const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
 
-        for (const detail of details) {
-          if (!detail) continue;
-          const result = extractResult(detail, matchtype);
-          if (!result) continue;
-
-          const me = result.info.find((p: any) => p.ouid === meOuid);
-          const opp = result.info.find((p: any) => p.ouid === oppOuid);
-          if (!me || !opp) continue; // 이 경기엔 그 상대가 없었음
-
-          const meDetail = me.matchDetail || {};
-          const oppDetail = opp.matchDetail || {};
-          const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
-          const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
-
-          let outcome: 'win' | 'lose' | 'draw' | 'unknown' = 'unknown';
-          const rawResult = String(meDetail.matchResult ?? '').toLowerCase();
-          if (rawResult.includes('win') || rawResult.includes('승')) outcome = 'win';
-          else if (rawResult.includes('lose') || rawResult.includes('패')) outcome = 'lose';
-          else if (rawResult.includes('draw') || rawResult.includes('무')) outcome = 'draw';
-          else if (typeof meGoal === 'number' && typeof oppGoal === 'number') {
-            outcome = meGoal > oppGoal ? 'win' : meGoal < oppGoal ? 'lose' : 'draw';
-          }
-          if (outcome === 'win') win++;
-          else if (outcome === 'lose') lose++;
-          else if (outcome === 'draw') draw++;
-
-          matches.push({
-            matchId: detail.matchId ?? null,
-            matchDate: detail.matchDate ?? meDetail.matchDate ?? null,
-            matchType: matchtype,
-            outcome,
-            meGoal, oppGoal,
-            meSquad: extractSquad(me, spidMap),
-            oppSquad: extractSquad(opp, spidMap),
-          });
-        }
+      let outcome: 'win' | 'lose' | 'draw' | 'unknown' = 'unknown';
+      const rawResult = String(meDetail.matchResult ?? '').toLowerCase();
+      if (rawResult.includes('win') || rawResult.includes('승')) outcome = 'win';
+      else if (rawResult.includes('lose') || rawResult.includes('패')) outcome = 'lose';
+      else if (rawResult.includes('draw') || rawResult.includes('무')) outcome = 'draw';
+      else if (typeof meGoal === 'number' && typeof oppGoal === 'number') {
+        outcome = meGoal > oppGoal ? 'win' : meGoal < oppGoal ? 'lose' : 'draw';
       }
+      if (outcome === 'win') win++;
+      else if (outcome === 'lose') lose++;
+      else if (outcome === 'draw') draw++;
+
+      matches.push({
+        matchId: detail.matchId ?? null,
+        matchDate: detail.matchDate ?? meDetail.matchDate ?? null,
+        matchType,
+        outcome,
+        meGoal, oppGoal,
+        meSquad: extractSquad(me, spidMap),
+        oppSquad: extractSquad(opp, spidMap),
+      });
     }
 
     matches.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
@@ -176,13 +209,39 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
   return getHead2HeadCached(meNickname, opponentNickname);
 }
 
+// 상대 목록도 결과 자체를 캐시해서 페이지 로드 때마다 다시 계산 안 하게 함
+const getOpponentsListCached = unstable_cache(
+  fetchOpponentsList,
+  ['fconline-opponents-list'],
+  { revalidate: 1800 }
+);
+
+async function getOpponentsList(meNickname: string) {
+  if (!NEXON_KEY) {
+    return { error: 'NEXON_API_KEY가 설정되어 있지 않습니다.' };
+  }
+  return getOpponentsListCached(meNickname);
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const opponent = searchParams.get('opponent');
   const me = searchParams.get('me') || SME_NICKNAME;
+  const list = searchParams.get('list');
+
+  if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
+
+  if (list) {
+    try {
+      const data = await getOpponentsList(me);
+      if ((data as any).error) return NextResponse.json(data, { status: 404 });
+      return NextResponse.json(data);
+    } catch (e: any) {
+      return NextResponse.json({ error: '조회 중 오류가 발생했어요: ' + (e?.message || 'unknown') }, { status: 500 });
+    }
+  }
 
   if (!opponent) return NextResponse.json({ error: 'opponent 파라미터(상대 닉네임)가 필요해요.' }, { status: 400 });
-  if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
 
   try {
     const data = await getHead2Head(me, opponent);
