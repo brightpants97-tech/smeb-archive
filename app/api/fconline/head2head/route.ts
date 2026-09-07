@@ -14,13 +14,21 @@ const MATCH_TYPES = [50, 40, 30, 60];
 // 상대전적 검색 시 뒤져볼 최근 경기 수 (매치타입별로 각각 이만큼 조회함)
 const SEARCH_DEPTH = 50;
 
-function nexonFetch(url: string) {
+// 429(rate limit) 응답 시 짧게 기다렸다가 재시도. 개발단계 키는 호출 한도가 낮아서
+// 여러 요청이 겹치면 종종 걸림 - 실패를 '없음'으로 오판하지 않도록 재시도로 흡수.
+async function nexonFetch(url: string, retries = 3): Promise<Response> {
+  for (let i = 0; i <= retries; i++) {
+    const res = await fetch(url, { headers: { 'x-nxopen-api-key': NEXON_KEY }, cache: 'no-store' });
+    if (res.status !== 429) return res;
+    if (i < retries) await new Promise(r => setTimeout(r, 300 * (i + 1)));
+  }
   return fetch(url, { headers: { 'x-nxopen-api-key': NEXON_KEY }, cache: 'no-store' });
 }
 
 async function getOuid(nickname: string): Promise<string | null> {
   const res = await nexonFetch(`${BASE}/id?nickname=${encodeURIComponent(nickname)}`);
-  if (!res.ok) return null;
+  if (res.status === 404) return null; // 진짜로 없는 닉네임
+  if (!res.ok) throw new Error(`넥슨 API 오류 (${res.status}) - 잠시 후 다시 시도해주세요.`);
   const data = await res.json();
   return data?.ouid || null;
 }
@@ -79,8 +87,10 @@ function extractResult(detail: any, matchtype: number) {
 }
 
 async function fetchHead2Head(meNickname: string, opponentNickname: string) {
-    const [meOuid, oppOuid] = await Promise.all([getOuid(meNickname), getOuid(opponentNickname)]);
+    // 두 조회를 동시에 쏘면 개발단계 키 rate limit에 걸리기 쉬워 순차로 진행
+    const meOuid = await getOuid(meNickname);
     if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
+    const oppOuid = await getOuid(opponentNickname);
     if (!oppOuid) return { error: `'${opponentNickname}' 닉네임을 찾을 수 없어요.` };
 
     const spidMap = await getSpidMap();
