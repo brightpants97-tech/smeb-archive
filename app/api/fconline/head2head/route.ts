@@ -54,7 +54,7 @@ let spidCache: Record<string, string> | null = null;
 async function getSpidMap(): Promise<Record<string, string>> {
   if (spidCache) return spidCache;
   try {
-    const res = await fetch('https://static.api.nexon.co.kr/fifaonline4/latest/spid.json', { cache: 'no-store' });
+    const res = await fetch('https://open.api.nexon.com/static/fconline/meta/spid.json', { cache: 'no-store' });
     if (!res.ok) throw new Error('spid fetch failed');
     const list = await res.json();
     const map: Record<string, string> = {};
