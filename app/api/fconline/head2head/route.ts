@@ -173,18 +173,16 @@ export async function GET(request: Request) {
     if (!NEXON_KEY) return NextResponse.json({ error: 'NEXON_API_KEY 없음' }, { status: 404 });
     const meOuid = await getOuid(me || '');
     if (!meOuid) return NextResponse.json({ error: `me(${me}) ouid 조회 실패` }, { status: 404 });
-    const idsByType: Record<string, any> = {};
+    const rows: any[] = [];
     for (const mt of MATCH_TYPES) {
       const ids = await getMatchIds(meOuid, mt, 5);
-      idsByType[mt] = ids;
+      for (const id of ids) {
+        const detail = await getMatchDetail(id);
+        const opp = detail?.matchInfo?.find((p: any) => p.ouid !== meOuid);
+        rows.push({ matchType: mt, matchId: id, date: detail?.matchDate, opponentNickname: opp?.nickname ?? null });
+      }
     }
-    const firstType = MATCH_TYPES.find(mt => idsByType[mt]?.length > 0);
-    let sampleDetail = null;
-    if (firstType) {
-      const firstId = idsByType[firstType][0];
-      sampleDetail = await getMatchDetail(firstId);
-    }
-    return NextResponse.json({ meOuid, idsByType, sampleDetail });
+    return NextResponse.json({ meOuid, rows });
   }
 
   if (!opponent) return NextResponse.json({ error: 'opponent 파라미터(상대 닉네임)가 필요해요.' }, { status: 400 });
