@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
+import { saveMatches, getStreamerByNickname, getOverallSummary, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
 // 문서: https://openapi.nexon.com/ko/game/fconline/
@@ -66,19 +67,31 @@ async function getSpidMap(): Promise<Record<string, string>> {
   return spidCache;
 }
 
-// matchInfo 배열 안에서 선수 리스트(스쿼드)를 뽑아내는 헬�퍼.
+// matchInfo 배열 안에서 선수 리스트(스쿼드)를 뽑아내는 헬퍼.
 // 참가자 객체에 직접 player: [{ spId, spPosition, spGrade, status:{...} }] 형태로 들어있음.
 function extractSquad(participant: any, spidMap: Record<string, string>) {
   const raw = participant?.player;
   if (!Array.isArray(raw)) return [];
   return raw.map((p: any) => {
     const spId = String(p.spId ?? '');
+    const s = p.status || {};
     return {
       spId,
       name: spidMap[spId] || `선수#${spId || '?'}`,
       position: p.spPosition ?? null,
       status: null,
       grade: p.spGrade ?? null,
+      stats: {
+        rating: s.spRating ?? null,
+        shoot: s.shoot ?? null,
+        effectiveShoot: s.effectiveShoot ?? null,
+        passTry: s.passTry ?? null,
+        passSuccess: s.passSuccess ?? null,
+        tackleTry: s.tackleTry ?? null,
+        tackle: s.tackle ?? null,
+        block: s.block ?? null,
+        intercept: s.intercept ?? null,
+      },
     };
   });
 }
@@ -87,6 +100,66 @@ function extractResult(detail: any, matchtype: number) {
   const info = detail?.matchInfo;
   if (!Array.isArray(info) || info.length < 2) return null;
   return { info };
+}
+
+// 팀 단위 스탯 (점유율/코너킥) - 필드가 없을 수도 있어 방어적으로 여러 후보 키를 시도
+function extractTeamStats(participant: any) {
+  const md = participant?.matchDetail || {};
+  return {
+    possession: md.possession ?? md.ballPossession ?? null,
+    cornerKick: md.cornerKick ?? md.corner ?? null,
+  };
+}
+
+// 매치 목록에서 선수(spId)별 평균 스탯을 집계하고 베스트/배드 선수를 표시
+function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
+  const map = new Map<string, {
+    spId: string; name: string; games: number;
+    sumRating: number; cntRating: number;
+    sumShoot: number; sumEffShoot: number;
+    sumPassTry: number; sumPassSuccess: number;
+    sumTackle: number; sumBlock: number;
+  }>();
+
+  for (const m of matches) {
+    const squad = m[side] as any[];
+    for (const p of squad || []) {
+      if (!p.spId) continue;
+      let e = map.get(p.spId);
+      if (!e) {
+        e = { spId: p.spId, name: p.name, games: 0, sumRating: 0, cntRating: 0, sumShoot: 0, sumEffShoot: 0, sumPassTry: 0, sumPassSuccess: 0, sumTackle: 0, sumBlock: 0 };
+        map.set(p.spId, e);
+      }
+      e.games++;
+      const st = p.stats || {};
+      if (typeof st.rating === 'number') { e.sumRating += st.rating; e.cntRating++; }
+      if (typeof st.shoot === 'number') e.sumShoot += st.shoot;
+      if (typeof st.effectiveShoot === 'number') e.sumEffShoot += st.effectiveShoot;
+      if (typeof st.passTry === 'number') e.sumPassTry += st.passTry;
+      if (typeof st.passSuccess === 'number') e.sumPassSuccess += st.passSuccess;
+      if (typeof st.tackle === 'number') e.sumTackle += st.tackle;
+      if (typeof st.block === 'number') e.sumBlock += st.block;
+    }
+  }
+
+  const list = [...map.values()].map(e => ({
+    spId: e.spId, name: e.name, games: e.games,
+    avgRating: e.cntRating ? +(e.sumRating / e.cntRating).toFixed(2) : null,
+    avgShoot: +(e.sumShoot / e.games).toFixed(1),
+    avgEffectiveShoot: +(e.sumEffShoot / e.games).toFixed(1),
+    passSuccessRate: e.sumPassTry ? +((e.sumPassSuccess / e.sumPassTry) * 100).toFixed(1) : null,
+    avgTackle: +(e.sumTackle / e.games).toFixed(1),
+    avgBlock: +(e.sumBlock / e.games).toFixed(1),
+    isBest: false, isWorst: false,
+  }));
+
+  const withRating = list.filter(p => p.avgRating != null).sort((a, b) => (b.avgRating as number) - (a.avgRating as number));
+  if (withRating.length > 1) {
+    withRating[0].isBest = true;
+    withRating[withRating.length - 1].isWorst = true;
+  }
+  list.sort((a, b) => (b.avgRating ?? -1) - (a.avgRating ?? -1));
+  return list;
 }
 
 // 최근 경기 상세 스캔 결과를 공유 캐시로 저장 - 상대전적 검색과 '최근 붙었던 상대' 목록이
@@ -177,6 +250,8 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
         matchType,
         outcome,
         meGoal, oppGoal,
+        meTeam: extractTeamStats(me),
+        oppTeam: extractTeamStats(opp),
         meSquad: extractSquad(me, spidMap),
         oppSquad: extractSquad(opp, spidMap),
       });
@@ -184,9 +259,42 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
 
     matches.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
 
+    // 영구 저장 (DB 연결돼 있으면) - 다음에 조회할 때도 계속 쌓인 기록으로 남게
+    if (matches.length > 0) {
+      const toStore: StoredMatch[] = matches
+        .filter(m => m.matchId && m.matchDate)
+        .map(m => ({
+          matchId: m.matchId, matchDate: m.matchDate, matchType: m.matchType,
+          meOuid, oppOuid, oppNickname: opponentNickname, outcome: m.outcome,
+          meGoal: m.meGoal, oppGoal: m.oppGoal, meSquad: m.meSquad, oppSquad: m.oppSquad,
+        }));
+      saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
+    }
+
+    const [meStreamer, oppStreamer] = await Promise.all([
+      getStreamerByNickname(meNickname).catch(() => null),
+      getStreamerByNickname(opponentNickname).catch(() => null),
+    ]);
+
+    // 팀 평균 점유율/코너킥 (필드 존재할 때만)
+    const avgTeam = (side: 'meTeam' | 'oppTeam', key: 'possession' | 'cornerKick') => {
+      const vals = matches.map(m => m[side]?.[key]).filter((v: any) => typeof v === 'number');
+      return vals.length ? +(vals.reduce((a: number, b: number) => a + b, 0) / vals.length).toFixed(1) : null;
+    };
+
     return {
       meNickname, opponentNickname, meOuid, oppOuid,
+      meDisplay: { name: meStreamer?.displayName || meNickname, color: meStreamer?.teamColor || null },
+      oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null },
       summary: { win, lose, draw, total: win + lose + draw },
+      teamStats: {
+        me: { possession: avgTeam('meTeam', 'possession'), cornerKick: avgTeam('meTeam', 'cornerKick') },
+        opp: { possession: avgTeam('oppTeam', 'possession'), cornerKick: avgTeam('oppTeam', 'cornerKick') },
+      },
+      playerStats: {
+        me: aggregatePlayerStats(matches, 'meSquad'),
+        opp: aggregatePlayerStats(matches, 'oppSquad'),
+      },
       matches,
       searchedDepth: SEARCH_DEPTH,
     };
@@ -228,8 +336,18 @@ export async function GET(request: Request) {
   const opponent = searchParams.get('opponent');
   const me = searchParams.get('me') || SME_NICKNAME;
   const list = searchParams.get('list');
+  const overall = searchParams.get('overall');
 
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
+
+  if (overall) {
+    try {
+      const summary = await getOverallSummary();
+      return NextResponse.json({ summary: summary || { win: 0, lose: 0, draw: 0, total: 0 } });
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || '조회 실패' }, { status: 500 });
+    }
+  }
 
   if (list) {
     try {
