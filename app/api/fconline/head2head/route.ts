@@ -8,19 +8,20 @@ const NEXON_KEY = process.env.NEXON_API_KEY || '';
 const BASE = 'https://open.api.nexon.com/fconline/v1';
 const SME_NICKNAME = process.env.SMEB_FC_NICKNAME || ''; // 스맵의 FC 온라인 닉네임
 
-// 매치 타입: 30=리그친선, 40=클래식1on1, 50=공식경기, 60=공식친선
-// 스트리머 대결은 보통 클래식1on1/리그친선 쪽이라 여러 타입을 함께 조회함
-const MATCH_TYPES = [50, 40, 30, 60];
+// 매치 타입: 40=클래식1on1(스트리머 대결 대부분 여기), 50=공식경기
+// 30(리그친선)/60(공식친선)은 실측 결과 거의 안 쓰여서 응답속도를 위해 제외
+const MATCH_TYPES = [40, 50];
 // 상대전적 검색 시 뒤져볼 최근 경기 수 (매치타입별로 각각 이만큼 조회함)
-const SEARCH_DEPTH = 50;
+// 너무 크면 서버리스 함수 실행시간 제한에 걸려 타임아웃날 수 있음
+const SEARCH_DEPTH = 25;
 
 // 429(rate limit) 응답 시 짧게 기다렸다가 재시도. 개발단계 키는 호출 한도가 낮아서
 // 여러 요청이 겹치면 종종 걸림 - 실패를 '없음'으로 오판하지 않도록 재시도로 흡수.
-async function nexonFetch(url: string, retries = 3): Promise<Response> {
+async function nexonFetch(url: string, retries = 2): Promise<Response> {
   for (let i = 0; i <= retries; i++) {
     const res = await fetch(url, { headers: { 'x-nxopen-api-key': NEXON_KEY }, cache: 'no-store' });
     if (res.status !== 429) return res;
-    if (i < retries) await new Promise(r => setTimeout(r, 300 * (i + 1)));
+    if (i < retries) await new Promise(r => setTimeout(r, 150 * (i + 1)));
   }
   return fetch(url, { headers: { 'x-nxopen-api-key': NEXON_KEY }, cache: 'no-store' });
 }
