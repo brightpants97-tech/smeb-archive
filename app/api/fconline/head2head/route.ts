@@ -132,7 +132,8 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
       }
       e.games++;
       const st = p.stats || {};
-      if (typeof st.rating === 'number') { e.sumRating += st.rating; e.cntRating++; }
+      // 평점 0은 실제로 출전하지 않은 벤치 멤버인 경우가 많아 평균 계산에서 제외
+      if (typeof st.rating === 'number' && st.rating > 0) { e.sumRating += st.rating; e.cntRating++; }
       if (typeof st.shoot === 'number') e.sumShoot += st.shoot;
       if (typeof st.effectiveShoot === 'number') e.sumEffShoot += st.effectiveShoot;
       if (typeof st.passTry === 'number') e.sumPassTry += st.passTry;
@@ -142,9 +143,11 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
     }
   }
 
-  const list = [...map.values()].map(e => ({
+  const list = [...map.values()]
+    .filter(e => e.cntRating > 0) // 한 번도 실제로 뛴 기록(평점>0)이 없는 벤치 멤버는 제외
+    .map(e => ({
     spId: e.spId, name: e.name, games: e.games,
-    avgRating: e.cntRating ? +(e.sumRating / e.cntRating).toFixed(2) : null,
+    avgRating: +(e.sumRating / e.cntRating).toFixed(2),
     avgShoot: +(e.sumShoot / e.games).toFixed(1),
     avgEffectiveShoot: +(e.sumEffShoot / e.games).toFixed(1),
     passSuccessRate: e.sumPassTry ? +((e.sumPassSuccess / e.sumPassTry) * 100).toFixed(1) : null,
@@ -153,7 +156,7 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
     isBest: false, isWorst: false,
   }));
 
-  const withRating = list.filter(p => p.avgRating != null).sort((a, b) => (b.avgRating as number) - (a.avgRating as number));
+  const withRating = [...list].sort((a, b) => (b.avgRating as number) - (a.avgRating as number));
   if (withRating.length > 1) {
     withRating[0].isBest = true;
     withRating[withRating.length - 1].isWorst = true;
