@@ -8,10 +8,11 @@ const NEXON_KEY = process.env.NEXON_API_KEY || '';
 const BASE = 'https://open.api.nexon.com/fconline/v1';
 const SME_NICKNAME = process.env.SMEB_FC_NICKNAME || ''; // 스맵의 FC 온라인 닉네임
 
-// 매치 타입: 50 = 공식경기(랭크). 필요하면 다른 타입도 추가로 조회 가능.
-const MATCH_TYPES = [50];
-// 상대전적 검색 시 뒤져볼 최근 경기 수 (너무 크게 잡으면 API 호출량이 급증함)
-const SEARCH_DEPTH = 100;
+// 매치 타입: 30=리그친선, 40=클래식1on1, 50=공식경기, 60=공식친선
+// 스트리머 대결은 보통 클래식1on1/리그친선 쪽이라 여러 타입을 함께 조회함
+const MATCH_TYPES = [50, 40, 30, 60];
+// 상대전적 검색 시 뒤져볼 최근 경기 수 (매치타입별로 각각 이만큼 조회함)
+const SEARCH_DEPTH = 50;
 
 function nexonFetch(url: string) {
   return fetch(url, { headers: { 'x-nxopen-api-key': NEXON_KEY }, cache: 'no-store' });
