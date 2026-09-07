@@ -9,11 +9,12 @@ const BASE = 'https://open.api.nexon.com/fconline/v1';
 const SME_NICKNAME = process.env.SMEB_FC_NICKNAME || ''; // 스맵의 FC 온라인 닉네임
 
 // 매치 타입: 40=클래식1on1(스트리머 대결 대부분 여기), 50=공식경기
-// 30(리그친선)/60(공식친선)은 실측 결과 거의 안 쓰여서 응답속도를 위해 제외
+// 30(리그친선)/60(공식친선)은 실측 결과 거의 안 쓰여서 API 호출량 절약을 위해 제외
 const MATCH_TYPES = [40, 50];
 // 상대전적 검색 시 뒤져볼 최근 경기 수 (매치타입별로 각각 이만큼 조회함)
-// 너무 크면 서버리스 함수 실행시간 제한에 걸려 타임아웃날 수 있음
-const SEARCH_DEPTH = 25;
+// 넥슨 개발단계 키는 하루 1,000건 한도라, 검색 한 번에 match-detail 호출을
+// 너무 많이 쓰지 않도록 보수적으로 잡음 (2타입 × 20 = 최대 40건/검색)
+const SEARCH_DEPTH = 20;
 
 // 429(rate limit) 응답 시 짧게 기다렸다가 재시도. 개발단계 키는 호출 한도가 낮아서
 // 여러 요청이 겹치면 종종 걸림 - 실패를 '없음'으로 오판하지 않도록 재시도로 흡수.
@@ -29,6 +30,7 @@ async function nexonFetch(url: string, retries = 2): Promise<Response> {
 async function getOuid(nickname: string): Promise<string | null> {
   const res = await nexonFetch(`${BASE}/id?nickname=${encodeURIComponent(nickname)}`);
   if (res.status === 404) return null; // 진짜로 없는 닉네임
+  if (res.status === 429) throw new Error('오늘의 넥슨 API 호출 한도를 다 썼어요. 하루 단위로 초기화되니 내일 다시 시도해주세요.');
   if (!res.ok) throw new Error(`넥슨 API 오류 (${res.status}) - 잠시 후 다시 시도해주세요.`);
   const data = await res.json();
   return data?.ouid || null;
@@ -157,12 +159,12 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     };
 }
 
-// 성공한 결과만 10분 캐시 (에러 응답은 캐시하지 않음 - 키 설정 직후 등 일시적 오류가
-// 그대로 굳어버리는 것을 방지)
+// 성공한 결과만 캐시 (하루 1,000건 제한인 개발단계 키 기준, 같은 상대를 반복 조회해도
+// API를 다시 안 쓰도록 넉넉하게 2시간 유지 - 에러 응답은 캐시하지 않음)
 const getHead2HeadCached = unstable_cache(
   fetchHead2Head,
   ['fconline-head2head'],
-  { revalidate: 600 }
+  { revalidate: 7200 }
 );
 
 async function getHead2Head(meNickname: string, opponentNickname: string) {
@@ -178,23 +180,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const opponent = searchParams.get('opponent');
   const me = searchParams.get('me') || SME_NICKNAME;
-  const debug = searchParams.get('debug');
-
-  if (debug) {
-    if (!NEXON_KEY) return NextResponse.json({ error: 'NEXON_API_KEY 없음' }, { status: 404 });
-    const meOuid = await getOuid(me || '');
-    if (!meOuid) return NextResponse.json({ error: `me(${me}) ouid 조회 실패` }, { status: 404 });
-    const rows: any[] = [];
-    for (const mt of MATCH_TYPES) {
-      const ids = await getMatchIds(meOuid, mt, 5);
-      for (const id of ids) {
-        const detail = await getMatchDetail(id);
-        const opp = detail?.matchInfo?.find((p: any) => p.ouid !== meOuid);
-        rows.push({ matchType: mt, matchId: id, date: detail?.matchDate, opponentNickname: opp?.nickname ?? null });
-      }
-    }
-    return NextResponse.json({ meOuid, rows });
-  }
 
   if (!opponent) return NextResponse.json({ error: 'opponent 파라미터(상대 닉네임)가 필요해요.' }, { status: 400 });
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
