@@ -55,20 +55,19 @@ async function getSpidMap(): Promise<Record<string, string>> {
   return spidCache;
 }
 
-// matchInfo 배열 안에서 선수 리스트(스쿼드)를 최대한 유연하게 뽑아내는 헬퍼.
-// 넥슨 API 응답 필드명이 문서 버전에 따라 조금씩 다르게 보고되는 경우가 있어
-// 몇 가지 후보 키를 다 시도해본다.
+// matchInfo 배열 안에서 선수 리스트(스쿼드)를 뽑아내는 헬�퍼.
+// 참가자 객체에 직접 player: [{ spId, spPosition, spGrade, status:{...} }] 형태로 들어있음.
 function extractSquad(participant: any, spidMap: Record<string, string>) {
-  const raw = participant?.player || participant?.players || participant?.playerInfo || [];
+  const raw = participant?.player;
   if (!Array.isArray(raw)) return [];
   return raw.map((p: any) => {
-    const spId = String(p.spId ?? p.spid ?? p.pid ?? '');
+    const spId = String(p.spId ?? '');
     return {
       spId,
       name: spidMap[spId] || `선수#${spId || '?'}`,
-      position: p.spPosition ?? p.position ?? p.pos ?? null,
-      status: p.status ?? null, // 선발/교체 등
-      grade: p.spGrade ?? p.grade ?? p.rating ?? null,
+      position: p.spPosition ?? null,
+      status: null,
+      grade: p.spGrade ?? null,
     };
   });
 }
@@ -109,8 +108,8 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
 
           const meDetail = me.matchDetail || {};
           const oppDetail = opp.matchDetail || {};
-          const meGoal = meDetail.matchScore ?? meDetail.goal ?? meDetail.shootTotal ?? null;
-          const oppGoal = oppDetail.matchScore ?? oppDetail.goal ?? oppDetail.shootTotal ?? null;
+          const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
+          const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
 
           let outcome: 'win' | 'lose' | 'draw' | 'unknown' = 'unknown';
           const rawResult = String(meDetail.matchResult ?? '').toLowerCase();
