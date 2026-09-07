@@ -168,6 +168,25 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const opponent = searchParams.get('opponent');
   const me = searchParams.get('me') || SME_NICKNAME;
+  const debug = searchParams.get('debug');
+
+  if (debug) {
+    if (!NEXON_KEY) return NextResponse.json({ error: 'NEXON_API_KEY 없음' }, { status: 404 });
+    const meOuid = await getOuid(me || '');
+    if (!meOuid) return NextResponse.json({ error: `me(${me}) ouid 조회 실패` }, { status: 404 });
+    const idsByType: Record<string, any> = {};
+    for (const mt of MATCH_TYPES) {
+      const ids = await getMatchIds(meOuid, mt, 5);
+      idsByType[mt] = ids;
+    }
+    const firstType = MATCH_TYPES.find(mt => idsByType[mt]?.length > 0);
+    let sampleDetail = null;
+    if (firstType) {
+      const firstId = idsByType[firstType][0];
+      sampleDetail = await getMatchDetail(firstId);
+    }
+    return NextResponse.json({ meOuid, idsByType, sampleDetail });
+  }
 
   if (!opponent) return NextResponse.json({ error: 'opponent 파라미터(상대 닉네임)가 필요해요.' }, { status: 400 });
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
