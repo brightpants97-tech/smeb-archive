@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 export default function FcRecordPage() {
   return (
     <>
-      {/* 넥슨 Open API 애플리케이션(339039) 연동 확인용 Analytics 스크립트 */}
-      <Script src="https://openapi.nexon.com/js/analytics.js?app_id=339039" strategy="afterInteractive" async />
+      {/* 넥슨 Open API 애플리케이션(339932) 연동 확인용 Analytics 스크립트 */}
+      <Script src="https://openapi.nexon.com/js/analytics.js?app_id=339932" strategy="afterInteractive" async />
       <FcRecordClient />
     </>
   );
