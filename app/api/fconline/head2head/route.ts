@@ -274,11 +274,6 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
       saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
     }
 
-    const [meStreamer, oppStreamer] = await Promise.all([
-      getStreamerByNickname(meNickname).catch(() => null),
-      getStreamerByNickname(opponentNickname).catch(() => null),
-    ]);
-
     // 팀 평균 점유율/코너킥 (필드 존재할 때만)
     const avgTeam = (side: 'meTeam' | 'oppTeam', key: 'possession' | 'cornerKick') => {
       const vals = matches.map(m => m[side]?.[key]).filter((v: any) => typeof v === 'number');
@@ -287,8 +282,6 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
 
     return {
       meNickname, opponentNickname, meOuid, oppOuid,
-      meDisplay: { name: meStreamer?.displayName || meNickname, color: meStreamer?.teamColor || null },
-      oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null },
       summary: { win, lose, draw, total: win + lose + draw },
       teamStats: {
         me: { possession: avgTeam('meTeam', 'possession'), cornerKick: avgTeam('meTeam', 'cornerKick') },
@@ -317,7 +310,20 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
   }
   const result = await fetchHead2Head(meNickname, opponentNickname);
   if ((result as any).error) return result; // 에러는 캐시하지 않고 바로 반환
-  return getHead2HeadCached(meNickname, opponentNickname);
+  const cached = await getHead2HeadCached(meNickname, opponentNickname);
+
+  // 스트리머 표시명/팀컬러는 매치 데이터 캐시와 분리해서 매번 최신으로 조회
+  // (관리자에서 방금 등록/수정한 정보가 캐시 만료를 안 기다리고 바로 반영되도록)
+  const [meStreamer, oppStreamer] = await Promise.all([
+    getStreamerByNickname(meNickname).catch(() => null),
+    getStreamerByNickname(opponentNickname).catch(() => null),
+  ]);
+
+  return {
+    ...cached,
+    meDisplay: { name: meStreamer?.displayName || meNickname, color: meStreamer?.teamColor || null },
+    oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null },
+  };
 }
 
 // 상대 목록도 결과 자체를 캐시해서 페이지 로드 때마다 다시 계산 안 하게 함
