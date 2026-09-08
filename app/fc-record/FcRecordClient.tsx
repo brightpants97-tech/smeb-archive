@@ -555,7 +555,7 @@ export default function FcRecordClient() {
 
         {recent30 && recent30.length > 0 && (
           <div style={{ marginBottom: '28px' }}>
-            <p style={{ fontSize: '0.72rem', color: '#aaa', marginBottom: '10px' }}>전체 커스텀 경기 최근 {recent30.length}경기 결과</p>
+            <p style={{ fontSize: '0.72rem', color: '#aaa', marginBottom: '10px' }}>등록된 스트리머와의 최근 {recent30.length}경기 결과</p>
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
               {recent30.map((m, i) => {
                 const color = OUTCOME_COLOR[m.outcome];

@@ -260,48 +260,56 @@ async function fetchOverallLive() {
   const meOuid = await getOuid(SME_NICKNAME);
   if (!meOuid) return { win: 0, lose: 0, draw: 0, total: 0 };
 
+  const streamers = await listStreamers();
+  const registeredNicknames = new Set(streamers.map(s => s.fcNickname));
+
   const raw = await getRecentMatchesRaw(meOuid);
   const seen = new Set<string>();
   let win = 0, lose = 0, draw = 0;
   for (const { detail } of raw) {
     const id = detail.matchId;
     if (!id || seen.has(id)) continue;
-    seen.add(id);
     const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
-    if (!me) continue;
+    const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
+    if (!me || !opp) continue;
+    if (!registeredNicknames.has(opp.nickname)) continue; // 등록된 스트리머와의 경기만 집계
+    seen.add(id);
     const outcome = judgeOutcome(me);
     if (outcome === 'win') win++; else if (outcome === 'lose') lose++; else if (outcome === 'draw') draw++;
   }
+  // 저장소에 남아있는 과거 기록도 - 저장 당시의 상대 닉네임이 지금 기준 등록되어 있으면 포함
   const stored = await getAllStoredMatches(3000).catch(() => []);
   for (const m of stored) {
     if (seen.has(m.matchId)) continue;
+    if (!registeredNicknames.has(m.oppNickname)) continue;
     seen.add(m.matchId);
     if (m.outcome === 'win') win++; else if (m.outcome === 'lose') lose++; else if (m.outcome === 'draw') draw++;
   }
   return { win, lose, draw, total: win + lose + draw };
 }
 
-// 최근 30경기 - 상대 구분 없이 전체 커스텀 경기 결과 (등록된 스트리머면 그 이름/이미지로 표시)
+// 최근 30경기 - 등록된 스트리머와 붙었던 경기만 (미등록 상대와의 일반 매칭은 제외)
 async function fetchRecent30() {
   if (!SME_NICKNAME) return { matches: [] };
   const meOuid = await getOuid(SME_NICKNAME);
   if (!meOuid) return { matches: [] };
 
-  const raw = await getRecentMatchesRaw(meOuid);
   const streamers = await listStreamers();
   const byNickname = new Map(streamers.map(s => [s.fcNickname, s]));
 
+  const raw = await getRecentMatchesRaw(meOuid);
   const rows = raw.map(({ detail }) => {
     const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
     const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
     if (!me || !opp) return null;
+    const s = byNickname.get(opp.nickname);
+    if (!s) return null; // 등록 안 된 상대는 제외
     const outcome = judgeOutcome(me);
     const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
     const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
-    const s = byNickname.get(opp.nickname);
     return {
       matchId: detail.matchId, matchDate: detail.matchDate, outcome, meGoal, oppGoal,
-      oppNickname: opp.nickname, oppDisplayName: s?.displayName || null, oppProfileImage: s?.profileImage || null,
+      oppNickname: opp.nickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
     };
   }).filter(Boolean) as any[];
 
