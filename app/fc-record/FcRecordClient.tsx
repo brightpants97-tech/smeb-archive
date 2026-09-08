@@ -157,15 +157,29 @@ function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void
         background: '#fff', borderRadius: '18px', padding: '24px', fontFamily: FONT,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-          <PlayerImg spId={p.spId} size={56} />
+          <div style={{ position: 'relative' }}>
+            <PlayerImg spId={p.spId} size={56} />
+            {p.grade != null && (
+              <span style={{
+                position: 'absolute', bottom: '-4px', right: '-6px', background: 'linear-gradient(135deg, #F2C94C, #E0A62F)',
+                color: '#5a3d00', fontSize: '0.68rem', fontWeight: 900, padding: '2px 6px', borderRadius: '8px',
+                border: '1.5px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+              }}>+{p.grade}</span>
+            )}
+          </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontWeight: 900, fontSize: '1.05rem', color: '#111' }}>{p.name}</span>
               {p.isMotm && <span title="Man of the Match">⭐</span>}
             </div>
-            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
               {group && <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#fff', background: color, padding: '2px 8px', borderRadius: '6px' }}>{POSITION_MAP[p.position as number]?.label}</span>}
-              {p.grade != null && <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#888', background: '#f2f2f2', padding: '2px 8px', borderRadius: '6px' }}>강화 Lv.{p.grade}</span>}
+              {p.grade != null && (
+                <span style={{
+                  fontSize: '0.7rem', fontWeight: 900, color: '#7a5200', background: 'linear-gradient(135deg, #FFE9A8, #F2C94C)',
+                  padding: '2px 9px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '3px',
+                }}>⚡ 강화 +{p.grade}</span>
+              )}
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.2rem', color: '#ccc', cursor: 'pointer' }}>✕</button>
@@ -239,6 +253,13 @@ function PitchPlayerChip({ p, coord, onClick }: { p: SquadPlayer; coord: { x: nu
             display: 'flex', alignItems: 'center', gap: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }}>{rating.toFixed(1)}{p.isMotm && '★'}</span>
         )}
+        {p.grade != null && (
+          <span style={{
+            position: 'absolute', bottom: '-4px', left: '-6px', background: 'linear-gradient(135deg, #FFE9A8, #F2C94C)',
+            color: '#5a3d00', fontSize: '0.56rem', fontWeight: 900, padding: '0 4px', borderRadius: '5px',
+            border: '1px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          }}>+{p.grade}</span>
+        )}
       </div>
       <span style={{
         marginTop: '3px', fontSize: '0.56rem', fontWeight: 800, color: '#fff',
@@ -254,13 +275,38 @@ function PitchPlayerChip({ p, coord, onClick }: { p: SquadPlayer; coord: { x: nu
   );
 }
 
+function BenchChip({ p, onClick }: { p: SquadPlayer; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: '5px', background: '#f7f7f7', border: '1px solid #eee',
+      borderRadius: '100px', padding: '3px 10px 3px 3px', cursor: 'pointer', fontFamily: FONT,
+    }}>
+      <div style={{ position: 'relative' }}>
+        <PlayerImg spId={p.spId} size={26} />
+        {p.grade != null && (
+          <span style={{
+            position: 'absolute', bottom: '-3px', right: '-4px', background: 'linear-gradient(135deg, #FFE9A8, #F2C94C)',
+            color: '#5a3d00', fontSize: '0.5rem', fontWeight: 900, padding: '0 3px', borderRadius: '4px',
+            border: '1px solid #fff',
+          }}>+{p.grade}</span>
+        )}
+      </div>
+      <span style={{ fontSize: '0.68rem', color: '#333' }}>{p.name}</span>
+    </button>
+  );
+}
+
 // ── 하나의 가로 핏치에 양팀을 마주보게 배치 ──────────────────────────────────
 function MatchPitch({ meSquad, oppSquad }: { meSquad: SquadPlayer[]; oppSquad: SquadPlayer[] }) {
   const [selected, setSelected] = useState<SquadPlayer | null>(null);
   const meOnPitch = meSquad.filter(p => typeof p.position === 'number' && POSITION_MAP[p.position]);
   const oppOnPitch = oppSquad.filter(p => typeof p.position === 'number' && POSITION_MAP[p.position]);
-  const meBench = meSquad.filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position]));
-  const oppBench = oppSquad.filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position]));
+  const meBench = meSquad
+    .filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position]))
+    .sort((a, b) => (b.grade ?? -1) - (a.grade ?? -1));
+  const oppBench = oppSquad
+    .filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position]))
+    .sort((a, b) => (b.grade ?? -1) - (a.grade ?? -1));
 
   return (
     <div>
@@ -291,26 +337,10 @@ function MatchPitch({ meSquad, oppSquad }: { meSquad: SquadPlayer[]; oppSquad: S
       {(meBench.length > 0 || oppBench.length > 0) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginTop: '10px', flexWrap: 'wrap' as const }}>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-            {meBench.map((p, i) => (
-              <button key={p.spId || i} onClick={() => setSelected(p)} style={{
-                display: 'flex', alignItems: 'center', gap: '5px', background: '#f7f7f7', border: '1px solid #eee',
-                borderRadius: '100px', padding: '3px 10px 3px 3px', cursor: 'pointer', fontFamily: FONT,
-              }}>
-                <PlayerImg spId={p.spId} size={26} />
-                <span style={{ fontSize: '0.68rem', color: '#333' }}>{p.name}</span>
-              </button>
-            ))}
+            {meBench.map((p, i) => <BenchChip key={p.spId || i} p={p} onClick={() => setSelected(p)} />)}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-            {oppBench.map((p, i) => (
-              <button key={p.spId || i} onClick={() => setSelected(p)} style={{
-                display: 'flex', alignItems: 'center', gap: '5px', background: '#f7f7f7', border: '1px solid #eee',
-                borderRadius: '100px', padding: '3px 10px 3px 3px', cursor: 'pointer', fontFamily: FONT,
-              }}>
-                <PlayerImg spId={p.spId} size={26} />
-                <span style={{ fontSize: '0.68rem', color: '#333' }}>{p.name}</span>
-              </button>
-            ))}
+            {oppBench.map((p, i) => <BenchChip key={p.spId || i} p={p} onClick={() => setSelected(p)} />)}
           </div>
         </div>
       )}
