@@ -573,6 +573,15 @@ export async function GET(request: Request) {
     }
   }
 
+  if (searchParams.get('rawdebug')) {
+    if (!NEXON_KEY) return NextResponse.json({ error: 'no key' }, { status: 500 });
+    const meOuid = await getOuid(me);
+    if (!meOuid) return NextResponse.json({ error: 'no ouid' }, { status: 404 });
+    const raw = await getRecentMatchesRaw(meOuid);
+    const p0 = raw[0]?.detail?.matchInfo?.[0]?.player?.[0];
+    return NextResponse.json({ playerKeys: p0 ? Object.keys(p0) : null, playerSample: p0 });
+  }
+
   if (list) {
     try {
       const data = await getOpponentsList(me);
