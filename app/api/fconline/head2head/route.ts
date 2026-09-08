@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { saveMatches, getStreamerByNickname, getOverallSummary, getStoredMatchesForOpponent, type StoredMatch } from '@/app/lib/fconline-db';
+import { saveMatches, getStreamerByNickname, getStoredMatchesForOpponent, getAllStoredMatches, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
 // 문서: https://openapi.nexon.com/ko/game/fconline/
@@ -114,33 +114,61 @@ function extractResult(detail: any, matchtype: number) {
   return { info };
 }
 
-// 팀 단위 스탯 - matchDetail의 팀 전체 기록(점유율/코너킥) + 스쿼드 합산/평균(평점/슈팅/패스/태클/블락)
-// averageRating 필드는 실측 결과 개인 평점과 스케일이 안 맞아서(비정상적으로 낮음) 안 씀 -
-// 대신 실제 출전(평점>0)한 선수들의 평점을 직접 평균냄
+// 팀 단위 스탯 - matchDetail/pass/defence의 팀 전체 기록 + 스쿼드 평균(평점) + shootDetail(득점 위치/거리)
+// averageRating 필드는 실측 결과 개인 평점과 스케일이 안 맞아서(비정상적으로 낮음) 안 씀
 function extractTeamStats(participant: any, squad: any[]) {
   const md = participant?.matchDetail || {};
-  let shoot = 0, effShoot = 0, passTry = 0, passSuccess = 0, tackle = 0, block = 0;
+  const pass = participant?.pass || {};
+  const def = participant?.defence || {};
+  const shootDetail: any[] = Array.isArray(participant?.shootDetail) ? participant.shootDetail : [];
+
+  let shoot = 0, effShoot = 0;
   let ratingSum = 0, ratingCnt = 0;
+  let intercept = 0, dribbleTry = 0, dribbleSuccess = 0, aerialTry = 0, aerialSuccess = 0;
   for (const p of squad) {
     const s = p.stats || {};
     shoot += s.shoot || 0;
     effShoot += s.effectiveShoot || 0;
-    passTry += s.passTry || 0;
-    passSuccess += s.passSuccess || 0;
-    tackle += s.tackle || 0;
-    block += s.block || 0;
+    intercept += s.intercept || 0;
+    dribbleTry += s.dribbleTry || 0;
+    dribbleSuccess += s.dribbleSuccess || 0;
+    aerialTry += s.aerialTry || 0;
+    aerialSuccess += s.aerialSuccess || 0;
     if (typeof s.rating === 'number' && s.rating > 0) { ratingSum += s.rating; ratingCnt++; }
   }
+
+  // 득점 위치 기반 - inPenalty(박스 안 여부)는 검증된 필드라 이걸로 계산, 세부 유형 코드는 불확실해서 사용 안함
+  const goals = shootDetail.filter(g => g && typeof g.x === 'number');
+  const inBoxGoals = goals.filter(g => g.inPenalty).length;
+  const avgGoalDistance = goals.length
+    ? +(goals.reduce((sum, g) => sum + Math.abs(1 - g.x) * 105, 0) / goals.length).toFixed(1)
+    : null;
+
   return {
     rating: ratingCnt ? +(ratingSum / ratingCnt).toFixed(2) : null,
-    possession: md.possession ?? md.ballPossession ?? null,
-    cornerKick: md.cornerKick ?? md.corner ?? null,
+    possession: md.possession ?? null,
+    cornerKick: md.cornerKick ?? null,
+    foul: md.foul ?? null,
+    offside: md.offsideCount ?? null,
+    systemPause: md.systemPause ?? null,
+    yellowCards: md.yellowCards ?? null,
+    redCards: md.redCards ?? null,
     shoot, effectiveShoot: effShoot,
-    passSuccessRate: passTry ? +((passSuccess / passTry) * 100).toFixed(1) : null,
-    tackle, block,
+    passSuccessRate: pass.passTry ? +((pass.passSuccess / pass.passTry) * 100).toFixed(1) : null,
+    passTry: pass.passTry ?? null, passSuccess: pass.passSuccess ?? null,
+    dribbleSuccessRate: dribbleTry ? +((dribbleSuccess / dribbleTry) * 100).toFixed(1) : null,
+    dribbleTry, dribbleSuccess,
+    aerialSuccessRate: aerialTry ? +((aerialSuccess / aerialTry) * 100).toFixed(1) : null,
+    aerialTry, aerialSuccess,
+    tackleTry: def.tackleTry ?? null, tackleSuccess: def.tackleSuccess ?? null,
+    tackleSuccessRate: def.tackleTry ? +((def.tackleSuccess / def.tackleTry) * 100).toFixed(1) : null,
+    blockTry: def.blockTry ?? null, blockSuccess: def.blockSuccess ?? null,
+    blockSuccessRate: def.blockTry ? +((def.blockSuccess / def.blockTry) * 100).toFixed(1) : null,
+    intercept,
+    goalCount: goals.length, inBoxGoalRate: goals.length ? +((inBoxGoals / goals.length) * 100).toFixed(1) : null,
+    avgGoalDistance,
   };
 }
-
 // 매치 목록에서 선수(spId)별 평균 스탯을 집계하고 베스트/배드 선수를 표시
 function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
   const map = new Map<string, {
@@ -217,7 +245,70 @@ const getRecentMatchesRaw = unstable_cache(
   { revalidate: 1800 } // 30분 - 상대 검색/목록이 이 캐시를 공유해서 API 호출을 아낌
 );
 
-// 최근 스캔된 경기들에서 me를 뺀 상대들을 뽑아 등장 횟수/최근 날짜로 집계
+// 통산 전적을 매번 클릭해서 쌓을 필요 없이, 라이브 스캔 + 저장된 과거 기록을 합쳐서 즉시 계산
+function judgeOutcome(participant: any): 'win' | 'lose' | 'draw' | 'unknown' {
+  const md = participant?.matchDetail || {};
+  const raw = String(md.matchResult ?? '').toLowerCase();
+  if (raw.includes('win') || raw.includes('승')) return 'win';
+  if (raw.includes('lose') || raw.includes('패')) return 'lose';
+  if (raw.includes('draw') || raw.includes('무')) return 'draw';
+  return 'unknown';
+}
+
+async function fetchOverallLive() {
+  if (!SME_NICKNAME) return { win: 0, lose: 0, draw: 0, total: 0 };
+  const meOuid = await getOuid(SME_NICKNAME);
+  if (!meOuid) return { win: 0, lose: 0, draw: 0, total: 0 };
+
+  const raw = await getRecentMatchesRaw(meOuid);
+  const seen = new Set<string>();
+  let win = 0, lose = 0, draw = 0;
+  for (const { detail } of raw) {
+    const id = detail.matchId;
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
+    if (!me) continue;
+    const outcome = judgeOutcome(me);
+    if (outcome === 'win') win++; else if (outcome === 'lose') lose++; else if (outcome === 'draw') draw++;
+  }
+  const stored = await getAllStoredMatches(3000).catch(() => []);
+  for (const m of stored) {
+    if (seen.has(m.matchId)) continue;
+    seen.add(m.matchId);
+    if (m.outcome === 'win') win++; else if (m.outcome === 'lose') lose++; else if (m.outcome === 'draw') draw++;
+  }
+  return { win, lose, draw, total: win + lose + draw };
+}
+
+// 최근 30경기 - 상대 구분 없이 전체 커스텀 경기 결과 (등록된 스트리머면 그 이름/이미지로 표시)
+async function fetchRecent30() {
+  if (!SME_NICKNAME) return { matches: [] };
+  const meOuid = await getOuid(SME_NICKNAME);
+  if (!meOuid) return { matches: [] };
+
+  const raw = await getRecentMatchesRaw(meOuid);
+  const streamers = await listStreamers();
+  const byNickname = new Map(streamers.map(s => [s.fcNickname, s]));
+
+  const rows = raw.map(({ detail }) => {
+    const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
+    const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
+    if (!me || !opp) return null;
+    const outcome = judgeOutcome(me);
+    const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
+    const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
+    const s = byNickname.get(opp.nickname);
+    return {
+      matchId: detail.matchId, matchDate: detail.matchDate, outcome, meGoal, oppGoal,
+      oppNickname: opp.nickname, oppDisplayName: s?.displayName || null, oppProfileImage: s?.profileImage || null,
+    };
+  }).filter(Boolean) as any[];
+
+  rows.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
+  return { matches: rows.slice(0, 30) };
+}
+// - 관리자에 등록된 스트리머만 보여주고(닉네임/이미지 정확도를 위해), 미등록 상대는 목록에서 제외
 async function fetchOpponentsList(meNickname: string) {
   const meOuid = await getOuid(meNickname);
   if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
@@ -237,7 +328,17 @@ async function fetchOpponentsList(meNickname: string) {
     }
   }
 
-  const opponents = [...map.values()].sort((a, b) => (b.count - a.count) || (a.lastDate < b.lastDate ? 1 : -1));
+  const allStreamers = await listStreamers();
+  const byNickname = new Map(allStreamers.map(s => [s.fcNickname, s]));
+
+  const opponents = [...map.values()]
+    .filter(o => byNickname.has(o.nickname)) // 등록된 스트리머만
+    .map(o => {
+      const s = byNickname.get(o.nickname)!;
+      return { nickname: o.nickname, count: o.count, lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor };
+    })
+    .sort((a, b) => (b.count - a.count) || (a.lastDate < b.lastDate ? 1 : -1));
+
   return { meNickname, opponents, searchedDepth: SEARCH_DEPTH };
 }
 
@@ -338,20 +439,41 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
       else if (m.outcome === 'draw') draw++;
     }
     // 팀 평균 스탯 - 매치별로 계산해둔 값들을 평균
-    const avgTeam = (side: 'meTeam' | 'oppTeam', key: 'rating' | 'possession' | 'cornerKick' | 'shoot' | 'effectiveShoot' | 'passSuccessRate' | 'tackle' | 'block') => {
+    const avgTeam = (side: 'meTeam' | 'oppTeam', key: string) => {
       const vals = matches.map(m => (m as any)[side]?.[key]).filter((v: any) => typeof v === 'number');
       return vals.length ? +(vals.reduce((a: number, b: number) => a + b, 0) / vals.length).toFixed(1) : null;
     };
-    const buildTeamStats = (side: 'meTeam' | 'oppTeam') => ({
-      rating: avgTeam(side, 'rating'),
-      shoot: avgTeam(side, 'shoot'),
-      effectiveShoot: avgTeam(side, 'effectiveShoot'),
-      possession: avgTeam(side, 'possession'),
-      passSuccessRate: avgTeam(side, 'passSuccessRate'),
-      cornerKick: avgTeam(side, 'cornerKick'),
-      tackle: avgTeam(side, 'tackle'),
-      block: avgTeam(side, 'block'),
-    });
+    const sumTeam = (side: 'meTeam' | 'oppTeam', key: string) => {
+      const vals = matches.map(m => (m as any)[side]?.[key]).filter((v: any) => typeof v === 'number');
+      return vals.length ? vals.reduce((a: number, b: number) => a + b, 0) : 0;
+    };
+    const buildTeamStats = (side: 'meTeam' | 'oppTeam') => {
+      const passTry = sumTeam(side, 'passTry'), passSuccess = sumTeam(side, 'passSuccess');
+      const dribbleTry = sumTeam(side, 'dribbleTry'), dribbleSuccess = sumTeam(side, 'dribbleSuccess');
+      const aerialTry = sumTeam(side, 'aerialTry'), aerialSuccess = sumTeam(side, 'aerialSuccess');
+      const tackleTry = sumTeam(side, 'tackleTry'), tackleSuccess = sumTeam(side, 'tackleSuccess');
+      const blockTry = sumTeam(side, 'blockTry'), blockSuccess = sumTeam(side, 'blockSuccess');
+      return {
+        rating: avgTeam(side, 'rating'),
+        shoot: avgTeam(side, 'shoot'),
+        effectiveShoot: avgTeam(side, 'effectiveShoot'),
+        possession: avgTeam(side, 'possession'),
+        cornerKick: avgTeam(side, 'cornerKick'),
+        foul: avgTeam(side, 'foul'),
+        offside: avgTeam(side, 'offside'),
+        systemPause: avgTeam(side, 'systemPause'),
+        yellowCards: avgTeam(side, 'yellowCards'),
+        redCards: avgTeam(side, 'redCards'),
+        intercept: avgTeam(side, 'intercept'),
+        avgGoalDistance: avgTeam(side, 'avgGoalDistance'),
+        inBoxGoalRate: avgTeam(side, 'inBoxGoalRate'),
+        passTry, passSuccess, passSuccessRate: passTry ? +((passSuccess / passTry) * 100).toFixed(1) : null,
+        dribbleTry, dribbleSuccess, dribbleSuccessRate: dribbleTry ? +((dribbleSuccess / dribbleTry) * 100).toFixed(1) : null,
+        aerialTry, aerialSuccess, aerialSuccessRate: aerialTry ? +((aerialSuccess / aerialTry) * 100).toFixed(1) : null,
+        tackleTry, tackleSuccess, tackleSuccessRate: tackleTry ? +((tackleSuccess / tackleTry) * 100).toFixed(1) : null,
+        blockTry, blockSuccess, blockSuccessRate: blockTry ? +((blockSuccess / blockTry) * 100).toFixed(1) : null,
+      };
+    };
 
     return {
       meNickname, opponentNickname, meOuid, oppOuid,
@@ -361,7 +483,7 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
         me: aggregatePlayerStats(matches, 'meSquad'),
         opp: aggregatePlayerStats(matches, 'oppSquad'),
       },
-      matches,
+      matches: matches.slice(0, 10), // 화면엔 최근 10경기만 - 전적/스탯 집계는 전체 병합 기록 기준
       searchedDepth: SEARCH_DEPTH,
     };
 }
@@ -397,6 +519,9 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
 }
 
 // 상대 목록도 결과 자체를 캐시해서 페이지 로드 때마다 다시 계산 안 하게 함
+const getOverallLiveCached = unstable_cache(fetchOverallLive, ['fconline-overall-live'], { revalidate: 600 });
+const getRecent30Cached = unstable_cache(fetchRecent30, ['fconline-recent30'], { revalidate: 600 });
+
 const getOpponentsListCached = unstable_cache(
   fetchOpponentsList,
   ['fconline-opponents-list'],
@@ -416,21 +541,23 @@ export async function GET(request: Request) {
   const me = searchParams.get('me') || SME_NICKNAME;
   const list = searchParams.get('list');
   const overall = searchParams.get('overall');
+  const recent30 = searchParams.get('recent30');
 
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
 
-  if (searchParams.get('rawdebug')) {
-    if (!NEXON_KEY) return NextResponse.json({ error: 'no key' }, { status: 500 });
-    const meOuid = await getOuid(me);
-    if (!meOuid) return NextResponse.json({ error: 'no ouid' }, { status: 404 });
-    const raw = await getRecentMatchesRaw(meOuid);
-    return NextResponse.json({ sample: raw[0]?.detail || null });
+  if (recent30) {
+    try {
+      const data = await getRecent30Cached();
+      return NextResponse.json(data);
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || '조회 실패' }, { status: 500 });
+    }
   }
 
   if (overall) {
     try {
-      const summary = await getOverallSummary();
-      return NextResponse.json({ summary: summary || { win: 0, lose: 0, draw: 0, total: 0 } });
+      const summary = await getOverallLiveCached();
+      return NextResponse.json({ summary });
     } catch (e: any) {
       return NextResponse.json({ error: e?.message || '조회 실패' }, { status: 500 });
     }
