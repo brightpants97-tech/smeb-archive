@@ -10,21 +10,22 @@ const FONT = "'Paperlogy', -apple-system, sans-serif";
 // 넥슨 공식 spposition 코드 → 포지션 라벨 + 세로 기준 좌표(%) (attack↑, y:0=공격 100=골키퍼)
 // RDM/LDM(9,11)은 RCB/LCB(4,6)와 대각선으로 너무 가까워 카드가 겹치는 문제가 있어서 레인을 더 넓힘.
 // 좌우 폭이 넓은 포지션(RM/LM 등)은 모서리에 카드가 잘리지 않도록 8~92 범위로 여유를 둠.
+// 수비-미드필더 간격(22→13)과 미드필더-공격수 간격을 좁혀서 공격진이 너무 떨어져 보이는 것을 개선.
 const POSITION_MAP: Record<number, { label: string; x: number; y: number }> = {
   0: { label: 'GK', x: 50, y: 95 }, 1: { label: 'SW', x: 50, y: 88 },
-  2: { label: 'RWB', x: 86, y: 78 }, 3: { label: 'RB', x: 80, y: 80 },
-  4: { label: 'RCB', x: 59, y: 87 }, 5: { label: 'CB', x: 50, y: 88 },
-  6: { label: 'LCB', x: 41, y: 87 }, 7: { label: 'LB', x: 20, y: 80 },
-  8: { label: 'LWB', x: 14, y: 78 }, 9: { label: 'RDM', x: 71, y: 65 },
-  10: { label: 'CDM', x: 50, y: 68 }, 11: { label: 'LDM', x: 29, y: 65 },
-  12: { label: 'RM', x: 88, y: 50 }, 13: { label: 'RCM', x: 62, y: 55 },
-  14: { label: 'CM', x: 50, y: 58 }, 15: { label: 'LCM', x: 38, y: 55 },
-  16: { label: 'LM', x: 12, y: 50 }, 17: { label: 'RAM', x: 65, y: 39 },
-  18: { label: 'CAM', x: 50, y: 36 }, 19: { label: 'LAM', x: 35, y: 39 },
-  20: { label: 'RF', x: 65, y: 23 }, 21: { label: 'CF', x: 50, y: 19 },
-  22: { label: 'LF', x: 35, y: 23 }, 23: { label: 'RW', x: 84, y: 16 },
-  24: { label: 'RS', x: 60, y: 9 }, 25: { label: 'ST', x: 50, y: 6 },
-  26: { label: 'LS', x: 40, y: 9 }, 27: { label: 'LW', x: 16, y: 16 },
+  2: { label: 'RWB', x: 86, y: 76 }, 3: { label: 'RB', x: 80, y: 76 },
+  4: { label: 'RCB', x: 59, y: 74 }, 5: { label: 'CB', x: 50, y: 75 },
+  6: { label: 'LCB', x: 41, y: 74 }, 7: { label: 'LB', x: 20, y: 76 },
+  8: { label: 'LWB', x: 14, y: 76 }, 9: { label: 'RDM', x: 71, y: 62 },
+  10: { label: 'CDM', x: 50, y: 63 }, 11: { label: 'LDM', x: 29, y: 62 },
+  12: { label: 'RM', x: 88, y: 48 }, 13: { label: 'RCM', x: 62, y: 50 },
+  14: { label: 'CM', x: 50, y: 51 }, 15: { label: 'LCM', x: 38, y: 50 },
+  16: { label: 'LM', x: 12, y: 48 }, 17: { label: 'RAM', x: 65, y: 34 },
+  18: { label: 'CAM', x: 50, y: 32 }, 19: { label: 'LAM', x: 35, y: 34 },
+  20: { label: 'RF', x: 65, y: 20 }, 21: { label: 'CF', x: 50, y: 18 },
+  22: { label: 'LF', x: 35, y: 20 }, 23: { label: 'RW', x: 84, y: 16 },
+  24: { label: 'RS', x: 60, y: 7 }, 25: { label: 'ST', x: 50, y: 5 },
+  26: { label: 'LS', x: 40, y: 7 }, 27: { label: 'LW', x: 16, y: 16 },
 };
 
 // 세로 포메이션 좌표를 좌/우로 마주보는 가로 배치 좌표로 변환
