@@ -313,6 +313,20 @@ async function fetchRecent30() {
     };
   }).filter(Boolean) as any[];
 
+  // 라이브 스캔 범위 밖으로 밀려난 옛날 경기도, 예전에 한 번이라도 검색해서 저장된 적 있으면 계속 보이게 병합
+  const seenIds = new Set(rows.map(r => r.matchId).filter(Boolean));
+  const stored = await getAllStoredMatches(3000).catch(() => []);
+  for (const m of stored) {
+    if (seenIds.has(m.matchId)) continue;
+    const s = byNickname.get(m.oppNickname);
+    if (!s) continue;
+    seenIds.add(m.matchId);
+    rows.push({
+      matchId: m.matchId, matchDate: m.matchDate, outcome: m.outcome, meGoal: m.meGoal, oppGoal: m.oppGoal,
+      oppNickname: m.oppNickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
+    });
+  }
+
   rows.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
   return { matches: rows.slice(0, 30) };
 }
@@ -323,16 +337,33 @@ async function fetchOpponentsList(meNickname: string) {
 
   const raw = await getRecentMatchesRaw(meOuid);
   const map = new Map<string, { nickname: string; count: number; lastDate: string }>();
+  const seenIds = new Set<string>();
 
   for (const { detail } of raw) {
     const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
     if (!opp?.nickname) continue;
+    if (detail.matchId) seenIds.add(detail.matchId);
     const existing = map.get(opp.ouid);
     if (existing) {
       existing.count += 1;
       if (detail.matchDate > existing.lastDate) existing.lastDate = detail.matchDate;
     } else {
       map.set(opp.ouid, { nickname: opp.nickname, count: 1, lastDate: detail.matchDate });
+    }
+  }
+
+  // 라이브 스캔 범위 밖의 저장된 과거 기록도 합산 - 최근에 안 붙어본 상대(다른 플랫폼 스트리머 포함)도
+  // 예전에 한 번이라도 전적조회를 해서 저장된 적 있으면 계속 목록에 남아있게 함
+  const stored = await getAllStoredMatches(3000).catch(() => []);
+  for (const m of stored) {
+    if (seenIds.has(m.matchId)) continue;
+    seenIds.add(m.matchId);
+    const existing = map.get(m.oppOuid);
+    if (existing) {
+      existing.count += 1;
+      if (m.matchDate > existing.lastDate) existing.lastDate = m.matchDate;
+    } else {
+      map.set(m.oppOuid, { nickname: m.oppNickname, count: 1, lastDate: m.matchDate });
     }
   }
 

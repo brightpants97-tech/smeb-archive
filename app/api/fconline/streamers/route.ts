@@ -32,7 +32,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '스트리머명과 FC 온라인 닉네임을 모두 입력해주세요.' }, { status: 400 });
     }
     await addStreamer({ fcNickname, displayName, teamColor, profileImage, addedAt: Date.now() });
-    return NextResponse.json({ ok: true });
+
+    // 등록하자마자 이 상대와의 전적을 미리 한번 조회해서 저장해둠 (플랫폼 상관없이 바로 목록/최근30경기에 뜨도록)
+    // 서버리스 환경에서 응답 후 바로 끊기지 않도록 완료까지 기다림 (몇 초 걸릴 수 있음)
+    let seeded = true;
+    try {
+      const origin = new URL(request.url).origin;
+      await fetch(`${origin}/api/fconline/head2head?opponent=${encodeURIComponent(fcNickname)}`, { cache: 'no-store' });
+    } catch {
+      seeded = false;
+    }
+
+    return NextResponse.json({ ok: true, seeded });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || '등록 실패' }, { status: 500 });
   }
