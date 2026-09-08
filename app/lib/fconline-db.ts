@@ -57,6 +57,8 @@ export interface StoredMatch {
   oppGoal: number | null;
   meSquad: any[];
   oppSquad: any[];
+  meTeam?: any;
+  oppTeam?: any;
 }
 
 export async function saveMatches(matches: StoredMatch[]) {

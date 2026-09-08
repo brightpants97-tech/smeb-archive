@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { saveMatches, getStreamerByNickname, getOverallSummary, type StoredMatch } from '@/app/lib/fconline-db';
+import { saveMatches, getStreamerByNickname, getOverallSummary, getStoredMatchesForOpponent, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
 // 문서: https://openapi.nexon.com/ko/game/fconline/
@@ -248,7 +248,6 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     const raw = await getRecentMatchesRaw(meOuid); // 상대 목록 API와 공유되는 캐시된 스캔 결과
 
     const matches: any[] = [];
-    let win = 0, lose = 0, draw = 0;
 
     for (const { matchType, detail } of raw) {
       const info = detail.matchInfo;
@@ -269,9 +268,6 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
       else if (typeof meGoal === 'number' && typeof oppGoal === 'number') {
         outcome = meGoal > oppGoal ? 'win' : meGoal < oppGoal ? 'lose' : 'draw';
       }
-      if (outcome === 'win') win++;
-      else if (outcome === 'lose') lose++;
-      else if (outcome === 'draw') draw++;
 
       const meSquad2 = extractSquad(me, spidMap);
       const oppSquad2 = extractSquad(opp, spidMap);
@@ -309,10 +305,34 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
           matchId: m.matchId, matchDate: m.matchDate, matchType: m.matchType,
           meOuid, oppOuid, oppNickname: opponentNickname, outcome: m.outcome,
           meGoal: m.meGoal, oppGoal: m.oppGoal, meSquad: m.meSquad, oppSquad: m.oppSquad,
+          meTeam: m.meTeam, oppTeam: m.oppTeam,
         }));
       saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
     }
 
+    // 저장소에 쌓여있는 과거 기록과 병합 - 최근 스캔 범위 밖으로 밀려난 오래된 경기도
+    // 한 번이라도 저장된 적 있으면 계속 보이도록 함
+    const stored = await getStoredMatchesForOpponent(oppOuid).catch(() => []);
+    const seenIds = new Set(matches.map(m => m.matchId).filter(Boolean));
+    for (const s of stored) {
+      if (seenIds.has(s.matchId)) continue;
+      seenIds.add(s.matchId);
+      matches.push({
+        matchId: s.matchId, matchDate: s.matchDate, matchType: s.matchType,
+        outcome: s.outcome, meGoal: s.meGoal, oppGoal: s.oppGoal,
+        meSquad: s.meSquad, oppSquad: s.oppSquad,
+        meTeam: s.meTeam || {}, oppTeam: s.oppTeam || {},
+      });
+    }
+    matches.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
+
+    // 병합된 전체 목록 기준으로 승/무/패 재집계
+    let win = 0, lose = 0, draw = 0;
+    for (const m of matches) {
+      if (m.outcome === 'win') win++;
+      else if (m.outcome === 'lose') lose++;
+      else if (m.outcome === 'draw') draw++;
+    }
     // 팀 평균 스탯 - 매치별로 계산해둔 값들을 평균
     const avgTeam = (side: 'meTeam' | 'oppTeam', key: 'rating' | 'possession' | 'cornerKick' | 'shoot' | 'effectiveShoot' | 'passSuccessRate' | 'tackle' | 'block') => {
       const vals = matches.map(m => (m as any)[side]?.[key]).filter((v: any) => typeof v === 'number');
