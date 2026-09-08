@@ -27,10 +27,11 @@ export async function POST(request: Request) {
     const fcNickname = String(body.fcNickname || '').trim();
     const displayName = String(body.displayName || '').trim();
     const teamColor = String(body.teamColor || '#E0A62F').trim();
+    const profileImage = body.profileImage ? String(body.profileImage).trim() : null;
     if (!fcNickname || !displayName) {
       return NextResponse.json({ error: '스트리머명과 FC 온라인 닉네임을 모두 입력해주세요.' }, { status: 400 });
     }
-    await addStreamer({ fcNickname, displayName, teamColor, addedAt: Date.now() });
+    await addStreamer({ fcNickname, displayName, teamColor, profileImage, addedAt: Date.now() });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || '등록 실패' }, { status: 500 });

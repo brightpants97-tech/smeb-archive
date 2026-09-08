@@ -321,8 +321,8 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
 
   return {
     ...cached,
-    meDisplay: { name: meStreamer?.displayName || meNickname, color: meStreamer?.teamColor || null },
-    oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null },
+    meDisplay: { name: meStreamer?.displayName || meNickname, color: meStreamer?.teamColor || null, profileImage: meStreamer?.profileImage || (process.env.SOOP_BJID ? `https://profile.img.sooplive.com/LOGO/${process.env.SOOP_BJID.slice(0, 2)}/${process.env.SOOP_BJID}/${process.env.SOOP_BJID}.jpg` : null) },
+    oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null, profileImage: oppStreamer?.profileImage || null },
   };
 }
 

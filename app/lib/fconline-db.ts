@@ -14,6 +14,7 @@ export interface StreamerEntry {
   fcNickname: string;
   displayName: string;
   teamColor: string; // hex color, 예: '#EB701A'
+  profileImage?: string | null; // SOOP 방송국 프로필 이미지 URL
   addedAt: number;
 }
 

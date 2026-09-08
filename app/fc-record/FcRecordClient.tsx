@@ -54,7 +54,7 @@ interface MatchRow {
   oppSquad: SquadPlayer[];
 }
 
-interface Display { name: string; color: string | null }
+interface Display { name: string; color: string | null; profileImage?: string | null }
 
 interface Result {
   meNickname: string;
@@ -271,16 +271,21 @@ function LoadingState() {
 }
 
 function VsHeader({ me, opp }: { me: Display; opp: Display }) {
+  const Avatar = ({ d }: { d: Display }) => d.profileImage ? (
+    <img src={d.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${d.color || '#ccc'}` }} />
+  ) : (
+    <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: d.color || ORANGE }} />
+  );
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '18px', marginBottom: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: me.color || ORANGE }} />
+        <Avatar d={me} />
         <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#111' }}>{me.name}</span>
       </div>
       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ccc' }}>VS</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#111' }}>{opp.name}</span>
-        <span style={{ width: '14px', height: '14px', borderRadius: '50%', background: opp.color || '#3B82C4' }} />
+        <Avatar d={opp} />
       </div>
     </div>
   );

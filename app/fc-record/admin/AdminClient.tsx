@@ -8,6 +8,7 @@ interface StreamerEntry {
   fcNickname: string;
   displayName: string;
   teamColor: string;
+  profileImage?: string | null;
   addedAt: number;
 }
 
@@ -20,9 +21,14 @@ export default function AdminClient() {
   const [streamers, setStreamers] = useState<StreamerEntry[]>([]);
   const [loadingList, setLoadingList] = useState(false);
 
+  const [soopId, setSoopId] = useState('');
+  const [looking, setLooking] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+
   const [displayName, setDisplayName] = useState('');
   const [fcNickname, setFcNickname] = useState('');
   const [teamColor, setTeamColor] = useState('#E0A62F');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -70,6 +76,26 @@ export default function AdminClient() {
     }
   };
 
+  const lookupSoop = async () => {
+    if (!soopId.trim()) return;
+    setLooking(true);
+    setLookupError(null);
+    try {
+      const res = await fetch(`/api/fconline/soop-lookup?bjid=${encodeURIComponent(soopId.trim())}`);
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setLookupError(data.error || 'SOOP에서 찾지 못했어요.');
+      } else {
+        setDisplayName(data.displayName);
+        setProfileImage(data.profileImage || null);
+      }
+    } catch {
+      setLookupError('조회 중 문제가 생겼어요.');
+    } finally {
+      setLooking(false);
+    }
+  };
+
   const submitAdd = async () => {
     if (!displayName.trim() || !fcNickname.trim()) {
       setFormError('스트리머명과 FC 온라인 닉네임을 모두 입력해주세요.');
@@ -81,7 +107,7 @@ export default function AdminClient() {
       const res = await fetch('/api/fconline/streamers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-        body: JSON.stringify({ displayName: displayName.trim(), fcNickname: fcNickname.trim(), teamColor }),
+        body: JSON.stringify({ displayName: displayName.trim(), fcNickname: fcNickname.trim(), teamColor, profileImage }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -90,6 +116,8 @@ export default function AdminClient() {
         setDisplayName('');
         setFcNickname('');
         setTeamColor('#E0A62F');
+        setProfileImage(null);
+        setSoopId('');
         loadStreamers();
       }
     } catch {
@@ -150,6 +178,33 @@ export default function AdminClient() {
         <Link href="/fc-record" style={{ fontSize: '0.8rem', color: '#999', textDecoration: 'none' }}>← 전적 페이지로</Link>
         <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '10px 0 24px', color: '#111' }}>스트리머 관리</h1>
 
+        {/* SOOP 아이디로 자동 조회 */}
+        <div style={{ padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '16px' }}>
+          <p style={{ fontSize: '0.76rem', color: '#999', marginBottom: '10px' }}>
+            SOOP(sooplive.com) 방송국 아이디를 넣으면 정확한 활동명 + 프로필 이미지를 자동으로 가져와요.
+            <br />예: sooplive.com/<strong>townboy</strong> → 아이디는 <strong>townboy</strong>
+          </p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input value={soopId} onChange={e => setSoopId(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') lookupSoop(); }}
+              placeholder="SOOP 방송국 아이디 (BJ ID)"
+              style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.88rem' }} />
+            <button onClick={lookupSoop} disabled={looking || !soopId.trim()} style={{
+              padding: '10px 18px', borderRadius: '8px', border: 'none',
+              background: '#333', color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer',
+              opacity: looking || !soopId.trim() ? 0.5 : 1, whiteSpace: 'nowrap' as const,
+            }}>{looking ? '조회 중...' : 'SOOP에서 조회'}</button>
+          </div>
+          {lookupError && <p style={{ color: '#e05252', fontSize: '0.78rem', margin: '8px 0 0' }}>{lookupError}</p>}
+          {profileImage && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+              <img src={profileImage} alt="" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #eee' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111' }}>{displayName}</span>
+              <span style={{ fontSize: '0.72rem', color: '#2FAE6B', fontWeight: 700 }}>✓ 불러옴 - 아래에서 FC 닉네임을 입력하고 등록해주세요</span>
+            </div>
+          )}
+        </div>
+
         {/* 등록 폼 */}
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px', padding: '20px', borderRadius: '14px', border: '1px solid #eee', marginBottom: '28px' }}>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
@@ -184,7 +239,11 @@ export default function AdminClient() {
                 display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
                 borderRadius: '10px', border: '1px solid #eee',
               }}>
-                <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: s.teamColor, flexShrink: 0 }} />
+                {s.profileImage ? (
+                  <img src={s.profileImage} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${s.teamColor}`, flexShrink: 0 }} />
+                ) : (
+                  <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: s.teamColor, flexShrink: 0 }} />
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>{s.displayName}</p>
                   <p style={{ margin: 0, fontSize: '0.76rem', color: '#999' }}>{s.fcNickname}</p>
