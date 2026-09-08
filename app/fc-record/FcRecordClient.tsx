@@ -7,7 +7,7 @@ const RED = '#E05252';
 const GRAY = '#9AA0A8';
 const FONT = "'Paperlogy', -apple-system, sans-serif";
 
-// 넥슨 공식 spposition 코드 → 포지션 라벨 + 화면상 좌표(%)
+// 넥슨 공식 spposition 코드 → 포지션 라벨 + 세로 기준 좌표(%) (attack↑, y:0=공격 100=골키퍼)
 const POSITION_MAP: Record<number, { label: string; x: number; y: number }> = {
   0: { label: 'GK', x: 50, y: 95 }, 1: { label: 'SW', x: 50, y: 88 },
   2: { label: 'RWB', x: 88, y: 78 }, 3: { label: 'RB', x: 82, y: 80 },
@@ -25,13 +25,49 @@ const POSITION_MAP: Record<number, { label: string; x: number; y: number }> = {
   26: { label: 'LS', x: 40, y: 10 }, 27: { label: 'LW', x: 16, y: 18 },
 };
 
+// 세로 포메이션 좌표를 좌/우로 마주보는 가로 배치 좌표로 변환
+function toHorizontal(pos: number, side: 'left' | 'right') {
+  const base = POSITION_MAP[pos];
+  if (!base) return null;
+  const xLeft = ((100 - base.y) / 100) * 46; // GK(y=95)→약 2.3, ST(y=6)→약 43.2
+  if (side === 'left') return { x: xLeft, y: base.x };
+  return { x: 100 - xLeft, y: 100 - base.x };
+}
+
+type PosGroup = 'GK' | 'DF' | 'MF' | 'FW';
+function posGroup(pos: number | null): PosGroup | null {
+  if (pos == null) return null;
+  if (pos === 0) return 'GK';
+  if (pos <= 8) return 'DF';
+  if (pos <= 19) return 'MF';
+  if (pos <= 27) return 'FW';
+  return null;
+}
+const GROUP_COLOR: Record<PosGroup, string> = { GK: '#F2C94C', DF: '#4A90D9', MF: '#27AE60', FW: '#EB5757' };
+
 const playerImgUrl = (spId: string) => `https://fco.dn.nexoncdn.co.kr/live/externalAssets/common/playersAction/p${spId}.png`;
+
+interface PlayerStatsRaw {
+  rating: number | null; goal: number; assist: number; shoot: number; effectiveShoot: number;
+  passTry: number; passSuccess: number; dribbleTry: number; dribbleSuccess: number;
+  ballPossessionTry: number; ballPossessionSuccess: number; aerialTry: number; aerialSuccess: number;
+  blockTry: number; block: number; tackleTry: number; tackle: number; intercept: number; defending: number;
+  yellowCards: number; redCards: number;
+}
 
 interface SquadPlayer {
   spId: string;
   name: string;
-  position: number | string | null;
-  grade: number | string | null;
+  position: number | null;
+  grade: number | null;
+  isMotm?: boolean;
+  stats: PlayerStatsRaw;
+}
+
+interface TeamStat {
+  rating: number | null; shoot: number | null; effectiveShoot: number | null;
+  possession: number | null; passSuccessRate: number | null; cornerKick: number | null;
+  tackle: number | null; block: number | null;
 }
 
 interface PlayerStat {
@@ -48,8 +84,8 @@ interface MatchRow {
   outcome: 'win' | 'lose' | 'draw' | 'unknown';
   meGoal: number | null;
   oppGoal: number | null;
-  meTeam: { possession: number | null; cornerKick: number | null };
-  oppTeam: { possession: number | null; cornerKick: number | null };
+  meTeam: TeamStat;
+  oppTeam: TeamStat;
   meSquad: SquadPlayer[];
   oppSquad: SquadPlayer[];
 }
@@ -62,7 +98,7 @@ interface Result {
   meDisplay: Display;
   oppDisplay: Display;
   summary: { win: number; lose: number; draw: number; total: number };
-  teamStats: { me: { possession: number | null; cornerKick: number | null }; opp: { possession: number | null; cornerKick: number | null } };
+  teamStats: { me: TeamStat; opp: TeamStat };
   playerStats: { me: PlayerStat[]; opp: PlayerStat[] };
   matches: MatchRow[];
   searchedDepth: number;
@@ -72,14 +108,12 @@ interface Result {
 const OUTCOME_LABEL: Record<string, string> = { win: '승', lose: '패', draw: '무', unknown: '?' };
 const OUTCOME_COLOR: Record<string, string> = { win: ORANGE, lose: RED, draw: GRAY, unknown: GRAY };
 
-function PlayerImg({ spId, accent, size = 44 }: { spId: string; accent: string; size?: number }) {
+function PlayerImg({ spId, size = 44 }: { spId: string; size?: number }) {
   const [failed, setFailed] = useState(false);
   return (
     <div style={{
       width: `${size}px`, height: `${size}px`, borderRadius: '50%', overflow: 'hidden',
-      border: `2px solid ${accent}`, background: '#f2f2f2', flexShrink: 0,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+      background: '#f2f2f2', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       {!failed ? (
         <img src={playerImgUrl(spId)} alt="" onError={() => setFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -90,57 +124,189 @@ function PlayerImg({ spId, accent, size = 44 }: { spId: string; accent: string; 
   );
 }
 
-function PitchSquad({ title, squad, accent }: { title: string; squad: SquadPlayer[]; accent: string }) {
-  const onPitch = squad.filter(p => typeof p.position === 'number' && POSITION_MAP[p.position as number]);
-  const bench = squad.filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position as number]));
+// ── 선수 개인 상세 스탯 모달 ──────────────────────────────────────────────
+function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void }) {
+  const s = p.stats;
+  const group = posGroup(p.position);
+  const color = group ? GROUP_COLOR[group] : '#999';
+  const passRate = s.passTry ? Math.round((s.passSuccess / s.passTry) * 100) : 0;
+  const shootAcc = s.shoot ? Math.round((s.effectiveShoot / s.shoot) * 100) : 0;
+
+  const Row = ({ label, value }: { label: string; value: number | string }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f2f2f2' }}>
+      <span style={{ fontSize: '0.8rem', color: '#888' }}>{label}</span>
+      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#222' }}>{value}</span>
+    </div>
+  );
 
   return (
-    <div style={{ flex: '1 1 300px', minWidth: '280px' }}>
-      <p style={{ fontSize: '0.72rem', fontWeight: 800, color: accent, letterSpacing: '0.06em', marginBottom: '8px' }}>{title}</p>
-      {squad.length === 0 ? (
-        <p style={{ fontSize: '0.78rem', color: '#aaa' }}>스쿼드 정보를 불러올 수 없어요.</p>
-      ) : (
-        <>
-          <div style={{
-            position: 'relative', width: '100%', aspectRatio: '2/3',
-            background: 'linear-gradient(180deg, #2FAE6B 0%, #1f8f57 100%)',
-            borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)',
-          }}>
-            <div style={{ position: 'absolute', inset: '4%', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '4px' }} />
-            <div style={{ position: 'absolute', left: '50%', top: '4%', bottom: '4%', width: '1px', background: 'rgba(255,255,255,0.28)' }} />
-            <div style={{ position: 'absolute', left: '50%', top: '50%', width: '26%', aspectRatio: '1/1', transform: 'translate(-50%,-50%)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '50%' }} />
-            {onPitch.map((p, i) => {
-              const pos = POSITION_MAP[p.position as number];
-              return (
-                <div key={p.spId || i} style={{
-                  position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)',
-                  width: '76px', textAlign: 'center' as const, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '4px',
-                }}>
-                  <PlayerImg spId={p.spId} accent={accent} size={56} />
-                  <span style={{
-                    fontSize: '0.62rem', fontWeight: 700, color: '#fff',
-                    background: 'rgba(0,0,0,0.55)', padding: '1px 5px', borderRadius: '4px',
-                    whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
-                  }}>{p.name}</span>
-                </div>
-              );
-            })}
-          </div>
-          {bench.length > 0 && (
-            <div style={{ marginTop: '10px' }}>
-              <p style={{ fontSize: '0.64rem', color: '#aaa', marginBottom: '6px' }}>벤치</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-                {bench.map((p, i) => (
-                  <div key={p.spId || i} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f7f7f7', border: '1px solid #eee', borderRadius: '100px', padding: '3px 10px 3px 3px' }}>
-                    <PlayerImg spId={p.spId} accent="#ddd" size={30} />
-                    <span style={{ fontSize: '0.72rem', color: '#333', whiteSpace: 'nowrap' as const }}>{p.name}</span>
-                  </div>
-                ))}
-              </div>
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 999,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: '100%', maxWidth: '380px', maxHeight: '85vh', overflowY: 'auto',
+        background: '#fff', borderRadius: '18px', padding: '24px', fontFamily: FONT,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+          <PlayerImg spId={p.spId} size={56} />
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontWeight: 900, fontSize: '1.05rem', color: '#111' }}>{p.name}</span>
+              {p.isMotm && <span title="Man of the Match">⭐</span>}
             </div>
-          )}
-        </>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+              {group && <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#fff', background: color, padding: '2px 8px', borderRadius: '6px' }}>{POSITION_MAP[p.position as number]?.label}</span>}
+              {p.grade != null && <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#888', background: '#f2f2f2', padding: '2px 8px', borderRadius: '6px' }}>강화 Lv.{p.grade}</span>}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.2rem', color: '#ccc', cursor: 'pointer' }}>✕</button>
+        </div>
+
+        {/* 헤드라인 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
+          {[
+            ['평점', s.rating != null ? s.rating.toFixed(1) : '-'],
+            ['득점', s.goal], ['어시스트', s.assist], ['패스성공률', `${passRate}%`],
+          ].map(([label, val]) => (
+            <div key={label as string} style={{ textAlign: 'center' as const, padding: '10px 4px', background: `${color}12`, borderRadius: '10px' }}>
+              <div style={{ fontSize: '1.05rem', fontWeight: 900, color }}>{val as any}</div>
+              <div style={{ fontSize: '0.62rem', color: '#999', marginTop: '2px' }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.04em', marginBottom: '4px' }}>공격 지표</p>
+        <Row label="슈팅 정확도" value={`${shootAcc}%`} />
+        <Row label="빗나간 슈팅" value={s.shoot - s.effectiveShoot} />
+        <Row label="유효 슈팅" value={s.effectiveShoot} />
+        <Row label="전체 슛" value={s.shoot} />
+        <Row label="득점" value={s.goal} />
+        <Row label="어시스트" value={s.assist} />
+
+        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.04em', margin: '16px 0 4px' }}>공통 지표</p>
+        <Row label="패스 성공률" value={`${passRate}%`} />
+        <Row label="패스 시도" value={s.passTry} />
+        <Row label="패스 성공" value={s.passSuccess} />
+        <Row label="드리블 시도" value={s.dribbleTry} />
+        <Row label="드리블 성공" value={s.dribbleSuccess} />
+        <Row label="볼 소유 시도" value={s.ballPossessionTry} />
+        <Row label="볼 소유 성공" value={s.ballPossessionSuccess} />
+        <Row label="공중볼 경합 시도" value={s.aerialTry} />
+        <Row label="공중볼 경합 성공" value={s.aerialSuccess} />
+        <Row label="옐로 카드" value={s.yellowCards} />
+        <Row label="레드 카드" value={s.redCards} />
+
+        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.04em', margin: '16px 0 4px' }}>수비 지표</p>
+        <Row label="인터셉트" value={s.intercept} />
+        <Row label="디펜딩" value={s.defending} />
+        <Row label="블락 시도" value={s.blockTry} />
+        <Row label="블락 성공" value={s.block} />
+        <Row label="태클 시도" value={s.tackleTry} />
+        <Row label="태클 성공" value={s.tackle} />
+      </div>
+    </div>
+  );
+}
+
+// ── 선수 카드 (핏치 위에 배치되는 조각) ──────────────────────────────────────
+function PitchPlayerChip({ p, coord, onClick }: { p: SquadPlayer; coord: { x: number; y: number }; onClick: () => void }) {
+  const group = posGroup(p.position) || 'MF';
+  const color = GROUP_COLOR[group];
+  const rating = p.stats.rating;
+  return (
+    <button onClick={onClick} style={{
+      position: 'absolute', left: `${coord.x}%`, top: `${coord.y}%`, transform: 'translate(-50%, -50%)',
+      width: '64px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT,
+      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', padding: 0,
+    }}>
+      <div style={{ position: 'relative' }}>
+        <div style={{ borderRadius: '50%', border: `2px solid ${color}`, boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }}>
+          <PlayerImg spId={p.spId} size={44} />
+        </div>
+        {rating != null && rating > 0 && (
+          <span style={{
+            position: 'absolute', top: '-6px', right: '-8px', background: color, color: '#fff',
+            fontSize: '0.62rem', fontWeight: 900, padding: '1px 5px', borderRadius: '6px',
+            display: 'flex', alignItems: 'center', gap: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          }}>{rating.toFixed(1)}{p.isMotm && '★'}</span>
+        )}
+      </div>
+      <span style={{
+        marginTop: '3px', fontSize: '0.58rem', fontWeight: 800, color: '#fff',
+        background: color, padding: '1px 6px', borderRadius: '4px',
+      }}>{POSITION_MAP[p.position as number]?.label || '-'}</span>
+      <span style={{
+        marginTop: '2px', fontSize: '0.6rem', fontWeight: 700, color: '#fff',
+        background: 'rgba(0,0,0,0.6)', padding: '1px 5px', borderRadius: '4px',
+        maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+      }}>{p.name}</span>
+    </button>
+  );
+}
+
+// ── 하나의 가로 핏치에 양팀을 마주보게 배치 ──────────────────────────────────
+function MatchPitch({ meSquad, oppSquad }: { meSquad: SquadPlayer[]; oppSquad: SquadPlayer[] }) {
+  const [selected, setSelected] = useState<SquadPlayer | null>(null);
+  const meOnPitch = meSquad.filter(p => typeof p.position === 'number' && POSITION_MAP[p.position]);
+  const oppOnPitch = oppSquad.filter(p => typeof p.position === 'number' && POSITION_MAP[p.position]);
+  const meBench = meSquad.filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position]));
+  const oppBench = oppSquad.filter(p => !(typeof p.position === 'number' && POSITION_MAP[p.position]));
+
+  return (
+    <div>
+      <div style={{
+        position: 'relative', width: '100%', aspectRatio: '2.3/1',
+        background: 'linear-gradient(90deg, #1f8f57 0%, #2FAE6B 50%, #1f8f57 100%)',
+        borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)',
+      }}>
+        <div style={{ position: 'absolute', inset: '3%', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '4px' }} />
+        <div style={{ position: 'absolute', top: '3%', bottom: '3%', left: '50%', width: '1px', background: 'rgba(255,255,255,0.28)' }} />
+        <div style={{ position: 'absolute', left: '50%', top: '50%', height: '30%', aspectRatio: '1/1', transform: 'translate(-50%,-50%)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '50%' }} />
+        {/* 좌/우 페널티 박스 느낌 */}
+        <div style={{ position: 'absolute', left: '3%', top: '25%', bottom: '25%', width: '10%', border: '1px solid rgba(255,255,255,0.2)', borderLeft: 'none' }} />
+        <div style={{ position: 'absolute', right: '3%', top: '25%', bottom: '25%', width: '10%', border: '1px solid rgba(255,255,255,0.2)', borderRight: 'none' }} />
+
+        {meOnPitch.map((p, i) => {
+          const c = toHorizontal(p.position as number, 'left');
+          if (!c) return null;
+          return <PitchPlayerChip key={p.spId || i} p={p} coord={c} onClick={() => setSelected(p)} />;
+        })}
+        {oppOnPitch.map((p, i) => {
+          const c = toHorizontal(p.position as number, 'right');
+          if (!c) return null;
+          return <PitchPlayerChip key={p.spId || i} p={p} coord={c} onClick={() => setSelected(p)} />;
+        })}
+      </div>
+
+      {(meBench.length > 0 || oppBench.length > 0) && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginTop: '10px', flexWrap: 'wrap' as const }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
+            {meBench.map((p, i) => (
+              <button key={p.spId || i} onClick={() => setSelected(p)} style={{
+                display: 'flex', alignItems: 'center', gap: '5px', background: '#f7f7f7', border: '1px solid #eee',
+                borderRadius: '100px', padding: '3px 10px 3px 3px', cursor: 'pointer', fontFamily: FONT,
+              }}>
+                <PlayerImg spId={p.spId} size={26} />
+                <span style={{ fontSize: '0.68rem', color: '#333' }}>{p.name}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
+            {oppBench.map((p, i) => (
+              <button key={p.spId || i} onClick={() => setSelected(p)} style={{
+                display: 'flex', alignItems: 'center', gap: '5px', background: '#f7f7f7', border: '1px solid #eee',
+                borderRadius: '100px', padding: '3px 10px 3px 3px', cursor: 'pointer', fontFamily: FONT,
+              }}>
+                <PlayerImg spId={p.spId} size={26} />
+                <span style={{ fontSize: '0.68rem', color: '#333' }}>{p.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
+
+      {selected && <PlayerDetailModal p={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
@@ -166,9 +332,8 @@ function MatchCard({ match }: { match: MatchRow }) {
         <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
       </button>
       {open && (
-        <div style={{ padding: '6px 18px 22px', display: 'flex', gap: '22px', flexWrap: 'wrap' as const, borderTop: '1px solid #f2f2f2', paddingTop: '16px' }}>
-          <PitchSquad title="스맵 스쿼드" squad={match.meSquad} accent={ORANGE} />
-          <PitchSquad title="상대 스쿼드" squad={match.oppSquad} accent="#3B82C4" />
+        <div style={{ padding: '6px 18px 22px', borderTop: '1px solid #f2f2f2', paddingTop: '16px' }}>
+          <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
         </div>
       )}
     </div>
@@ -204,7 +369,7 @@ function PlayerStatRowExpandable({ p, accent }: { p: PlayerStat; accent: string 
         width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
         background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
       }}>
-        <PlayerImg spId={p.spId} accent={p.isBest ? ORANGE : p.isWorst ? RED : '#ddd'} size={36} />
+        <PlayerImg spId={p.spId} size={36} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
@@ -334,7 +499,7 @@ export default function FcRecordClient() {
 
   return (
     <main style={{ minHeight: '100vh', background: '#fff', padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)', fontFamily: FONT }}>
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '980px', margin: '0 auto' }}>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
           <Link href="/apps" style={{
@@ -427,17 +592,17 @@ export default function FcRecordClient() {
               </div>
             </div>
 
-            {(result.teamStats.me.possession != null || result.playerStats.me.length > 0) && (
-              <div style={{ marginBottom: '32px' }}>
-                <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.06em', marginBottom: '10px' }}>평균 팀 스탯 비교</p>
-                {result.teamStats.me.possession != null && (
-                  <StatRow label="점유율" meVal={result.teamStats.me.possession} oppVal={result.teamStats.opp.possession} suffix="%" />
-                )}
-                {result.teamStats.me.cornerKick != null && (
-                  <StatRow label="코너킥" meVal={result.teamStats.me.cornerKick} oppVal={result.teamStats.opp.cornerKick} />
-                )}
-              </div>
-            )}
+            <div style={{ marginBottom: '32px' }}>
+              <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.06em', marginBottom: '10px' }}>평균 팀 스탯 비교</p>
+              <StatRow label="평균 평점" meVal={result.teamStats.me.rating} oppVal={result.teamStats.opp.rating} />
+              <StatRow label="슈팅" meVal={result.teamStats.me.shoot} oppVal={result.teamStats.opp.shoot} />
+              <StatRow label="유효 슈팅" meVal={result.teamStats.me.effectiveShoot} oppVal={result.teamStats.opp.effectiveShoot} />
+              <StatRow label="점유율(%)" meVal={result.teamStats.me.possession} oppVal={result.teamStats.opp.possession} suffix="%" />
+              <StatRow label="패스 성공률(%)" meVal={result.teamStats.me.passSuccessRate} oppVal={result.teamStats.opp.passSuccessRate} suffix="%" />
+              <StatRow label="코너킥" meVal={result.teamStats.me.cornerKick} oppVal={result.teamStats.opp.cornerKick} />
+              <StatRow label="태클" meVal={result.teamStats.me.tackle} oppVal={result.teamStats.opp.tackle} />
+              <StatRow label="블락" meVal={result.teamStats.me.block} oppVal={result.teamStats.opp.block} />
+            </div>
 
             {(result.playerStats.me.length > 0 || result.playerStats.opp.length > 0) && (
               <div style={{ marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap' as const }}>

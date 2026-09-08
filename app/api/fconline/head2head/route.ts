@@ -69,6 +69,7 @@ async function getSpidMap(): Promise<Record<string, string>> {
 
 // matchInfo 배열 안에서 선수 리스트(스쿼드)를 뽑아내는 헬퍼.
 // 참가자 객체에 직접 player: [{ spId, spPosition, spGrade, status:{...} }] 형태로 들어있음.
+// status에 있는 필드를 최대한 그대로 다 보존해서, 개인 상세 스탯 화면에서 쓸 수 있게 함.
 function extractSquad(participant: any, spidMap: Record<string, string>) {
   const raw = participant?.player;
   if (!Array.isArray(raw)) return [];
@@ -79,18 +80,29 @@ function extractSquad(participant: any, spidMap: Record<string, string>) {
       spId,
       name: spidMap[spId] || `선수#${spId || '?'}`,
       position: p.spPosition ?? null,
-      status: null,
-      grade: p.spGrade ?? null,
+      grade: p.spGrade ?? null, // 카드 강화등급 (추정)
       stats: {
         rating: s.spRating ?? null,
-        shoot: s.shoot ?? null,
-        effectiveShoot: s.effectiveShoot ?? null,
-        passTry: s.passTry ?? null,
-        passSuccess: s.passSuccess ?? null,
-        tackleTry: s.tackleTry ?? null,
-        tackle: s.tackle ?? null,
-        block: s.block ?? null,
-        intercept: s.intercept ?? null,
+        goal: s.goal ?? 0,
+        assist: s.assist ?? 0,
+        shoot: s.shoot ?? 0,
+        effectiveShoot: s.effectiveShoot ?? 0,
+        passTry: s.passTry ?? 0,
+        passSuccess: s.passSuccess ?? 0,
+        dribbleTry: s.dribbleTry ?? 0,
+        dribbleSuccess: s.dribbleSuccess ?? 0,
+        ballPossessionTry: s.ballPossesionTry ?? s.ballPossessionTry ?? 0,
+        ballPossessionSuccess: s.ballPossesionSuccess ?? s.ballPossessionSuccess ?? 0,
+        aerialTry: s.aerialTry ?? 0,
+        aerialSuccess: s.aerialSuccess ?? 0,
+        blockTry: s.blockTry ?? 0,
+        block: s.block ?? 0,
+        tackleTry: s.tackleTry ?? 0,
+        tackle: s.tackle ?? 0,
+        intercept: s.intercept ?? 0,
+        defending: s.defending ?? 0,
+        yellowCards: s.yellowCards ?? 0,
+        redCards: s.redCards ?? 0,
       },
     };
   });
@@ -102,12 +114,26 @@ function extractResult(detail: any, matchtype: number) {
   return { info };
 }
 
-// 팀 단위 스탯 (점유율/코너킥) - 필드가 없을 수도 있어 방어적으로 여러 후보 키를 시도
-function extractTeamStats(participant: any) {
+// 팀 단위 스탯 - matchDetail의 팀 전체 기록(점유율/코너킥/평균평점) + 스쿼드 합산(슈팅/패스/태클/블락)
+function extractTeamStats(participant: any, squad: any[]) {
   const md = participant?.matchDetail || {};
+  let shoot = 0, effShoot = 0, passTry = 0, passSuccess = 0, tackle = 0, block = 0;
+  for (const p of squad) {
+    const s = p.stats || {};
+    shoot += s.shoot || 0;
+    effShoot += s.effectiveShoot || 0;
+    passTry += s.passTry || 0;
+    passSuccess += s.passSuccess || 0;
+    tackle += s.tackle || 0;
+    block += s.block || 0;
+  }
   return {
+    rating: md.averageRating ?? null,
     possession: md.possession ?? md.ballPossession ?? null,
     cornerKick: md.cornerKick ?? md.corner ?? null,
+    shoot, effectiveShoot: effShoot,
+    passSuccessRate: passTry ? +((passSuccess / passTry) * 100).toFixed(1) : null,
+    tackle, block,
   };
 }
 
@@ -247,16 +273,29 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
       else if (outcome === 'lose') lose++;
       else if (outcome === 'draw') draw++;
 
+      const meSquad2 = extractSquad(me, spidMap);
+      const oppSquad2 = extractSquad(opp, spidMap);
+
+      // 이 경기 MOTM(최고 평점 선수) 계산 - 양팀 통틀어 최고 평점 1명에게 표시
+      let motmSpId: string | null = null;
+      let motmRating = -1;
+      for (const p of [...meSquad2, ...oppSquad2]) {
+        const r = p.stats?.rating;
+        if (typeof r === 'number' && r > motmRating) { motmRating = r; motmSpId = p.spId; }
+      }
+      for (const p of meSquad2) (p as any).isMotm = p.spId === motmSpId;
+      for (const p of oppSquad2) (p as any).isMotm = p.spId === motmSpId;
+
       matches.push({
         matchId: detail.matchId ?? null,
         matchDate: detail.matchDate ?? meDetail.matchDate ?? null,
         matchType,
         outcome,
         meGoal, oppGoal,
-        meTeam: extractTeamStats(me),
-        oppTeam: extractTeamStats(opp),
-        meSquad: extractSquad(me, spidMap),
-        oppSquad: extractSquad(opp, spidMap),
+        meSquad: meSquad2,
+        oppSquad: oppSquad2,
+        meTeam: extractTeamStats(me, meSquad2),
+        oppTeam: extractTeamStats(opp, oppSquad2),
       });
     }
 
@@ -274,19 +313,26 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
       saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
     }
 
-    // 팀 평균 점유율/코너킥 (필드 존재할 때만)
-    const avgTeam = (side: 'meTeam' | 'oppTeam', key: 'possession' | 'cornerKick') => {
-      const vals = matches.map(m => m[side]?.[key]).filter((v: any) => typeof v === 'number');
+    // 팀 평균 스탯 - 매치별로 계산해둔 값들을 평균
+    const avgTeam = (side: 'meTeam' | 'oppTeam', key: 'rating' | 'possession' | 'cornerKick' | 'shoot' | 'effectiveShoot' | 'passSuccessRate' | 'tackle' | 'block') => {
+      const vals = matches.map(m => (m as any)[side]?.[key]).filter((v: any) => typeof v === 'number');
       return vals.length ? +(vals.reduce((a: number, b: number) => a + b, 0) / vals.length).toFixed(1) : null;
     };
+    const buildTeamStats = (side: 'meTeam' | 'oppTeam') => ({
+      rating: avgTeam(side, 'rating'),
+      shoot: avgTeam(side, 'shoot'),
+      effectiveShoot: avgTeam(side, 'effectiveShoot'),
+      possession: avgTeam(side, 'possession'),
+      passSuccessRate: avgTeam(side, 'passSuccessRate'),
+      cornerKick: avgTeam(side, 'cornerKick'),
+      tackle: avgTeam(side, 'tackle'),
+      block: avgTeam(side, 'block'),
+    });
 
     return {
       meNickname, opponentNickname, meOuid, oppOuid,
       summary: { win, lose, draw, total: win + lose + draw },
-      teamStats: {
-        me: { possession: avgTeam('meTeam', 'possession'), cornerKick: avgTeam('meTeam', 'cornerKick') },
-        opp: { possession: avgTeam('oppTeam', 'possession'), cornerKick: avgTeam('oppTeam', 'cornerKick') },
-      },
+      teamStats: { me: buildTeamStats('meTeam'), opp: buildTeamStats('oppTeam') },
       playerStats: {
         me: aggregatePlayerStats(matches, 'meSquad'),
         opp: aggregatePlayerStats(matches, 'oppSquad'),
