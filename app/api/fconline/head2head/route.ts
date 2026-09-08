@@ -527,7 +527,9 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
 }
 
 // 상대 목록도 결과 자체를 캐시해서 페이지 로드 때마다 다시 계산 안 하게 함
-const getOverallLiveCached = unstable_cache(fetchOverallLive, ['fconline-overall-live'], { revalidate: 600 });
+// 통산전적은 별도 캐시를 두지 않고 매번 새로 계산 - 내부에서 쓰는 getRecentMatchesRaw가
+// 이미 30분 캐시라 넥슨 API 호출 부담은 없고, 페이지 열 때마다 최신 승/무/패로 보이게 함
+const getOverallLiveCached = fetchOverallLive;
 const getRecent30Cached = unstable_cache(fetchRecent30, ['fconline-recent30'], { revalidate: 600 });
 
 const getOpponentsListCached = unstable_cache(

@@ -8,29 +8,30 @@ const GRAY = '#9AA0A8';
 const FONT = "'Paperlogy', -apple-system, sans-serif";
 
 // 넥슨 공식 spposition 코드 → 포지션 라벨 + 세로 기준 좌표(%) (attack↑, y:0=공격 100=골키퍼)
-// RDM/LDM(9,11)은 RCB/LCB(4,6)와 대각선으로 너무 가까워 카드가 겹치는 문제가 있어서 레인을 더 넓힘
+// RDM/LDM(9,11)은 RCB/LCB(4,6)와 대각선으로 너무 가까워 카드가 겹치는 문제가 있어서 레인을 더 넓힘.
+// 좌우 폭이 넓은 포지션(RM/LM 등)은 모서리에 카드가 잘리지 않도록 8~92 범위로 여유를 둠.
 const POSITION_MAP: Record<number, { label: string; x: number; y: number }> = {
   0: { label: 'GK', x: 50, y: 95 }, 1: { label: 'SW', x: 50, y: 88 },
-  2: { label: 'RWB', x: 88, y: 78 }, 3: { label: 'RB', x: 82, y: 80 },
-  4: { label: 'RCB', x: 60, y: 87 }, 5: { label: 'CB', x: 50, y: 88 },
-  6: { label: 'LCB', x: 40, y: 87 }, 7: { label: 'LB', x: 18, y: 80 },
-  8: { label: 'LWB', x: 12, y: 78 }, 9: { label: 'RDM', x: 72, y: 66 },
-  10: { label: 'CDM', x: 50, y: 68 }, 11: { label: 'LDM', x: 28, y: 66 },
-  12: { label: 'RM', x: 90, y: 52 }, 13: { label: 'RCM', x: 63, y: 56 },
-  14: { label: 'CM', x: 50, y: 58 }, 15: { label: 'LCM', x: 37, y: 56 },
-  16: { label: 'LM', x: 10, y: 52 }, 17: { label: 'RAM', x: 66, y: 40 },
-  18: { label: 'CAM', x: 50, y: 38 }, 19: { label: 'LAM', x: 34, y: 40 },
-  20: { label: 'RF', x: 66, y: 22 }, 21: { label: 'CF', x: 50, y: 18 },
-  22: { label: 'LF', x: 34, y: 22 }, 23: { label: 'RW', x: 86, y: 16 },
-  24: { label: 'RS', x: 60, y: 8 }, 25: { label: 'ST', x: 50, y: 4 },
-  26: { label: 'LS', x: 40, y: 8 }, 27: { label: 'LW', x: 14, y: 16 },
+  2: { label: 'RWB', x: 86, y: 78 }, 3: { label: 'RB', x: 80, y: 80 },
+  4: { label: 'RCB', x: 59, y: 87 }, 5: { label: 'CB', x: 50, y: 88 },
+  6: { label: 'LCB', x: 41, y: 87 }, 7: { label: 'LB', x: 20, y: 80 },
+  8: { label: 'LWB', x: 14, y: 78 }, 9: { label: 'RDM', x: 71, y: 65 },
+  10: { label: 'CDM', x: 50, y: 68 }, 11: { label: 'LDM', x: 29, y: 65 },
+  12: { label: 'RM', x: 88, y: 50 }, 13: { label: 'RCM', x: 62, y: 55 },
+  14: { label: 'CM', x: 50, y: 58 }, 15: { label: 'LCM', x: 38, y: 55 },
+  16: { label: 'LM', x: 12, y: 50 }, 17: { label: 'RAM', x: 65, y: 39 },
+  18: { label: 'CAM', x: 50, y: 36 }, 19: { label: 'LAM', x: 35, y: 39 },
+  20: { label: 'RF', x: 65, y: 23 }, 21: { label: 'CF', x: 50, y: 19 },
+  22: { label: 'LF', x: 35, y: 23 }, 23: { label: 'RW', x: 84, y: 16 },
+  24: { label: 'RS', x: 60, y: 9 }, 25: { label: 'ST', x: 50, y: 6 },
+  26: { label: 'LS', x: 40, y: 9 }, 27: { label: 'LW', x: 16, y: 16 },
 };
 
 // 세로 포메이션 좌표를 좌/우로 마주보는 가로 배치 좌표로 변환
 function toHorizontal(pos: number, side: 'left' | 'right') {
   const base = POSITION_MAP[pos];
   if (!base) return null;
-  const xLeft = ((100 - base.y) / 100) * 46; // GK(y=95)→약 2.3, ST(y=6)→약 43.2
+  const xLeft = ((100 - base.y) / 100) * 43; // 배율을 살짝 줄여 중앙선/모서리에 카드가 안 붙게 여유를 둠
   if (side === 'left') return { x: xLeft, y: base.x };
   return { x: 100 - xLeft, y: 100 - base.x };
 }
@@ -311,7 +312,7 @@ function MatchPitch({ meSquad, oppSquad }: { meSquad: SquadPlayer[]; oppSquad: S
   return (
     <div>
       <div style={{
-        position: 'relative', width: '100%', aspectRatio: '2.3/1',
+        position: 'relative', width: '100%', aspectRatio: '2.15/1',
         background: 'linear-gradient(90deg, #1f8f57 0%, #2FAE6B 50%, #1f8f57 100%)',
         borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)',
       }}>
@@ -515,6 +516,7 @@ export default function FcRecordClient() {
   const [opponents, setOpponents] = useState<{ nickname: string; count: number; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
   const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number } | null>(null);
+  const [overallLoading, setOverallLoading] = useState(true);
   const [recent30, setRecent30] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -524,10 +526,11 @@ export default function FcRecordClient() {
       .catch(() => {})
       .finally(() => setOpponentsLoading(false));
 
-    fetch('/api/fconline/head2head?overall=1')
+    fetch('/api/fconline/head2head?overall=1', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => { if (!data.error) setOverall(data.summary); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setOverallLoading(false));
 
     fetch('/api/fconline/head2head?recent30=1')
       .then(res => res.json())
@@ -575,13 +578,27 @@ export default function FcRecordClient() {
           </p>
         </div>
 
-        {overall && overall.total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '24px' }}>
-            <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
-            <span style={{ fontWeight: 900, color: ORANGE }}>{overall.win}승</span>
-            <span style={{ fontWeight: 900, color: GRAY }}>{overall.draw}무</span>
-            <span style={{ fontWeight: 900, color: RED }}>{overall.lose}패</span>
-            <span style={{ fontSize: '0.74rem', color: '#bbb' }}>(총 {overall.total}경기)</span>
+        {(overallLoading || (overall && overall.total > 0)) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '24px', minHeight: '20px' }}>
+            {overallLoading ? (
+              <>
+                <div style={{
+                  width: '16px', height: '16px', borderRadius: '50%',
+                  border: '2px solid #eee', borderTopColor: ORANGE,
+                  animation: 'fc-spin 0.8s linear infinite', flexShrink: 0,
+                }} />
+                <span style={{ fontSize: '0.78rem', color: '#aaa' }}>스맵 통산 전적 최신화 중...</span>
+                <style>{`@keyframes fc-spin { to { transform: rotate(360deg); } }`}</style>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
+                <span style={{ fontWeight: 900, color: ORANGE }}>{overall!.win}승</span>
+                <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
+                <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
+                <span style={{ fontSize: '0.74rem', color: '#bbb' }}>(총 {overall!.total}경기)</span>
+              </>
+            )}
           </div>
         )}
 
