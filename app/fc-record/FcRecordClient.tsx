@@ -8,21 +8,22 @@ const GRAY = '#9AA0A8';
 const FONT = "'Paperlogy', -apple-system, sans-serif";
 
 // 넥슨 공식 spposition 코드 → 포지션 라벨 + 세로 기준 좌표(%) (attack↑, y:0=공격 100=골키퍼)
+// RDM/LDM(9,11)은 RCB/LCB(4,6)와 대각선으로 너무 가까워 카드가 겹치는 문제가 있어서 레인을 더 넓힘
 const POSITION_MAP: Record<number, { label: string; x: number; y: number }> = {
   0: { label: 'GK', x: 50, y: 95 }, 1: { label: 'SW', x: 50, y: 88 },
   2: { label: 'RWB', x: 88, y: 78 }, 3: { label: 'RB', x: 82, y: 80 },
-  4: { label: 'RCB', x: 62, y: 86 }, 5: { label: 'CB', x: 50, y: 88 },
-  6: { label: 'LCB', x: 38, y: 86 }, 7: { label: 'LB', x: 18, y: 80 },
-  8: { label: 'LWB', x: 12, y: 78 }, 9: { label: 'RDM', x: 66, y: 68 },
-  10: { label: 'CDM', x: 50, y: 70 }, 11: { label: 'LDM', x: 34, y: 68 },
-  12: { label: 'RM', x: 88, y: 54 }, 13: { label: 'RCM', x: 63, y: 58 },
-  14: { label: 'CM', x: 50, y: 60 }, 15: { label: 'LCM', x: 37, y: 58 },
-  16: { label: 'LM', x: 12, y: 54 }, 17: { label: 'RAM', x: 66, y: 42 },
-  18: { label: 'CAM', x: 50, y: 40 }, 19: { label: 'LAM', x: 34, y: 42 },
-  20: { label: 'RF', x: 66, y: 24 }, 21: { label: 'CF', x: 50, y: 20 },
-  22: { label: 'LF', x: 34, y: 24 }, 23: { label: 'RW', x: 84, y: 18 },
-  24: { label: 'RS', x: 60, y: 10 }, 25: { label: 'ST', x: 50, y: 6 },
-  26: { label: 'LS', x: 40, y: 10 }, 27: { label: 'LW', x: 16, y: 18 },
+  4: { label: 'RCB', x: 60, y: 87 }, 5: { label: 'CB', x: 50, y: 88 },
+  6: { label: 'LCB', x: 40, y: 87 }, 7: { label: 'LB', x: 18, y: 80 },
+  8: { label: 'LWB', x: 12, y: 78 }, 9: { label: 'RDM', x: 72, y: 66 },
+  10: { label: 'CDM', x: 50, y: 68 }, 11: { label: 'LDM', x: 28, y: 66 },
+  12: { label: 'RM', x: 90, y: 52 }, 13: { label: 'RCM', x: 63, y: 56 },
+  14: { label: 'CM', x: 50, y: 58 }, 15: { label: 'LCM', x: 37, y: 56 },
+  16: { label: 'LM', x: 10, y: 52 }, 17: { label: 'RAM', x: 66, y: 40 },
+  18: { label: 'CAM', x: 50, y: 38 }, 19: { label: 'LAM', x: 34, y: 40 },
+  20: { label: 'RF', x: 66, y: 22 }, 21: { label: 'CF', x: 50, y: 18 },
+  22: { label: 'LF', x: 34, y: 22 }, 23: { label: 'RW', x: 86, y: 16 },
+  24: { label: 'RS', x: 60, y: 8 }, 25: { label: 'ST', x: 50, y: 4 },
+  26: { label: 'LS', x: 40, y: 8 }, 27: { label: 'LW', x: 14, y: 16 },
 };
 
 // 세로 포메이션 좌표를 좌/우로 마주보는 가로 배치 좌표로 변환
@@ -222,31 +223,32 @@ function PitchPlayerChip({ p, coord, onClick }: { p: SquadPlayer; coord: { x: nu
   const color = GROUP_COLOR[group];
   const rating = p.stats.rating;
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} title={p.name} style={{
       position: 'absolute', left: `${coord.x}%`, top: `${coord.y}%`, transform: 'translate(-50%, -50%)',
-      width: '64px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT,
-      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', padding: 0,
+      width: '54px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT,
+      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', padding: 0, zIndex: 1,
     }}>
       <div style={{ position: 'relative' }}>
         <div style={{ borderRadius: '50%', border: `2px solid ${color}`, boxShadow: '0 2px 6px rgba(0,0,0,0.35)' }}>
-          <PlayerImg spId={p.spId} size={44} />
+          <PlayerImg spId={p.spId} size={38} />
         </div>
         {rating != null && rating > 0 && (
           <span style={{
             position: 'absolute', top: '-6px', right: '-8px', background: color, color: '#fff',
-            fontSize: '0.62rem', fontWeight: 900, padding: '1px 5px', borderRadius: '6px',
+            fontSize: '0.6rem', fontWeight: 900, padding: '1px 4px', borderRadius: '6px',
             display: 'flex', alignItems: 'center', gap: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }}>{rating.toFixed(1)}{p.isMotm && '★'}</span>
         )}
       </div>
       <span style={{
-        marginTop: '3px', fontSize: '0.58rem', fontWeight: 800, color: '#fff',
+        marginTop: '3px', fontSize: '0.56rem', fontWeight: 800, color: '#fff',
         background: color, padding: '1px 6px', borderRadius: '4px',
       }}>{POSITION_MAP[p.position as number]?.label || '-'}</span>
       <span style={{
-        marginTop: '2px', fontSize: '0.6rem', fontWeight: 700, color: '#fff',
-        background: 'rgba(0,0,0,0.6)', padding: '1px 5px', borderRadius: '4px',
-        maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+        marginTop: '2px', fontSize: '0.58rem', fontWeight: 700, color: '#fff', lineHeight: 1.15,
+        background: 'rgba(0,0,0,0.62)', padding: '1px 4px', borderRadius: '4px', textAlign: 'center' as const,
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+        overflow: 'hidden', maxWidth: '68px', wordBreak: 'keep-all' as const,
       }}>{p.name}</span>
     </button>
   );
