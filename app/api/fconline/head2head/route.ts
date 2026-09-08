@@ -114,10 +114,13 @@ function extractResult(detail: any, matchtype: number) {
   return { info };
 }
 
-// 팀 단위 스탯 - matchDetail의 팀 전체 기록(점유율/코너킥/평균평점) + 스쿼드 합산(슈팅/패스/태클/블락)
+// 팀 단위 스탯 - matchDetail의 팀 전체 기록(점유율/코너킥) + 스쿼드 합산/평균(평점/슈팅/패스/태클/블락)
+// averageRating 필드는 실측 결과 개인 평점과 스케일이 안 맞아서(비정상적으로 낮음) 안 씀 -
+// 대신 실제 출전(평점>0)한 선수들의 평점을 직접 평균냄
 function extractTeamStats(participant: any, squad: any[]) {
   const md = participant?.matchDetail || {};
   let shoot = 0, effShoot = 0, passTry = 0, passSuccess = 0, tackle = 0, block = 0;
+  let ratingSum = 0, ratingCnt = 0;
   for (const p of squad) {
     const s = p.stats || {};
     shoot += s.shoot || 0;
@@ -126,9 +129,10 @@ function extractTeamStats(participant: any, squad: any[]) {
     passSuccess += s.passSuccess || 0;
     tackle += s.tackle || 0;
     block += s.block || 0;
+    if (typeof s.rating === 'number' && s.rating > 0) { ratingSum += s.rating; ratingCnt++; }
   }
   return {
-    rating: md.averageRating ?? null,
+    rating: ratingCnt ? +(ratingSum / ratingCnt).toFixed(2) : null,
     possession: md.possession ?? md.ballPossession ?? null,
     cornerKick: md.cornerKick ?? md.corner ?? null,
     shoot, effectiveShoot: effShoot,
