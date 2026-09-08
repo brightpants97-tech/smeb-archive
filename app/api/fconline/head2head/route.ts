@@ -419,6 +419,14 @@ export async function GET(request: Request) {
 
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
 
+  if (searchParams.get('rawdebug')) {
+    if (!NEXON_KEY) return NextResponse.json({ error: 'no key' }, { status: 500 });
+    const meOuid = await getOuid(me);
+    if (!meOuid) return NextResponse.json({ error: 'no ouid' }, { status: 404 });
+    const raw = await getRecentMatchesRaw(meOuid);
+    return NextResponse.json({ sample: raw[0]?.detail || null });
+  }
+
   if (overall) {
     try {
       const summary = await getOverallSummary();
