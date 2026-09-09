@@ -178,9 +178,15 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
   const map = new Map<string, {
     spId: string; name: string; games: number; position: number | null;
     sumRating: number; cntRating: number;
-    sumShoot: number; sumEffShoot: number;
+    sumShoot: number; sumEffShoot: number; sumGoal: number; sumAssist: number;
     sumPassTry: number; sumPassSuccess: number;
-    sumTackle: number; sumBlock: number;
+    sumDribbleTry: number; sumDribbleSuccess: number;
+    sumBallTry: number; sumBallSuccess: number;
+    sumAerialTry: number; sumAerialSuccess: number;
+    sumYellow: number; sumRed: number;
+    sumIntercept: number; sumDefending: number;
+    sumBlockTry: number; sumBlock: number;
+    sumTackleTry: number; sumTackle: number;
   }>();
 
   for (const m of matches) {
@@ -189,7 +195,13 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
       if (!p.spId) continue;
       let e = map.get(p.spId);
       if (!e) {
-        e = { spId: p.spId, name: p.name, games: 0, position: null, sumRating: 0, cntRating: 0, sumShoot: 0, sumEffShoot: 0, sumPassTry: 0, sumPassSuccess: 0, sumTackle: 0, sumBlock: 0 };
+        e = {
+          spId: p.spId, name: p.name, games: 0, position: null, sumRating: 0, cntRating: 0,
+          sumShoot: 0, sumEffShoot: 0, sumGoal: 0, sumAssist: 0, sumPassTry: 0, sumPassSuccess: 0,
+          sumDribbleTry: 0, sumDribbleSuccess: 0, sumBallTry: 0, sumBallSuccess: 0,
+          sumAerialTry: 0, sumAerialSuccess: 0, sumYellow: 0, sumRed: 0,
+          sumIntercept: 0, sumDefending: 0, sumBlockTry: 0, sumBlock: 0, sumTackleTry: 0, sumTackle: 0,
+        };
         map.set(p.spId, e);
       }
       e.games++;
@@ -200,10 +212,24 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
       if (typeof st.rating === 'number' && st.rating > 0) { e.sumRating += st.rating; e.cntRating++; }
       if (typeof st.shoot === 'number') e.sumShoot += st.shoot;
       if (typeof st.effectiveShoot === 'number') e.sumEffShoot += st.effectiveShoot;
+      if (typeof st.goal === 'number') e.sumGoal += st.goal;
+      if (typeof st.assist === 'number') e.sumAssist += st.assist;
       if (typeof st.passTry === 'number') e.sumPassTry += st.passTry;
       if (typeof st.passSuccess === 'number') e.sumPassSuccess += st.passSuccess;
-      if (typeof st.tackle === 'number') e.sumTackle += st.tackle;
+      if (typeof st.dribbleTry === 'number') e.sumDribbleTry += st.dribbleTry;
+      if (typeof st.dribbleSuccess === 'number') e.sumDribbleSuccess += st.dribbleSuccess;
+      if (typeof st.ballPossessionTry === 'number') e.sumBallTry += st.ballPossessionTry;
+      if (typeof st.ballPossessionSuccess === 'number') e.sumBallSuccess += st.ballPossessionSuccess;
+      if (typeof st.aerialTry === 'number') e.sumAerialTry += st.aerialTry;
+      if (typeof st.aerialSuccess === 'number') e.sumAerialSuccess += st.aerialSuccess;
+      if (typeof st.yellowCards === 'number') e.sumYellow += st.yellowCards;
+      if (typeof st.redCards === 'number') e.sumRed += st.redCards;
+      if (typeof st.intercept === 'number') e.sumIntercept += st.intercept;
+      if (typeof st.defending === 'number') e.sumDefending += st.defending;
+      if (typeof st.blockTry === 'number') e.sumBlockTry += st.blockTry;
       if (typeof st.block === 'number') e.sumBlock += st.block;
+      if (typeof st.tackleTry === 'number') e.sumTackleTry += st.tackleTry;
+      if (typeof st.tackle === 'number') e.sumTackle += st.tackle;
     }
   }
 
@@ -219,19 +245,42 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
     }
   }
 
+  const round1 = (n: number) => +n.toFixed(1);
+
   const list = [...map.values()]
     .filter(e => e.cntRating > 0) // 한 번도 실제로 뛴 기록(평점>0)이 없는 벤치 멤버는 제외
-    .map(e => ({
-    spId: e.spId, name: e.name, games: e.games, position: e.position,
-    avgRating: +(e.sumRating / e.cntRating).toFixed(2),
-    avgShoot: +(e.sumShoot / e.games).toFixed(1),
-    avgEffectiveShoot: +(e.sumEffShoot / e.games).toFixed(1),
-    passSuccessRate: e.sumPassTry ? +((e.sumPassSuccess / e.sumPassTry) * 100).toFixed(1) : null,
-    avgTackle: +(e.sumTackle / e.games).toFixed(1),
-    avgBlock: +(e.sumBlock / e.games).toFixed(1),
-    isBest: false, isWorst: false,
-    isCurrentSquad: currentSquadIds.has(e.spId),
-  }));
+    .map(e => {
+      const shootAcc = e.sumShoot ? +((e.sumEffShoot / e.sumShoot) * 100).toFixed(1) : null;
+      return {
+        spId: e.spId, name: e.name, games: e.games, position: e.position,
+        avgRating: +(e.sumRating / e.cntRating).toFixed(2),
+        avgShoot: round1(e.sumShoot / e.games),
+        avgEffectiveShoot: round1(e.sumEffShoot / e.games),
+        avgMissedShoot: round1((e.sumShoot - e.sumEffShoot) / e.games),
+        shootAccuracy: shootAcc,
+        avgGoal: round1(e.sumGoal / e.games),
+        avgAssist: round1(e.sumAssist / e.games),
+        passSuccessRate: e.sumPassTry ? +((e.sumPassSuccess / e.sumPassTry) * 100).toFixed(1) : null,
+        avgPassTry: round1(e.sumPassTry / e.games),
+        avgPassSuccess: round1(e.sumPassSuccess / e.games),
+        avgDribbleTry: round1(e.sumDribbleTry / e.games),
+        avgDribbleSuccess: round1(e.sumDribbleSuccess / e.games),
+        avgBallTry: round1(e.sumBallTry / e.games),
+        avgBallSuccess: round1(e.sumBallSuccess / e.games),
+        avgAerialTry: round1(e.sumAerialTry / e.games),
+        avgAerialSuccess: round1(e.sumAerialSuccess / e.games),
+        avgYellow: round1(e.sumYellow / e.games),
+        avgRed: round1(e.sumRed / e.games),
+        avgIntercept: round1(e.sumIntercept / e.games),
+        avgDefending: round1(e.sumDefending / e.games),
+        avgBlockTry: round1(e.sumBlockTry / e.games),
+        avgBlock: round1(e.sumBlock / e.games),
+        avgTackleTry: round1(e.sumTackleTry / e.games),
+        avgTackle: round1(e.sumTackle / e.games),
+        isBest: false, isWorst: false,
+        isCurrentSquad: currentSquadIds.has(e.spId),
+      };
+    });
 
   // best/worst는 '현재(가장 최근 경기) 스쿼드' 안에서만 선정
   const currentGroup = list.filter(p => p.isCurrentSquad);

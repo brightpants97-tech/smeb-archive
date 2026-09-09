@@ -83,8 +83,17 @@ interface TeamStat {
 
 interface PlayerStat {
   spId: string; name: string; games: number; position: number | null;
-  avgRating: number | null; avgShoot: number; avgEffectiveShoot: number;
-  passSuccessRate: number | null; avgTackle: number; avgBlock: number;
+  avgRating: number | null;
+  avgShoot: number; avgEffectiveShoot: number; avgMissedShoot: number; shootAccuracy: number | null;
+  avgGoal: number; avgAssist: number;
+  passSuccessRate: number | null; avgPassTry: number; avgPassSuccess: number;
+  avgDribbleTry: number; avgDribbleSuccess: number;
+  avgBallTry: number; avgBallSuccess: number;
+  avgAerialTry: number; avgAerialSuccess: number;
+  avgYellow: number; avgRed: number;
+  avgIntercept: number; avgDefending: number;
+  avgBlockTry: number; avgBlock: number;
+  avgTackleTry: number; avgTackle: number;
   isBest: boolean; isWorst: boolean; isCurrentSquad: boolean;
 }
 
@@ -468,19 +477,54 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
         <span style={{ color: '#ccc', fontSize: '0.75rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
       </button>
       {open && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', padding: '4px 12px 12px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-          {[
-            ['슈팅', p.avgShoot], ['유효슈팅', p.avgEffectiveShoot],
-            ['패스성공률', p.passSuccessRate != null ? `${p.passSuccessRate}%` : '-'],
-            ['태클', p.avgTackle], ['블락', p.avgBlock],
-          ].map(([label, val]) => (
-            <div key={label as string} style={{ textAlign: 'center' as const, padding: '8px 4px', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#333' }}>{val as any}</div>
-              <div style={{ fontSize: '0.6rem', color: '#aaa', marginTop: '2px' }}>{label}</div>
-            </div>
-          ))}
+        <div style={{ padding: '4px 12px 14px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          {/* 주요 지표 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', margin: '8px 0 12px' }}>
+            {[
+              ['평점', p.avgRating ?? '-'], ['득점', p.avgGoal], ['어시스트', p.avgAssist],
+              ['패스성공률', p.passSuccessRate != null ? `${p.passSuccessRate}%` : '-'],
+            ].map(([label, val]) => (
+              <div key={label as string} style={{ textAlign: 'center' as const, padding: '8px 4px', background: `${tone || '#999'}12`, borderRadius: '8px' }}>
+                <div style={{ fontSize: '0.88rem', fontWeight: 900, color: tone || '#333' }}>{val as any}</div>
+                <div style={{ fontSize: '0.58rem', color: '#999', marginTop: '2px' }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          <PStatSection title="공격 지표" rows={[
+            ['슈팅 정확도', p.shootAccuracy != null ? `${p.shootAccuracy}%` : '-'],
+            ['빗나간 슈팅', p.avgMissedShoot], ['유효 슈팅', p.avgEffectiveShoot], ['전체 슛', p.avgShoot],
+            ['득점', p.avgGoal], ['어시스트', p.avgAssist],
+          ]} />
+          <PStatSection title="공통 지표" rows={[
+            ['패스 성공률', p.passSuccessRate != null ? `${p.passSuccessRate}%` : '-'],
+            ['패스 시도', p.avgPassTry], ['패스 성공', p.avgPassSuccess],
+            ['드리블 시도', p.avgDribbleTry], ['드리블 성공', p.avgDribbleSuccess],
+            ['볼 소유 시도', p.avgBallTry], ['볼 소유 성공', p.avgBallSuccess],
+            ['공중볼 경합 시도', p.avgAerialTry], ['공중볼 경합 성공', p.avgAerialSuccess],
+            ['옐로 카드', p.avgYellow], ['레드 카드', p.avgRed],
+          ]} />
+          <PStatSection title="수비 지표" rows={[
+            ['인터셉트', p.avgIntercept], ['디펜딩', p.avgDefending],
+            ['블락 시도', p.avgBlockTry], ['블락 성공', p.avgBlock],
+            ['태클 시도', p.avgTackleTry], ['태클 성공', p.avgTackle],
+          ]} last />
         </div>
       )}
+    </div>
+  );
+}
+
+function PStatSection({ title, rows, last }: { title: string; rows: [string, number | string][]; last?: boolean }) {
+  return (
+    <div style={{ marginBottom: last ? 0 : '10px' }}>
+      <p style={{ fontSize: '0.62rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.03em', margin: '0 0 4px' }}>{title}</p>
+      {rows.map(([label, val]) => (
+        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 2px', borderBottom: '1px solid #f5f5f5' }}>
+          <span style={{ fontSize: '0.72rem', color: '#999' }}>{label}</span>
+          <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#333' }}>{val}</span>
+        </div>
+      ))}
     </div>
   );
 }
