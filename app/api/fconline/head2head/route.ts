@@ -17,6 +17,10 @@ const MATCH_TYPES = [40, 50];
 // 더 많이 집계할 수 있도록 20→50으로 확대 (2타입 × 50 = 최대 100건/검색)
 const SEARCH_DEPTH = 50;
 
+// 이 날짜 이전 경기는 전적/스탯 집계에서 전부 제외 (2026-08-10부터 집계 시작)
+const DATA_CUTOFF = '2026-08-10T00:00:00';
+const isAfterCutoff = (dateStr: string | null | undefined) => !!dateStr && dateStr >= DATA_CUTOFF;
+
 // 429(rate limit) 응답 시 짧게 기다렸다가 재시도. 개발단계 키는 호출 한도가 낮아서
 // 여러 요청이 겹치면 종종 걸림 - 실패를 '없음'으로 오판하지 않도록 재시도로 흡수.
 async function nexonFetch(url: string, retries = 2): Promise<Response> {
@@ -271,6 +275,7 @@ async function fetchOverallLive() {
   for (const { detail } of raw) {
     const id = detail.matchId;
     if (!id || seen.has(id)) continue;
+    if (!isAfterCutoff(detail.matchDate)) continue; // 기준일 이전 경기 제외
     const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
     const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
     if (!me || !opp) continue;
@@ -283,6 +288,7 @@ async function fetchOverallLive() {
   const stored = await getAllStoredMatches(3000).catch(() => []);
   for (const m of stored) {
     if (seen.has(m.matchId)) continue;
+    if (!isAfterCutoff(m.matchDate)) continue; // 기준일 이전 경기 제외
     if (!registeredNicknames.has(m.oppNickname)) continue;
     seen.add(m.matchId);
     if (m.outcome === 'win') win++; else if (m.outcome === 'lose') lose++; else if (m.outcome === 'draw') draw++;
@@ -301,6 +307,7 @@ async function fetchRecent30() {
 
   const raw = await getRecentMatchesRaw(meOuid);
   const rows = raw.map(({ detail }) => {
+    if (!isAfterCutoff(detail.matchDate)) return null; // 기준일 이전 경기 제외
     const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
     const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
     if (!me || !opp) return null;
@@ -320,6 +327,7 @@ async function fetchRecent30() {
   const stored = await getAllStoredMatches(3000).catch(() => []);
   for (const m of stored) {
     if (seenIds.has(m.matchId)) continue;
+    if (!isAfterCutoff(m.matchDate)) continue; // 기준일 이전 경기 제외
     const s = byNickname.get(m.oppNickname);
     if (!s) continue;
     seenIds.add(m.matchId);
@@ -342,6 +350,7 @@ async function fetchOpponentsList(meNickname: string) {
   const seenIds = new Set<string>();
 
   for (const { detail } of raw) {
+    if (!isAfterCutoff(detail.matchDate)) continue; // 기준일 이전 경기 제외
     const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
     if (!opp?.nickname) continue;
     if (detail.matchId) seenIds.add(detail.matchId);
@@ -359,6 +368,7 @@ async function fetchOpponentsList(meNickname: string) {
   const stored = await getAllStoredMatches(3000).catch(() => []);
   for (const m of stored) {
     if (seenIds.has(m.matchId)) continue;
+    if (!isAfterCutoff(m.matchDate)) continue; // 기준일 이전 경기 제외
     seenIds.add(m.matchId);
     const existing = map.get(m.oppOuid);
     if (existing) {
@@ -396,6 +406,7 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     const matches: any[] = [];
 
     for (const { matchType, detail } of raw) {
+      if (!isAfterCutoff(detail.matchDate)) continue; // 기준일 이전 경기 제외
       const info = detail.matchInfo;
       const me = info.find((p: any) => p.ouid === meOuid);
       const opp = info.find((p: any) => p.ouid === oppOuid);
@@ -462,6 +473,7 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     const seenIds = new Set(matches.map(m => m.matchId).filter(Boolean));
     for (const s of stored) {
       if (seenIds.has(s.matchId)) continue;
+      if (!isAfterCutoff(s.matchDate)) continue; // 기준일 이전 경기 제외
       seenIds.add(s.matchId);
       matches.push({
         matchId: s.matchId, matchDate: s.matchDate, matchType: s.matchType,
