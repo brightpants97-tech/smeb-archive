@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { saveMatches, getStreamerByNickname, getStoredMatchesForOpponent, getAllStoredMatches, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
+import { saveMatches, getStreamerByNickname, getAllStoredMatches, getLatestStoredMatchDate, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
 // 문서: https://openapi.nexon.com/ko/game/fconline/
@@ -229,68 +229,79 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
   return list;
 }
 
-// 최근 경기 상세 스캔 결과를 공유 캐시로 저장 - 상대전적 검색과 '최근 붙었던 상대' 목록이
-// 이 하나의 스캔 결과를 같이 재사용해서 넥슨 API 호출을 중복으로 쓰지 않게 함.
-// 고정 개수가 아니라 DATA_CUTOFF(기준일)까지 계속 페이지네이션해서 그 기간 전체를 다 긁어옴 -
-// 넥슨 API가 최신순으로 내려주므로, 기준일보다 오래된 경기를 만나는 즉시 그 타입은 스캔 중단.
-// 스캔하며 만난 모든 경기(상대 무관)를 다 영구 저장해서, 다음 스캔부턴 이 기간이 계속 누적됨.
+// 최근 경기 스캔 - Redis에 이미 저장된 매치는 재사용하고, 그 이후에 새로 생긴 경기만
+// 라이브로 추가 확인하는 증분(incremental) 방식. unstable_cache가 이 배포 환경에서
+// 안정적으로 캐시 히트를 안 해서(매번 재계산), 이미 구축된 Redis를 캐시 겸 영구저장소로 사용.
+// 최초 1회만 DATA_CUTOFF(8/10)까지 전체를 긁고, 이후엔 "저장된 것 이후"만 빠르게 확인함.
 const PAGE_SIZE = 30;
 const MAX_PAGES_PER_TYPE = 12; // 안전장치: 타입당 최대 360경기까지만 (무한 스캔 방지)
 
-const getRecentMatchesRaw = unstable_cache(
-  async (meOuid: string) => {
-    const results: { matchType: number; detail: any }[] = [];
-    const spidMap = await getSpidMap();
-    const toStore: StoredMatch[] = [];
+async function scanNewMatches(meOuid: string, sinceDate: string): Promise<StoredMatch[]> {
+  const spidMap = await getSpidMap();
+  const found: StoredMatch[] = [];
 
-    for (const matchtype of MATCH_TYPES) {
-      let offset = 0;
-      for (let page = 0; page < MAX_PAGES_PER_TYPE; page++) {
-        const ids = await getMatchIds(meOuid, matchtype, PAGE_SIZE, offset);
-        if (ids.length === 0) break;
-        offset += ids.length;
+  for (const matchtype of MATCH_TYPES) {
+    let offset = 0;
+    for (let page = 0; page < MAX_PAGES_PER_TYPE; page++) {
+      const ids = await getMatchIds(meOuid, matchtype, PAGE_SIZE, offset);
+      if (ids.length === 0) break;
+      offset += ids.length;
 
-        const CHUNK = 10;
-        let hitCutoff = false;
-        for (let i = 0; i < ids.length; i += CHUNK) {
-          const chunk = ids.slice(i, i + CHUNK);
-          const details = await Promise.all(chunk.map(getMatchDetail));
-          for (const detail of details) {
-            if (!detail) continue;
-            if (!isAfterCutoff(detail.matchDate)) { hitCutoff = true; continue; } // 기준일 이전이면 이 타입 스캔 종료 신호
-            const result = extractResult(detail, matchtype);
-            if (!result) continue;
-            results.push({ matchType: matchtype, detail });
+      const CHUNK = 10;
+      let hitBoundary = false;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        const details = await Promise.all(chunk.map(getMatchDetail));
+        for (const detail of details) {
+          if (!detail) continue;
+          if (!detail.matchDate || detail.matchDate <= sinceDate) { hitBoundary = true; continue; }
+          const info = detail.matchInfo;
+          if (!Array.isArray(info) || info.length < 2) continue;
+          const me = info.find((p: any) => p.ouid === meOuid);
+          const opp = info.find((p: any) => p.ouid !== meOuid);
+          if (!me || !opp || !detail.matchId) continue;
 
-            // 상대가 누구든 상관없이 다 영구 저장 (나중에 어떤 상대를 검색해도 이 기간이 남아있게)
-            const me = result.info.find((p: any) => p.ouid === meOuid);
-            const opp = result.info.find((p: any) => p.ouid !== meOuid);
-            if (me && opp && detail.matchId) {
-              const meSquad = extractSquad(me, spidMap);
-              const oppSquad = extractSquad(opp, spidMap);
-              const outcome = judgeOutcome(me);
-              const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
-              const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
-              toStore.push({
-                matchId: detail.matchId, matchDate: detail.matchDate, matchType: matchtype,
-                meOuid, oppOuid: opp.ouid, oppNickname: opp.nickname, outcome,
-                meGoal, oppGoal, meSquad, oppSquad,
-                meTeam: extractTeamStats(me, meSquad), oppTeam: extractTeamStats(opp, oppSquad),
-              });
-            }
+          const meSquad = extractSquad(me, spidMap);
+          const oppSquad = extractSquad(opp, spidMap);
+
+          // 이 경기 MOTM(최고 평점 선수) 계산 - 양팀 통틀어 최고 평점 1명에게 표시
+          let motmSpId: string | null = null, motmRating = -1;
+          for (const p of [...meSquad, ...oppSquad]) {
+            const r = p.stats?.rating;
+            if (typeof r === 'number' && r > motmRating) { motmRating = r; motmSpId = p.spId; }
           }
+          for (const p of meSquad) (p as any).isMotm = p.spId === motmSpId;
+          for (const p of oppSquad) (p as any).isMotm = p.spId === motmSpId;
+
+          const outcome = judgeOutcome(me);
+          const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
+          const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
+
+          found.push({
+            matchId: detail.matchId, matchDate: detail.matchDate, matchType: matchtype,
+            meOuid, oppOuid: opp.ouid, oppNickname: opp.nickname, outcome,
+            meGoal, oppGoal, meSquad, oppSquad,
+            meTeam: extractTeamStats(me, meSquad), oppTeam: extractTeamStats(opp, oppSquad),
+          });
         }
-        if (hitCutoff || ids.length < PAGE_SIZE) break; // 기준일 도달했거나 더 이상 페이지 없음
       }
+      if (hitBoundary || ids.length < PAGE_SIZE) break; // 저장된 지점 도달했거나 더 이상 페이지 없음
     }
+  }
+  return found;
+}
 
-    if (toStore.length > 0) saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
+async function getRecentMatchesRaw(meOuid: string): Promise<StoredMatch[]> {
+  const latestStored = await getLatestStoredMatchDate();
+  const since = latestStored && latestStored > DATA_CUTOFF ? latestStored : DATA_CUTOFF;
 
-    return results;
-  },
-  ['fconline-recent-matches-v2'],
-  { revalidate: 1800 } // 30분 - 상대 검색/목록이 이 캐시를 공유해서 API 호출을 아낌
-);
+  const newMatches = await scanNewMatches(meOuid, since);
+  if (newMatches.length > 0) await saveMatches(newMatches).catch(() => {});
+
+  // 방금 저장한 것까지 포함해서 저장소 전체(기준일 이후)를 반환 - 이후 4개 집계 함수가 공용으로 재사용
+  const all = await getAllStoredMatches(3000);
+  return all.filter(m => isAfterCutoff(m.matchDate) && m.meOuid === meOuid);
+}
 
 // 통산 전적을 매번 클릭해서 쌓을 필요 없이, 라이브 스캔 + 저장된 과거 기록을 합쳐서 즉시 계산
 function judgeOutcome(participant: any): 'win' | 'lose' | 'draw' | 'unknown' {
@@ -310,28 +321,10 @@ async function fetchOverallLive() {
   const streamers = await listStreamers();
   const registeredNicknames = new Set(streamers.map(s => s.fcNickname));
 
-  const raw = await getRecentMatchesRaw(meOuid);
-  const seen = new Set<string>();
+  const raw = await getRecentMatchesRaw(meOuid); // 이미 기준일 이후, me 소유 전체 (Redis 기반)
   let win = 0, lose = 0, draw = 0;
-  for (const { detail } of raw) {
-    const id = detail.matchId;
-    if (!id || seen.has(id)) continue;
-    if (!isAfterCutoff(detail.matchDate)) continue; // 기준일 이전 경기 제외
-    const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
-    const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
-    if (!me || !opp) continue;
-    if (!registeredNicknames.has(opp.nickname)) continue; // 등록된 스트리머와의 경기만 집계
-    seen.add(id);
-    const outcome = judgeOutcome(me);
-    if (outcome === 'win') win++; else if (outcome === 'lose') lose++; else if (outcome === 'draw') draw++;
-  }
-  // 저장소에 남아있는 과거 기록도 - 저장 당시의 상대 닉네임이 지금 기준 등록되어 있으면 포함
-  const stored = await getAllStoredMatches(3000).catch(() => []);
-  for (const m of stored) {
-    if (seen.has(m.matchId)) continue;
-    if (!isAfterCutoff(m.matchDate)) continue; // 기준일 이전 경기 제외
-    if (!registeredNicknames.has(m.oppNickname)) continue;
-    seen.add(m.matchId);
+  for (const m of raw) {
+    if (!registeredNicknames.has(m.oppNickname)) continue; // 등록된 스트리머와의 경기만 집계
     if (m.outcome === 'win') win++; else if (m.outcome === 'lose') lose++; else if (m.outcome === 'draw') draw++;
   }
   return { win, lose, draw, total: win + lose + draw };
@@ -347,40 +340,20 @@ async function fetchRecent30() {
   const byNickname = new Map(streamers.map(s => [s.fcNickname, s]));
 
   const raw = await getRecentMatchesRaw(meOuid);
-  const rows = raw.map(({ detail }) => {
-    if (!isAfterCutoff(detail.matchDate)) return null; // 기준일 이전 경기 제외
-    const me = detail.matchInfo.find((p: any) => p.ouid === meOuid);
-    const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
-    if (!me || !opp) return null;
-    const s = byNickname.get(opp.nickname);
-    if (!s) return null; // 등록 안 된 상대는 제외
-    const outcome = judgeOutcome(me);
-    const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
-    const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
-    return {
-      matchId: detail.matchId, matchDate: detail.matchDate, outcome, meGoal, oppGoal,
-      oppNickname: opp.nickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
-    };
-  }).filter(Boolean) as any[];
-
-  // 라이브 스캔 범위 밖으로 밀려난 옛날 경기도, 예전에 한 번이라도 검색해서 저장된 적 있으면 계속 보이게 병합
-  const seenIds = new Set(rows.map(r => r.matchId).filter(Boolean));
-  const stored = await getAllStoredMatches(3000).catch(() => []);
-  for (const m of stored) {
-    if (seenIds.has(m.matchId)) continue;
-    if (!isAfterCutoff(m.matchDate)) continue; // 기준일 이전 경기 제외
-    const s = byNickname.get(m.oppNickname);
-    if (!s) continue;
-    seenIds.add(m.matchId);
-    rows.push({
-      matchId: m.matchId, matchDate: m.matchDate, outcome: m.outcome, meGoal: m.meGoal, oppGoal: m.oppGoal,
-      oppNickname: m.oppNickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
+  const rows = raw
+    .filter(m => byNickname.has(m.oppNickname))
+    .map(m => {
+      const s = byNickname.get(m.oppNickname)!;
+      return {
+        matchId: m.matchId, matchDate: m.matchDate, outcome: m.outcome, meGoal: m.meGoal, oppGoal: m.oppGoal,
+        oppNickname: m.oppNickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
+      };
     });
-  }
 
   rows.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
   return { matches: rows.slice(0, 30) };
 }
+
 // - 관리자에 등록된 스트리머만 보여주고(닉네임/이미지 정확도를 위해), 미등록 상대는 목록에서 제외
 async function fetchOpponentsList(meNickname: string) {
   const meOuid = await getOuid(meNickname);
@@ -388,29 +361,7 @@ async function fetchOpponentsList(meNickname: string) {
 
   const raw = await getRecentMatchesRaw(meOuid);
   const map = new Map<string, { nickname: string; count: number; lastDate: string }>();
-  const seenIds = new Set<string>();
-
-  for (const { detail } of raw) {
-    if (!isAfterCutoff(detail.matchDate)) continue; // 기준일 이전 경기 제외
-    const opp = detail.matchInfo.find((p: any) => p.ouid !== meOuid);
-    if (!opp?.nickname) continue;
-    if (detail.matchId) seenIds.add(detail.matchId);
-    const existing = map.get(opp.ouid);
-    if (existing) {
-      existing.count += 1;
-      if (detail.matchDate > existing.lastDate) existing.lastDate = detail.matchDate;
-    } else {
-      map.set(opp.ouid, { nickname: opp.nickname, count: 1, lastDate: detail.matchDate });
-    }
-  }
-
-  // 라이브 스캔 범위 밖의 저장된 과거 기록도 합산 - 최근에 안 붙어본 상대(다른 플랫폼 스트리머 포함)도
-  // 예전에 한 번이라도 전적조회를 해서 저장된 적 있으면 계속 목록에 남아있게 함
-  const stored = await getAllStoredMatches(3000).catch(() => []);
-  for (const m of stored) {
-    if (seenIds.has(m.matchId)) continue;
-    if (!isAfterCutoff(m.matchDate)) continue; // 기준일 이전 경기 제외
-    seenIds.add(m.matchId);
+  for (const m of raw) {
     const existing = map.get(m.oppOuid);
     if (existing) {
       existing.count += 1;
@@ -435,97 +386,21 @@ async function fetchOpponentsList(meNickname: string) {
 }
 
 async function fetchHead2Head(meNickname: string, opponentNickname: string) {
-    // 두 조회를 동시에 쏘면 개발단계 키 rate limit에 걸리기 쉬워 순차로 진행
     const meOuid = await getOuid(meNickname);
     if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
     const oppOuid = await getOuid(opponentNickname);
     if (!oppOuid) return { error: `'${opponentNickname}' 닉네임을 찾을 수 없어요.` };
 
-    const spidMap = await getSpidMap();
-    const raw = await getRecentMatchesRaw(meOuid); // 상대 목록 API와 공유되는 캐시된 스캔 결과
-
-    const matches: any[] = [];
-
-    for (const { matchType, detail } of raw) {
-      if (!isAfterCutoff(detail.matchDate)) continue; // 기준일 이전 경기 제외
-      const info = detail.matchInfo;
-      const me = info.find((p: any) => p.ouid === meOuid);
-      const opp = info.find((p: any) => p.ouid === oppOuid);
-      if (!me || !opp) continue; // 이 경기엔 그 상대가 없었음
-
-      const meDetail = me.matchDetail || {};
-      const oppDetail = opp.matchDetail || {};
-      const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
-      const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
-
-      let outcome: 'win' | 'lose' | 'draw' | 'unknown' = 'unknown';
-      const rawResult = String(meDetail.matchResult ?? '').toLowerCase();
-      if (rawResult.includes('win') || rawResult.includes('승')) outcome = 'win';
-      else if (rawResult.includes('lose') || rawResult.includes('패')) outcome = 'lose';
-      else if (rawResult.includes('draw') || rawResult.includes('무')) outcome = 'draw';
-      else if (typeof meGoal === 'number' && typeof oppGoal === 'number') {
-        outcome = meGoal > oppGoal ? 'win' : meGoal < oppGoal ? 'lose' : 'draw';
-      }
-
-      const meSquad2 = extractSquad(me, spidMap);
-      const oppSquad2 = extractSquad(opp, spidMap);
-
-      // 이 경기 MOTM(최고 평점 선수) 계산 - 양팀 통틀어 최고 평점 1명에게 표시
-      let motmSpId: string | null = null;
-      let motmRating = -1;
-      for (const p of [...meSquad2, ...oppSquad2]) {
-        const r = p.stats?.rating;
-        if (typeof r === 'number' && r > motmRating) { motmRating = r; motmSpId = p.spId; }
-      }
-      for (const p of meSquad2) (p as any).isMotm = p.spId === motmSpId;
-      for (const p of oppSquad2) (p as any).isMotm = p.spId === motmSpId;
-
-      matches.push({
-        matchId: detail.matchId ?? null,
-        matchDate: detail.matchDate ?? meDetail.matchDate ?? null,
-        matchType,
-        outcome,
-        meGoal, oppGoal,
-        meSquad: meSquad2,
-        oppSquad: oppSquad2,
-        meTeam: extractTeamStats(me, meSquad2),
-        oppTeam: extractTeamStats(opp, oppSquad2),
-      });
-    }
-
+    const raw = await getRecentMatchesRaw(meOuid); // 이미 기준일 이후 전체 (Redis 기반, 증분 스캔)
+    const matches: any[] = raw
+      .filter(m => m.oppOuid === oppOuid)
+      .map(m => ({
+        matchId: m.matchId, matchDate: m.matchDate, matchType: m.matchType, outcome: m.outcome,
+        meGoal: m.meGoal, oppGoal: m.oppGoal, meSquad: m.meSquad, oppSquad: m.oppSquad,
+        meTeam: m.meTeam || {}, oppTeam: m.oppTeam || {},
+      }));
     matches.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
 
-    // 영구 저장 (DB 연결돼 있으면) - 다음에 조회할 때도 계속 쌓인 기록으로 남게
-    if (matches.length > 0) {
-      const toStore: StoredMatch[] = matches
-        .filter(m => m.matchId && m.matchDate)
-        .map(m => ({
-          matchId: m.matchId, matchDate: m.matchDate, matchType: m.matchType,
-          meOuid, oppOuid, oppNickname: opponentNickname, outcome: m.outcome,
-          meGoal: m.meGoal, oppGoal: m.oppGoal, meSquad: m.meSquad, oppSquad: m.oppSquad,
-          meTeam: m.meTeam, oppTeam: m.oppTeam,
-        }));
-      saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
-    }
-
-    // 저장소에 쌓여있는 과거 기록과 병합 - 최근 스캔 범위 밖으로 밀려난 오래된 경기도
-    // 한 번이라도 저장된 적 있으면 계속 보이도록 함
-    const stored = await getStoredMatchesForOpponent(oppOuid).catch(() => []);
-    const seenIds = new Set(matches.map(m => m.matchId).filter(Boolean));
-    for (const s of stored) {
-      if (seenIds.has(s.matchId)) continue;
-      if (!isAfterCutoff(s.matchDate)) continue; // 기준일 이전 경기 제외
-      seenIds.add(s.matchId);
-      matches.push({
-        matchId: s.matchId, matchDate: s.matchDate, matchType: s.matchType,
-        outcome: s.outcome, meGoal: s.meGoal, oppGoal: s.oppGoal,
-        meSquad: s.meSquad, oppSquad: s.oppSquad,
-        meTeam: s.meTeam || {}, oppTeam: s.oppTeam || {},
-      });
-    }
-    matches.sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
-
-    // 병합된 전체 목록 기준으로 승/무/패 재집계
     let win = 0, lose = 0, draw = 0;
     for (const m of matches) {
       if (m.outcome === 'win') win++;
