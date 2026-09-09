@@ -5,6 +5,7 @@ import Link from 'next/link';
 const ORANGE = '#EB701A';
 const RED = '#E05252';
 const GRAY = '#9AA0A8';
+const WIN_BLUE = '#2F6FED';
 const FONT = "'Paperlogy', -apple-system, sans-serif";
 
 // 넥슨 공식 spposition 코드 → 포지션 라벨 + 세로 기준 좌표(%) (attack↑, y:0=공격 100=골키퍼)
@@ -116,7 +117,7 @@ interface Result {
 }
 
 const OUTCOME_LABEL: Record<string, string> = { win: '승', lose: '패', draw: '무', unknown: '?' };
-const OUTCOME_COLOR: Record<string, string> = { win: ORANGE, lose: RED, draw: GRAY, unknown: GRAY };
+const OUTCOME_COLOR: Record<string, string> = { win: WIN_BLUE, lose: RED, draw: GRAY, unknown: GRAY };
 
 function PlayerImg({ spId, size = 44 }: { spId: string; size?: number }) {
   const [failed, setFailed] = useState(false);
@@ -415,28 +416,34 @@ function StatRow({ label, meVal, oppVal, suffix = '' }: { label: string; meVal: 
 
 function PlayerStatRowExpandable({ p, accent }: { p: PlayerStat; accent: string }) {
   const [open, setOpen] = useState(false);
+  const tone = p.isBest ? ORANGE : p.isWorst ? RED : null;
   return (
     <div style={{
-      borderRadius: '10px', border: `1px solid ${p.isBest ? ORANGE : p.isWorst ? RED : '#eee'}`,
-      background: p.isBest ? `${ORANGE}0d` : p.isWorst ? `${RED}0d` : '#fff', overflow: 'hidden',
+      borderRadius: '12px', border: `1px solid ${tone ? tone : '#eee'}`,
+      background: tone ? `${tone}08` : '#fff', overflow: 'hidden',
+      boxShadow: tone ? `0 2px 8px ${tone}1a` : '0 1px 3px rgba(0,0,0,0.03)',
     }}>
       <button onClick={() => setOpen(o => !o)} style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
+        width: '100%', display: 'flex', alignItems: 'center', gap: '11px', padding: '11px 12px',
         background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
       }}>
-        <PlayerImg spId={p.spId} size={36} />
+        <div style={{ borderRadius: '50%', border: `2px solid ${tone || '#e5e5e5'}`, flexShrink: 0 }}>
+          <PlayerImg spId={p.spId} size={36} />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-            {p.isBest && <span style={{ fontSize: '0.6rem', fontWeight: 800, color: '#fff', background: ORANGE, padding: '1px 6px', borderRadius: '100px' }}>BEST</span>}
-            {p.isWorst && <span style={{ fontSize: '0.6rem', fontWeight: 800, color: '#fff', background: RED, padding: '1px 6px', borderRadius: '100px' }}>WORST</span>}
+            {p.isBest && <span style={{ fontSize: '0.6rem', fontWeight: 800, color: ORANGE, background: `${ORANGE}18`, padding: '1px 7px', borderRadius: '100px', whiteSpace: 'nowrap' as const }}>⭐ BEST</span>}
+            {p.isWorst && <span style={{ fontSize: '0.6rem', fontWeight: 800, color: RED, background: `${RED}18`, padding: '1px 7px', borderRadius: '100px', whiteSpace: 'nowrap' as const }}>🔻 WORST</span>}
           </div>
           <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#999' }}>{p.games}경기 출전</p>
         </div>
-        <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
-          <div style={{ fontSize: '1rem', fontWeight: 900, color: p.isBest ? ORANGE : p.isWorst ? RED : '#333' }}>{p.avgRating ?? '-'}</div>
-          <div style={{ fontSize: '0.6rem', color: '#bbb' }}>평균 평점</div>
-        </div>
+        <div style={{
+          flexShrink: 0, width: '38px', height: '38px', borderRadius: '50%',
+          background: tone ? tone : '#f2f2f2', color: tone ? '#fff' : '#555',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.8rem', fontWeight: 900,
+        }}>{p.avgRating ?? '-'}</div>
         <span style={{ color: '#ccc', fontSize: '0.75rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
       </button>
       {open && (
@@ -481,6 +488,10 @@ function PlayerStatsTable({ title, players, accent }: { title: string; players: 
   );
 }
 
+function Skel({ w, h, r = 8 }: { w: string; h: string; r?: number }) {
+  return <div style={{ width: w, height: h, borderRadius: `${r}px`, background: 'linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 37%, #f0f0f0 63%)', backgroundSize: '400% 100%', animation: 'fc-shimmer 1.4s ease infinite' }} />;
+}
+
 function LoadingState() {
   const [dots, setDots] = useState(1);
   useEffect(() => {
@@ -488,16 +499,29 @@ function LoadingState() {
     return () => clearInterval(t);
   }, []);
   return (
-    <div style={{ padding: '48px 0', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '16px' }}>
-      <div style={{
-        width: '40px', height: '40px', borderRadius: '50%',
-        border: '3px solid #f0f0f0', borderTopColor: ORANGE,
-        animation: 'fc-spin 0.8s linear infinite',
-      }} />
-      <p style={{ fontSize: '0.85rem', color: '#999', fontWeight: 600 }}>
+    <div>
+      <style>{`@keyframes fc-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }`}</style>
+      <p style={{ fontSize: '0.8rem', color: '#bbb', fontWeight: 600, marginBottom: '18px', textAlign: 'center' as const }}>
         경기 기록을 뒤지는 중{'.'.repeat(dots)}
       </p>
-      <style>{`@keyframes fc-spin { to { transform: rotate(360deg); } }`}</style>
+      {/* VS 헤더 스켈레톤 */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '18px', marginBottom: '20px' }}>
+        <Skel w="120px" h="24px" r={100} />
+        <Skel w="30px" h="24px" r={100} />
+        <Skel w="120px" h="24px" r={100} />
+      </div>
+      {/* 스코어보드 스켈레톤 */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '28px' }}>
+        <Skel w="48px" h="48px" r={12} /><Skel w="48px" h="48px" r={12} /><Skel w="48px" h="48px" r={12} />
+      </div>
+      {/* 요약 카드 스켈레톤 */}
+      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '12px', marginBottom: '32px' }}>
+        {[1, 2, 3].map(i => <Skel key={i} w="260px" h="120px" r={14} />)}
+      </div>
+      {/* 매치카드 스켈레톤 */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
+        {[1, 2, 3].map(i => <Skel key={i} w="100%" h="60px" r={16} />)}
+      </div>
     </div>
   );
 }
@@ -521,6 +545,10 @@ function VsHeader({ me, opp }: { me: Display; opp: Display }) {
       </div>
     </div>
   );
+}
+
+function Divider() {
+  return <div style={{ height: '1px', background: '#f0f0f0', margin: '40px 0' }} />;
 }
 
 export default function FcRecordClient() {
@@ -608,7 +636,7 @@ export default function FcRecordClient() {
             ) : (
               <>
                 <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
-                <span style={{ fontWeight: 900, color: ORANGE }}>{overall!.win}승</span>
+                <span style={{ fontWeight: 900, color: WIN_BLUE }}>{overall!.win}승</span>
                 <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
                 <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
                 <span style={{ fontSize: '0.74rem', color: '#bbb' }}>(총 {overall!.total}경기)</span>
@@ -617,9 +645,61 @@ export default function FcRecordClient() {
           </div>
         )}
 
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+          <input
+            value={nickname}
+            onChange={e => setNickname(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') search(); }}
+            placeholder="상대 닉네임 입력 (예: 호날두팬클럽)"
+            style={{ flex: 1, padding: '14px 18px', borderRadius: '12px', border: '1px solid #ddd', background: '#fff', color: '#111', fontSize: '0.95rem', outline: 'none', fontFamily: FONT }}
+          />
+          <button onClick={() => search()} disabled={loading || !nickname.trim()} style={{
+            padding: '14px 24px', borderRadius: '12px', border: 'none',
+            background: loading || !nickname.trim() ? '#eee' : ORANGE,
+            color: loading || !nickname.trim() ? '#bbb' : '#fff',
+            fontWeight: 800, fontSize: '0.9rem', cursor: loading || !nickname.trim() ? 'default' : 'pointer',
+            fontFamily: FONT, whiteSpace: 'nowrap' as const,
+          }}>{loading ? '조회 중...' : '전적 조회'}</button>
+        </div>
+
+        {/* 액션성 섹션: 클릭하면 바로 검색되는 상대 선택 - 주황 틴트로 "탭 가능함"을 명확히 표시 */}
+        {!opponentsLoading && opponents && opponents.length > 0 && (
+          <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0a`, border: `1px solid ${ORANGE}30` }}>
+            <p style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              🎯 탭하면 바로 검색돼요
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px' }}>
+              {opponents.map(o => {
+                const active = nickname === o.nickname;
+                return (
+                  <button key={o.nickname} onClick={() => search(o.nickname)} disabled={loading} style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px 6px 6px', borderRadius: '100px',
+                    background: active ? ORANGE : '#fff',
+                    border: `1px solid ${active ? ORANGE : '#e8d4c0'}`,
+                    color: active ? '#fff' : '#333',
+                    fontSize: '0.82rem', fontWeight: 700, fontFamily: FONT, cursor: loading ? 'default' : 'pointer',
+                    boxShadow: active ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
+                  }}>
+                    {o.profileImage ? (
+                      <img src={o.profileImage} alt="" style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}` }} />
+                    ) : (
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: o.teamColor, marginLeft: '4px' }} />
+                    )}
+                    {o.displayName}
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{o.count}경기</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 정보성 섹션: 클릭 불가, 그냥 최근 결과 훑어보기 - 무채색 카드로 "읽기 전용"임을 표시 */}
         {recent30 && recent30.length > 0 && (
-          <div style={{ marginBottom: '28px' }}>
-            <p style={{ fontSize: '0.72rem', color: '#aaa', marginBottom: '10px' }}>등록된 스트리머와의 최근 {recent30.length}경기 결과</p>
+          <div style={{ marginBottom: '28px', padding: '16px 18px', borderRadius: '14px', background: '#fff', border: '1px solid #eee' }}>
+            <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              📅 등록된 스트리머와의 최근 {recent30.length}경기 결과
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
               {recent30.map((m, i) => {
                 const color = OUTCOME_COLOR[m.outcome];
@@ -642,51 +722,6 @@ export default function FcRecordClient() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-          <input
-            value={nickname}
-            onChange={e => setNickname(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') search(); }}
-            placeholder="상대 닉네임 입력 (예: 호날두팬클럽)"
-            style={{ flex: 1, padding: '14px 18px', borderRadius: '12px', border: '1px solid #ddd', background: '#fff', color: '#111', fontSize: '0.95rem', outline: 'none', fontFamily: FONT }}
-          />
-          <button onClick={() => search()} disabled={loading || !nickname.trim()} style={{
-            padding: '14px 24px', borderRadius: '12px', border: 'none',
-            background: loading || !nickname.trim() ? '#eee' : ORANGE,
-            color: loading || !nickname.trim() ? '#bbb' : '#fff',
-            fontWeight: 800, fontSize: '0.9rem', cursor: loading || !nickname.trim() ? 'default' : 'pointer',
-            fontFamily: FONT, whiteSpace: 'nowrap' as const,
-          }}>{loading ? '조회 중...' : '전적 조회'}</button>
-        </div>
-
-        {!opponentsLoading && opponents && opponents.length > 0 && (
-          <div style={{ marginBottom: '28px' }}>
-            <p style={{ fontSize: '0.72rem', color: '#aaa', marginBottom: '10px' }}>최근 커스텀에서 붙었던 상대 · 클릭하면 바로 검색해요</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px' }}>
-              {opponents.map(o => {
-                const active = nickname === o.nickname;
-                return (
-                  <button key={o.nickname} onClick={() => search(o.nickname)} disabled={loading} style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px 6px 6px', borderRadius: '100px',
-                    background: active ? ORANGE : '#fafafa',
-                    border: `1px solid ${active ? ORANGE : '#eee'}`,
-                    color: active ? '#fff' : '#333',
-                    fontSize: '0.82rem', fontWeight: 700, fontFamily: FONT, cursor: loading ? 'default' : 'pointer',
-                  }}>
-                    {o.profileImage ? (
-                      <img src={o.profileImage} alt="" style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}` }} />
-                    ) : (
-                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: o.teamColor, marginLeft: '4px' }} />
-                    )}
-                    {o.displayName}
-                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{o.count}경기</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {errorMsg && (
           <div style={{ padding: '16px 18px', borderRadius: '12px', background: '#fff5f5', border: '1px solid #f4cccc', color: '#c0392b', fontSize: '0.85rem', marginBottom: '24px' }}>
             {errorMsg}
@@ -697,11 +732,12 @@ export default function FcRecordClient() {
 
         {result && !errorMsg && !loading && (
           <>
+            <Divider />
             <VsHeader me={result.meDisplay} opp={result.oppDisplay} />
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(20px,6vw,48px)', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '28px' }}>
               <div style={{ textAlign: 'center' as const }}>
-                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: ORANGE }}>{result.summary.win}</div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: WIN_BLUE }}>{result.summary.win}</div>
                 <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>승</div>
               </div>
               <div style={{ textAlign: 'center' as const }}>
@@ -748,11 +784,16 @@ export default function FcRecordClient() {
             </div>
 
             {(result.playerStats.me.length > 0 || result.playerStats.opp.length > 0) && (
-              <div style={{ marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap' as const }}>
-                <PlayerStatsTable title="스맵 선수 평균 스탯" players={result.playerStats.me} accent={ORANGE} />
-                <PlayerStatsTable title="상대 선수 평균 스탯" players={result.playerStats.opp} accent="#3B82C4" />
-              </div>
+              <>
+                <Divider />
+                <div style={{ marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap' as const }}>
+                  <PlayerStatsTable title="스맵 선수 평균 스탯" players={result.playerStats.me} accent={ORANGE} />
+                  <PlayerStatsTable title="상대 선수 평균 스탯" players={result.playerStats.opp} accent="#3B82C4" />
+                </div>
+              </>
             )}
+
+            <Divider />
 
             {result.matches.length === 0 ? (
               <div style={{ textAlign: 'center' as const, padding: '48px 0', color: '#aaa', fontSize: '0.88rem' }}>
