@@ -497,14 +497,43 @@ function StatRowCount({ label, meRate, meSuccess, meTry, oppRate, oppSuccess, op
     />
   );
 }
-function PlayerStatsTable({ title, players, accent }: { title: string; players: PlayerStat[]; accent: string }) {
-  if (players.length === 0) return null;
+function PlayerCompareTable({ meTitle, oppTitle, mePlayers, oppPlayers }: {
+  meTitle: string; oppTitle: string; mePlayers: PlayerStat[]; oppPlayers: PlayerStat[];
+}) {
+  const DEFAULT_SHOW = 6;
+  const [expanded, setExpanded] = useState(false);
+  const total = Math.max(mePlayers.length, oppPlayers.length);
+  if (total === 0) return null;
+  const visibleCount = expanded ? total : Math.min(DEFAULT_SHOW, total);
+
   return (
-    <div style={{ flex: '1 1 320px', minWidth: '280px' }}>
-      <p style={{ fontSize: '0.72rem', fontWeight: 800, color: accent, letterSpacing: '0.06em', marginBottom: '10px' }}>{title}</p>
-      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
-        {players.map((p, i) => <PlayerStatRowExpandable key={p.spId} p={p} accent={accent} rank={i + 1} />)}
+    <div>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '4px', flexWrap: 'wrap' as const, gap: '6px' }}>
+        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em' }}>선수 평균 스탯</p>
+        <p style={{ fontSize: '0.66rem', color: '#bbb', fontWeight: 600 }}>평균 평점 기준 순위 · 같은 순위끼리 비교</p>
       </div>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <p style={{ flex: 1, fontSize: '0.68rem', fontWeight: 800, color: ORANGE }}>● {meTitle}</p>
+        <p style={{ flex: 1, fontSize: '0.68rem', fontWeight: 800, color: '#3B82C4' }}>● {oppTitle}</p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
+        {Array.from({ length: visibleCount }).map((_, i) => (
+          <div key={i} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
+            <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
+              {mePlayers[i] ? <PlayerStatRowExpandable p={mePlayers[i]} accent={ORANGE} rank={i + 1} /> : <div />}
+            </div>
+            <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
+              {oppPlayers[i] ? <PlayerStatRowExpandable p={oppPlayers[i]} accent="#3B82C4" rank={i + 1} /> : <div />}
+            </div>
+          </div>
+        ))}
+      </div>
+      {total > DEFAULT_SHOW && (
+        <button onClick={() => setExpanded(e => !e)} style={{
+          width: '100%', marginTop: '10px', padding: '10px', borderRadius: '10px', border: '1px solid #eee',
+          background: '#fafafa', color: '#888', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+        }}>{expanded ? '접기 ▴' : `선수 더보기 (${total - DEFAULT_SHOW}명) ▾`}</button>
+      )}
     </div>
   );
 }
@@ -807,9 +836,8 @@ export default function FcRecordClient() {
             {(result.playerStats.me.length > 0 || result.playerStats.opp.length > 0) && (
               <>
                 <Divider />
-                <div style={{ marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap' as const }}>
-                  <PlayerStatsTable title="스맵 선수 평균 스탯" players={result.playerStats.me} accent={ORANGE} />
-                  <PlayerStatsTable title="상대 선수 평균 스탯" players={result.playerStats.opp} accent="#3B82C4" />
+                <div style={{ marginBottom: '32px' }}>
+                  <PlayerCompareTable meTitle={result.meDisplay.name} oppTitle={result.oppDisplay.name} mePlayers={result.playerStats.me} oppPlayers={result.playerStats.opp} />
                 </div>
               </>
             )}
