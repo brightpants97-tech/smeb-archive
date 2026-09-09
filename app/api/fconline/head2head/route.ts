@@ -41,8 +41,8 @@ async function getOuid(nickname: string): Promise<string | null> {
   return data?.ouid || null;
 }
 
-async function getMatchIds(ouid: string, matchtype: number, limit: number): Promise<string[]> {
-  const res = await nexonFetch(`${BASE}/user/match?ouid=${ouid}&matchtype=${matchtype}&offset=0&limit=${limit}`);
+async function getMatchIds(ouid: string, matchtype: number, limit: number, offset = 0): Promise<string[]> {
+  const res = await nexonFetch(`${BASE}/user/match?ouid=${ouid}&matchtype=${matchtype}&offset=${offset}&limit=${limit}`);
   if (!res.ok) return [];
   const data = await res.json();
   return Array.isArray(data) ? data : [];
@@ -231,23 +231,64 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
 
 // 최근 경기 상세 스캔 결과를 공유 캐시로 저장 - 상대전적 검색과 '최근 붙었던 상대' 목록이
 // 이 하나의 스캔 결과를 같이 재사용해서 넥슨 API 호출을 중복으로 쓰지 않게 함.
+// 고정 개수가 아니라 DATA_CUTOFF(기준일)까지 계속 페이지네이션해서 그 기간 전체를 다 긁어옴 -
+// 넥슨 API가 최신순으로 내려주므로, 기준일보다 오래된 경기를 만나는 즉시 그 타입은 스캔 중단.
+// 스캔하며 만난 모든 경기(상대 무관)를 다 영구 저장해서, 다음 스캔부턴 이 기간이 계속 누적됨.
+const PAGE_SIZE = 30;
+const MAX_PAGES_PER_TYPE = 12; // 안전장치: 타입당 최대 360경기까지만 (무한 스캔 방지)
+
 const getRecentMatchesRaw = unstable_cache(
   async (meOuid: string) => {
     const results: { matchType: number; detail: any }[] = [];
+    const spidMap = await getSpidMap();
+    const toStore: StoredMatch[] = [];
+
     for (const matchtype of MATCH_TYPES) {
-      const ids = await getMatchIds(meOuid, matchtype, SEARCH_DEPTH);
-      const CHUNK = 10;
-      for (let i = 0; i < ids.length; i += CHUNK) {
-        const chunk = ids.slice(i, i + CHUNK);
-        const details = await Promise.all(chunk.map(getMatchDetail));
-        for (const detail of details) {
-          if (detail && extractResult(detail, matchtype)) results.push({ matchType: matchtype, detail });
+      let offset = 0;
+      for (let page = 0; page < MAX_PAGES_PER_TYPE; page++) {
+        const ids = await getMatchIds(meOuid, matchtype, PAGE_SIZE, offset);
+        if (ids.length === 0) break;
+        offset += ids.length;
+
+        const CHUNK = 10;
+        let hitCutoff = false;
+        for (let i = 0; i < ids.length; i += CHUNK) {
+          const chunk = ids.slice(i, i + CHUNK);
+          const details = await Promise.all(chunk.map(getMatchDetail));
+          for (const detail of details) {
+            if (!detail) continue;
+            if (!isAfterCutoff(detail.matchDate)) { hitCutoff = true; continue; } // 기준일 이전이면 이 타입 스캔 종료 신호
+            const result = extractResult(detail, matchtype);
+            if (!result) continue;
+            results.push({ matchType: matchtype, detail });
+
+            // 상대가 누구든 상관없이 다 영구 저장 (나중에 어떤 상대를 검색해도 이 기간이 남아있게)
+            const me = result.info.find((p: any) => p.ouid === meOuid);
+            const opp = result.info.find((p: any) => p.ouid !== meOuid);
+            if (me && opp && detail.matchId) {
+              const meSquad = extractSquad(me, spidMap);
+              const oppSquad = extractSquad(opp, spidMap);
+              const outcome = judgeOutcome(me);
+              const meGoal = me.shoot?.goalTotalDisplay ?? me.shoot?.goalTotal ?? null;
+              const oppGoal = opp.shoot?.goalTotalDisplay ?? opp.shoot?.goalTotal ?? null;
+              toStore.push({
+                matchId: detail.matchId, matchDate: detail.matchDate, matchType: matchtype,
+                meOuid, oppOuid: opp.ouid, oppNickname: opp.nickname, outcome,
+                meGoal, oppGoal, meSquad, oppSquad,
+                meTeam: extractTeamStats(me, meSquad), oppTeam: extractTeamStats(opp, oppSquad),
+              });
+            }
+          }
         }
+        if (hitCutoff || ids.length < PAGE_SIZE) break; // 기준일 도달했거나 더 이상 페이지 없음
       }
     }
+
+    if (toStore.length > 0) saveMatches(toStore).catch(() => {}); // 저장 실패해도 응답엔 영향 없게
+
     return results;
   },
-  ['fconline-recent-matches'],
+  ['fconline-recent-matches-v2'],
   { revalidate: 1800 } // 30분 - 상대 검색/목록이 이 캐시를 공유해서 API 호출을 아낌
 );
 
