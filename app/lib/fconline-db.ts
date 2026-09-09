@@ -107,11 +107,27 @@ export async function getOverallSummary() {
   return { win, lose, draw, total: matches.length };
 }
 
-// 저장된 매치 중 가장 최근 날짜 - 증분 스캔의 기준점(이 날짜 이후만 새로 확인하면 됨)
+// 최근 저장된 매치 중 가장 최근 날짜 - 증분 스캔의 기준점(이 날짜 이후만 새로 확인하면 됨)
 export async function getLatestStoredMatchDate(): Promise<string | null> {
   if (!hasRedis) return null;
   const top = await redis.zrange<string[]>('fc:matches:all', 0, 0, { rev: true });
   if (!top || top.length === 0) return null;
   const match = await redis.get<StoredMatch>(`fc:match:${top[0]}`);
   return match?.matchDate || null;
+}
+
+// ── 스캔 진행률 (통산전적 최신화 중 % 표시용) ────────────────────────────────
+export async function setScanProgress(done: number, total: number) {
+  if (!hasRedis) return;
+  await redis.set('fc:scan:progress', { done, total, updatedAt: Date.now() }, { ex: 120 });
+}
+
+export async function clearScanProgress() {
+  if (!hasRedis) return;
+  await redis.del('fc:scan:progress');
+}
+
+export async function getScanProgress(): Promise<{ done: number; total: number; updatedAt: number } | null> {
+  if (!hasRedis) return null;
+  return await redis.get('fc:scan:progress');
 }

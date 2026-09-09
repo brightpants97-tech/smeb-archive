@@ -85,7 +85,7 @@ interface PlayerStat {
   spId: string; name: string; games: number; position: number | null;
   avgRating: number | null; avgShoot: number; avgEffectiveShoot: number;
   passSuccessRate: number | null; avgTackle: number; avgBlock: number;
-  isBest: boolean; isWorst: boolean;
+  isBest: boolean; isWorst: boolean; isCurrentSquad: boolean;
 }
 
 interface MatchRow {
@@ -500,17 +500,21 @@ function StatRowCount({ label, meRate, meSuccess, meTry, oppRate, oppSuccess, op
 function PlayerCompareTable({ meTitle, oppTitle, mePlayers, oppPlayers }: {
   meTitle: string; oppTitle: string; mePlayers: PlayerStat[]; oppPlayers: PlayerStat[];
 }) {
-  const DEFAULT_SHOW = 6;
   const [expanded, setExpanded] = useState(false);
   const total = Math.max(mePlayers.length, oppPlayers.length);
   if (total === 0) return null;
-  const visibleCount = expanded ? total : Math.min(DEFAULT_SHOW, total);
+  // 기본으로는 '가장 최근 경기에 실제 출전한 선수(현재 스쿼드)'까지만 보여주고,
+  // 예전에만 쓰였던 선수는 더보기 버튼 뒤로 숨김
+  const meCurrentCount = mePlayers.filter(p => p.isCurrentSquad).length;
+  const oppCurrentCount = oppPlayers.filter(p => p.isCurrentSquad).length;
+  const defaultShow = Math.max(meCurrentCount, oppCurrentCount, 1);
+  const visibleCount = expanded ? total : Math.min(defaultShow, total);
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '4px', flexWrap: 'wrap' as const, gap: '6px' }}>
         <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em' }}>선수 평균 스탯</p>
-        <p style={{ fontSize: '0.66rem', color: '#bbb', fontWeight: 600 }}>평균 평점 기준 순위 · 같은 순위끼리 비교</p>
+        <p style={{ fontSize: '0.66rem', color: '#bbb', fontWeight: 600 }}>최근 경기 스쿼드 기준 · 같은 순위끼리 비교</p>
       </div>
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
         <p style={{ flex: 1, fontSize: '0.68rem', fontWeight: 800, color: ORANGE }}>● {meTitle}</p>
@@ -528,11 +532,11 @@ function PlayerCompareTable({ meTitle, oppTitle, mePlayers, oppPlayers }: {
           </div>
         ))}
       </div>
-      {total > DEFAULT_SHOW && (
+      {total > defaultShow && (
         <button onClick={() => setExpanded(e => !e)} style={{
           width: '100%', marginTop: '10px', padding: '10px', borderRadius: '10px', border: '1px solid #eee',
           background: '#fafafa', color: '#888', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
-        }}>{expanded ? '접기 ▴' : `선수 더보기 (${total - DEFAULT_SHOW}명) ▾`}</button>
+        }}>{expanded ? '접기 ▴' : `이전에 사용됐던 선수 더보기 (${total - defaultShow}명) ▾`}</button>
       )}
     </div>
   );
@@ -606,10 +610,11 @@ export default function FcRecordClient() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [opponents, setOpponents] = useState<{ nickname: string; count: number; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
+  const [opponents, setOpponents] = useState<{ nickname: string; win: number; draw: number; lose: number; total: number; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
   const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number } | null>(null);
   const [overallLoading, setOverallLoading] = useState(true);
+  const [overallProgress, setOverallProgress] = useState(0);
   const [recent30, setRecent30] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -619,16 +624,32 @@ export default function FcRecordClient() {
       .catch(() => {})
       .finally(() => setOpponentsLoading(false));
 
+    // 통산전적 스캔 중엔 진행률(%)을 0.8초마다 폴링해서 표시
+    let stopPolling = false;
+    const pollProgress = async () => {
+      while (!stopPolling) {
+        try {
+          const r = await fetch('/api/fconline/head2head?progress=1', { cache: 'no-store' });
+          const d = await r.json();
+          if (typeof d.percent === 'number') setOverallProgress(d.percent);
+        } catch {}
+        await new Promise(res => setTimeout(res, 800));
+      }
+    };
+    pollProgress();
+
     fetch('/api/fconline/head2head?overall=1', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => { if (!data.error) setOverall(data.summary); })
       .catch(() => {})
-      .finally(() => setOverallLoading(false));
+      .finally(() => { setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
 
     fetch('/api/fconline/head2head?recent30=1')
       .then(res => res.json())
       .then(data => { if (!data.error) setRecent30(data.matches); })
       .catch(() => {});
+
+    return () => { stopPolling = true; };
   }, []);
 
   const search = async (nick?: string) => {
@@ -672,25 +693,30 @@ export default function FcRecordClient() {
         </div>
 
         {(overallLoading || (overall && overall.total > 0)) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '24px', minHeight: '20px' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '24px', minHeight: '20px' }}>
             {overallLoading ? (
               <>
-                <div style={{
-                  width: '16px', height: '16px', borderRadius: '50%',
-                  border: '2px solid #eee', borderTopColor: ORANGE,
-                  animation: 'fc-spin 0.8s linear infinite', flexShrink: 0,
-                }} />
-                <span style={{ fontSize: '0.78rem', color: '#aaa' }}>스맵 통산 전적 최신화 중...</span>
-                <style>{`@keyframes fc-spin { to { transform: rotate(360deg); } }`}</style>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <div style={{
+                    width: '16px', height: '16px', borderRadius: '50%',
+                    border: '2px solid #eee', borderTopColor: ORANGE,
+                    animation: 'fc-spin 0.8s linear infinite', flexShrink: 0,
+                  }} />
+                  <span style={{ fontSize: '0.78rem', color: '#aaa' }}>스맵 통산 전적 최신화 중... {overallProgress}%</span>
+                  <style>{`@keyframes fc-spin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+                <div style={{ width: '100%', height: '4px', borderRadius: '100px', background: '#eee', overflow: 'hidden' }}>
+                  <div style={{ width: `${overallProgress}%`, height: '100%', background: ORANGE, borderRadius: '100px', transition: 'width 0.4s ease' }} />
+                </div>
               </>
             ) : (
-              <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
                 <span style={{ fontWeight: 900, color: WIN_BLUE }}>{overall!.win}승</span>
                 <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
                 <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
-                <span style={{ fontSize: '0.74rem', color: '#bbb' }}>(총 {overall!.total}경기)</span>
-              </>
+                <span style={{ fontSize: '0.74rem', color: '#bbb' }}>(총 {overall!.total}경기 · 2026.8.10 이후 기준)</span>
+              </div>
             )}
           </div>
         )}
@@ -736,7 +762,9 @@ export default function FcRecordClient() {
                       <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: o.teamColor, marginLeft: '4px' }} />
                     )}
                     {o.displayName}
-                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{o.count}경기</span>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>
+                      {o.win}승{o.draw > 0 ? ` ${o.draw}무` : ''} {o.lose}패
+                    </span>
                   </button>
                 );
               })}
@@ -846,7 +874,7 @@ export default function FcRecordClient() {
 
             {result.matches.length === 0 ? (
               <div style={{ textAlign: 'center' as const, padding: '48px 0', color: '#aaa', fontSize: '0.88rem' }}>
-                최근 {result.searchedDepth}경기 안에서 <strong style={{ color: '#333' }}>{result.opponentNickname}</strong>님과 맞붙은 기록을 찾지 못했어요.
+                2026년 8월 10일 이후로 <strong style={{ color: '#333' }}>{result.opponentNickname}</strong>님과 맞붙은 기록을 찾지 못했어요.
               </div>
             ) : (
               <>

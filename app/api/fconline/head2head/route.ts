@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { saveMatches, getStreamerByNickname, getAllStoredMatches, getLatestStoredMatchDate, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
+import { saveMatches, getStreamerByNickname, getAllStoredMatches, getLatestStoredMatchDate, setScanProgress, clearScanProgress, getScanProgress, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
 // 문서: https://openapi.nexon.com/ko/game/fconline/
@@ -207,6 +207,18 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
     }
   }
 
+  // 가장 최근 경기(matches[0], 이미 최신순 정렬되어 들어옴)에 실제로 출전(평점>0)한 선수들 -
+  // 이 사람들이 '현재 스쿼드'로 최상위에 노출되고, best/worst도 이 그룹 안에서만 뽑음
+  const latestMatch = matches[0];
+  const currentSquadIds = new Set<string>();
+  if (latestMatch) {
+    const squad = latestMatch[side] as any[];
+    for (const p of squad || []) {
+      const r = p.stats?.rating;
+      if (p.spId && typeof r === 'number' && r > 0) currentSquadIds.add(p.spId);
+    }
+  }
+
   const list = [...map.values()]
     .filter(e => e.cntRating > 0) // 한 번도 실제로 뛴 기록(평점>0)이 없는 벤치 멤버는 제외
     .map(e => ({
@@ -218,14 +230,22 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
     avgTackle: +(e.sumTackle / e.games).toFixed(1),
     avgBlock: +(e.sumBlock / e.games).toFixed(1),
     isBest: false, isWorst: false,
+    isCurrentSquad: currentSquadIds.has(e.spId),
   }));
 
-  const withRating = [...list].sort((a, b) => (b.avgRating as number) - (a.avgRating as number));
+  // best/worst는 '현재(가장 최근 경기) 스쿼드' 안에서만 선정
+  const currentGroup = list.filter(p => p.isCurrentSquad);
+  const withRating = [...currentGroup].sort((a, b) => (b.avgRating as number) - (a.avgRating as number));
   if (withRating.length > 1) {
     withRating[0].isBest = true;
     withRating[withRating.length - 1].isWorst = true;
   }
-  list.sort((a, b) => (b.avgRating ?? -1) - (a.avgRating ?? -1));
+
+  // 정렬: 현재 스쿼드가 항상 위, 그 안에서/이전 선수 그룹 안에서는 각각 평점순
+  list.sort((a, b) => {
+    if (a.isCurrentSquad !== b.isCurrentSquad) return a.isCurrentSquad ? -1 : 1;
+    return (b.avgRating ?? -1) - (a.avgRating ?? -1);
+  });
   return list;
 }
 
@@ -239,6 +259,9 @@ const MAX_PAGES_PER_TYPE = 12; // 안전장치: 타입당 최대 360경기까지
 async function scanNewMatches(meOuid: string, sinceDate: string): Promise<StoredMatch[]> {
   const spidMap = await getSpidMap();
   const found: StoredMatch[] = [];
+  const TOTAL_PAGES_ESTIMATE = MATCH_TYPES.length * MAX_PAGES_PER_TYPE; // 진행률 계산용 이론적 최대치
+  let pagesDone = 0;
+  await setScanProgress(0, TOTAL_PAGES_ESTIMATE).catch(() => {});
 
   for (const matchtype of MATCH_TYPES) {
     let offset = 0;
@@ -285,9 +308,12 @@ async function scanNewMatches(meOuid: string, sinceDate: string): Promise<Stored
           });
         }
       }
+      pagesDone++;
+      setScanProgress(pagesDone, TOTAL_PAGES_ESTIMATE).catch(() => {}); // 완료를 기다리지 않고 진행률만 갱신
       if (hitBoundary || ids.length < PAGE_SIZE) break; // 저장된 지점 도달했거나 더 이상 페이지 없음
     }
   }
+  await clearScanProgress().catch(() => {}); // 끝났으니 진행률 표시 종료(폴링 쪽에서 100%로 처리)
   return found;
 }
 
@@ -360,14 +386,18 @@ async function fetchOpponentsList(meNickname: string) {
   if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
 
   const raw = await getRecentMatchesRaw(meOuid);
-  const map = new Map<string, { nickname: string; count: number; lastDate: string }>();
+  const map = new Map<string, { nickname: string; win: number; draw: number; lose: number; lastDate: string }>();
   for (const m of raw) {
     const existing = map.get(m.oppOuid);
+    // outcome은 '나(스맵)' 기준이라, 상대방 입장에선 승/패가 뒤바뀜
+    const oppWin = m.outcome === 'lose' ? 1 : 0; // 내가 졌으면 상대는 이긴 것
+    const oppLose = m.outcome === 'win' ? 1 : 0;
+    const oppDraw = m.outcome === 'draw' ? 1 : 0;
     if (existing) {
-      existing.count += 1;
+      existing.win += oppWin; existing.draw += oppDraw; existing.lose += oppLose;
       if (m.matchDate > existing.lastDate) existing.lastDate = m.matchDate;
     } else {
-      map.set(m.oppOuid, { nickname: m.oppNickname, count: 1, lastDate: m.matchDate });
+      map.set(m.oppOuid, { nickname: m.oppNickname, win: oppWin, draw: oppDraw, lose: oppLose, lastDate: m.matchDate });
     }
   }
 
@@ -378,9 +408,14 @@ async function fetchOpponentsList(meNickname: string) {
     .filter(o => byNickname.has(o.nickname)) // 등록된 스트리머만
     .map(o => {
       const s = byNickname.get(o.nickname)!;
-      return { nickname: o.nickname, count: o.count, lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor };
+      const total = o.win + o.draw + o.lose;
+      const winRate = total ? o.win / total : 0; // 상대방(스맵이 아닌) 기준 승률
+      return {
+        nickname: o.nickname, win: o.win, draw: o.draw, lose: o.lose, total, winRate,
+        lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor,
+      };
     })
-    .sort((a, b) => (b.count - a.count) || (a.lastDate < b.lastDate ? 1 : -1));
+    .sort((a, b) => (b.winRate - a.winRate) || (b.total - a.total)); // 상대방 승률 높은 순
 
   return { meNickname, opponents, searchedDepth: SEARCH_DEPTH };
 }
@@ -452,8 +487,9 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
         me: aggregatePlayerStats(matches, 'meSquad'),
         opp: aggregatePlayerStats(matches, 'oppSquad'),
       },
-      matches: matches.slice(0, 20), // 화면엔 최근 20경기만 - 전적/스탯 집계는 전체 병합 기록 기준
+      matches, // 이제 전체(8/10~오늘) 병합 기록을 다 보여줌 - 인위적으로 자르지 않음
       searchedDepth: SEARCH_DEPTH,
+      dataSince: DATA_CUTOFF,
     };
 }
 
@@ -482,7 +518,7 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
 
   return {
     ...cached,
-    meDisplay: { name: meStreamer?.displayName || meNickname, color: meStreamer?.teamColor || null, profileImage: meStreamer?.profileImage || (process.env.SOOP_BJID ? `https://profile.img.sooplive.com/LOGO/${process.env.SOOP_BJID.slice(0, 2)}/${process.env.SOOP_BJID}/${process.env.SOOP_BJID}.jpg` : null) },
+    meDisplay: { name: '스맵', color: meStreamer?.teamColor || null, profileImage: meStreamer?.profileImage || (process.env.SOOP_BJID ? `https://profile.img.sooplive.com/LOGO/${process.env.SOOP_BJID.slice(0, 2)}/${process.env.SOOP_BJID}/${process.env.SOOP_BJID}.jpg` : null) },
     oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null, profileImage: oppStreamer?.profileImage || null },
   };
 }
@@ -508,6 +544,14 @@ export async function GET(request: Request) {
   const list = searchParams.get('list');
   const overall = searchParams.get('overall');
   const recent30 = searchParams.get('recent30');
+  const progress = searchParams.get('progress');
+
+  if (progress) {
+    const p = await getScanProgress().catch(() => null);
+    if (!p) return NextResponse.json({ percent: 100, done: true });
+    const percent = p.total > 0 ? Math.min(99, Math.round((p.done / p.total) * 100)) : 0;
+    return NextResponse.json({ percent, done: false, doneCount: p.done, total: p.total });
+  }
 
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
 
