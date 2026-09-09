@@ -172,7 +172,7 @@ function extractTeamStats(participant: any, squad: any[]) {
 // 매치 목록에서 선수(spId)별 평균 스탯을 집계하고 베스트/배드 선수를 표시
 function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
   const map = new Map<string, {
-    spId: string; name: string; games: number;
+    spId: string; name: string; games: number; position: number | null;
     sumRating: number; cntRating: number;
     sumShoot: number; sumEffShoot: number;
     sumPassTry: number; sumPassSuccess: number;
@@ -185,10 +185,12 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
       if (!p.spId) continue;
       let e = map.get(p.spId);
       if (!e) {
-        e = { spId: p.spId, name: p.name, games: 0, sumRating: 0, cntRating: 0, sumShoot: 0, sumEffShoot: 0, sumPassTry: 0, sumPassSuccess: 0, sumTackle: 0, sumBlock: 0 };
+        e = { spId: p.spId, name: p.name, games: 0, position: null, sumRating: 0, cntRating: 0, sumShoot: 0, sumEffShoot: 0, sumPassTry: 0, sumPassSuccess: 0, sumTackle: 0, sumBlock: 0 };
         map.set(p.spId, e);
       }
       e.games++;
+      // 대표 포지션은 실제로 출전(핏치 포지션이 있는)한 가장 최근 경기 기준으로 갱신
+      if (typeof p.position === 'number') e.position = p.position;
       const st = p.stats || {};
       // 평점 0은 실제로 출전하지 않은 벤치 멤버인 경우가 많아 평균 계산에서 제외
       if (typeof st.rating === 'number' && st.rating > 0) { e.sumRating += st.rating; e.cntRating++; }
@@ -204,7 +206,7 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
   const list = [...map.values()]
     .filter(e => e.cntRating > 0) // 한 번도 실제로 뛴 기록(평점>0)이 없는 벤치 멤버는 제외
     .map(e => ({
-    spId: e.spId, name: e.name, games: e.games,
+    spId: e.spId, name: e.name, games: e.games, position: e.position,
     avgRating: +(e.sumRating / e.cntRating).toFixed(2),
     avgShoot: +(e.sumShoot / e.games).toFixed(1),
     avgEffectiveShoot: +(e.sumEffShoot / e.games).toFixed(1),

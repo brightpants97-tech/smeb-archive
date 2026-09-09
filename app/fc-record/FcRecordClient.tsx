@@ -82,7 +82,7 @@ interface TeamStat {
 }
 
 interface PlayerStat {
-  spId: string; name: string; games: number;
+  spId: string; name: string; games: number; position: number | null;
   avgRating: number | null; avgShoot: number; avgEffectiveShoot: number;
   passSuccessRate: number | null; avgTackle: number; avgBlock: number;
   isBest: boolean; isWorst: boolean;
@@ -414,29 +414,50 @@ function StatRow({ label, meVal, oppVal, suffix = '' }: { label: string; meVal: 
   );
 }
 
-function PlayerStatRowExpandable({ p, accent }: { p: PlayerStat; accent: string }) {
+function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: string; rank: number }) {
   const [open, setOpen] = useState(false);
   const tone = p.isBest ? ORANGE : p.isWorst ? RED : null;
+  const group = posGroup(p.position);
+  const posColor = group ? GROUP_COLOR[group] : '#ddd';
+  const posLabel = typeof p.position === 'number' ? POSITION_MAP[p.position]?.label : null;
   return (
     <div style={{
-      borderRadius: '12px', border: `1px solid ${tone ? tone : '#eee'}`,
+      position: 'relative', display: 'flex', borderRadius: '12px',
+      border: `1px solid ${tone ? tone : '#eee'}`,
       background: tone ? `${tone}08` : '#fff', overflow: 'hidden',
       boxShadow: tone ? `0 2px 8px ${tone}1a` : '0 1px 3px rgba(0,0,0,0.03)',
     }}>
+      {/* 포지션 컬러 스트립 */}
+      <span style={{ width: '4px', flexShrink: 0, background: posColor }} />
+
+      {/* BEST/WORST 코너 배지 */}
+      {tone && (
+        <span style={{
+          position: 'absolute', top: '-1px', right: '10px', background: tone, color: '#fff',
+          fontSize: '0.56rem', fontWeight: 900, padding: '2px 8px', borderRadius: '0 0 6px 6px',
+          letterSpacing: '0.04em', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        }}>{p.isBest ? '⭐ BEST' : '🔻 WORST'}</span>
+      )}
+
       <button onClick={() => setOpen(o => !o)} style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: '11px', padding: '11px 12px',
+        flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 12px',
         background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
       }}>
-        <div style={{ borderRadius: '50%', border: `2px solid ${tone || '#e5e5e5'}`, flexShrink: 0 }}>
+        <span style={{
+          flexShrink: 0, width: '18px', textAlign: 'center' as const, fontSize: '0.72rem', fontWeight: 800,
+          color: rank <= 3 ? '#bbb' : '#ddd',
+        }}>{rank}</span>
+        <div style={{ borderRadius: '50%', border: `2px solid ${tone || posColor}`, flexShrink: 0 }}>
           <PlayerImg spId={p.spId} size={36} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-            {p.isBest && <span style={{ fontSize: '0.6rem', fontWeight: 800, color: ORANGE, background: `${ORANGE}18`, padding: '1px 7px', borderRadius: '100px', whiteSpace: 'nowrap' as const }}>⭐ BEST</span>}
-            {p.isWorst && <span style={{ fontSize: '0.6rem', fontWeight: 800, color: RED, background: `${RED}18`, padding: '1px 7px', borderRadius: '100px', whiteSpace: 'nowrap' as const }}>🔻 WORST</span>}
+            {posLabel && <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#fff', background: posColor, padding: '1px 5px', borderRadius: '4px', flexShrink: 0 }}>{posLabel}</span>}
           </div>
-          <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#999' }}>{p.games}경기 출전</p>
+          <p style={{ margin: '2px 0 0', fontSize: '0.68rem', color: '#999', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ background: '#f2f2f2', padding: '0 5px', borderRadius: '100px', fontWeight: 700, color: '#888' }}>{p.games}G</span>
+          </p>
         </div>
         <div style={{
           flexShrink: 0, width: '38px', height: '38px', borderRadius: '50%',
@@ -482,7 +503,7 @@ function PlayerStatsTable({ title, players, accent }: { title: string; players: 
     <div style={{ flex: '1 1 320px', minWidth: '280px' }}>
       <p style={{ fontSize: '0.72rem', fontWeight: 800, color: accent, letterSpacing: '0.06em', marginBottom: '10px' }}>{title}</p>
       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
-        {players.map(p => <PlayerStatRowExpandable key={p.spId} p={p} accent={accent} />)}
+        {players.map((p, i) => <PlayerStatRowExpandable key={p.spId} p={p} accent={accent} rank={i + 1} />)}
       </div>
     </div>
   );
