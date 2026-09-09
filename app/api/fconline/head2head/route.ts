@@ -386,18 +386,18 @@ async function fetchOpponentsList(meNickname: string) {
   if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
 
   const raw = await getRecentMatchesRaw(meOuid);
-  const map = new Map<string, { nickname: string; win: number; draw: number; lose: number; lastDate: string }>();
+  const map = new Map<string, { nickname: string; meWin: number; meDraw: number; meLose: number; lastDate: string }>();
   for (const m of raw) {
     const existing = map.get(m.oppOuid);
-    // outcome은 '나(스맵)' 기준이라, 상대방 입장에선 승/패가 뒤바뀜
-    const oppWin = m.outcome === 'lose' ? 1 : 0; // 내가 졌으면 상대는 이긴 것
-    const oppLose = m.outcome === 'win' ? 1 : 0;
-    const oppDraw = m.outcome === 'draw' ? 1 : 0;
+    // 화면엔 스맵 관점(내가 이겼으면 승)으로 보여줌 - 정렬만 상대방 승률 기준으로 별도 계산
+    const meWin = m.outcome === 'win' ? 1 : 0;
+    const meLose = m.outcome === 'lose' ? 1 : 0;
+    const meDraw = m.outcome === 'draw' ? 1 : 0;
     if (existing) {
-      existing.win += oppWin; existing.draw += oppDraw; existing.lose += oppLose;
+      existing.meWin += meWin; existing.meDraw += meDraw; existing.meLose += meLose;
       if (m.matchDate > existing.lastDate) existing.lastDate = m.matchDate;
     } else {
-      map.set(m.oppOuid, { nickname: m.oppNickname, win: oppWin, draw: oppDraw, lose: oppLose, lastDate: m.matchDate });
+      map.set(m.oppOuid, { nickname: m.oppNickname, meWin, meDraw, meLose, lastDate: m.matchDate });
     }
   }
 
@@ -408,14 +408,14 @@ async function fetchOpponentsList(meNickname: string) {
     .filter(o => byNickname.has(o.nickname)) // 등록된 스트리머만
     .map(o => {
       const s = byNickname.get(o.nickname)!;
-      const total = o.win + o.draw + o.lose;
-      const winRate = total ? o.win / total : 0; // 상대방(스맵이 아닌) 기준 승률
+      const total = o.meWin + o.meDraw + o.meLose;
+      const oppWinRate = total ? o.meLose / total : 0; // 정렬용: 상대방(스맵이 아닌) 기준 승률 = 나의 패배 비율
       return {
-        nickname: o.nickname, win: o.win, draw: o.draw, lose: o.lose, total, winRate,
+        nickname: o.nickname, win: o.meWin, draw: o.meDraw, lose: o.meLose, total, oppWinRate,
         lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor,
       };
     })
-    .sort((a, b) => (b.winRate - a.winRate) || (b.total - a.total)); // 상대방 승률 높은 순
+    .sort((a, b) => (b.oppWinRate - a.oppWinRate) || (b.total - a.total)); // 상대방 승률 높은 순
 
   return { meNickname, opponents, searchedDepth: SEARCH_DEPTH };
 }
