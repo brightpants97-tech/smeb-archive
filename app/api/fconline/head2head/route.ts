@@ -13,9 +13,9 @@ const SME_NICKNAME = process.env.SMEB_FC_NICKNAME || ''; // 스맵의 FC 온라�
 // 30(리그친선)/60(공식친선)은 실측 결과 거의 안 쓰여서 API 호출량 절약을 위해 제외
 const MATCH_TYPES = [40, 50];
 // 상대전적 검색 시 뒤져볼 최근 경기 수 (매치타입별로 각각 이만큼 조회함)
-// 넥슨 개발단계 키는 하루 1,000건 한도라, 검색 한 번에 match-detail 호출을
-// 너무 많이 쓰지 않도록 보수적으로 잡음 (2타입 × 20 = 최대 40건/검색)
-const SEARCH_DEPTH = 20;
+// 서비스 단계 키로 전환되어 호출 한도가 넉넉해져서, 특정 상대와 실제 맞붙은 경기를
+// 더 많이 집계할 수 있도록 20→50으로 확대 (2타입 × 50 = 최대 100건/검색)
+const SEARCH_DEPTH = 50;
 
 // 429(rate limit) 응답 시 짧게 기다렸다가 재시도. 개발단계 키는 호출 한도가 낮아서
 // 여러 요청이 겹치면 종종 걸림 - 실패를 '없음'으로 오판하지 않도록 재시도로 흡수.
@@ -522,7 +522,7 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
         me: aggregatePlayerStats(matches, 'meSquad'),
         opp: aggregatePlayerStats(matches, 'oppSquad'),
       },
-      matches: matches.slice(0, 10), // 화면엔 최근 10경기만 - 전적/스탯 집계는 전체 병합 기록 기준
+      matches: matches.slice(0, 20), // 화면엔 최근 20경기만 - 전적/스탯 집계는 전체 병합 기록 기준
       searchedDepth: SEARCH_DEPTH,
     };
 }
