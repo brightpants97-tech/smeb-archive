@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 const ORANGE = '#EB701A';
@@ -695,6 +695,8 @@ export default function FcRecordClient() {
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const resultRef = useRef<Result | null>(null);
+  useEffect(() => { resultRef.current = result; }, [result]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [opponents, setOpponents] = useState<{ nickname: string; win: number; draw: number; lose: number; total: number; last5: string[]; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
@@ -702,6 +704,25 @@ export default function FcRecordClient() {
   const [overallLoading, setOverallLoading] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
   const [recent30, setRecent30] = useState<any[] | null>(null);
+
+  const loadOpponents = () => {
+    fetch('/api/fconline/head2head?list=1', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => { if (!data.error) setOpponents(data.opponents); })
+      .catch(() => {});
+  };
+  const loadOverall = () => {
+    fetch('/api/fconline/head2head?overall=1', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => { if (!data.error) setOverall(data.summary); })
+      .catch(() => {});
+  };
+  const loadRecent30 = () => {
+    fetch('/api/fconline/head2head?recent30=1', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => { if (!data.error) setRecent30(data.matches); })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     fetch('/api/fconline/head2head?list=1')
@@ -730,30 +751,38 @@ export default function FcRecordClient() {
       .catch(() => {})
       .finally(() => { setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
 
-    fetch('/api/fconline/head2head?recent30=1')
-      .then(res => res.json())
-      .then(data => { if (!data.error) setRecent30(data.matches); })
-      .catch(() => {});
+    loadRecent30();
 
-    return () => { stopPolling = true; };
+    // 페이지를 켜놓고 있는 동안 60초마다 조용히(로딩 표시 없이) 새 경기 자동 반영
+    // - 새로고침 안 해도 방송 보면서 켜둔 채로 최신 전적이 자동으로 업데이트됨
+    const autoRefresh = setInterval(() => {
+      loadOpponents();
+      loadOverall();
+      loadRecent30();
+      if (resultRef.current?.opponentNickname) search(resultRef.current.opponentNickname, true);
+    }, 60000);
+
+    return () => { stopPolling = true; clearInterval(autoRefresh); };
   }, []);
 
-  const search = async (nick?: string) => {
+  const search = async (nick?: string, silent = false) => {
     const target = (nick ?? nickname).trim();
     if (!target) return;
-    setNickname(target);
-    setLoading(true);
-    setErrorMsg(null);
-    setResult(null);
+    if (!silent) {
+      setNickname(target);
+      setLoading(true);
+      setErrorMsg(null);
+      setResult(null);
+    }
     try {
-      const res = await fetch(`/api/fconline/head2head?opponent=${encodeURIComponent(target)}`);
+      const res = await fetch(`/api/fconline/head2head?opponent=${encodeURIComponent(target)}`, silent ? { cache: 'no-store' } : undefined);
       const data = await res.json();
-      if (!res.ok || data.error) setErrorMsg(data.error || '조회에 실패했어요.');
-      else setResult(data);
+      if (!res.ok || data.error) { if (!silent) setErrorMsg(data.error || '조회에 실패했어요.'); }
+      else setResult(data); // silent여도 최신 데이터로 조용히 교체
     } catch {
-      setErrorMsg('조회 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
+      if (!silent) setErrorMsg('조회 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
