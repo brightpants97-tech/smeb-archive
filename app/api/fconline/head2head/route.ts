@@ -305,7 +305,7 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
 const PAGE_SIZE = 30;
 const MAX_PAGES_PER_TYPE = 12; // 안전장치: 타입당 최대 360경기까지만 (무한 스캔 방지)
 
-async function scanNewMatches(meOuid: string, sinceDate: string): Promise<StoredMatch[]> {
+async function scanNewMatches(meOuid: string, sinceDateByType: Record<number, string>): Promise<StoredMatch[]> {
   const spidMap = await getSpidMap();
   const found: StoredMatch[] = [];
   const TOTAL_PAGES_ESTIMATE = MATCH_TYPES.length * MAX_PAGES_PER_TYPE; // 진행률 계산용 이론적 최대치
@@ -313,6 +313,7 @@ async function scanNewMatches(meOuid: string, sinceDate: string): Promise<Stored
   await setScanProgress(0, TOTAL_PAGES_ESTIMATE).catch(() => {});
 
   for (const matchtype of MATCH_TYPES) {
+    const sinceDate = sinceDateByType[matchtype] || DATA_CUTOFF; // 이 타입 기준 마지막 저장 시각(타입별로 다름)
     let offset = 0;
     for (let page = 0; page < MAX_PAGES_PER_TYPE; page++) {
       const ids = await getMatchIds(meOuid, matchtype, PAGE_SIZE, offset);
@@ -367,10 +368,15 @@ async function scanNewMatches(meOuid: string, sinceDate: string): Promise<Stored
 }
 
 async function getRecentMatchesRaw(meOuid: string): Promise<StoredMatch[]> {
-  const latestStored = await getLatestStoredMatchDate();
-  const since = latestStored && latestStored > DATA_CUTOFF ? latestStored : DATA_CUTOFF;
+  // 매치타입마다 최신 저장 시각을 따로 조회 - 한 타입(예: 공식경기)에 더 최근 경기가 있다고 해서
+  // 다른 타입(클래식1on1)의 아직 저장 안 된 경기를 건너뛰면 안 되기 때문에 타입별로 분리함
+  const sinceDateByType: Record<number, string> = {};
+  await Promise.all(MATCH_TYPES.map(async mt => {
+    const latest = await getLatestStoredMatchDate(mt);
+    sinceDateByType[mt] = latest && latest > DATA_CUTOFF ? latest : DATA_CUTOFF;
+  }));
 
-  const newMatches = await scanNewMatches(meOuid, since);
+  const newMatches = await scanNewMatches(meOuid, sinceDateByType);
   if (newMatches.length > 0) await saveMatches(newMatches).catch(() => {});
 
   // 방금 저장한 것까지 포함해서 저장소 전체(기준일 이후)를 반환 - 이후 4개 집계 함수가 공용으로 재사용
@@ -607,25 +613,6 @@ export async function GET(request: Request) {
     if (!p) return NextResponse.json({ percent: 100, done: true });
     const percent = p.total > 0 ? Math.min(99, Math.round((p.done / p.total) * 100)) : 0;
     return NextResponse.json({ percent, done: false, doneCount: p.done, total: p.total });
-  }
-
-  if (searchParams.get('debugtypes')) {
-    if (!NEXON_KEY) return NextResponse.json({ error: 'no key' }, { status: 500 });
-    const meOuid = await getOuid(SME_NICKNAME);
-    if (!meOuid) return NextResponse.json({ error: 'no ouid' }, { status: 404 });
-    const findNick = searchParams.get('find');
-    const ALL_TYPES = [30, 40, 50, 52, 60];
-    const out: Record<string, any> = {};
-    for (const mt of ALL_TYPES) {
-      const ids = await getMatchIds(meOuid, mt, 40, 0);
-      const details = await Promise.all(ids.map(getMatchDetail));
-      const rows = details.filter(Boolean).map((d: any) => {
-        const opp = d.matchInfo?.find((p: any) => p.ouid !== meOuid);
-        return { matchDate: d.matchDate, opp: opp?.nickname };
-      });
-      out[mt] = findNick ? rows.filter(r => r.opp === findNick) : rows.slice(0, 5);
-    }
-    return NextResponse.json(out);
   }
 
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });

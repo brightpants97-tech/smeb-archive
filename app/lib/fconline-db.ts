@@ -65,10 +65,16 @@ export async function saveMatches(matches: StoredMatch[]) {
   if (!hasRedis || matches.length === 0) return;
   const pipeline = redis.pipeline();
   for (const m of matches) {
-    const ts = new Date(m.matchDate).getTime() || Date.now();
+    // 넥슨 matchDate는 UTC0인데 'Z'가 없어서 그대로 파싱하면 서버 타임존에 따라 어긋날 수 있어 명시적으로 UTC 처리
+    const iso = m.matchDate.endsWith('Z') ? m.matchDate : m.matchDate + 'Z';
+    const ts = new Date(iso).getTime() || Date.now();
     pipeline.set(`fc:match:${m.matchId}`, m);
     pipeline.zadd('fc:matches:all', { score: ts, member: m.matchId });
     pipeline.zadd(`fc:matches:opp:${m.oppOuid}`, { score: ts, member: m.matchId });
+    // 매치타입별 최신 시각을 정확히 추적하기 위한 별도 인덱스 - 이게 없으면 특정 타입(예: 공식경기)에
+    // 더 최근 경기가 있을 때, 다른 타입(클래식1on1)의 아직 저장 안 된 오래된 경기를 증분스캔이
+    // "이미 저장된 범위"로 착각해 통째로 건너뛰는 버그가 있었음
+    pipeline.zadd(`fc:matches:type:${m.matchType}`, { score: ts, member: m.matchId });
   }
   await pipeline.exec();
 }
@@ -108,9 +114,10 @@ export async function getOverallSummary() {
 }
 
 // 최근 저장된 매치 중 가장 최근 날짜 - 증분 스캔의 기준점(이 날짜 이후만 새로 확인하면 됨)
-export async function getLatestStoredMatchDate(): Promise<string | null> {
+export async function getLatestStoredMatchDate(matchtype?: number): Promise<string | null> {
   if (!hasRedis) return null;
-  const top = await redis.zrange<string[]>('fc:matches:all', 0, 0, { rev: true });
+  const key = matchtype != null ? `fc:matches:type:${matchtype}` : 'fc:matches:all';
+  const top = await redis.zrange<string[]>(key, 0, 0, { rev: true });
   if (!top || top.length === 0) return null;
   const match = await redis.get<StoredMatch>(`fc:match:${top[0]}`);
   return match?.matchDate || null;
