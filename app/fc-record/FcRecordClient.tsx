@@ -432,7 +432,7 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
   const posLabel = typeof p.position === 'number' ? POSITION_MAP[p.position]?.label : null;
   return (
     <div style={{
-      position: 'relative', display: 'flex', borderRadius: '12px',
+      position: 'relative', display: 'flex', flexDirection: 'row' as const, borderRadius: '12px',
       border: `1px solid ${tone ? tone : '#eee'}`,
       background: tone ? `${tone}08` : '#fff', overflow: 'hidden',
       boxShadow: tone ? `0 2px 8px ${tone}1a` : '0 1px 3px rgba(0,0,0,0.03)',
@@ -449,10 +449,12 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
         }}>{p.isBest ? '⭐ BEST' : '🔻 WORST'}</span>
       )}
 
-      <button onClick={() => setOpen(o => !o)} style={{
-        flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 12px',
-        background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
-      }}>
+      {/* 헤더(버튼)와 펼침 내용을 세로로 쌓는 본문 컬럼 - 바깥 wrapper가 row라서 이 래퍼가 꼭 필요함 */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' as const }}>
+        <button onClick={() => setOpen(o => !o)} style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 12px',
+          background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
+        }}>
         <span style={{
           flexShrink: 0, width: '18px', textAlign: 'center' as const, fontSize: '0.72rem', fontWeight: 800,
           color: rank <= 3 ? '#bbb' : '#ddd',
@@ -519,6 +521,7 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
           }}>{showZero ? '기록 없는 항목 숨기기 ▴' : '기록 없는 항목까지 모두 보기 ▾'}</button>
         </div>
       )}
+      </div>
     </div>
   );
 }
