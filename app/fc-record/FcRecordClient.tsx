@@ -846,9 +846,9 @@ export default function FcRecordClient() {
 
         {!opponentsLoading && opponents && opponents.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px' }}>역대 최다 격돌 상대 TOP 3</p>
+            <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px' }}>역대 최다 격돌 상대 TOP 5</p>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
-              {opponents.slice(0, 3).map((o, i) => (
+              {opponents.slice(0, 5).map((o, i) => (
                 <button key={o.nickname} onClick={() => search(o.nickname)} style={{
                   flex: '1 1 200px', minWidth: '180px', display: 'flex', alignItems: 'center', gap: '10px',
                   padding: '12px 14px', borderRadius: '14px', border: '1px solid #eee', background: '#fff',
@@ -856,7 +856,7 @@ export default function FcRecordClient() {
                 }}>
                   <span style={{
                     position: 'absolute', top: '-6px', left: '10px', width: '20px', height: '20px', borderRadius: '50%',
-                    background: i === 0 ? '#F2C94C' : i === 1 ? '#BDBDBD' : '#D08A4C', color: '#fff',
+                    background: i === 0 ? '#F2C94C' : i === 1 ? '#BDBDBD' : i === 2 ? '#D08A4C' : '#ccc', color: '#fff',
                     fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
                   }}>{i + 1}</span>

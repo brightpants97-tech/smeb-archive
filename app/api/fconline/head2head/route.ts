@@ -609,6 +609,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ percent, done: false, doneCount: p.done, total: p.total });
   }
 
+  if (searchParams.get('debugtypes')) {
+    if (!NEXON_KEY) return NextResponse.json({ error: 'no key' }, { status: 500 });
+    const meOuid = await getOuid(SME_NICKNAME);
+    if (!meOuid) return NextResponse.json({ error: 'no ouid' }, { status: 404 });
+    const ALL_TYPES = [30, 40, 50, 52, 60];
+    const out: Record<string, any[]> = {};
+    for (const mt of ALL_TYPES) {
+      const ids = await getMatchIds(meOuid, mt, 10, 0);
+      const details = await Promise.all(ids.slice(0, 5).map(getMatchDetail));
+      out[mt] = details.filter(Boolean).map((d: any) => {
+        const opp = d.matchInfo?.find((p: any) => p.ouid !== meOuid);
+        return { matchDate: d.matchDate, opp: opp?.nickname };
+      });
+    }
+    return NextResponse.json(out);
+  }
+
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
 
   if (recent30) {
