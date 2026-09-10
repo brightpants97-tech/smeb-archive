@@ -711,7 +711,6 @@ export default function FcRecordClient() {
   const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number } | null>(null);
   const [overallLoading, setOverallLoading] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
-  const [recent30, setRecent30] = useState<any[] | null>(null);
 
   const loadOpponents = () => {
     fetch('/api/fconline/head2head?list=1', { cache: 'no-store' })
@@ -723,12 +722,6 @@ export default function FcRecordClient() {
     fetch('/api/fconline/head2head?overall=1', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => { if (!data.error) setOverall(data.summary); })
-      .catch(() => {});
-  };
-  const loadRecent30 = () => {
-    fetch('/api/fconline/head2head?recent30=1', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => { if (!data.error) setRecent30(data.matches); })
       .catch(() => {});
   };
 
@@ -759,14 +752,11 @@ export default function FcRecordClient() {
       .catch(() => {})
       .finally(() => { setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
 
-    loadRecent30();
-
     // 페이지를 켜놓고 있는 동안 60초마다 조용히(로딩 표시 없이) 새 경기 자동 반영
     // - 새로고침 안 해도 방송 보면서 켜둔 채로 최신 전적이 자동으로 업데이트됨
     const autoRefresh = setInterval(() => {
       loadOpponents();
       loadOverall();
-      loadRecent30();
       if (resultRef.current?.opponentNickname) search(resultRef.current.opponentNickname, true);
     }, 60000);
 
@@ -935,34 +925,6 @@ export default function FcRecordClient() {
                       </span>
                     )}
                   </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 정보성 섹션: 클릭 불가, 그냥 최근 결과 훑어보기 - 무채색 카드로 "읽기 전용"임을 표시 */}
-        {recent30 && recent30.length > 0 && (
-          <div style={{ marginBottom: '28px', padding: '16px 18px', borderRadius: '14px', background: '#fff', border: '1px solid #eee' }}>
-            <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Icon name="calendar" size={12} color="#999" /> 등록된 스트리머와의 최근 {recent30.length}경기 결과
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-              {recent30.map((m, i) => {
-                const color = OUTCOME_COLOR[m.outcome];
-                const label = m.oppDisplayName || m.oppNickname;
-                return (
-                  <div key={m.matchId ?? i} title={`${label} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${m.matchDate ? formatMatchDate(m.matchDate, { dateStyle: 'short' }) : ''}`} style={{
-                    display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 9px 4px 4px', borderRadius: '100px',
-                    background: '#fafafa', border: `1px solid ${color}33`,
-                  }}>
-                    <span style={{
-                      width: '20px', height: '20px', borderRadius: '50%', background: color + '20', color,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 900,
-                    }}>{OUTCOME_LABEL[m.outcome]}</span>
-                    {m.oppProfileImage && <img src={m.oppProfileImage} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover' }} />}
-                    <span style={{ fontSize: '0.68rem', color: '#888', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{label}</span>
-                  </div>
                 );
               })}
             </div>
