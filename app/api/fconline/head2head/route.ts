@@ -613,15 +613,17 @@ export async function GET(request: Request) {
     if (!NEXON_KEY) return NextResponse.json({ error: 'no key' }, { status: 500 });
     const meOuid = await getOuid(SME_NICKNAME);
     if (!meOuid) return NextResponse.json({ error: 'no ouid' }, { status: 404 });
+    const findNick = searchParams.get('find');
     const ALL_TYPES = [30, 40, 50, 52, 60];
-    const out: Record<string, any[]> = {};
+    const out: Record<string, any> = {};
     for (const mt of ALL_TYPES) {
-      const ids = await getMatchIds(meOuid, mt, 10, 0);
-      const details = await Promise.all(ids.slice(0, 5).map(getMatchDetail));
-      out[mt] = details.filter(Boolean).map((d: any) => {
+      const ids = await getMatchIds(meOuid, mt, 40, 0);
+      const details = await Promise.all(ids.map(getMatchDetail));
+      const rows = details.filter(Boolean).map((d: any) => {
         const opp = d.matchInfo?.find((p: any) => p.ouid !== meOuid);
         return { matchDate: d.matchDate, opp: opp?.nickname };
       });
+      out[mt] = findNick ? rows.filter(r => r.opp === findNick) : rows.slice(0, 5);
     }
     return NextResponse.json(out);
   }
