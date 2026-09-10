@@ -6,6 +6,14 @@ const ORANGE = '#EB701A';
 const RED = '#E05252';
 const GRAY = '#9AA0A8';
 const WIN_BLUE = '#2F6FED';
+
+// 넥슨 API의 matchDate는 UTC0 기준인데 문자열에 'Z'가 없어서, 그대로 new Date()하면
+// 브라우저가 "이미 로컬시간"으로 오인해 9시간 차이가 나던 문제를 수정
+function formatMatchDate(dateStr: string | null, opts: Intl.DateTimeFormatOptions = {}): string {
+  if (!dateStr) return '날짜 정보 없음';
+  const utcDate = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+  return utcDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', ...opts });
+}
 const FONT = "'Paperlogy', -apple-system, sans-serif";
 
 // 넥슨 공식 spposition 코드 → 포지션 라벨 + 세로 기준 좌표(%) (attack↑, y:0=공격 100=골키퍼)
@@ -380,7 +388,7 @@ function MatchCard({ match }: { match: MatchRow }) {
           }}>{OUTCOME_LABEL[match.outcome]}</span>
           <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flexShrink: 0 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
           <span style={{ fontSize: '0.78rem', color: '#a8a8a8', fontWeight: 600, flex: 1 }}>
-            {match.matchDate ? new Date(match.matchDate).toLocaleString('ko-KR') : '날짜 정보 없음'}
+            {formatMatchDate(match.matchDate)}
           </span>
           <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
         </button>
@@ -942,7 +950,7 @@ export default function FcRecordClient() {
                 const color = OUTCOME_COLOR[m.outcome];
                 const label = m.oppDisplayName || m.oppNickname;
                 return (
-                  <div key={m.matchId ?? i} title={`${label} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${m.matchDate ? new Date(m.matchDate).toLocaleDateString('ko-KR') : ''}`} style={{
+                  <div key={m.matchId ?? i} title={`${label} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${m.matchDate ? formatMatchDate(m.matchDate, { dateStyle: 'short' }) : ''}`} style={{
                     display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 9px 4px 4px', borderRadius: '100px',
                     background: '#fafafa', border: `1px solid ${color}33`,
                   }}>
