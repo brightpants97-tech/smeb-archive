@@ -896,38 +896,40 @@ export default function FcRecordClient() {
 
         {/* 액션성 섹션: 클릭하면 바로 검색되는 상대 선택 - 주황 틴트로 "탭 가능함"을 명확히 표시 */}
         {!opponentsLoading && opponents && opponents.length > 0 && (
-          <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0a`, border: `1px solid ${ORANGE}30` }}>
-            <p style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Icon name="target" size={12} /> 탭하면 바로 검색돼요
+          <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0d`, border: `1.5px solid ${ORANGE}45` }}>
+            <p style={{ fontSize: '0.78rem', color: ORANGE, fontWeight: 900, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Icon name="target" size={13} /> 탭하면 바로 검색돼요
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '9px' }}>
               {opponents.map(o => {
                 const active = nickname === o.nickname;
                 return (
                   <button key={o.nickname} onClick={() => search(o.nickname)} disabled={loading} style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px 6px 6px', borderRadius: '100px',
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 14px 7px 7px', borderRadius: '100px',
                     background: active ? ORANGE : '#fff',
-                    border: `1px solid ${active ? ORANGE : '#e8d4c0'}`,
-                    color: active ? '#fff' : '#333',
-                    fontSize: '0.82rem', fontWeight: 700, fontFamily: FONT, cursor: loading ? 'default' : 'pointer',
-                    boxShadow: active ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
+                    border: `1.5px solid ${active ? ORANGE : '#eaddcf'}`,
+                    color: active ? '#fff' : '#222',
+                    fontSize: '0.86rem', fontWeight: 800, fontFamily: FONT, cursor: loading ? 'default' : 'pointer',
+                    boxShadow: active ? '0 2px 6px rgba(235,112,26,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
                   }}>
                     {o.profileImage ? (
-                      <img src={o.profileImage} alt="" style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}` }} />
+                      <img src={o.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
                     ) : (
-                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: o.teamColor, marginLeft: '4px' }} />
+                      <span style={{ width: '11px', height: '11px', borderRadius: '50%', background: o.teamColor, marginLeft: '4px', flexShrink: 0 }} />
                     )}
-                    {o.displayName}
-                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>
-                      {o.win}승{o.draw > 0 ? ` ${o.draw}무` : ''} {o.lose}패
+                    <span>{o.displayName}</span>
+                    <span style={{ fontSize: '0.76rem', fontWeight: 900, whiteSpace: 'nowrap' as const }}>
+                      <span style={{ color: active ? '#fff' : WIN_BLUE }}>{o.win}승</span>
+                      {o.draw > 0 && <span style={{ color: active ? 'rgba(255,255,255,0.85)' : GRAY }}> {o.draw}무</span>}
+                      <span style={{ color: active ? 'rgba(255,255,255,0.85)' : RED }}> {o.lose}패</span>
                     </span>
                     {o.last5 && o.last5.length > 0 && (
-                      <span style={{ display: 'flex', gap: '2px' }} title="최근 5경기 (스맵 기준)">
+                      <span style={{ display: 'flex', gap: '3px', flexShrink: 0 }} title="최근 5경기 (스맵 기준)">
                         {o.last5.map((r: string, i: number) => (
                           <span key={i} style={{
-                            width: '5px', height: '5px', borderRadius: '50%',
+                            width: '7px', height: '7px', borderRadius: '50%',
                             background: r === 'win' ? WIN_BLUE : r === 'lose' ? RED : GRAY,
-                            opacity: active ? 0.9 : 1,
+                            border: active ? '1px solid rgba(255,255,255,0.6)' : 'none',
                           }} />
                         ))}
                       </span>
