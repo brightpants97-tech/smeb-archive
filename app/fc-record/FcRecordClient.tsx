@@ -766,6 +766,18 @@ export default function FcRecordClient() {
   const resultRef = useRef<Result | null>(null);
   useEffect(() => { resultRef.current = result; }, [result]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [liveStreamers, setLiveStreamers] = useState<{ fcNickname: string; displayName: string; profileImage: string | null; teamColor: string }[]>([]);
+  useEffect(() => {
+    const loadLive = () => {
+      fetch('/api/fconline/live-status', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => { if (!data.error) setLiveStreamers(data.live); })
+        .catch(() => {});
+    };
+    loadLive();
+    const t = setInterval(loadLive, 120000); // 2분마다 방송 상태 갱신
+    return () => clearInterval(t);
+  }, []);
   useEffect(() => {
     if (!result) return;
     const { win, total } = result.summary;
@@ -857,7 +869,8 @@ export default function FcRecordClient() {
 
   return (
     <main style={{ minHeight: '100vh', position: 'relative', background: '#fff', padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)', fontFamily: FONT, overflow: 'hidden' }}>
-      {/* 은은한 메시 그라데이션 배경 - 아주 느리게 떠다니며 화면에 생동감을 더함 */}
+      {/* 은은한 메시 그라데이션 배경 - 아주 느리게 떠다니며 화면에 생동감을 더함. 넓은 화면일수록 양옆이
+          비어보이지 않도록, 코너의 둥근 블롭 2개 + 좌우 측면을 세로로 길게 흐르는 블롭 2개를 함께 배치함 */}
       <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', top: '-10%', left: '-5%', width: '45vw', height: '45vw', maxWidth: '600px', maxHeight: '600px',
@@ -869,12 +882,64 @@ export default function FcRecordClient() {
           background: `radial-gradient(circle, ${WIN_BLUE}10 0%, transparent 70%)`, borderRadius: '50%',
           animation: 'fc-blob-b 26s ease-in-out infinite',
         }} />
+        {/* 좌측면을 따라 흐르는 세로 블롭 - 넓은 화면에서 좌측 여백을 채움 */}
+        <div style={{
+          position: 'absolute', top: '20%', left: '-12%', width: '26vw', height: '75vh', maxWidth: '380px',
+          background: `radial-gradient(ellipse, ${WIN_BLUE}0d 0%, transparent 65%)`, borderRadius: '50%',
+          animation: 'fc-blob-c 30s ease-in-out infinite',
+        }} />
+        {/* 우측면을 따라 흐르는 세로 블롭 - 넓은 화면에서 우측 여백을 채움 */}
+        <div style={{
+          position: 'absolute', top: '5%', right: '-12%', width: '26vw', height: '80vh', maxWidth: '380px',
+          background: `radial-gradient(ellipse, ${ORANGE}0d 0%, transparent 65%)`, borderRadius: '50%',
+          animation: 'fc-blob-d 28s ease-in-out infinite',
+        }} />
         <style>{`
           @keyframes fc-blob-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(4%,6%) scale(1.08); } }
           @keyframes fc-blob-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-5%,-4%) scale(1.06); } }
+          @keyframes fc-blob-c { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(4%) scale(1.05); } }
+          @keyframes fc-blob-d { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4%) scale(1.05); } }
           @keyframes fc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          /* 넓은 화면(1440px+)에서만 우측 여백에 방송중 사이드바 노출 - 좁은 화면/모바일에선 숨김 */
+          .fc-live-sidebar { display: none; }
+          @media (min-width: 1440px) {
+            .fc-live-sidebar { display: flex !important; }
+          }
         `}</style>
       </div>
+
+      {/* 2) 지금 방송 중인 등록 스트리머 사이드바 - 넓은 화면 우측 여백을 실용적인 정보로 채움 */}
+      {liveStreamers.length > 0 && (
+        <div className="fc-live-sidebar" style={{
+          position: 'fixed', top: '140px', right: '28px', width: '210px', zIndex: 2,
+          flexDirection: 'column' as const, gap: '10px', padding: '14px', borderRadius: '16px',
+          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', border: '1px solid #eee',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.06)', maxHeight: '70vh', overflowY: 'auto' as const,
+        }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#e0342f', display: 'flex', alignItems: 'center', gap: '5px', margin: 0 }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#e0342f', animation: 'fc-live-pulse 1.4s ease-in-out infinite' }} />
+            지금 방송 중
+          </p>
+          {liveStreamers.map(s => (
+            <button key={s.fcNickname} onClick={() => search(s.fcNickname)} style={{
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', borderRadius: '10px',
+              border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: FONT, textAlign: 'left', width: '100%',
+            }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                {s.profileImage ? (
+                  <img src={s.profileImage} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${s.teamColor}` }} />
+                ) : (
+                  <span style={{ width: '32px', height: '32px', borderRadius: '50%', background: s.teamColor, display: 'block' }} />
+                )}
+                <span style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '9px', height: '9px', borderRadius: '50%', background: '#e0342f', border: '1.5px solid #fff' }} />
+              </div>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{s.displayName}</span>
+            </button>
+          ))}
+          <style>{`@keyframes fc-live-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+        </div>
+      )}
+
       <div style={{ maxWidth: '980px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
