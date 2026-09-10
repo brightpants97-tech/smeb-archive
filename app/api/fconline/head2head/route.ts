@@ -435,7 +435,7 @@ async function fetchOpponentsList(meNickname: string) {
   if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
 
   const raw = await getRecentMatchesRaw(meOuid);
-  const map = new Map<string, { nickname: string; meWin: number; meDraw: number; meLose: number; lastDate: string }>();
+  const map = new Map<string, { nickname: string; meWin: number; meDraw: number; meLose: number; lastDate: string; matches: { date: string; outcome: string }[] }>();
   for (const m of raw) {
     const existing = map.get(m.oppOuid);
     // 화면엔 스맵 관점(내가 이겼으면 승)으로 보여줌 - 정렬만 상대방 승률 기준으로 별도 계산
@@ -444,9 +444,10 @@ async function fetchOpponentsList(meNickname: string) {
     const meDraw = m.outcome === 'draw' ? 1 : 0;
     if (existing) {
       existing.meWin += meWin; existing.meDraw += meDraw; existing.meLose += meLose;
+      existing.matches.push({ date: m.matchDate, outcome: m.outcome });
       if (m.matchDate > existing.lastDate) existing.lastDate = m.matchDate;
     } else {
-      map.set(m.oppOuid, { nickname: m.oppNickname, meWin, meDraw, meLose, lastDate: m.matchDate });
+      map.set(m.oppOuid, { nickname: m.oppNickname, meWin, meDraw, meLose, lastDate: m.matchDate, matches: [{ date: m.matchDate, outcome: m.outcome }] });
     }
   }
 
@@ -459,8 +460,14 @@ async function fetchOpponentsList(meNickname: string) {
       const s = byNickname.get(o.nickname)!;
       const total = o.meWin + o.meDraw + o.meLose;
       const oppWinRate = total ? o.meLose / total : 0; // 정렬용: 상대방(스맵이 아닌) 기준 승률 = 나의 패배 비율
+      // 최근 5경기 폼 - 오래된 것→최신 순으로 (화면에서 왼쪽부터 시간순으로 읽히게)
+      const last5 = o.matches
+        .sort((a, b) => (a.date < b.date ? 1 : -1))
+        .slice(0, 5)
+        .reverse()
+        .map(x => x.outcome);
       return {
-        nickname: o.nickname, win: o.meWin, draw: o.meDraw, lose: o.meLose, total, oppWinRate,
+        nickname: o.nickname, win: o.meWin, draw: o.meDraw, lose: o.meLose, total, oppWinRate, last5,
         lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor,
       };
     })

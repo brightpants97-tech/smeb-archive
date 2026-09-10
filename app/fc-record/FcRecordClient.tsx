@@ -182,7 +182,7 @@ function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontWeight: 900, fontSize: '1.05rem', color: '#111' }}>{p.name}</span>
-              {p.isMotm && <span title="Man of the Match">⭐</span>}
+              {p.isMotm && <span title="Man of the Match"><Icon name="starFilled" size={12} color="#F2C94C" /></span>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
               {group && <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#fff', background: color, padding: '2px 8px', borderRadius: '6px' }}>{POSITION_MAP[p.position as number]?.label}</span>}
@@ -394,11 +394,11 @@ function MatchCard({ match }: { match: MatchRow }) {
   );
 }
 
-function StatGroup({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+function StatGroup({ title, icon, children }: { title: string; icon: IconName; children: React.ReactNode }) {
   return (
     <div style={{ flex: '1 1 260px', minWidth: '240px', padding: '16px 18px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0' }}>
       <p style={{ fontSize: '0.74rem', fontWeight: 800, color: '#333', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span>{icon}</span>{title}
+        <Icon name={icon} size={14} color="#999" />{title}
       </p>
       {children}
     </div>
@@ -446,7 +446,8 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
           position: 'absolute', top: '-1px', right: '10px', background: tone, color: '#fff',
           fontSize: '0.56rem', fontWeight: 900, padding: '2px 8px', borderRadius: '0 0 6px 6px',
           letterSpacing: '0.04em', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        }}>{p.isBest ? '⭐ BEST' : '🔻 WORST'}</span>
+          display: 'flex', alignItems: 'center', gap: '3px',
+        }}>{p.isBest ? <><Icon name="starFilled" size={9} color="#fff" /> BEST</> : <><Icon name="trendDown" size={9} color="#fff" /> WORST</>}</span>
       )}
 
       {/* 헤더(버튼)와 펼침 내용을 세로로 쌓는 본문 컬럼 - 바깥 wrapper가 row라서 이 래퍼가 꼭 필요함 */}
@@ -575,9 +576,9 @@ function PlayerCompareTable({ meTitle, oppTitle, mePlayers, oppPlayers }: {
         <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em' }}>선수 평균 스탯</p>
         <p style={{ fontSize: '0.66rem', color: '#bbb', fontWeight: 600 }}>최근 경기 스쿼드 기준 · 같은 순위끼리 비교</p>
       </div>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-        <p style={{ flex: 1, fontSize: '0.68rem', fontWeight: 800, color: ORANGE }}>● {meTitle}</p>
-        <p style={{ flex: 1, fontSize: '0.68rem', fontWeight: 800, color: '#3B82C4' }}>● {oppTitle}</p>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' as const }}>
+        <p style={{ flex: '1 1 120px', fontSize: '0.68rem', fontWeight: 800, color: ORANGE, whiteSpace: 'nowrap' as const }}>● {meTitle}</p>
+        <p style={{ flex: '1 1 120px', fontSize: '0.68rem', fontWeight: 800, color: '#3B82C4', whiteSpace: 'nowrap' as const }}>● {oppTitle}</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
         {Array.from({ length: visibleCount }).map((_, i) => (
@@ -660,6 +661,32 @@ function VsHeader({ me, opp }: { me: Display; opp: Display }) {
   );
 }
 
+// ── 통일된 라인 아이콘 세트 (이모지 대신 사용) ────────────────────────────────
+type IconName = 'target' | 'sword' | 'compass' | 'shield' | 'clipboard' | 'star' | 'starFilled' | 'trendDown' | 'calendar';
+function Icon({ name, size = 13, color = 'currentColor' }: { name: IconName; size?: number; color?: string }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  switch (name) {
+    case 'target':
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" fill={color} /></svg>;
+    case 'sword':
+      return <svg {...common}><line x1="5" y1="19" x2="16" y2="8" /><path d="M14 6l4-1-1 4-2 2-3-3 2-2z" /><line x1="5" y1="19" x2="8" y2="19" /><line x1="5" y1="19" x2="5" y2="16" /></svg>;
+    case 'compass':
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M15 9l-2 6-6 2 2-6 6-2z" /></svg>;
+    case 'shield':
+      return <svg {...common}><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" /></svg>;
+    case 'clipboard':
+      return <svg {...common}><rect x="6" y="4" width="12" height="17" rx="2" /><rect x="9" y="2.5" width="6" height="3" rx="1" /><line x1="9" y1="11" x2="15" y2="11" /><line x1="9" y1="15" x2="15" y2="15" /></svg>;
+    case 'star':
+      return <svg {...common}><polygon points="12,3 14.7,9.2 21.5,9.8 16.3,14.2 17.9,21 12,17.3 6.1,21 7.7,14.2 2.5,9.8 9.3,9.2" /></svg>;
+    case 'starFilled':
+      return <svg width={size} height={size} viewBox="0 0 24 24" fill={color}><polygon points="12,3 14.7,9.2 21.5,9.8 16.3,14.2 17.9,21 12,17.3 6.1,21 7.7,14.2 2.5,9.8 9.3,9.2" /></svg>;
+    case 'trendDown':
+      return <svg {...common}><polyline points="3,7 10,14 14,10 21,17" /><polyline points="15,17 21,17 21,11" /></svg>;
+    case 'calendar':
+      return <svg {...common}><rect x="3.5" y="5" width="17" height="16" rx="2" /><line x1="3.5" y1="10" x2="20.5" y2="10" /><line x1="8" y1="3" x2="8" y2="7" /><line x1="16" y1="3" x2="16" y2="7" /></svg>;
+  }
+}
+
 function Divider() {
   return <div style={{ height: '1px', background: '#f0f0f0', margin: '40px 0' }} />;
 }
@@ -669,7 +696,7 @@ export default function FcRecordClient() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [opponents, setOpponents] = useState<{ nickname: string; win: number; draw: number; lose: number; total: number; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
+  const [opponents, setOpponents] = useState<{ nickname: string; win: number; draw: number; lose: number; total: number; last5: string[]; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
   const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number } | null>(null);
   const [overallLoading, setOverallLoading] = useState(true);
@@ -780,6 +807,39 @@ export default function FcRecordClient() {
           </div>
         )}
 
+        {!opponentsLoading && opponents && opponents.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px' }}>역대 최다 격돌 상대 TOP 3</p>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
+              {opponents.slice(0, 3).map((o, i) => (
+                <button key={o.nickname} onClick={() => search(o.nickname)} style={{
+                  flex: '1 1 200px', minWidth: '180px', display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '12px 14px', borderRadius: '14px', border: '1px solid #eee', background: '#fff',
+                  cursor: 'pointer', fontFamily: FONT, textAlign: 'left', position: 'relative',
+                }}>
+                  <span style={{
+                    position: 'absolute', top: '-6px', left: '10px', width: '20px', height: '20px', borderRadius: '50%',
+                    background: i === 0 ? '#F2C94C' : i === 1 ? '#BDBDBD' : '#D08A4C', color: '#fff',
+                    fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                  }}>{i + 1}</span>
+                  {o.profileImage ? (
+                    <img src={o.profileImage} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${o.teamColor}`, flexShrink: 0 }} />
+                  ) : (
+                    <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.displayName}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#999' }}>
+                      총 {o.total}경기 · <span style={{ color: WIN_BLUE, fontWeight: 700 }}>{o.win}승</span> <span style={{ color: RED, fontWeight: 700 }}>{o.lose}패</span>
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
           <input
             value={nickname}
@@ -801,7 +861,7 @@ export default function FcRecordClient() {
         {!opponentsLoading && opponents && opponents.length > 0 && (
           <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0a`, border: `1px solid ${ORANGE}30` }}>
             <p style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              🎯 탭하면 바로 검색돼요
+              <Icon name="target" size={12} /> 탭하면 바로 검색돼요
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px' }}>
               {opponents.map(o => {
@@ -824,6 +884,17 @@ export default function FcRecordClient() {
                     <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>
                       {o.win}승{o.draw > 0 ? ` ${o.draw}무` : ''} {o.lose}패
                     </span>
+                    {o.last5 && o.last5.length > 0 && (
+                      <span style={{ display: 'flex', gap: '2px' }} title="최근 5경기 (스맵 기준)">
+                        {o.last5.map((r: string, i: number) => (
+                          <span key={i} style={{
+                            width: '5px', height: '5px', borderRadius: '50%',
+                            background: r === 'win' ? WIN_BLUE : r === 'lose' ? RED : GRAY,
+                            opacity: active ? 0.9 : 1,
+                          }} />
+                        ))}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -835,7 +906,7 @@ export default function FcRecordClient() {
         {recent30 && recent30.length > 0 && (
           <div style={{ marginBottom: '28px', padding: '16px 18px', borderRadius: '14px', background: '#fff', border: '1px solid #eee' }}>
             <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              📅 등록된 스트리머와의 최근 {recent30.length}경기 결과
+              <Icon name="calendar" size={12} color="#999" /> 등록된 스트리머와의 최근 {recent30.length}경기 결과
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
               {recent30.map((m, i) => {
@@ -872,7 +943,21 @@ export default function FcRecordClient() {
             <Divider />
             <VsHeader me={result.meDisplay} opp={result.oppDisplay} />
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(20px,6vw,48px)', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '28px' }}>
+            {/* sticky 미니 탭 - 섹션이 길어서 스크롤 중에도 바로 이동 가능하게 */}
+            <div style={{
+              position: 'sticky', top: 0, zIndex: 5, display: 'flex', gap: '6px', justifyContent: 'center',
+              padding: '8px 0', marginBottom: '20px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
+              borderBottom: '1px solid #f0f0f0',
+            }}>
+              {[['요약', 'section-summary'], ['선수', 'section-players'], ['경기', 'section-matches']].map(([label, id]) => (
+                <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{
+                  padding: '5px 14px', borderRadius: '100px', border: '1px solid #eee', background: '#fafafa',
+                  color: '#888', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                }}>{label}</button>
+              ))}
+            </div>
+
+            <div id="section-summary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(20px,6vw,48px)', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '28px' }}>
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ fontSize: '2.2rem', fontWeight: 900, color: WIN_BLUE }}>{result.summary.win}</div>
                 <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>승</div>
@@ -888,30 +973,30 @@ export default function FcRecordClient() {
             </div>
 
             <div style={{ marginBottom: '32px' }}>
-              <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#999', letterSpacing: '0.06em', marginBottom: '12px' }}>요약 · 경기당 평균 기록</p>
+              <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em', marginBottom: '12px' }}>요약 · 경기당 평균 기록</p>
               <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '12px' }}>
-                <StatGroup title="종합" icon="🎯">
+                <StatGroup title="종합" icon="target">
                   <StatRow label="승률" meVal={result.summary.total ? +((result.summary.win / result.summary.total) * 100).toFixed(1) : null} oppVal={result.summary.total ? +((result.summary.lose / result.summary.total) * 100).toFixed(1) : null} suffix="%" />
                   <StatRow label="평균 평점" meVal={result.teamStats.me.rating} oppVal={result.teamStats.opp.rating} />
                 </StatGroup>
-                <StatGroup title="공격" icon="⚔️">
+                <StatGroup title="공격" icon="sword">
                   <StatRow label="유효 슈팅" meVal={result.teamStats.me.effectiveShoot} oppVal={result.teamStats.opp.effectiveShoot} />
                   <StatRow label="일반 슈팅" meVal={result.teamStats.me.shoot != null && result.teamStats.me.effectiveShoot != null ? +(result.teamStats.me.shoot - result.teamStats.me.effectiveShoot).toFixed(1) : null} oppVal={result.teamStats.opp.shoot != null && result.teamStats.opp.effectiveShoot != null ? +(result.teamStats.opp.shoot - result.teamStats.opp.effectiveShoot).toFixed(1) : null} />
                   <StatRow label="박스 안 득점 비율" meVal={result.teamStats.me.inBoxGoalRate} oppVal={result.teamStats.opp.inBoxGoalRate} suffix="%" />
                   <StatRow label="득점 성공 거리" meVal={result.teamStats.me.avgGoalDistance} oppVal={result.teamStats.opp.avgGoalDistance} suffix="m" />
                 </StatGroup>
-                <StatGroup title="빌드업" icon="🧭">
+                <StatGroup title="빌드업" icon="compass">
                   <StatRow label="점유율(%)" meVal={result.teamStats.me.possession} oppVal={result.teamStats.opp.possession} suffix="%" />
                   <StatRowCount label="패스 성공률" meRate={result.teamStats.me.passSuccessRate} meSuccess={result.teamStats.me.passSuccess} meTry={result.teamStats.me.passTry} oppRate={result.teamStats.opp.passSuccessRate} oppSuccess={result.teamStats.opp.passSuccess} oppTry={result.teamStats.opp.passTry} />
                   <StatRowCount label="드리블 성공률" meRate={result.teamStats.me.dribbleSuccessRate} meSuccess={result.teamStats.me.dribbleSuccess} meTry={result.teamStats.me.dribbleTry} oppRate={result.teamStats.opp.dribbleSuccessRate} oppSuccess={result.teamStats.opp.dribbleSuccess} oppTry={result.teamStats.opp.dribbleTry} />
                 </StatGroup>
-                <StatGroup title="수비" icon="🛡️">
+                <StatGroup title="수비" icon="shield">
                   <StatRowCount label="태클 성공률" meRate={result.teamStats.me.tackleSuccessRate} meSuccess={result.teamStats.me.tackleSuccess ?? 0} meTry={result.teamStats.me.tackleTry ?? 0} oppRate={result.teamStats.opp.tackleSuccessRate} oppSuccess={result.teamStats.opp.tackleSuccess ?? 0} oppTry={result.teamStats.opp.tackleTry ?? 0} />
                   <StatRowCount label="차단 성공률" meRate={result.teamStats.me.blockSuccessRate} meSuccess={result.teamStats.me.blockSuccess ?? 0} meTry={result.teamStats.me.blockTry ?? 0} oppRate={result.teamStats.opp.blockSuccessRate} oppSuccess={result.teamStats.opp.blockSuccess ?? 0} oppTry={result.teamStats.opp.blockTry ?? 0} />
                   <StatRowCount label="공중볼 경합 성공률" meRate={result.teamStats.me.aerialSuccessRate} meSuccess={result.teamStats.me.aerialSuccess} meTry={result.teamStats.me.aerialTry} oppRate={result.teamStats.opp.aerialSuccessRate} oppSuccess={result.teamStats.opp.aerialSuccess} oppTry={result.teamStats.opp.aerialTry} />
                   <StatRow label="가로채기" meVal={result.teamStats.me.intercept} oppVal={result.teamStats.opp.intercept} />
                 </StatGroup>
-                <StatGroup title="기타" icon="📋">
+                <StatGroup title="기타" icon="clipboard">
                   <StatRow label="코너킥" meVal={result.teamStats.me.cornerKick} oppVal={result.teamStats.opp.cornerKick} />
                   <StatRow label="오프사이드" meVal={result.teamStats.me.offside} oppVal={result.teamStats.opp.offside} />
                   <StatRow label="파울(옐로/레드)" meVal={result.teamStats.me.foul != null ? `${result.teamStats.me.foul} (${result.teamStats.me.yellowCards ?? 0}/${result.teamStats.me.redCards ?? 0})` : null} oppVal={result.teamStats.opp.foul != null ? `${result.teamStats.opp.foul} (${result.teamStats.opp.yellowCards ?? 0}/${result.teamStats.opp.redCards ?? 0})` : null} />
@@ -923,7 +1008,7 @@ export default function FcRecordClient() {
             {(result.playerStats.me.length > 0 || result.playerStats.opp.length > 0) && (
               <>
                 <Divider />
-                <div style={{ marginBottom: '32px' }}>
+                <div id="section-players" style={{ marginBottom: '32px' }}>
                   <PlayerCompareTable meTitle={result.meDisplay.name} oppTitle={result.oppDisplay.name} mePlayers={result.playerStats.me} oppPlayers={result.playerStats.opp} />
                 </div>
               </>
@@ -931,18 +1016,20 @@ export default function FcRecordClient() {
 
             <Divider />
 
+            <div id="section-matches">
             {result.matches.length === 0 ? (
               <div style={{ textAlign: 'center' as const, padding: '48px 0', color: '#aaa', fontSize: '0.88rem' }}>
                 2026년 8월 10일 이후로 <strong style={{ color: '#333' }}>{result.opponentNickname}</strong>님과 맞붙은 기록을 찾지 못했어요.
               </div>
             ) : (
               <>
-                <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.06em', marginBottom: '10px' }}>{result.oppDisplay.name}님과의 최근 {result.matches.length}경기 결과</p>
+                <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em', marginBottom: '10px' }}>{result.oppDisplay.name}님과의 최근 {result.matches.length}경기 결과</p>
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
                   {result.matches.map((m, i) => <MatchCard key={m.matchId ?? i} match={m} />)}
                 </div>
               </>
             )}
+            </div>
           </>
         )}
 
