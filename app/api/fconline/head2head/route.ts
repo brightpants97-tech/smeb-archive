@@ -464,7 +464,7 @@ async function fetchOpponentsList(meNickname: string) {
         lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor,
       };
     })
-    .sort((a, b) => (b.oppWinRate - a.oppWinRate) || (b.total - a.total)); // 상대방 승률 높은 순
+    .sort((a, b) => (b.total - a.total) || (b.oppWinRate - a.oppWinRate)); // 전적 수(경기 수) 많은 순
 
   return { meNickname, opponents, searchedDepth: SEARCH_DEPTH };
 }

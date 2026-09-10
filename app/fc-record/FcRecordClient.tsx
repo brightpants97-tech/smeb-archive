@@ -425,6 +425,7 @@ function StatRow({ label, meVal, oppVal, suffix = '' }: { label: string; meVal: 
 
 function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: string; rank: number }) {
   const [open, setOpen] = useState(false);
+  const [showZero, setShowZero] = useState(false);
   const tone = p.isBest ? ORANGE : p.isWorst ? RED : null;
   const group = posGroup(p.position);
   const posColor = group ? GROUP_COLOR[group] : '#ddd';
@@ -491,40 +492,51 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
             ))}
           </div>
 
-          <PStatSection title="공격 지표" rows={[
-            ['슈팅 정확도', p.shootAccuracy != null ? `${p.shootAccuracy}%` : '-'],
-            ['빗나간 슈팅', p.avgMissedShoot], ['유효 슈팅', p.avgEffectiveShoot], ['전체 슛', p.avgShoot],
-            ['득점', p.avgGoal], ['어시스트', p.avgAssist],
+          <PStatSection title="공격 지표" showZero={showZero} items={[
+            { label: '슈팅 정확도', value: p.shootAccuracy != null ? `${p.shootAccuracy}%` : '-', raw: p.avgShoot },
+            { label: '슈팅 (유효/전체)', value: `${p.avgEffectiveShoot}/${p.avgShoot}`, raw: p.avgShoot },
+            { label: '득점', value: p.avgGoal, raw: p.avgGoal },
+            { label: '어시스트', value: p.avgAssist, raw: p.avgAssist },
           ]} />
-          <PStatSection title="공통 지표" rows={[
-            ['패스 성공률', p.passSuccessRate != null ? `${p.passSuccessRate}%` : '-'],
-            ['패스 시도', p.avgPassTry], ['패스 성공', p.avgPassSuccess],
-            ['드리블 시도', p.avgDribbleTry], ['드리블 성공', p.avgDribbleSuccess],
-            ['볼 소유 시도', p.avgBallTry], ['볼 소유 성공', p.avgBallSuccess],
-            ['공중볼 경합 시도', p.avgAerialTry], ['공중볼 경합 성공', p.avgAerialSuccess],
-            ['옐로 카드', p.avgYellow], ['레드 카드', p.avgRed],
+          <PStatSection title="공통 지표" showZero={showZero} items={[
+            { label: '패스 (성공/시도)', value: `${p.avgPassSuccess}/${p.avgPassTry}`, raw: p.avgPassTry },
+            { label: '드리블 (성공/시도)', value: `${p.avgDribbleSuccess}/${p.avgDribbleTry}`, raw: p.avgDribbleTry },
+            { label: '볼 소유 (성공/시도)', value: `${p.avgBallSuccess}/${p.avgBallTry}`, raw: p.avgBallTry },
+            { label: '공중볼 경합 (성공/시도)', value: `${p.avgAerialSuccess}/${p.avgAerialTry}`, raw: p.avgAerialTry },
+            { label: '옐로 카드', value: p.avgYellow, raw: p.avgYellow },
+            { label: '레드 카드', value: p.avgRed, raw: p.avgRed },
           ]} />
-          <PStatSection title="수비 지표" rows={[
-            ['인터셉트', p.avgIntercept], ['디펜딩', p.avgDefending],
-            ['블락 시도', p.avgBlockTry], ['블락 성공', p.avgBlock],
-            ['태클 시도', p.avgTackleTry], ['태클 성공', p.avgTackle],
+          <PStatSection title="수비 지표" showZero={showZero} items={[
+            { label: '인터셉트', value: p.avgIntercept, raw: p.avgIntercept },
+            { label: '디펜딩', value: p.avgDefending, raw: p.avgDefending },
+            { label: '블락 (성공/시도)', value: `${p.avgBlock}/${p.avgBlockTry}`, raw: p.avgBlockTry },
+            { label: '태클 (성공/시도)', value: `${p.avgTackle}/${p.avgTackleTry}`, raw: p.avgTackleTry },
           ]} last />
+
+          <button onClick={() => setShowZero(z => !z)} style={{
+            width: '100%', marginTop: '6px', padding: '6px', borderRadius: '8px', border: 'none',
+            background: 'none', color: '#bbb', fontSize: '0.66rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+          }}>{showZero ? '기록 없는 항목 숨기기 ▴' : '기록 없는 항목까지 모두 보기 ▾'}</button>
         </div>
       )}
     </div>
   );
 }
 
-function PStatSection({ title, rows, last }: { title: string; rows: [string, number | string][]; last?: boolean }) {
+function PStatSection({ title, items, last, showZero }: { title: string; items: { label: string; value: number | string; raw: number }[]; last?: boolean; showZero: boolean }) {
+  const visible = showZero ? items : items.filter(it => it.raw > 0);
+  if (visible.length === 0) return null;
   return (
     <div style={{ marginBottom: last ? 0 : '10px' }}>
       <p style={{ fontSize: '0.62rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.03em', margin: '0 0 4px' }}>{title}</p>
-      {rows.map(([label, val]) => (
-        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 2px', borderBottom: '1px solid #f5f5f5' }}>
-          <span style={{ fontSize: '0.72rem', color: '#999' }}>{label}</span>
-          <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#333' }}>{val}</span>
-        </div>
-      ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px' }}>
+        {visible.map(it => (
+          <div key={it.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 2px', borderBottom: '1px solid #f5f5f5' }}>
+            <span style={{ fontSize: '0.7rem', color: '#999', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.label}</span>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#333', flexShrink: 0, marginLeft: '6px' }}>{it.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
