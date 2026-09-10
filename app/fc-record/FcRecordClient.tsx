@@ -370,34 +370,60 @@ function MatchPitch({ meSquad, oppSquad }: { meSquad: SquadPlayer[]; oppSquad: S
   );
 }
 
-function MatchCard({ match }: { match: MatchRow }) {
+// 5) 마우스 위치에 따라 아주 살짝 3D로 기울어지는 호버 효과 (데스크톱 전용, 터치기기는 자연히 무시됨)
+function TiltWrapper({ children, maxTilt = 4 }: { children: React.ReactNode; maxTilt?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [tiltStyle, setTiltStyle] = useState<React.CSSProperties>({ transform: 'perspective(700px) rotateX(0) rotateY(0)' });
+  const onMouseMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const rotateY = (px - 0.5) * maxTilt * 2;
+    const rotateX = (0.5 - py) * maxTilt * 2;
+    setTiltStyle({ transform: `perspective(700px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`, transition: 'transform 0.06s linear' });
+  };
+  const onMouseLeave = () => setTiltStyle({ transform: 'perspective(700px) rotateX(0) rotateY(0)', transition: 'transform 0.35s ease' });
+  return (
+    <div ref={ref} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} style={{ ...tiltStyle, willChange: 'transform' }}>
+      {children}
+    </div>
+  );
+}
+
+function MatchCard({ match, index = 0 }: { match: MatchRow; index?: number }) {
   const [open, setOpen] = useState(false);
   const color = OUTCOME_COLOR[match.outcome];
   return (
-    <div style={{ display: 'flex', border: '1px solid #eee', borderRadius: '16px', overflow: 'hidden', background: '#fff' }}>
-      <span style={{ width: '4px', flexShrink: 0, background: color }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <button onClick={() => setOpen(o => !o)} style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
-          padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
-        }}>
-          <span style={{
-            flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%',
-            background: color + '18', color, border: `1.5px solid ${color}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.88rem',
-          }}>{OUTCOME_LABEL[match.outcome]}</span>
-          <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flexShrink: 0 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
-          <span style={{ fontSize: '0.78rem', color: '#a8a8a8', fontWeight: 600, flex: 1 }}>
-            {formatMatchDate(match.matchDate)}
-          </span>
-          <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
-        </button>
-        {open && (
-          <div style={{ padding: '6px 18px 22px', borderTop: '1px solid #f2f2f2', paddingTop: '16px' }}>
-            <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
+    <div style={{ animation: 'fc-card-in 0.4s ease both', animationDelay: `${Math.min(index * 0.05, 0.5)}s` }}>
+      <TiltWrapper maxTilt={2.5}>
+        <div style={{ display: 'flex', border: '1px solid #eee', borderRadius: '16px', overflow: 'hidden', background: '#fff' }}>
+          <span style={{ width: '4px', flexShrink: 0, background: color }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <button onClick={() => setOpen(o => !o)} style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+              padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
+            }}>
+              <span style={{
+                flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%',
+                background: color + '18', color, border: `1.5px solid ${color}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.88rem',
+              }}>{OUTCOME_LABEL[match.outcome]}</span>
+              <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flexShrink: 0 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
+              <span style={{ fontSize: '0.78rem', color: '#a8a8a8', fontWeight: 600, flex: 1 }}>
+                {formatMatchDate(match.matchDate)}
+              </span>
+              <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
+            </button>
+            {open && (
+              <div style={{ padding: '6px 18px 22px', borderTop: '1px solid #f2f2f2', paddingTop: '16px' }}>
+                <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </TiltWrapper>
     </div>
   );
 }
@@ -439,6 +465,7 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
   const posColor = group ? GROUP_COLOR[group] : '#ddd';
   const posLabel = typeof p.position === 'number' ? POSITION_MAP[p.position]?.label : null;
   return (
+    <TiltWrapper maxTilt={1.8}>
     <div style={{
       position: 'relative', display: 'flex', flexDirection: 'row' as const, borderRadius: '12px',
       border: `1px solid ${tone ? tone : '#eee'}`,
@@ -532,6 +559,7 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
       )}
       </div>
     </div>
+    </TiltWrapper>
   );
 }
 
@@ -648,6 +676,38 @@ function LoadingState() {
   );
 }
 
+// 2) 스맵이 압도적으로 이기고 있는 상대를 검색했을 때 잠깐 터지는 색종이 효과
+function Confetti() {
+  const pieces = Array.from({ length: 24 }, (_, i) => {
+    const left = Math.random() * 100;
+    const delay = Math.random() * 0.3;
+    const duration = 1.1 + Math.random() * 0.6;
+    const size = 5 + Math.random() * 5;
+    const colors = [ORANGE, WIN_BLUE, '#F2C94C', '#fff'];
+    const color = colors[i % colors.length];
+    const rotate = Math.random() * 360;
+    return { left, delay, duration, size, color, rotate, key: i };
+  });
+  return (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 2 }}>
+      {pieces.map(p => (
+        <span key={p.key} style={{
+          position: 'absolute', top: '-10px', left: `${p.left}%`, width: `${p.size}px`, height: `${p.size * 0.4}px`,
+          background: p.color, borderRadius: '2px',
+          animation: `fc-confetti-fall ${p.duration}s ease-in ${p.delay}s both`,
+          transform: `rotate(${p.rotate}deg)`,
+        }} />
+      ))}
+      <style>{`
+        @keyframes fc-confetti-fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(90px) rotate(340deg); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function VsHeader({ me, opp }: { me: Display; opp: Display }) {
   const Avatar = ({ d }: { d: Display }) => d.profileImage ? (
     <img src={d.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${d.color || '#ccc'}` }} />
@@ -705,6 +765,17 @@ export default function FcRecordClient() {
   const [result, setResult] = useState<Result | null>(null);
   const resultRef = useRef<Result | null>(null);
   useEffect(() => { resultRef.current = result; }, [result]);
+  const [showConfetti, setShowConfetti] = useState(false);
+  useEffect(() => {
+    if (!result) return;
+    const { win, total } = result.summary;
+    // 표본이 너무 적으면(3경기 미만) 우연일 수 있어 제외 - 승률 70% 이상일 때만 축하 연출
+    if (total >= 3 && win / total >= 0.7) {
+      setShowConfetti(true);
+      const t = setTimeout(() => setShowConfetti(false), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [result]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [opponents, setOpponents] = useState<{ nickname: string; win: number; draw: number; lose: number; total: number; last5: string[]; displayName: string; profileImage: string | null; teamColor: string }[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
@@ -785,8 +856,26 @@ export default function FcRecordClient() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', background: '#fff', padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)', fontFamily: FONT }}>
-      <div style={{ maxWidth: '980px', margin: '0 auto' }}>
+    <main style={{ minHeight: '100vh', position: 'relative', background: '#fff', padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)', fontFamily: FONT, overflow: 'hidden' }}>
+      {/* 은은한 메시 그라데이션 배경 - 아주 느리게 떠다니며 화면에 생동감을 더함 */}
+      <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', top: '-10%', left: '-5%', width: '45vw', height: '45vw', maxWidth: '600px', maxHeight: '600px',
+          background: `radial-gradient(circle, ${ORANGE}14 0%, transparent 70%)`, borderRadius: '50%',
+          animation: 'fc-blob-a 22s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-15%', right: '-8%', width: '50vw', height: '50vw', maxWidth: '650px', maxHeight: '650px',
+          background: `radial-gradient(circle, ${WIN_BLUE}10 0%, transparent 70%)`, borderRadius: '50%',
+          animation: 'fc-blob-b 26s ease-in-out infinite',
+        }} />
+        <style>{`
+          @keyframes fc-blob-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(4%,6%) scale(1.08); } }
+          @keyframes fc-blob-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-5%,-4%) scale(1.06); } }
+          @keyframes fc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        `}</style>
+      </div>
+      <div style={{ maxWidth: '980px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
           <Link href="/apps" style={{
@@ -942,7 +1031,10 @@ export default function FcRecordClient() {
         {result && !errorMsg && !loading && (
           <>
             <Divider />
-            <VsHeader me={result.meDisplay} opp={result.oppDisplay} />
+            <div style={{ position: 'relative' }}>
+              {showConfetti && <Confetti />}
+              <VsHeader me={result.meDisplay} opp={result.oppDisplay} />
+            </div>
 
             {/* sticky 미니 탭 - 섹션이 길어서 스크롤 중에도 바로 이동 가능하게 */}
             <div style={{
@@ -1026,7 +1118,7 @@ export default function FcRecordClient() {
               <>
                 <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em', marginBottom: '10px' }}>{result.oppDisplay.name}님과의 최근 {result.matches.length}경기 결과</p>
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
-                  {result.matches.map((m, i) => <MatchCard key={m.matchId ?? i} match={m} />)}
+                  {result.matches.map((m, i) => <MatchCard key={m.matchId ?? i} match={m} index={i} />)}
                 </div>
               </>
             )}
