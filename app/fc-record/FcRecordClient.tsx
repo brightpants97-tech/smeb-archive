@@ -1015,40 +1015,44 @@ export default function FcRecordClient() {
             <p style={{ fontSize: '0.78rem', color: ORANGE, fontWeight: 900, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <Icon name="target" size={13} /> 탭하면 바로 검색돼요
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '9px' }}>
-              {opponents.map(o => {
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+              {opponents.map((o, i) => {
                 const active = nickname === o.nickname;
+                const total = o.win + o.draw + o.lose;
+                const winPct = total ? (o.win / total) * 100 : 0;
+                const drawPct = total ? (o.draw / total) * 100 : 0;
                 return (
                   <button key={o.nickname} onClick={() => search(o.nickname)} disabled={loading} style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 14px 7px 7px', borderRadius: '100px',
+                    display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderRadius: '10px',
                     background: active ? ORANGE : '#fff',
-                    border: `1.5px solid ${active ? ORANGE : '#eaddcf'}`,
-                    color: active ? '#fff' : '#222',
-                    fontSize: '0.86rem', fontWeight: 800, fontFamily: FONT, cursor: loading ? 'default' : 'pointer',
-                    boxShadow: active ? '0 2px 6px rgba(235,112,26,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
+                    border: `1px solid ${active ? ORANGE : '#f0e4d6'}`,
+                    cursor: loading ? 'default' : 'pointer', fontFamily: FONT, textAlign: 'left', width: '100%',
                   }}>
+                    {/* 1) 순위 */}
+                    <span style={{ width: '18px', flexShrink: 0, textAlign: 'center' as const, fontSize: '0.7rem', fontWeight: 800, color: active ? 'rgba(255,255,255,0.7)' : '#ccc' }}>{i + 1}</span>
+                    {/* 1) 프로필 + 이름 */}
                     {o.profileImage ? (
-                      <img src={o.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
+                      <img src={o.profileImage} alt="" style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
                     ) : (
-                      <span style={{ width: '11px', height: '11px', borderRadius: '50%', background: o.teamColor, marginLeft: '4px', flexShrink: 0 }} />
+                      <span style={{ width: '30px', height: '30px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
                     )}
-                    <span>{o.displayName}</span>
-                    <span style={{ fontSize: '0.76rem', fontWeight: 900, whiteSpace: 'nowrap' as const }}>
-                      <span style={{ color: active ? '#fff' : WIN_BLUE }}>{o.win}승</span>
-                      {o.draw > 0 && <span style={{ color: active ? 'rgba(255,255,255,0.85)' : GRAY }}> {o.draw}무</span>}
-                      <span style={{ color: active ? 'rgba(255,255,255,0.85)' : RED }}> {o.lose}패</span>
+                    <span style={{ width: '92px', flexShrink: 0, fontSize: '0.85rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{o.displayName}</span>
+
+                    {/* 4) 승/무/패 색깔 원 */}
+                    <span style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                      <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '11px', background: active ? 'rgba(255,255,255,0.25)' : `${WIN_BLUE}18`, color: active ? '#fff' : WIN_BLUE, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.win}</span>
+                      {o.draw > 0 && <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '11px', background: active ? 'rgba(255,255,255,0.25)' : '#eee', color: active ? '#fff' : GRAY, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.draw}</span>}
+                      <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '11px', background: active ? 'rgba(255,255,255,0.25)' : `${RED}18`, color: active ? '#fff' : RED, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.lose}</span>
                     </span>
-                    {o.last5 && o.last5.length > 0 && (
-                      <span style={{ display: 'flex', gap: '3px', flexShrink: 0 }} title="최근 5경기 (스맵 기준)">
-                        {o.last5.map((r: string, i: number) => (
-                          <span key={i} style={{
-                            width: '7px', height: '7px', borderRadius: '50%',
-                            background: r === 'win' ? WIN_BLUE : r === 'lose' ? RED : GRAY,
-                            border: active ? '1px solid rgba(255,255,255,0.6)' : 'none',
-                          }} />
-                        ))}
-                      </span>
-                    )}
+
+                    {/* 2) 좌우 대비 승률 바 */}
+                    <span style={{ flex: 1, minWidth: '40px', height: '6px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: active ? 'rgba(255,255,255,0.25)' : '#f0f0f0' }}>
+                      <span style={{ width: `${winPct}%`, background: active ? '#fff' : WIN_BLUE }} />
+                      <span style={{ width: `${drawPct}%`, background: active ? 'rgba(255,255,255,0.6)' : GRAY }} />
+                      <span style={{ width: `${100 - winPct - drawPct}%`, background: active ? 'rgba(255,255,255,0.35)' : RED }} />
+                    </span>
+
+                    <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>
                   </button>
                 );
               })}
