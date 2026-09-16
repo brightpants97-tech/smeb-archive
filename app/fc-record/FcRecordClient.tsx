@@ -859,7 +859,7 @@ export default function FcRecordClient() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', position: 'relative', background: '#fff', padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)', fontFamily: FONT, overflow: 'hidden' }}>
+    <main style={{ minHeight: '100vh', position: 'relative', background: '#fff', padding: 'clamp(48px,8vw,80px) clamp(1.5rem,6vw,6rem)', fontFamily: FONT }}>
       {/* 은은한 메시 그라데이션 배경 - 아주 느리게 떠다니며 화면에 생동감을 더함. 넓은 화면일수록 양옆이
           비어보이지 않도록, 코너의 둥근 블롭 2개 + 좌우 측면을 세로로 길게 흐르는 블롭 2개를 함께 배치함 */}
       <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
