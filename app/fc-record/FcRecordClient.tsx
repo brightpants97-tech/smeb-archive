@@ -410,14 +410,14 @@ function MatchCard({ match, index = 0 }: { match: MatchRow; index?: number }) {
                 background: color + '18', color, border: `1.5px solid ${color}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.88rem',
               }}>{OUTCOME_LABEL[match.outcome]}</span>
-              <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flexShrink: 0 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
-              <span style={{ fontSize: '0.78rem', color: '#a8a8a8', fontWeight: 600, flex: 1 }}>
-                {formatMatchDate(match.matchDate)}
-              </span>
+              <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flex: 1 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
               <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
             </button>
             {open && (
-              <div style={{ padding: '6px 18px 22px', borderTop: '1px solid #f2f2f2', paddingTop: '16px' }}>
+              <div style={{ padding: '0 18px 22px' }}>
+                <p style={{ fontSize: '0.74rem', color: '#a8a8a8', fontWeight: 600, margin: '0 0 14px', borderTop: '1px solid #f2f2f2', paddingTop: '14px' }}>
+                  {formatMatchDate(match.matchDate)}
+                </p>
                 <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
               </div>
             )}
@@ -756,7 +756,7 @@ function Icon({ name, size = 13, color = 'currentColor' }: { name: IconName; siz
 }
 
 function Divider() {
-  return <div style={{ height: '1px', background: '#f0f0f0', margin: '40px 0' }} />;
+  return <div style={{ height: '1px', background: '#f0f0f0', margin: '52px 0' }} />;
 }
 
 export default function FcRecordClient() {
@@ -766,6 +766,9 @@ export default function FcRecordClient() {
   const resultRef = useRef<Result | null>(null);
   useEffect(() => { resultRef.current = result; }, [result]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showAllStats, setShowAllStats] = useState(false);
+  useEffect(() => { setShowAllStats(false); }, [result?.opponentNickname]); // 상대가 바뀌면 다시 '종합'만 보이는 기본 상태로
   useEffect(() => {
     if (!result) return;
     const { win, total } = result.summary;
@@ -902,12 +905,26 @@ export default function FcRecordClient() {
 
         <div style={{ marginBottom: '28px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', color: ORANGE, marginBottom: '8px' }}>FC ONLINE HEAD-TO-HEAD</p>
-          <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111', margin: 0, lineHeight: 1.15 }}>
-            상대 스트리머와의 전적
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111', margin: 0, lineHeight: 1.15 }}>
+              상대 스트리머와의 전적
+            </h1>
+            <button onClick={() => setShowHelp(h => !h)} title="용어 설명 보기" style={{
+              width: '26px', height: '26px', borderRadius: '50%', border: '1.5px solid #ddd', background: showHelp ? '#f5f5f5' : '#fff',
+              color: '#999', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', flexShrink: 0, fontFamily: FONT,
+            }}>?</button>
+          </div>
           <p style={{ fontSize: '0.88rem', color: '#999', marginTop: '10px', lineHeight: 1.6 }}>
             상대 스트리머의 FC 온라인 닉네임을 입력하면, 스맵과 맞붙었던 경기 전적과 그날 서로 사용한 스쿼드를 보여줘요.
           </p>
+          {/* 7) 처음 오는 사람도 핵심 용어를 바로 이해할 수 있게 짧은 도움말 */}
+          {showHelp && (
+            <div style={{ marginTop: '14px', padding: '14px 16px', borderRadius: '12px', background: '#fafafa', border: '1px solid #eee', fontSize: '0.78rem', color: '#666', lineHeight: 1.8 }}>
+              <p style={{ margin: '0 0 4px' }}>· 기록은 <b style={{ color: '#333' }}>2026년 8월 10일 이후</b> 경기만 집계돼요.</p>
+              <p style={{ margin: '0 0 4px' }}>· <b style={{ color: ORANGE }}>⭐ BEST</b> / <b style={{ color: RED }}>🔻 WORST</b>는 <b>가장 최근 경기에 뛴 선수들</b> 중에서만 뽑아요.</p>
+              <p style={{ margin: 0 }}>· 선수 스탯의 "이전에 사용됐던 선수"는 예전엔 뛰었지만 최근 경기엔 없었던 선수예요.</p>
+            </div>
+          )}
         </div>
 
         {(overallLoading || (overall && overall.total > 0)) && (
@@ -972,7 +989,10 @@ export default function FcRecordClient() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 6, display: 'flex', gap: '8px', marginBottom: '20px',
+          padding: '10px 0', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)',
+        }}>
           <input
             value={nickname}
             onChange={e => setNickname(e.target.value)}
@@ -1052,10 +1072,20 @@ export default function FcRecordClient() {
               <VsHeader me={result.meDisplay} opp={result.oppDisplay} />
             </div>
 
+            {/* 5) 피라미드 구조의 최상단 - 표/숫자를 보기 전에 결론부터 한 줄 자연어로 전달 */}
+            <p style={{ textAlign: 'center' as const, fontSize: '0.95rem', fontWeight: 700, color: '#555', marginBottom: '20px' }}>
+              {result.summary.total === 0
+                ? `${result.oppDisplay.name}님과 붙은 기록이 아직 없어요`
+                : (() => {
+                    const rate = Math.round((result.summary.win / result.summary.total) * 100);
+                    return <>총 <b style={{ color: '#111' }}>{result.summary.total}경기</b> 중 <b style={{ color: WIN_BLUE }}>{result.summary.win}번 승리</b> (승률 {rate}%)</>;
+                  })()}
+            </p>
+
             {/* sticky 미니 탭 - 섹션이 길어서 스크롤 중에도 바로 이동 가능하게 */}
             <div style={{
               position: 'sticky', top: 0, zIndex: 5, display: 'flex', gap: '6px', justifyContent: 'center',
-              padding: '8px 0', marginBottom: '20px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
+              padding: '8px 0', marginBottom: '24px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
               borderBottom: '1px solid #f0f0f0',
             }}>
               {[['요약', 'section-summary'], ['선수', 'section-players'], ['경기', 'section-matches']].map(([label, id]) => (
@@ -1066,7 +1096,7 @@ export default function FcRecordClient() {
               ))}
             </div>
 
-            <div id="section-summary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(20px,6vw,48px)', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '28px' }}>
+            <div id="section-summary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(20px,6vw,48px)', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '36px' }}>
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ fontSize: '2.2rem', fontWeight: 900, color: WIN_BLUE }}>{result.summary.win}</div>
                 <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>승</div>
@@ -1081,36 +1111,51 @@ export default function FcRecordClient() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '32px' }}>
-              <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em', marginBottom: '12px' }}>요약 · 경기당 평균 기록</p>
+            <div style={{ marginBottom: '40px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em', margin: 0 }}>요약 · 경기당 평균 기록</p>
+                {!showAllStats && (
+                  <button onClick={() => setShowAllStats(true)} style={{
+                    fontSize: '0.72rem', fontWeight: 700, color: ORANGE, background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT,
+                  }}>공격·빌드업·수비 등 자세히 보기 →</button>
+                )}
+              </div>
               <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '12px' }}>
                 <StatGroup title="종합" icon="target">
                   <StatRow label="승률" meVal={result.summary.total ? +((result.summary.win / result.summary.total) * 100).toFixed(1) : null} oppVal={result.summary.total ? +((result.summary.lose / result.summary.total) * 100).toFixed(1) : null} suffix="%" />
                   <StatRow label="평균 평점" meVal={result.teamStats.me.rating} oppVal={result.teamStats.opp.rating} />
                 </StatGroup>
-                <StatGroup title="공격" icon="sword">
-                  <StatRow label="유효 슈팅" meVal={result.teamStats.me.effectiveShoot} oppVal={result.teamStats.opp.effectiveShoot} />
-                  <StatRow label="일반 슈팅" meVal={result.teamStats.me.shoot != null && result.teamStats.me.effectiveShoot != null ? +(result.teamStats.me.shoot - result.teamStats.me.effectiveShoot).toFixed(1) : null} oppVal={result.teamStats.opp.shoot != null && result.teamStats.opp.effectiveShoot != null ? +(result.teamStats.opp.shoot - result.teamStats.opp.effectiveShoot).toFixed(1) : null} />
-                  <StatRow label="박스 안 득점 비율" meVal={result.teamStats.me.inBoxGoalRate} oppVal={result.teamStats.opp.inBoxGoalRate} suffix="%" />
-                  <StatRow label="득점 성공 거리" meVal={result.teamStats.me.avgGoalDistance} oppVal={result.teamStats.opp.avgGoalDistance} suffix="m" />
-                </StatGroup>
-                <StatGroup title="빌드업" icon="compass">
-                  <StatRow label="점유율(%)" meVal={result.teamStats.me.possession} oppVal={result.teamStats.opp.possession} suffix="%" />
-                  <StatRowCount label="패스 성공률" meRate={result.teamStats.me.passSuccessRate} meSuccess={result.teamStats.me.passSuccess} meTry={result.teamStats.me.passTry} oppRate={result.teamStats.opp.passSuccessRate} oppSuccess={result.teamStats.opp.passSuccess} oppTry={result.teamStats.opp.passTry} />
-                  <StatRowCount label="드리블 성공률" meRate={result.teamStats.me.dribbleSuccessRate} meSuccess={result.teamStats.me.dribbleSuccess} meTry={result.teamStats.me.dribbleTry} oppRate={result.teamStats.opp.dribbleSuccessRate} oppSuccess={result.teamStats.opp.dribbleSuccess} oppTry={result.teamStats.opp.dribbleTry} />
-                </StatGroup>
-                <StatGroup title="수비" icon="shield">
-                  <StatRowCount label="태클 성공률" meRate={result.teamStats.me.tackleSuccessRate} meSuccess={result.teamStats.me.tackleSuccess ?? 0} meTry={result.teamStats.me.tackleTry ?? 0} oppRate={result.teamStats.opp.tackleSuccessRate} oppSuccess={result.teamStats.opp.tackleSuccess ?? 0} oppTry={result.teamStats.opp.tackleTry ?? 0} />
-                  <StatRowCount label="차단 성공률" meRate={result.teamStats.me.blockSuccessRate} meSuccess={result.teamStats.me.blockSuccess ?? 0} meTry={result.teamStats.me.blockTry ?? 0} oppRate={result.teamStats.opp.blockSuccessRate} oppSuccess={result.teamStats.opp.blockSuccess ?? 0} oppTry={result.teamStats.opp.blockTry ?? 0} />
-                  <StatRowCount label="공중볼 경합 성공률" meRate={result.teamStats.me.aerialSuccessRate} meSuccess={result.teamStats.me.aerialSuccess} meTry={result.teamStats.me.aerialTry} oppRate={result.teamStats.opp.aerialSuccessRate} oppSuccess={result.teamStats.opp.aerialSuccess} oppTry={result.teamStats.opp.aerialTry} />
-                  <StatRow label="가로채기" meVal={result.teamStats.me.intercept} oppVal={result.teamStats.opp.intercept} />
-                </StatGroup>
-                <StatGroup title="기타" icon="clipboard">
-                  <StatRow label="코너킥" meVal={result.teamStats.me.cornerKick} oppVal={result.teamStats.opp.cornerKick} />
-                  <StatRow label="오프사이드" meVal={result.teamStats.me.offside} oppVal={result.teamStats.opp.offside} />
-                  <StatRow label="파울(옐로/레드)" meVal={result.teamStats.me.foul != null ? `${result.teamStats.me.foul} (${result.teamStats.me.yellowCards ?? 0}/${result.teamStats.me.redCards ?? 0})` : null} oppVal={result.teamStats.opp.foul != null ? `${result.teamStats.opp.foul} (${result.teamStats.opp.yellowCards ?? 0}/${result.teamStats.opp.redCards ?? 0})` : null} />
-                  <StatRow label="경기 중단 횟수" meVal={result.teamStats.me.systemPause} oppVal={result.teamStats.opp.systemPause} />
-                </StatGroup>
+                {showAllStats && (
+                  <>
+                    <StatGroup title="공격" icon="sword">
+                      <StatRow label="유효 슈팅" meVal={result.teamStats.me.effectiveShoot} oppVal={result.teamStats.opp.effectiveShoot} />
+                      <StatRow label="일반 슈팅" meVal={result.teamStats.me.shoot != null && result.teamStats.me.effectiveShoot != null ? +(result.teamStats.me.shoot - result.teamStats.me.effectiveShoot).toFixed(1) : null} oppVal={result.teamStats.opp.shoot != null && result.teamStats.opp.effectiveShoot != null ? +(result.teamStats.opp.shoot - result.teamStats.opp.effectiveShoot).toFixed(1) : null} />
+                      <StatRow label="박스 안 득점 비율" meVal={result.teamStats.me.inBoxGoalRate} oppVal={result.teamStats.opp.inBoxGoalRate} suffix="%" />
+                      <StatRow label="득점 성공 거리" meVal={result.teamStats.me.avgGoalDistance} oppVal={result.teamStats.opp.avgGoalDistance} suffix="m" />
+                    </StatGroup>
+                    <StatGroup title="빌드업" icon="compass">
+                      <StatRow label="점유율(%)" meVal={result.teamStats.me.possession} oppVal={result.teamStats.opp.possession} suffix="%" />
+                      <StatRowCount label="패스 성공률" meRate={result.teamStats.me.passSuccessRate} meSuccess={result.teamStats.me.passSuccess} meTry={result.teamStats.me.passTry} oppRate={result.teamStats.opp.passSuccessRate} oppSuccess={result.teamStats.opp.passSuccess} oppTry={result.teamStats.opp.passTry} />
+                      <StatRowCount label="드리블 성공률" meRate={result.teamStats.me.dribbleSuccessRate} meSuccess={result.teamStats.me.dribbleSuccess} meTry={result.teamStats.me.dribbleTry} oppRate={result.teamStats.opp.dribbleSuccessRate} oppSuccess={result.teamStats.opp.dribbleSuccess} oppTry={result.teamStats.opp.dribbleTry} />
+                    </StatGroup>
+                    <StatGroup title="수비" icon="shield">
+                      <StatRowCount label="태클 성공률" meRate={result.teamStats.me.tackleSuccessRate} meSuccess={result.teamStats.me.tackleSuccess ?? 0} meTry={result.teamStats.me.tackleTry ?? 0} oppRate={result.teamStats.opp.tackleSuccessRate} oppSuccess={result.teamStats.opp.tackleSuccess ?? 0} oppTry={result.teamStats.opp.tackleTry ?? 0} />
+                      <StatRowCount label="차단 성공률" meRate={result.teamStats.me.blockSuccessRate} meSuccess={result.teamStats.me.blockSuccess ?? 0} meTry={result.teamStats.me.blockTry ?? 0} oppRate={result.teamStats.opp.blockSuccessRate} oppSuccess={result.teamStats.opp.blockSuccess ?? 0} oppTry={result.teamStats.opp.blockTry ?? 0} />
+                      <StatRowCount label="공중볼 경합 성공률" meRate={result.teamStats.me.aerialSuccessRate} meSuccess={result.teamStats.me.aerialSuccess} meTry={result.teamStats.me.aerialTry} oppRate={result.teamStats.opp.aerialSuccessRate} oppSuccess={result.teamStats.opp.aerialSuccess} oppTry={result.teamStats.opp.aerialTry} />
+                      <StatRow label="가로채기" meVal={result.teamStats.me.intercept} oppVal={result.teamStats.opp.intercept} />
+                    </StatGroup>
+                    <StatGroup title="기타" icon="clipboard">
+                      <StatRow label="코너킥" meVal={result.teamStats.me.cornerKick} oppVal={result.teamStats.opp.cornerKick} />
+                      <StatRow label="오프사이드" meVal={result.teamStats.me.offside} oppVal={result.teamStats.opp.offside} />
+                      <StatRow label="파울(옐로/레드)" meVal={result.teamStats.me.foul != null ? `${result.teamStats.me.foul} (${result.teamStats.me.yellowCards ?? 0}/${result.teamStats.me.redCards ?? 0})` : null} oppVal={result.teamStats.opp.foul != null ? `${result.teamStats.opp.foul} (${result.teamStats.opp.yellowCards ?? 0}/${result.teamStats.opp.redCards ?? 0})` : null} />
+                      <StatRow label="경기 중단 횟수" meVal={result.teamStats.me.systemPause} oppVal={result.teamStats.opp.systemPause} />
+                    </StatGroup>
+                    <button onClick={() => setShowAllStats(false)} style={{
+                      width: '100%', padding: '8px', borderRadius: '10px', border: '1px solid #eee', background: '#fafafa',
+                      color: '#999', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                    }}>간단히 보기 ▴</button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1133,7 +1178,7 @@ export default function FcRecordClient() {
             ) : (
               <>
                 <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em', marginBottom: '10px' }}>{result.oppDisplay.name}님과의 최근 {result.matches.length}경기 결과</p>
-                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '14px' }}>
                   {result.matches.map((m, i) => <MatchCard key={m.matchId ?? i} match={m} index={i} />)}
                 </div>
               </>
