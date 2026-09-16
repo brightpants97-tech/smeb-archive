@@ -28,7 +28,23 @@ async function checkLive(bjid: string): Promise<boolean> {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const debugBjid = searchParams.get('debugRaw');
+  if (debugBjid) {
+    const res = await fetch(`https://api-channel.sooplive.com/v1.1/channel/${debugBjid}/station`, {
+      headers: {
+        Referer: 'https://www.sooplive.com/',
+        Origin: 'https://www.sooplive.com',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        Accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const data = await res.json();
+    return NextResponse.json(data);
+  }
+
   try {
     const streamers = await listStreamers();
     const withBjid = streamers
