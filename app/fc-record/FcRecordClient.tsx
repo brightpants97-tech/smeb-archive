@@ -861,27 +861,32 @@ export default function FcRecordClient() {
   const [overallLoading, setOverallLoading] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
 
-  const loadOpponents = () => {
-    fetch('/api/fconline/head2head?list=1', { cache: 'no-store' })
+  // 상대목록+통산전적을 한 번의 요청으로 같이 받아옴 (API 왕복 횟수 절반으로 절감)
+  const loadCombined = () => {
+    fetch('/api/fconline/head2head?combined=1', { cache: 'no-store' })
       .then(res => res.json())
-      .then(data => { if (!data.error) setOpponents(data.opponents); })
-      .catch(() => {});
-  };
-  const loadOverall = () => {
-    fetch('/api/fconline/head2head?overall=1', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => { if (!data.error) setOverall(data.summary); })
+      .then(data => {
+        if (!data.error) {
+          if (!data.opponentsError) setOpponents(data.opponents);
+          setOverall(data.summary);
+        }
+      })
       .catch(() => {});
   };
 
   useEffect(() => {
-    fetch('/api/fconline/head2head?list=1')
+    fetch('/api/fconline/head2head?combined=1', { cache: 'no-store' })
       .then(res => res.json())
-      .then(data => { if (!data.error) setOpponents(data.opponents); })
+      .then(data => {
+        if (!data.error) {
+          if (!data.opponentsError) setOpponents(data.opponents);
+          setOverall(data.summary);
+        }
+      })
       .catch(() => {})
-      .finally(() => setOpponentsLoading(false));
+      .finally(() => { setOpponentsLoading(false); setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
 
-    // 통산전적 스캔 중엔 진행률(%)을 0.8초마다 폴링해서 표시
+    // 통산전적 스캔 중엔 진행률(%)을 2.5초마다 폴링해서 표시 (예전 0.8초는 너무 잦았음)
     let stopPolling = false;
     const pollProgress = async () => {
       while (!stopPolling) {
@@ -890,24 +895,21 @@ export default function FcRecordClient() {
           const d = await r.json();
           if (typeof d.percent === 'number') setOverallProgress(d.percent);
         } catch {}
-        await new Promise(res => setTimeout(res, 800));
+        await new Promise(res => setTimeout(res, 2500));
       }
     };
     pollProgress();
 
-    fetch('/api/fconline/head2head?overall=1', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => { if (!data.error) setOverall(data.summary); })
-      .catch(() => {})
-      .finally(() => { setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
-
     // 페이지를 켜놓고 있는 동안 1시간마다 조용히(로딩 표시 없이) 새 경기 자동 반영
     // - 새로고침 안 해도 방송 보면서 켜둔 채로 최신 전적이 자동으로 업데이트됨
     // - 여러 명이 동시에 볼 수 있는 페이지라, Redis 요청량 여유를 넉넉히 확보하기 위해 1시간으로 설정
+    // - 현재 보고 있는 검색 결과까지 매번 재조회하던 건 불필요한 부담이라 제거함(사용자가 직접
+    //   재검색하지 않는 한, 통산전적/상대목록만 갱신)
+    // - 탭이 백그라운드(안 보고 있음)일 땐 자동갱신 자체를 멈춰서, 실제로 '보고 있는' 사람 수만큼만
+    //   요청이 나가게 함
     const autoRefresh = setInterval(() => {
-      loadOpponents();
-      loadOverall();
-      if (resultRef.current?.opponentNickname) search(resultRef.current.opponentNickname, true);
+      if (document.visibilityState !== 'visible') return; // 탭을 안 보고 있으면 스킵
+      loadCombined();
     }, 3600000);
 
     return () => { stopPolling = true; clearInterval(autoRefresh); };

@@ -583,7 +583,7 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
   // 예전엔 여기서 fetchHead2Head를 한 번 호출해 에러만 확인하고 결과를 버린 뒤,
   // 안 먹히는 unstable_cache를 통해 fetchHead2Head를 또 호출해서 매 검색마다 전체
   // 스캔이 두 번씩 실행되던 버그가 있었음. 메모리 TTL 캐시로 한 번만 호출하도록 수정.
-  const result = await withMemCache(`h2h:${meNickname}:${opponentNickname}`, 30000, () => fetchHead2Head(meNickname, opponentNickname));
+  const result = await withMemCache(`h2h:${meNickname}:${opponentNickname}`, 60000, () => fetchHead2Head(meNickname, opponentNickname));
   if ((result as any).error) return result;
 
   // 스트리머 표시명/팀컬러는 매치 데이터 캐시와 분리해서 매번 최신으로 조회
@@ -613,9 +613,9 @@ async function withMemCache<T>(key: string, ttlMs: number, fn: () => Promise<T>)
   return data;
 }
 
-const getOverallLiveCached = () => withMemCache('overall', 30000, fetchOverallLive);
-const getRecent30Cached = () => withMemCache('recent30', 30000, fetchRecent30);
-const getOpponentsListCached = (meNickname: string) => withMemCache(`opponents:${meNickname}`, 30000, () => fetchOpponentsList(meNickname));
+const getOverallLiveCached = () => withMemCache('overall', 180000, fetchOverallLive);
+const getRecent30Cached = () => withMemCache('recent30', 180000, fetchRecent30);
+const getOpponentsListCached = (meNickname: string) => withMemCache(`opponents:${meNickname}`, 180000, () => fetchOpponentsList(meNickname));
 
 async function getOpponentsList(meNickname: string) {
   if (!NEXON_KEY) {
@@ -631,6 +631,7 @@ export async function GET(request: Request) {
   const list = searchParams.get('list');
   const overall = searchParams.get('overall');
   const recent30 = searchParams.get('recent30');
+  const combined = searchParams.get('combined'); // 상대목록+통산전적을 한 번의 호출로 - 초기 로드 시 API 왕복 횟수를 절반으로 줄임
   const progress = searchParams.get('progress');
 
   if (progress) {
@@ -641,6 +642,15 @@ export async function GET(request: Request) {
   }
 
   if (!me) return NextResponse.json({ error: '내 닉네임이 설정되어 있지 않아요. SMEB_FC_NICKNAME 환경변수를 추가하거나 me 파라미터를 넘겨주세요.' }, { status: 400 });
+
+  if (combined) {
+    try {
+      const [opponentsData, summary] = await Promise.all([getOpponentsList(me), getOverallLiveCached()]);
+      return NextResponse.json({ opponents: (opponentsData as any).opponents ?? null, opponentsError: (opponentsData as any).error ?? null, summary });
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || '조회 실패' }, { status: 500 });
+    }
+  }
 
   if (recent30) {
     try {
