@@ -989,6 +989,12 @@ export default function FcRecordClient() {
           <p style={{ fontSize: '0.88rem', color: '#999', marginTop: '10px', lineHeight: 1.6 }}>
             상대 스트리머의 FC 온라인 닉네임을 입력하면, 스맵과 맞붙었던 경기 전적과 그날 서로 사용한 스쿼드를 보여줘요.
           </p>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '12px', padding: '6px 12px', borderRadius: '100px',
+            background: `${ORANGE}15`, border: `1px solid ${ORANGE}40`, color: ORANGE, fontSize: '0.78rem', fontWeight: 800,
+          }}>
+            <Icon name="calendar" size={12} color={ORANGE} /> 2026년 8월 10일부터의 전적만 집계돼요
+          </span>
           {/* 7) 처음 오는 사람도 핵심 용어를 바로 이해할 수 있게 짧은 도움말 */}
           {showHelp && (
             <div style={{ marginTop: '14px', padding: '14px 16px', borderRadius: '12px', background: '#fafafa', border: '1px solid #eee', fontSize: '0.78rem', color: '#666', lineHeight: 1.8 }}>
@@ -1017,12 +1023,18 @@ export default function FcRecordClient() {
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' as const }}>
                 <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
                 <span style={{ fontWeight: 900, color: WIN_BLUE }}>{overall!.win}승</span>
                 <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
                 <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
-                <span style={{ fontSize: '0.74rem', color: '#bbb' }}>(총 {overall!.total}경기 · 2026.8.10 이후 기준)</span>
+                <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 600 }}>(총 {overall!.total}경기)</span>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '100px',
+                  background: `${ORANGE}15`, border: `1px solid ${ORANGE}40`, color: ORANGE, fontSize: '0.74rem', fontWeight: 800,
+                }}>
+                  <Icon name="calendar" size={11} color={ORANGE} /> 2026.8.10부터 집계
+                </span>
               </div>
             )}
           </div>
