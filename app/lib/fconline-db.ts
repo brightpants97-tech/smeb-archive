@@ -83,9 +83,8 @@ export async function getStoredMatchesForOpponent(oppOuid: string): Promise<Stor
   if (!hasRedis) return [];
   const ids = await redis.zrange<string[]>(`fc:matches:opp:${oppOuid}`, 0, -1, { rev: true });
   if (!ids || ids.length === 0) return [];
-  const pipeline = redis.pipeline();
-  for (const id of ids) pipeline.get(`fc:match:${id}`);
-  const results = await pipeline.exec<StoredMatch[]>();
+  const keys = ids.map(id => `fc:match:${id}`);
+  const results = await redis.mget<StoredMatch[]>(...keys);
   return (results || []).filter(Boolean) as StoredMatch[];
 }
 
@@ -93,9 +92,12 @@ export async function getAllStoredMatches(limit = 500): Promise<StoredMatch[]> {
   if (!hasRedis) return [];
   const ids = await redis.zrange<string[]>('fc:matches:all', 0, limit - 1, { rev: true });
   if (!ids || ids.length === 0) return [];
-  const pipeline = redis.pipeline();
-  for (const id of ids) pipeline.get(`fc:match:${id}`);
-  const results = await pipeline.exec<StoredMatch[]>();
+  // 예전엔 pipeline으로 매치마다 개별 get을 했는데, Upstash는 pipeline 안의 명령어도
+  // 하나하나 과금 대상으로 카운트해서 (244경기 조회에 245개 명령 소모) 월 요청 한도를
+  // 순식간에 다 써버리는 문제가 있었음. mget은 여러 키를 한 번에 가져오는 단일 명령이라
+  // 같은 조회를 1개 명령으로 처리해서 비용을 수백 배 절감함
+  const keys = ids.map(id => `fc:match:${id}`);
+  const results = await redis.mget<StoredMatch[]>(...keys);
   return (results || []).filter(Boolean) as StoredMatch[];
 }
 
