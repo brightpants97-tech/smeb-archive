@@ -1096,9 +1096,9 @@ export default function FcRecordClient() {
         {/* 액션성 섹션: 클릭하면 바로 검색되는 상대 선택 - 주황 틴트로 "탭 가능함"을 명확히 표시 */}
         {!opponentsLoading && opponents && opponents.length > 0 && (
           <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0d`, border: `1.5px solid ${ORANGE}45` }}>
-            <p style={{ fontSize: '0.78rem', color: ORANGE, fontWeight: 900, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Icon name="target" size={13} /> 탭하면 바로 검색돼요
-            </p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginBottom: '14px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50` }}>
+              <Icon name="target" size={15} color="#fff" /> <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: 900 }}>탭하면 바로 검색돼요</span>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
               {opponents.map((o, i) => (
                 <OpponentRow key={o.nickname} o={o} rank={i + 1} active={nickname === o.nickname} loading={loading} onSearch={() => search(o.nickname)} />
