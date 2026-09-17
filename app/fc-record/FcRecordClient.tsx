@@ -826,14 +826,14 @@ export default function FcRecordClient() {
       .catch(() => {})
       .finally(() => { setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
 
-    // 페이지를 켜놓고 있는 동안 5분마다 조용히(로딩 표시 없이) 새 경기 자동 반영
+    // 페이지를 켜놓고 있는 동안 1시간마다 조용히(로딩 표시 없이) 새 경기 자동 반영
     // - 새로고침 안 해도 방송 보면서 켜둔 채로 최신 전적이 자동으로 업데이트됨
-    // - MGET 최적화로 호출당 비용은 크게 줄었지만, 여러 명이 동시에 켜둘 걸 감안해 안전 마진 확보
+    // - 여러 명이 동시에 볼 수 있는 페이지라, Redis 요청량 여유를 넉넉히 확보하기 위해 1시간으로 설정
     const autoRefresh = setInterval(() => {
       loadOpponents();
       loadOverall();
       if (resultRef.current?.opponentNickname) search(resultRef.current.opponentNickname, true);
-    }, 300000);
+    }, 3600000);
 
     return () => { stopPolling = true; clearInterval(autoRefresh); };
   }, []);
