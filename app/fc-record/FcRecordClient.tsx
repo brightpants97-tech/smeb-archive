@@ -154,18 +154,12 @@ function PlayerImg({ spId, size = 44 }: { spId: string; size?: number }) {
 
 // ── 선수 개인 상세 스탯 모달 ──────────────────────────────────────────────
 function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void }) {
+  const [showZero, setShowZero] = useState(false);
   const s = p.stats;
   const group = posGroup(p.position);
   const color = group ? GROUP_COLOR[group] : '#999';
   const passRate = s.passTry ? Math.round((s.passSuccess / s.passTry) * 100) : 0;
   const shootAcc = s.shoot ? Math.round((s.effectiveShoot / s.shoot) * 100) : 0;
-
-  const Row = ({ label, value }: { label: string; value: number | string }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f2f2f2' }}>
-      <span style={{ fontSize: '0.8rem', color: '#888' }}>{label}</span>
-      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#222' }}>{value}</span>
-    </div>
-  );
 
   return (
     <div onClick={onClose} style={{
@@ -206,7 +200,7 @@ function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void
         </div>
 
         {/* 헤드라인 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
           {[
             ['평점', s.rating != null ? s.rating.toFixed(1) : '-'],
             ['득점', s.goal], ['어시스트', s.assist], ['패스성공률', `${passRate}%`],
@@ -218,34 +212,32 @@ function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void
           ))}
         </div>
 
-        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.04em', marginBottom: '4px' }}>공격 지표</p>
-        <Row label="슈팅 정확도" value={`${shootAcc}%`} />
-        <Row label="빗나간 슈팅" value={s.shoot - s.effectiveShoot} />
-        <Row label="유효 슈팅" value={s.effectiveShoot} />
-        <Row label="전체 슛" value={s.shoot} />
-        <Row label="득점" value={s.goal} />
-        <Row label="어시스트" value={s.assist} />
+        {/* 시도/성공 페어를 한 줄로 합치고 2열 그리드로 배치 + 0값은 기본 숨김 - 세로로 너무 길어지던 문제 해결 */}
+        <PStatSection title="공격 지표" showZero={showZero} items={[
+          { label: '슈팅 정확도', value: `${shootAcc}%`, raw: s.shoot },
+          { label: '슈팅 (유효/전체)', value: `${s.effectiveShoot}/${s.shoot}`, raw: s.shoot },
+          { label: '득점', value: s.goal, raw: s.goal },
+          { label: '어시스트', value: s.assist, raw: s.assist },
+        ]} />
+        <PStatSection title="공통 지표" showZero={showZero} items={[
+          { label: '패스 (성공/시도)', value: `${s.passSuccess}/${s.passTry}`, raw: s.passTry },
+          { label: '드리블 (성공/시도)', value: `${s.dribbleSuccess}/${s.dribbleTry}`, raw: s.dribbleTry },
+          { label: '볼 소유 (성공/시도)', value: `${s.ballPossessionSuccess}/${s.ballPossessionTry}`, raw: s.ballPossessionTry },
+          { label: '공중볼 경합 (성공/시도)', value: `${s.aerialSuccess}/${s.aerialTry}`, raw: s.aerialTry },
+          { label: '옐로 카드', value: s.yellowCards, raw: s.yellowCards },
+          { label: '레드 카드', value: s.redCards, raw: s.redCards },
+        ]} />
+        <PStatSection title="수비 지표" showZero={showZero} items={[
+          { label: '인터셉트', value: s.intercept, raw: s.intercept },
+          { label: '디펜딩', value: s.defending, raw: s.defending },
+          { label: '블락 (성공/시도)', value: `${s.block}/${s.blockTry}`, raw: s.blockTry },
+          { label: '태클 (성공/시도)', value: `${s.tackle}/${s.tackleTry}`, raw: s.tackleTry },
+        ]} last />
 
-        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.04em', margin: '16px 0 4px' }}>공통 지표</p>
-        <Row label="패스 성공률" value={`${passRate}%`} />
-        <Row label="패스 시도" value={s.passTry} />
-        <Row label="패스 성공" value={s.passSuccess} />
-        <Row label="드리블 시도" value={s.dribbleTry} />
-        <Row label="드리블 성공" value={s.dribbleSuccess} />
-        <Row label="볼 소유 시도" value={s.ballPossessionTry} />
-        <Row label="볼 소유 성공" value={s.ballPossessionSuccess} />
-        <Row label="공중볼 경합 시도" value={s.aerialTry} />
-        <Row label="공중볼 경합 성공" value={s.aerialSuccess} />
-        <Row label="옐로 카드" value={s.yellowCards} />
-        <Row label="레드 카드" value={s.redCards} />
-
-        <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#bbb', letterSpacing: '0.04em', margin: '16px 0 4px' }}>수비 지표</p>
-        <Row label="인터셉트" value={s.intercept} />
-        <Row label="디펜딩" value={s.defending} />
-        <Row label="블락 시도" value={s.blockTry} />
-        <Row label="블락 성공" value={s.block} />
-        <Row label="태클 시도" value={s.tackleTry} />
-        <Row label="태클 성공" value={s.tackle} />
+        <button onClick={() => setShowZero(z => !z)} style={{
+          width: '100%', marginTop: '6px', padding: '6px', borderRadius: '8px', border: 'none',
+          background: 'none', color: '#bbb', fontSize: '0.66rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+        }}>{showZero ? '기록 없는 항목 숨기기 ▴' : '기록 없는 항목까지 모두 보기 ▾'}</button>
       </div>
     </div>
   );
@@ -499,33 +491,31 @@ function MatchCard({ match, index = 0 }: { match: MatchRow; index?: number }) {
   const color = OUTCOME_COLOR[match.outcome];
   return (
     <div style={{ animation: 'fc-card-in 0.4s ease both', animationDelay: `${Math.min(index * 0.05, 0.5)}s` }}>
-      <TiltWrapper maxTilt={2.5}>
-        <div style={{ display: 'flex', border: '1px solid #eee', borderRadius: '16px', overflow: 'hidden', background: '#fff' }}>
-          <span style={{ width: '4px', flexShrink: 0, background: color }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <button onClick={() => setOpen(o => !o)} style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
-              padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
-            }}>
-              <span style={{
-                flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%',
-                background: color + '18', color, border: `1.5px solid ${color}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.88rem',
-              }}>{OUTCOME_LABEL[match.outcome]}</span>
-              <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flex: 1 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
-              <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
-            </button>
-            {open && (
-              <div style={{ padding: '0 18px 22px' }}>
-                <p style={{ fontSize: '0.74rem', color: '#a8a8a8', fontWeight: 600, margin: '0 0 14px', borderTop: '1px solid #f2f2f2', paddingTop: '14px' }}>
-                  {formatMatchDate(match.matchDate)}
-                </p>
-                <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
-              </div>
-            )}
-          </div>
+      <div style={{ display: 'flex', border: '1px solid #eee', borderRadius: '16px', overflow: 'hidden', background: '#fff' }}>
+        <span style={{ width: '4px', flexShrink: 0, background: color }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <button onClick={() => setOpen(o => !o)} style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+            padding: '16px 18px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: FONT, textAlign: 'left',
+          }}>
+            <span style={{
+              flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%',
+              background: color + '18', color, border: `1.5px solid ${color}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.88rem',
+            }}>{OUTCOME_LABEL[match.outcome]}</span>
+            <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flex: 1 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
+            <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
+          </button>
+          {open && (
+            <div style={{ padding: '0 18px 22px' }}>
+              <p style={{ fontSize: '0.74rem', color: '#a8a8a8', fontWeight: 600, margin: '0 0 14px', borderTop: '1px solid #f2f2f2', paddingTop: '14px' }}>
+                {formatMatchDate(match.matchDate)}
+              </p>
+              <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
+            </div>
+          )}
         </div>
-      </TiltWrapper>
+      </div>
     </div>
   );
 }
