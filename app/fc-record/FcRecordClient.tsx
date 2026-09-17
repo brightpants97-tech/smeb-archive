@@ -843,6 +843,14 @@ export default function FcRecordClient() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showAllStats, setShowAllStats] = useState(false);
+  useEffect(() => {
+    // 검색 결과가 새로 뜨면 자동으로 그 위치까지 스크롤 - 직접 내려서 찾아야 하는 불편함 해소
+    // (조용한 자동갱신 시엔 스크롤 안 튀게, 사용자가 직접 검색했을 때만 동작)
+    if (result) {
+      const el = document.getElementById('result-top');
+      if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }, [result?.opponentNickname]);
   useEffect(() => { setShowAllStats(false); }, [result?.opponentNickname]); // 상대가 바뀌면 다시 '종합'만 보이는 기본 상태로
   useEffect(() => {
     if (!result) return;
@@ -963,8 +971,52 @@ export default function FcRecordClient() {
           @keyframes fc-blob-c { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(4%) scale(1.05); } }
           @keyframes fc-blob-d { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4%) scale(1.05); } }
           @keyframes fc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          /* 넓은 화면(1440px+)에서만 결과 요약 사이드 패널 노출 - 스크롤 안 해도 핵심 결과가 바로 보이게 */
+          .fc-side-summary { display: none; }
+          @media (min-width: 1440px) {
+            .fc-side-summary { display: flex !important; }
+          }
         `}</style>
       </div>
+
+      {/* 넓은 화면 여백 활용: 검색 결과가 있으면 우측에 핵심 요약을 고정 표시해서
+          아래로 스크롤하지 않아도 승패/승률을 바로 볼 수 있게 함. 새로운 데이터를 더
+          불러오는 게 아니라 이미 받아온 result를 재사용하는 거라 서버 부담은 없음 */}
+      {result && !errorMsg && !loading && (
+        <div className="fc-side-summary" style={{
+          position: 'fixed', top: '140px', right: '28px', width: '220px', zIndex: 2,
+          flexDirection: 'column' as const, gap: '10px', padding: '16px', borderRadius: '16px',
+          background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', border: '1px solid #eee',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+        }}>
+          <button onClick={() => document.getElementById('result-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{
+            display: 'flex', flexDirection: 'column' as const, gap: '10px', background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: FONT, textAlign: 'left', padding: 0, width: '100%',
+          }}>
+            <p style={{ margin: 0, fontSize: '0.68rem', color: '#bbb', fontWeight: 800, letterSpacing: '0.04em' }}>스맵 VS {result.oppDisplay.name}</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: WIN_BLUE }}>{result.summary.win}</span>
+              <span style={{ fontSize: '0.72rem', color: '#999' }}>승</span>
+              {result.summary.draw > 0 && <><span style={{ fontSize: '1.6rem', fontWeight: 900, color: GRAY }}>{result.summary.draw}</span><span style={{ fontSize: '0.72rem', color: '#999' }}>무</span></>}
+              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: RED }}>{result.summary.lose}</span>
+              <span style={{ fontSize: '0.72rem', color: '#999' }}>패</span>
+            </div>
+            {result.summary.total > 0 && (
+              <>
+                <div style={{ width: '100%', height: '6px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: '#f0f0f0' }}>
+                  <span style={{ width: `${(result.summary.win / result.summary.total) * 100}%`, background: WIN_BLUE }} />
+                  <span style={{ width: `${(result.summary.draw / result.summary.total) * 100}%`, background: GRAY }} />
+                  <span style={{ width: `${(result.summary.lose / result.summary.total) * 100}%`, background: RED }} />
+                </div>
+                <p style={{ margin: 0, fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
+                  승률 {Math.round((result.summary.win / result.summary.total) * 100)}% · 총 {result.summary.total}경기
+                </p>
+              </>
+            )}
+            <span style={{ marginTop: '4px', fontSize: '0.7rem', color: ORANGE, fontWeight: 800 }}>자세히 보기 ↓</span>
+          </button>
+        </div>
+      )}
 
       <div style={{ maxWidth: '980px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
@@ -1118,7 +1170,7 @@ export default function FcRecordClient() {
         {result && !errorMsg && !loading && (
           <>
             <Divider />
-            <div style={{ position: 'relative' }}>
+            <div id="result-top" style={{ position: 'relative', scrollMarginTop: '16px' }}>
               {showConfetti && <Confetti />}
               <VsHeader me={result.meDisplay} opp={result.oppDisplay} />
             </div>
