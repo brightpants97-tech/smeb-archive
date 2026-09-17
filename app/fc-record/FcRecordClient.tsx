@@ -318,7 +318,7 @@ function BenchChip({ p, onClick }: { p: SquadPlayer; onClick: () => void }) {
 
 // ── 하나의 가로 핏치에 양팀을 마주보게 배치 ──────────────────────────────────
 // 상대목록 한 행 - 연승/연패 배지, 눌러서 펼치는 '최근 경기 스쿼드 보기'를 포함
-function OpponentRow({ o, rank, active, loading, onSearch }: { o: any; rank: number; active: boolean; loading: boolean; onSearch: () => void }) {
+function OpponentRow({ o, rank, active, loading, isSearching, onSearch }: { o: any; rank: number; active: boolean; loading: boolean; isSearching: boolean; onSearch: () => void }) {
   const [showSquad, setShowSquad] = useState(false);
   const [hovered, setHovered] = useState(false);
   const total = o.win + o.draw + o.lose;
@@ -372,7 +372,16 @@ function OpponentRow({ o, rank, active, loading, onSearch }: { o: any; rank: num
           <span style={{ width: `${100 - winPct - drawPct}%`, background: active ? 'rgba(255,255,255,0.35)' : RED }} />
         </span>
 
-        {!hovered && <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>}
+        {!hovered && !isSearching && <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>}
+        {isSearching && (
+          <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.7rem', fontWeight: 800, color: active ? '#fff' : ORANGE }}>
+            <span style={{
+              width: '11px', height: '11px', borderRadius: '50%', border: `2px solid ${active ? 'rgba(255,255,255,0.4)' : `${ORANGE}40`}`,
+              borderTopColor: active ? '#fff' : ORANGE, animation: 'fc-spin 0.7s linear infinite',
+            }} />
+            조회 중...
+          </span>
+        )}
         </button>
 
         {/* 마우스를 올렸을 때만 나타나는 '탭 가능함' 안내 - 클릭되는 영역인지 헷갈리지 않게 함 */}
@@ -976,6 +985,7 @@ export default function FcRecordClient() {
           @keyframes fc-blob-c { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(4%) scale(1.05); } }
           @keyframes fc-blob-d { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4%) scale(1.05); } }
           @keyframes fc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes fc-spin { to { transform: rotate(360deg); } }
           /* 넓은 화면(1440px+)에서만 결과 요약 사이드 패널 노출 - 스크롤 안 해도 핵심 결과가 바로 보이게 */
           .fc-side-summary { display: none; }
           @media (min-width: 1440px) {
@@ -1199,7 +1209,7 @@ export default function FcRecordClient() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
               {opponents.map((o, i) => (
-                <OpponentRow key={o.nickname} o={o} rank={i + 1} active={nickname === o.nickname} loading={loading} onSearch={() => search(o.nickname)} />
+                <OpponentRow key={o.nickname} o={o} rank={i + 1} active={nickname === o.nickname} loading={loading} isSearching={loading && nickname === o.nickname} onSearch={() => search(o.nickname)} />
               ))}
             </div>
           </div>
