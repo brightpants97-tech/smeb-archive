@@ -310,101 +310,116 @@ function BenchChip({ p, onClick }: { p: SquadPlayer; onClick: () => void }) {
 
 // ── 하나의 가로 핏치에 양팀을 마주보게 배치 ──────────────────────────────────
 // 상대목록 한 행 - 연승/연패 배지, 눌러서 펼치는 '최근 경기 스쿼드 보기'를 포함
-function OpponentRow({ o, rank, active, loading, isSearching, onSearch }: { o: any; rank: number; active: boolean; loading: boolean; isSearching: boolean; onSearch: () => void }) {
-  const [showSquad, setShowSquad] = useState(false);
+function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: any; rank: number; active: boolean; loading: boolean; isSearching: boolean; onSearch: () => void }) {
   const [hovered, setHovered] = useState(false);
+  const [showSquadModal, setShowSquadModal] = useState(false);
   const total = o.win + o.draw + o.lose;
-  const winPct = total ? (o.win / total) * 100 : 0;
-  const drawPct = total ? (o.draw / total) * 100 : 0;
+  const winRate = total > 0 ? (o.win / total) * 100 : 50;
   const hasSquad = o.latestSquad?.meSquad?.length > 0;
+  // 색은 테두리로만 표현 - 배경까지 물들이면 승/무/패 원 색상과 겹쳐서 오히려 헷갈림
+  const tone = total === 0 ? '#eee' : winRate > 55 ? WIN_BLUE : winRate < 45 ? RED : '#e5d9c8';
+  const rankColor = rank === 1 ? '#F2C94C' : rank === 2 ? '#BDBDBD' : rank === 3 ? '#D08A4C' : null;
 
   return (
-    <div style={{ borderRadius: '10px', border: `1px solid ${active ? ORANGE : '#f0e4d6'}`, overflow: 'hidden' }}>
-      <div style={{ position: 'relative' }}>
-        <button
-          onClick={onSearch} disabled={loading}
-          onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px',
-            background: active ? ORANGE : (hovered ? '#fff8f0' : '#fff'), border: 'none',
-            cursor: loading ? 'default' : 'pointer', fontFamily: FONT, textAlign: 'left', width: '100%',
-            transition: 'background 0.15s',
-          }}
-        >
-        {/* 순위 */}
-        <span style={{ width: '18px', flexShrink: 0, textAlign: 'center' as const, fontSize: '0.7rem', fontWeight: 800, color: active ? 'rgba(255,255,255,0.7)' : '#ccc' }}>{rank}</span>
-        {/* 프로필 + 이름 */}
-        {o.profileImage ? (
-          <img src={o.profileImage} alt="" style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
-        ) : (
-          <span style={{ width: '30px', height: '30px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
-        )}
-        <span style={{ width: '92px', flexShrink: 0, fontSize: '0.85rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{o.displayName}</span>
-
-        {/* 승/무/패 색깔 원 */}
-        <span style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-          <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '11px', background: active ? 'rgba(255,255,255,0.25)' : `${WIN_BLUE}18`, color: active ? '#fff' : WIN_BLUE, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.win}</span>
-          {o.draw > 0 && <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '11px', background: active ? 'rgba(255,255,255,0.25)' : '#eee', color: active ? '#fff' : GRAY, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.draw}</span>}
-          <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '11px', background: active ? 'rgba(255,255,255,0.25)' : `${RED}18`, color: active ? '#fff' : RED, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.lose}</span>
-        </span>
-
-        {/* 연승/연패 배지 */}
-        {o.streakCount >= 2 && (
+    <div style={{
+      position: 'relative', height: '92px', borderRadius: '12px', overflow: 'hidden',
+      border: `1.5px solid ${active ? ORANGE : tone}`, background: active ? ORANGE : (hovered ? '#fff8f0' : '#fff'),
+      transition: 'background 0.15s',
+    }}>
+      <button
+        onClick={onSearch} disabled={loading}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        style={{
+          width: '100%', height: '100%', display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between',
+          padding: '10px', background: 'none', border: 'none', cursor: loading ? 'default' : 'pointer',
+          fontFamily: FONT, textAlign: 'left',
+        }}
+      >
+        {/* 상단: 순위 배지 + 프로필 + 이름 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{
-            flexShrink: 0, padding: '2px 8px', borderRadius: '100px', fontSize: '0.66rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
-            background: active ? 'rgba(255,255,255,0.25)' : (o.streakType === 'win' ? `${WIN_BLUE}18` : `${RED}18`),
-            color: active ? '#fff' : (o.streakType === 'win' ? WIN_BLUE : RED),
-          }}>{o.streakCount}연{o.streakType === 'win' ? '승' : '패'}</span>
-        )}
+            flexShrink: 0, width: '18px', height: '18px', borderRadius: '50%', fontSize: '0.62rem', fontWeight: 900,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: rankColor || (active ? 'rgba(255,255,255,0.25)' : '#f2f2f2'),
+            color: rankColor ? '#fff' : (active ? 'rgba(255,255,255,0.8)' : '#bbb'),
+          }}>{rank}</span>
+          {o.profileImage ? (
+            <img src={o.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
+          ) : (
+            <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
+          )}
+          <span style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{o.displayName}</span>
+        </div>
 
-        {/* 좌우 대비 승률 바 - 호버 중이면 살짝 자리를 줄여 '탭해서 검색' 안내가 들어갈 공간 확보 */}
-        <span style={{ flex: 1, minWidth: '30px', height: '6px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: active ? 'rgba(255,255,255,0.25)' : '#f0f0f0' }}>
-          <span style={{ width: `${winPct}%`, background: active ? '#fff' : WIN_BLUE }} />
-          <span style={{ width: `${drawPct}%`, background: active ? 'rgba(255,255,255,0.6)' : GRAY }} />
-          <span style={{ width: `${100 - winPct - drawPct}%`, background: active ? 'rgba(255,255,255,0.35)' : RED }} />
-        </span>
-
-        {!hovered && !isSearching && <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>}
-        {isSearching && (
-          <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.7rem', fontWeight: 800, color: active ? '#fff' : ORANGE }}>
+        {/* 중단: 승/무/패 색깔 원 + 연승/연패 배지 (자리는 항상 확보해서 카드 높이가 흔들리지 않게) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ minWidth: '20px', height: '20px', padding: '0 4px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.25)' : `${WIN_BLUE}18`, color: active ? '#fff' : WIN_BLUE, fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.win}</span>
+          {o.draw > 0 && <span style={{ minWidth: '20px', height: '20px', padding: '0 4px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.25)' : '#eee', color: active ? '#fff' : GRAY, fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.draw}</span>}
+          <span style={{ minWidth: '20px', height: '20px', padding: '0 4px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.25)' : `${RED}18`, color: active ? '#fff' : RED, fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.lose}</span>
+          {o.streakCount >= 2 && (
             <span style={{
-              width: '11px', height: '11px', borderRadius: '50%', border: `2px solid ${active ? 'rgba(255,255,255,0.4)' : `${ORANGE}40`}`,
+              flexShrink: 0, padding: '1px 6px', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
+              background: active ? 'rgba(255,255,255,0.25)' : (o.streakType === 'win' ? `${WIN_BLUE}18` : `${RED}18`),
+              color: active ? '#fff' : (o.streakType === 'win' ? WIN_BLUE : RED),
+            }}>{o.streakCount}연{o.streakType === 'win' ? '승' : '패'}</span>
+          )}
+        </div>
+
+        {/* 하단: 총 경기수 / 조회중 스피너 */}
+        {isSearching ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: 800, color: active ? '#fff' : ORANGE }}>
+            <span style={{
+              width: '10px', height: '10px', borderRadius: '50%', border: `2px solid ${active ? 'rgba(255,255,255,0.4)' : `${ORANGE}40`}`,
               borderTopColor: active ? '#fff' : ORANGE, animation: 'fc-spin 0.7s linear infinite',
             }} />
             조회 중...
           </span>
+        ) : (
+          <span style={{ fontSize: '0.66rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>
         )}
-        </button>
+      </button>
 
-        {/* 마우스를 올렸을 때만 나타나는 '탭 가능함' 안내 - 클릭되는 영역인지 헷갈리지 않게 함 */}
-        {!active && hovered && !loading && (
-          <span style={{
-            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-            display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '100px',
-            background: ORANGE, color: '#fff', fontSize: '0.66rem', fontWeight: 900, pointerEvents: 'none',
-            boxShadow: `0 2px 6px ${ORANGE}60`, whiteSpace: 'nowrap' as const,
-          }}>👆 탭해서 검색</span>
-        )}
-      </div>
-
-      {/* 스쿼드 보기 토글 - 시인성 높게 눈에 띄는 버튼으로 별도 배치 (검색 버튼과 분리) */}
+      {/* 최근 경기 스쿼드 보기 - 별도 아이콘으로 분리해서 카드 안에서 클릭 영역이 겹치지 않게 함 */}
       {hasSquad && (
-        <div style={{ borderTop: '1px solid #f5ece0' }}>
-          <button onClick={(e) => { e.stopPropagation(); setShowSquad(s => !s); }} style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-            padding: '8px', background: showSquad ? `${ORANGE}12` : '#fafafa', border: 'none', cursor: 'pointer',
-            fontFamily: FONT, fontSize: '0.76rem', fontWeight: 800, color: ORANGE,
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowSquadModal(true); }}
+          title="최근 경기 스쿼드 보기"
+          style={{
+            position: 'absolute', top: '6px', right: '6px', width: '24px', height: '24px', borderRadius: '50%',
+            background: active ? 'rgba(255,255,255,0.25)' : '#fafafa', border: `1px solid ${active ? 'rgba(255,255,255,0.4)' : '#eee'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.8rem', padding: 0,
+          }}
+        >⚽</button>
+      )}
+
+      {/* 마우스를 올렸을 때만 나타나는 '탭 가능함' 안내 */}
+      {!active && hovered && !loading && (
+        <span style={{
+          position: 'absolute', left: '50%', bottom: '8px', transform: 'translateX(-50%)',
+          display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '100px',
+          background: ORANGE, color: '#fff', fontSize: '0.6rem', fontWeight: 900, pointerEvents: 'none',
+          boxShadow: `0 2px 6px ${ORANGE}60`, whiteSpace: 'nowrap' as const,
+        }}>👆 탭해서 검색</span>
+      )}
+
+      {/* 스쿼드 모달 - 그리드 정렬이 깨지지 않도록 카드 내부 확장 대신 오버레이로 띄움 */}
+      {showSquadModal && (
+        <div onClick={() => setShowSquadModal(false)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 998,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width: '100%', maxWidth: '640px', maxHeight: '85vh', overflowY: 'auto',
+            background: '#fff', borderRadius: '18px', padding: '20px', fontFamily: FONT,
           }}>
-            {showSquad ? '스쿼드 접기 ▴' : '최근 경기 스쿼드 보기 ▾'}
-          </button>
-          {showSquad && (
-            <div style={{ padding: '14px 12px 18px', background: '#fff' }}>
-              <p style={{ textAlign: 'center' as const, fontSize: '0.78rem', color: '#999', margin: '0 0 12px', fontWeight: 700 }}>
-                최근 경기 {o.latestSquad.meGoal ?? '-'} : {o.latestSquad.oppGoal ?? '-'} · {formatMatchDate(o.latestSquad.date)}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#333' }}>
+                {o.displayName}님과의 최근 경기 · {o.latestSquad.meGoal ?? '-'} : {o.latestSquad.oppGoal ?? '-'} · {formatMatchDate(o.latestSquad.date)}
               </p>
-              <MatchPitch meSquad={o.latestSquad.meSquad} oppSquad={o.latestSquad.oppSquad} />
+              <button onClick={() => setShowSquadModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', color: '#ccc', cursor: 'pointer' }}>✕</button>
             </div>
-          )}
+            <MatchPitch meSquad={o.latestSquad.meSquad} oppSquad={o.latestSquad.oppSquad} />
+          </div>
         </div>
       )}
     </div>
@@ -1197,9 +1212,9 @@ export default function FcRecordClient() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginBottom: '14px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50` }}>
               <Icon name="target" size={15} color="#fff" /> <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: 900 }}>탭하면 바로 검색돼요</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 240px))', gap: '10px' }}>
               {opponents.map((o, i) => (
-                <OpponentRow key={o.nickname} o={o} rank={i + 1} active={nickname === o.nickname} loading={loading} isSearching={loading && nickname === o.nickname} onSearch={() => search(o.nickname)} />
+                <OpponentCard key={o.nickname} o={o} rank={i + 1} active={nickname === o.nickname} loading={loading} isSearching={loading && nickname === o.nickname} onSearch={() => search(o.nickname)} />
               ))}
             </div>
           </div>
