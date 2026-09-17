@@ -320,6 +320,7 @@ function BenchChip({ p, onClick }: { p: SquadPlayer; onClick: () => void }) {
 // 상대목록 한 행 - 연승/연패 배지, 눌러서 펼치는 '최근 경기 스쿼드 보기'를 포함
 function OpponentRow({ o, rank, active, loading, onSearch }: { o: any; rank: number; active: boolean; loading: boolean; onSearch: () => void }) {
   const [showSquad, setShowSquad] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const total = o.win + o.draw + o.lose;
   const winPct = total ? (o.win / total) * 100 : 0;
   const drawPct = total ? (o.draw / total) * 100 : 0;
@@ -327,11 +328,17 @@ function OpponentRow({ o, rank, active, loading, onSearch }: { o: any; rank: num
 
   return (
     <div style={{ borderRadius: '10px', border: `1px solid ${active ? ORANGE : '#f0e4d6'}`, overflow: 'hidden' }}>
-      <button onClick={onSearch} disabled={loading} style={{
-        display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px',
-        background: active ? ORANGE : '#fff', border: 'none',
-        cursor: loading ? 'default' : 'pointer', fontFamily: FONT, textAlign: 'left', width: '100%',
-      }}>
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={onSearch} disabled={loading}
+          onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px',
+            background: active ? ORANGE : (hovered ? '#fff8f0' : '#fff'), border: 'none',
+            cursor: loading ? 'default' : 'pointer', fontFamily: FONT, textAlign: 'left', width: '100%',
+            transition: 'background 0.15s',
+          }}
+        >
         {/* 순위 */}
         <span style={{ width: '18px', flexShrink: 0, textAlign: 'center' as const, fontSize: '0.7rem', fontWeight: 800, color: active ? 'rgba(255,255,255,0.7)' : '#ccc' }}>{rank}</span>
         {/* 프로필 + 이름 */}
@@ -358,15 +365,26 @@ function OpponentRow({ o, rank, active, loading, onSearch }: { o: any; rank: num
           }}>{o.streakCount}연{o.streakType === 'win' ? '승' : '패'}</span>
         )}
 
-        {/* 좌우 대비 승률 바 */}
-        <span style={{ flex: 1, minWidth: '40px', height: '6px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: active ? 'rgba(255,255,255,0.25)' : '#f0f0f0' }}>
+        {/* 좌우 대비 승률 바 - 호버 중이면 살짝 자리를 줄여 '탭해서 검색' 안내가 들어갈 공간 확보 */}
+        <span style={{ flex: 1, minWidth: '30px', height: '6px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: active ? 'rgba(255,255,255,0.25)' : '#f0f0f0' }}>
           <span style={{ width: `${winPct}%`, background: active ? '#fff' : WIN_BLUE }} />
           <span style={{ width: `${drawPct}%`, background: active ? 'rgba(255,255,255,0.6)' : GRAY }} />
           <span style={{ width: `${100 - winPct - drawPct}%`, background: active ? 'rgba(255,255,255,0.35)' : RED }} />
         </span>
 
-        <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>
-      </button>
+        {!hovered && <span style={{ flexShrink: 0, fontSize: '0.68rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>}
+        </button>
+
+        {/* 마우스를 올렸을 때만 나타나는 '탭 가능함' 안내 - 클릭되는 영역인지 헷갈리지 않게 함 */}
+        {!active && hovered && !loading && (
+          <span style={{
+            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+            display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '100px',
+            background: ORANGE, color: '#fff', fontSize: '0.66rem', fontWeight: 900, pointerEvents: 'none',
+            boxShadow: `0 2px 6px ${ORANGE}60`, whiteSpace: 'nowrap' as const,
+          }}>👆 탭해서 검색</span>
+        )}
+      </div>
 
       {/* 스쿼드 보기 토글 - 시인성 높게 눈에 띄는 버튼으로 별도 배치 (검색 버튼과 분리) */}
       {hasSquad && (
@@ -671,28 +689,21 @@ function StatRowCount({ label, meRate, meSuccess, meTry, oppRate, oppSuccess, op
 function PlayerCompareTable({ meTitle, oppTitle, mePlayers, oppPlayers }: {
   meTitle: string; oppTitle: string; mePlayers: PlayerStat[]; oppPlayers: PlayerStat[];
 }) {
-  const [expanded, setExpanded] = useState(false);
   const total = Math.max(mePlayers.length, oppPlayers.length);
   if (total === 0) return null;
-  // 기본으로는 '가장 최근 경기에 실제 출전한 선수(현재 스쿼드)'까지만 보여주고,
-  // 예전에만 쓰였던 선수는 더보기 버튼 뒤로 숨김
-  const meCurrentCount = mePlayers.filter(p => p.isCurrentSquad).length;
-  const oppCurrentCount = oppPlayers.filter(p => p.isCurrentSquad).length;
-  const defaultShow = Math.max(meCurrentCount, oppCurrentCount, 1);
-  const visibleCount = expanded ? total : Math.min(defaultShow, total);
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '4px', flexWrap: 'wrap' as const, gap: '6px' }}>
         <p style={{ fontSize: '0.72rem', fontWeight: 800, color: '#333', letterSpacing: '0.06em' }}>선수 평균 스탯</p>
-        <p style={{ fontSize: '0.66rem', color: '#bbb', fontWeight: 600 }}>최근 경기 스쿼드 기준 · 같은 순위끼리 비교</p>
+        <p style={{ fontSize: '0.66rem', color: '#bbb', fontWeight: 600 }}>가장 최근 경기 스쿼드(교체 포함) · 포지션 순</p>
       </div>
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' as const }}>
         <p style={{ flex: '1 1 120px', fontSize: '0.68rem', fontWeight: 800, color: ORANGE, whiteSpace: 'nowrap' as const }}>● {meTitle}</p>
         <p style={{ flex: '1 1 120px', fontSize: '0.68rem', fontWeight: 800, color: '#3B82C4', whiteSpace: 'nowrap' as const }}>● {oppTitle}</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
-        {Array.from({ length: visibleCount }).map((_, i) => (
+        {Array.from({ length: total }).map((_, i) => (
           <div key={i} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
             <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
               {mePlayers[i] ? <PlayerStatRowExpandable p={mePlayers[i]} accent={ORANGE} rank={i + 1} /> : <div />}
@@ -703,12 +714,6 @@ function PlayerCompareTable({ meTitle, oppTitle, mePlayers, oppPlayers }: {
           </div>
         ))}
       </div>
-      {total > defaultShow && (
-        <button onClick={() => setExpanded(e => !e)} style={{
-          width: '100%', marginTop: '10px', padding: '10px', borderRadius: '10px', border: '1px solid #eee',
-          background: '#fafafa', color: '#888', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
-        }}>{expanded ? '접기 ▴' : `이전에 사용됐던 선수 더보기 (${total - defaultShow}명) ▾`}</button>
-      )}
     </div>
   );
 }

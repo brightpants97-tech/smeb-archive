@@ -289,12 +289,12 @@ function aggregatePlayerStats(matches: any[], side: 'meSquad' | 'oppSquad') {
     withRating[withRating.length - 1].isWorst = true;
   }
 
-  // 정렬: 현재 스쿼드가 항상 위, 그 안에서/이전 선수 그룹 안에서는 각각 평점순
-  list.sort((a, b) => {
-    if (a.isCurrentSquad !== b.isCurrentSquad) return a.isCurrentSquad ? -1 : 1;
-    return (b.avgRating ?? -1) - (a.avgRating ?? -1);
+  // 가장 최근 경기 출전 선수(교체 포함)만 남기고, 포지션 코드 순으로 정렬 (GK→DF→MF→FW 순서에 가까움)
+  currentGroup.sort((a, b) => {
+    const pa = a.position ?? 999, pb = b.position ?? 999;
+    return pa - pb;
   });
-  return list;
+  return currentGroup;
 }
 
 // 최근 경기 스캔 - Redis에 이미 저장된 매치는 재사용하고, 그 이후에 새로 생긴 경기만
