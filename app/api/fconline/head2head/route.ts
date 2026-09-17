@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 import { saveMatches, getStreamerByNickname, getAllStoredMatches, getLatestStoredMatchDate, setScanProgress, clearScanProgress, getScanProgress, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
@@ -555,21 +554,19 @@ async function fetchHead2Head(meNickname: string, opponentNickname: string) {
     };
 }
 
-// 성공한 결과만 캐시 (하루 1,000건 제한인 개발단계 키 기준, 같은 상대를 반복 조회해도
-// API를 다시 안 쓰도록 넉넉하게 2시간 유지 - 에러 응답은 캐시하지 않음)
-const getHead2HeadCached = unstable_cache(
-  fetchHead2Head,
-  ['fconline-head2head'],
-  { revalidate: 7200 }
-);
+// (예전엔 여기서 unstable_cache로 fetchHead2Head를 감쌌었는데, 이 배포 환경에서
+// 캐시 히트가 안 되는 걸 확인했고 오히려 중복 호출 버그의 원인이 되어서 제거함.
+// 지금은 withMemCache(메모리 TTL 캐시)로 getHead2Head 안에서 직접 처리함)
 
 async function getHead2Head(meNickname: string, opponentNickname: string) {
   if (!NEXON_KEY) {
     return { error: 'NEXON_API_KEY가 설정되어 있지 않습니다. Vercel 프로젝트 환경변수에 NEXON_API_KEY를 추가해주세요.' };
   }
-  const result = await fetchHead2Head(meNickname, opponentNickname);
-  if ((result as any).error) return result; // 에러는 캐시하지 않고 바로 반환
-  const cached = await getHead2HeadCached(meNickname, opponentNickname);
+  // 예전엔 여기서 fetchHead2Head를 한 번 호출해 에러만 확인하고 결과를 버린 뒤,
+  // 안 먹히는 unstable_cache를 통해 fetchHead2Head를 또 호출해서 매 검색마다 전체
+  // 스캔이 두 번씩 실행되던 버그가 있었음. 메모리 TTL 캐시로 한 번만 호출하도록 수정.
+  const result = await withMemCache(`h2h:${meNickname}:${opponentNickname}`, 30000, () => fetchHead2Head(meNickname, opponentNickname));
+  if ((result as any).error) return result;
 
   // 스트리머 표시명/팀컬러는 매치 데이터 캐시와 분리해서 매번 최신으로 조회
   // (관리자에서 방금 등록/수정한 정보가 캐시 만료를 안 기다리고 바로 반영되도록)
@@ -579,18 +576,28 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
   ]);
 
   return {
-    ...cached,
+    ...result,
     meDisplay: { name: '스맵', color: meStreamer?.teamColor || null, profileImage: meStreamer?.profileImage || (process.env.SOOP_BJID ? `https://profile.img.sooplive.com/LOGO/${process.env.SOOP_BJID.slice(0, 2)}/${process.env.SOOP_BJID}/${process.env.SOOP_BJID}.jpg` : null) },
     oppDisplay: { name: oppStreamer?.displayName || opponentNickname, color: oppStreamer?.teamColor || null, profileImage: oppStreamer?.profileImage || null },
   };
 }
 
-// 상대목록/최근30경기/통산전적 모두 별도 캐시 없이 매번 새로 계산 - 내부에서 쓰는
-// getRecentMatchesRaw가 이미 30분 캐시라 넥슨 API 호출 부담은 없고, 관리자에서 스트리머를
-// 새로 등록/삭제하면 바로 다음 새로고침에 반영되도록 함
-const getOverallLiveCached = fetchOverallLive;
-const getRecent30Cached = fetchRecent30;
-const getOpponentsListCached = fetchOpponentsList;
+// 여러 방문자가 동시에 이 페이지를 보고 있을 때, 각자 요청이 들어올 때마다 Redis를
+// 두드리면 사람 수만큼 비용이 곱해짐. 서버 인스턴스 메모리에 짧게(TTL) 결과를 담아두고
+// 그 안에 들어온 요청들은 재계산 없이 같은 결과를 나눠 쓰게 해서 동시접속 부담을 줄임.
+// (서버리스 인스턴스가 새로 뜨면 초기화되긴 하지만, 트래픽이 몰리는 '웜' 상태에서 효과가 큼)
+const memCache = new Map<string, { data: any; expiresAt: number }>();
+async function withMemCache<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
+  const hit = memCache.get(key);
+  if (hit && hit.expiresAt > Date.now()) return hit.data as T;
+  const data = await fn();
+  memCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+  return data;
+}
+
+const getOverallLiveCached = () => withMemCache('overall', 30000, fetchOverallLive);
+const getRecent30Cached = () => withMemCache('recent30', 30000, fetchRecent30);
+const getOpponentsListCached = (meNickname: string) => withMemCache(`opponents:${meNickname}`, 30000, () => fetchOpponentsList(meNickname));
 
 async function getOpponentsList(meNickname: string) {
   if (!NEXON_KEY) {
