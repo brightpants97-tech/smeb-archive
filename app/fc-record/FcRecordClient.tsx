@@ -982,41 +982,82 @@ export default function FcRecordClient() {
       {/* 넓은 화면 여백 활용: 검색 결과가 있으면 우측에 핵심 요약을 고정 표시해서
           아래로 스크롤하지 않아도 승패/승률을 바로 볼 수 있게 함. 새로운 데이터를 더
           불러오는 게 아니라 이미 받아온 result를 재사용하는 거라 서버 부담은 없음 */}
-      {result && !errorMsg && !loading && (
-        <div className="fc-side-summary" style={{
-          position: 'fixed', top: '140px', right: '28px', width: '220px', zIndex: 2,
-          flexDirection: 'column' as const, gap: '10px', padding: '16px', borderRadius: '16px',
-          background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', border: '1px solid #eee',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-        }}>
-          <button onClick={() => document.getElementById('result-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{
-            display: 'flex', flexDirection: 'column' as const, gap: '10px', background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: FONT, textAlign: 'left', padding: 0, width: '100%',
+      {result && !errorMsg && !loading && (() => {
+        const winRate = result.summary.total > 0 ? (result.summary.win / result.summary.total) * 100 : 50;
+        // 4) 우세/열세에 따른 톤 - 숫자를 안 읽어도 색으로 바로 감이 오게
+        const tone = result.summary.total === 0 ? '#ddd' : winRate > 55 ? WIN_BLUE : winRate < 45 ? RED : GRAY;
+        // 5) 최근 5경기 폼 - 오래된 것부터 최신 순으로 (matches는 이미 최신순 정렬돼있음)
+        const last5 = [...result.matches].slice(0, 5).reverse();
+        return (
+          <div className="fc-side-summary" style={{
+            position: 'fixed', top: '130px', right: '28px', width: '300px', zIndex: 2,
+            flexDirection: 'column' as const, gap: '14px', padding: '22px', borderRadius: '20px',
+            background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', border: `2px solid ${tone}55`,
+            boxShadow: `0 10px 30px ${tone}25`,
           }}>
-            <p style={{ margin: 0, fontSize: '0.68rem', color: '#bbb', fontWeight: 800, letterSpacing: '0.04em' }}>스맵 VS {result.oppDisplay.name}</p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: WIN_BLUE }}>{result.summary.win}</span>
-              <span style={{ fontSize: '0.72rem', color: '#999' }}>승</span>
-              {result.summary.draw > 0 && <><span style={{ fontSize: '1.6rem', fontWeight: 900, color: GRAY }}>{result.summary.draw}</span><span style={{ fontSize: '0.72rem', color: '#999' }}>무</span></>}
-              <span style={{ fontSize: '1.6rem', fontWeight: 900, color: RED }}>{result.summary.lose}</span>
-              <span style={{ fontSize: '0.72rem', color: '#999' }}>패</span>
-            </div>
-            {result.summary.total > 0 && (
-              <>
-                <div style={{ width: '100%', height: '6px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: '#f0f0f0' }}>
-                  <span style={{ width: `${(result.summary.win / result.summary.total) * 100}%`, background: WIN_BLUE }} />
-                  <span style={{ width: `${(result.summary.draw / result.summary.total) * 100}%`, background: GRAY }} />
-                  <span style={{ width: `${(result.summary.lose / result.summary.total) * 100}%`, background: RED }} />
+            <button onClick={() => document.getElementById('result-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{
+              display: 'flex', flexDirection: 'column' as const, gap: '14px', background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: FONT, textAlign: 'left', padding: 0, width: '100%',
+            }}>
+              {/* 3) 상대 프로필 사진 + 이름 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {result.oppDisplay.profileImage ? (
+                  <img src={result.oppDisplay.profileImage} alt="" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: `2.5px solid ${tone}`, flexShrink: 0 }} />
+                ) : (
+                  <span style={{ width: '44px', height: '44px', borderRadius: '50%', background: tone, flexShrink: 0 }} />
+                )}
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: '0.7rem', color: '#bbb', fontWeight: 800, letterSpacing: '0.04em' }}>스맵 VS</p>
+                  <p style={{ margin: '1px 0 0', fontSize: '1.05rem', color: '#222', fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{result.oppDisplay.name}</p>
                 </div>
-                <p style={{ margin: 0, fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
-                  승률 {Math.round((result.summary.win / result.summary.total) * 100)}% · 총 {result.summary.total}경기
-                </p>
-              </>
-            )}
-            <span style={{ marginTop: '4px', fontSize: '0.7rem', color: ORANGE, fontWeight: 800 }}>자세히 보기 ↓</span>
-          </button>
-        </div>
-      )}
+              </div>
+
+              {/* 2) 승/무/패 - 대폭 확대된 숫자 */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                <span style={{ fontSize: '2.3rem', fontWeight: 900, color: WIN_BLUE, lineHeight: 1 }}>{result.summary.win}</span>
+                <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: 700 }}>승</span>
+                {result.summary.draw > 0 && <><span style={{ fontSize: '2.3rem', fontWeight: 900, color: GRAY, lineHeight: 1 }}>{result.summary.draw}</span><span style={{ fontSize: '0.8rem', color: '#999', fontWeight: 700 }}>무</span></>}
+                <span style={{ fontSize: '2.3rem', fontWeight: 900, color: RED, lineHeight: 1 }}>{result.summary.lose}</span>
+                <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: 700 }}>패</span>
+              </div>
+
+              {result.summary.total > 0 && (
+                <>
+                  <div style={{ width: '100%', height: '8px', borderRadius: '100px', overflow: 'hidden', display: 'flex', background: '#f0f0f0' }}>
+                    <span style={{ width: `${(result.summary.win / result.summary.total) * 100}%`, background: WIN_BLUE }} />
+                    <span style={{ width: `${(result.summary.draw / result.summary.total) * 100}%`, background: GRAY }} />
+                    <span style={{ width: `${(result.summary.lose / result.summary.total) * 100}%`, background: RED }} />
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#888', fontWeight: 800 }}>
+                    승률 <span style={{ color: tone, fontSize: '0.95rem' }}>{Math.round(winRate)}%</span> · 총 {result.summary.total}경기
+                  </p>
+                </>
+              )}
+
+              {/* 5) 최근 5경기 폼 dot */}
+              {last5.length > 0 && (
+                <div>
+                  <p style={{ margin: '0 0 6px', fontSize: '0.68rem', color: '#bbb', fontWeight: 800 }}>최근 {last5.length}경기</p>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {last5.map((m, i) => {
+                      const c = OUTCOME_COLOR[m.outcome];
+                      return (
+                        <span key={i} style={{
+                          width: '22px', height: '22px', borderRadius: '50%', background: `${c}18`, color: c,
+                          border: `1.5px solid ${c}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.62rem', fontWeight: 900,
+                        }}>{OUTCOME_LABEL[m.outcome]}</span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <span style={{ marginTop: '2px', fontSize: '0.76rem', color: ORANGE, fontWeight: 800 }}>자세히 보기 ↓</span>
+            </button>
+          </div>
+        );
+      })()}
 
       <div style={{ maxWidth: '980px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
