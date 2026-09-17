@@ -886,33 +886,27 @@ export default function FcRecordClient() {
       .catch(() => {})
       .finally(() => { setOpponentsLoading(false); setOverallLoading(false); stopPolling = true; setOverallProgress(100); });
 
-    // 통산전적 스캔 중엔 진행률(%)을 2.5초마다 폴링해서 표시 (예전 0.8초는 너무 잦았음)
+    // 통산전적 스캔 중엔 진행률(%)을 2.5초마다 폴링해서 표시하되, 스캔이 비정상적으로
+    // 오래 걸리는 경우를 대비해 최대 40번(약 100초)까지만 폴링하고 자동으로 멈춤
     let stopPolling = false;
     const pollProgress = async () => {
-      while (!stopPolling) {
+      let attempts = 0;
+      while (!stopPolling && attempts < 40) {
         try {
           const r = await fetch('/api/fconline/head2head?progress=1', { cache: 'no-store' });
           const d = await r.json();
           if (typeof d.percent === 'number') setOverallProgress(d.percent);
         } catch {}
+        attempts++;
         await new Promise(res => setTimeout(res, 2500));
       }
     };
     pollProgress();
 
-    // 페이지를 켜놓고 있는 동안 1시간마다 조용히(로딩 표시 없이) 새 경기 자동 반영
-    // - 새로고침 안 해도 방송 보면서 켜둔 채로 최신 전적이 자동으로 업데이트됨
-    // - 여러 명이 동시에 볼 수 있는 페이지라, Redis 요청량 여유를 넉넉히 확보하기 위해 1시간으로 설정
-    // - 현재 보고 있는 검색 결과까지 매번 재조회하던 건 불필요한 부담이라 제거함(사용자가 직접
-    //   재검색하지 않는 한, 통산전적/상대목록만 갱신)
-    // - 탭이 백그라운드(안 보고 있음)일 땐 자동갱신 자체를 멈춰서, 실제로 '보고 있는' 사람 수만큼만
-    //   요청이 나가게 함
-    const autoRefresh = setInterval(() => {
-      if (document.visibilityState !== 'visible') return; // 탭을 안 보고 있으면 스킵
-      loadCombined();
-    }, 3600000);
-
-    return () => { stopPolling = true; clearInterval(autoRefresh); };
+    // 새로고침 시엔 항상 최신 데이터를 가져오지만, 페이지를 켜놓은 채로 있는 동안 자동으로
+    // 다시 조회하진 않음(예전엔 1시간마다 자동갱신했는데, 여러 명이 동시에 페이지를 켜둘 수
+    // 있는 만큼 요청량을 최대한 아끼기 위해 완전히 제거함 - 필요하면 새로고침으로 갱신)
+    return () => { stopPolling = true; };
   }, []);
 
   const search = async (nick?: string, silent = false) => {

@@ -583,7 +583,7 @@ async function getHead2Head(meNickname: string, opponentNickname: string) {
   // 예전엔 여기서 fetchHead2Head를 한 번 호출해 에러만 확인하고 결과를 버린 뒤,
   // 안 먹히는 unstable_cache를 통해 fetchHead2Head를 또 호출해서 매 검색마다 전체
   // 스캔이 두 번씩 실행되던 버그가 있었음. 메모리 TTL 캐시로 한 번만 호출하도록 수정.
-  const result = await withMemCache(`h2h:${meNickname}:${opponentNickname}`, 60000, () => fetchHead2Head(meNickname, opponentNickname));
+  const result = await withMemCache(`h2h:${meNickname}:${opponentNickname}`, 600000, () => fetchHead2Head(meNickname, opponentNickname));
   if ((result as any).error) return result;
 
   // 스트리머 표시명/팀컬러는 매치 데이터 캐시와 분리해서 매번 최신으로 조회
@@ -613,9 +613,9 @@ async function withMemCache<T>(key: string, ttlMs: number, fn: () => Promise<T>)
   return data;
 }
 
-const getOverallLiveCached = () => withMemCache('overall', 180000, fetchOverallLive);
-const getRecent30Cached = () => withMemCache('recent30', 180000, fetchRecent30);
-const getOpponentsListCached = (meNickname: string) => withMemCache(`opponents:${meNickname}`, 180000, () => fetchOpponentsList(meNickname));
+const getOverallLiveCached = () => withMemCache('overall', 900000, fetchOverallLive);
+const getRecent30Cached = () => withMemCache('recent30', 900000, fetchRecent30);
+const getOpponentsListCached = (meNickname: string) => withMemCache(`opponents:${meNickname}`, 900000, () => fetchOpponentsList(meNickname));
 
 async function getOpponentsList(meNickname: string) {
   if (!NEXON_KEY) {
