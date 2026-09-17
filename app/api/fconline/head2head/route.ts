@@ -440,7 +440,11 @@ async function fetchOpponentsList(meNickname: string) {
   if (!meOuid) return { error: `'${meNickname}' 닉네임을 찾을 수 없어요.` };
 
   const raw = await getRecentMatchesRaw(meOuid);
-  const map = new Map<string, { nickname: string; meWin: number; meDraw: number; meLose: number; lastDate: string; matches: { date: string; outcome: string }[] }>();
+  const map = new Map<string, {
+    nickname: string; meWin: number; meDraw: number; meLose: number; lastDate: string;
+    matches: { date: string; outcome: string }[];
+    latestMeSquad: any[]; latestOppSquad: any[]; latestMeGoal: number | null; latestOppGoal: number | null;
+  }>();
   for (const m of raw) {
     const existing = map.get(m.oppOuid);
     // 화면엔 스맵 관점(내가 이겼으면 승)으로 보여줌 - 정렬만 상대방 승률 기준으로 별도 계산
@@ -450,9 +454,16 @@ async function fetchOpponentsList(meNickname: string) {
     if (existing) {
       existing.meWin += meWin; existing.meDraw += meDraw; existing.meLose += meLose;
       existing.matches.push({ date: m.matchDate, outcome: m.outcome });
-      if (m.matchDate > existing.lastDate) existing.lastDate = m.matchDate;
+      if (m.matchDate > existing.lastDate) {
+        existing.lastDate = m.matchDate;
+        existing.latestMeSquad = m.meSquad; existing.latestOppSquad = m.oppSquad;
+        existing.latestMeGoal = m.meGoal; existing.latestOppGoal = m.oppGoal;
+      }
     } else {
-      map.set(m.oppOuid, { nickname: m.oppNickname, meWin, meDraw, meLose, lastDate: m.matchDate, matches: [{ date: m.matchDate, outcome: m.outcome }] });
+      map.set(m.oppOuid, {
+        nickname: m.oppNickname, meWin, meDraw, meLose, lastDate: m.matchDate, matches: [{ date: m.matchDate, outcome: m.outcome }],
+        latestMeSquad: m.meSquad, latestOppSquad: m.oppSquad, latestMeGoal: m.meGoal, latestOppGoal: m.oppGoal,
+      });
     }
   }
 
@@ -465,15 +476,22 @@ async function fetchOpponentsList(meNickname: string) {
       const s = byNickname.get(o.nickname)!;
       const total = o.meWin + o.meDraw + o.meLose;
       const oppWinRate = total ? o.meLose / total : 0; // 정렬용: 상대방(스맵이 아닌) 기준 승률 = 나의 패배 비율
+      const sortedDesc = [...o.matches].sort((a, b) => (a.date < b.date ? 1 : -1)); // 최신순
       // 최근 5경기 폼 - 오래된 것→최신 순으로 (화면에서 왼쪽부터 시간순으로 읽히게)
-      const last5 = o.matches
-        .sort((a, b) => (a.date < b.date ? 1 : -1))
-        .slice(0, 5)
-        .reverse()
-        .map(x => x.outcome);
+      const last5 = sortedDesc.slice(0, 5).reverse().map(x => x.outcome);
+      // 연승/연패 - 가장 최근 경기부터 같은 결과가 몇 번 이어지는지 (스맵 기준)
+      let streakType: 'win' | 'lose' | null = null, streakCount = 0;
+      for (const x of sortedDesc) {
+        if (x.outcome !== 'win' && x.outcome !== 'lose') break; // 무승부 나오면 연속 끊김
+        if (streakType === null) streakType = x.outcome as 'win' | 'lose';
+        if (x.outcome !== streakType) break;
+        streakCount++;
+      }
       return {
         nickname: o.nickname, win: o.meWin, draw: o.meDraw, lose: o.meLose, total, oppWinRate, last5,
+        streakType, streakCount,
         lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor,
+        latestSquad: { meSquad: o.latestMeSquad, oppSquad: o.latestOppSquad, meGoal: o.latestMeGoal, oppGoal: o.latestOppGoal, date: o.lastDate },
       };
     })
     .sort((a, b) => (b.total - a.total) || (b.oppWinRate - a.oppWinRate)); // 전적 수(경기 수) 많은 순
