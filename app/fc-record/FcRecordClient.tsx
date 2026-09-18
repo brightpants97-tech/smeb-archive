@@ -884,7 +884,7 @@ export default function FcRecordClient() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [opponents, setOpponents] = useState<any[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
-  const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number } | null>(null);
+  const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number; thisMonth?: { win: number; lose: number; draw: number; total: number } } | null>(null);
   const [overallLoading, setOverallLoading] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
 
@@ -1136,12 +1136,25 @@ export default function FcRecordClient() {
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' as const }}>
-                <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
-                <span style={{ fontWeight: 900, color: WIN_BLUE }}>{overall!.win}승</span>
-                <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
-                <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
-                <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 600 }}>(총 {overall!.total}경기)</span>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' as const }}>
+                  <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 700 }}>스맵 통산</span>
+                  <span style={{ fontWeight: 900, color: WIN_BLUE }}>{overall!.win}승</span>
+                  <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
+                  <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
+                  <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 600 }}>(총 {overall!.total}경기)</span>
+                </div>
+                {overall!.thisMonth && overall!.thisMonth.total > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
+                    <span style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800 }}>이번 달</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{overall!.thisMonth.win}승</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{overall!.thisMonth.draw}무</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{overall!.thisMonth.lose}패</span>
+                    <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
+                      · 승률 {Math.round((overall!.thisMonth.win / overall!.thisMonth.total) * 100)}% (총 {overall!.thisMonth.total}경기)
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

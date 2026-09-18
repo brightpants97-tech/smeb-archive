@@ -393,21 +393,36 @@ function judgeOutcome(participant: any): 'win' | 'lose' | 'draw' | 'unknown' {
   return 'unknown';
 }
 
+// 넥슨 matchDate(UTC0)를 KST 기준 'YYYY-MM'으로 변환 - '이번 달' 집계 판단용
+function toKstYearMonth(dateStr: string): string {
+  const d = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
 async function fetchOverallLive() {
-  if (!SME_NICKNAME) return { win: 0, lose: 0, draw: 0, total: 0 };
+  if (!SME_NICKNAME) return { win: 0, lose: 0, draw: 0, total: 0, thisMonth: { win: 0, lose: 0, draw: 0, total: 0 } };
   const meOuid = await getOuid(SME_NICKNAME);
-  if (!meOuid) return { win: 0, lose: 0, draw: 0, total: 0 };
+  if (!meOuid) return { win: 0, lose: 0, draw: 0, total: 0, thisMonth: { win: 0, lose: 0, draw: 0, total: 0 } };
 
   const streamers = await listStreamers();
   const registeredNicknames = new Set(streamers.map(s => s.fcNickname));
+  const nowYm = toKstYearMonth(new Date().toISOString());
 
   const raw = await getRecentMatchesRaw(meOuid); // 이미 기준일 이후, me 소유 전체 (Redis 기반)
   let win = 0, lose = 0, draw = 0;
+  let mWin = 0, mLose = 0, mDraw = 0; // 이번 달(KST 기준)
   for (const m of raw) {
     if (!registeredNicknames.has(m.oppNickname)) continue; // 등록된 스트리머와의 경기만 집계
-    if (m.outcome === 'win') win++; else if (m.outcome === 'lose') lose++; else if (m.outcome === 'draw') draw++;
+    const isThisMonth = toKstYearMonth(m.matchDate) === nowYm;
+    if (m.outcome === 'win') { win++; if (isThisMonth) mWin++; }
+    else if (m.outcome === 'lose') { lose++; if (isThisMonth) mLose++; }
+    else if (m.outcome === 'draw') { draw++; if (isThisMonth) mDraw++; }
   }
-  return { win, lose, draw, total: win + lose + draw };
+  return {
+    win, lose, draw, total: win + lose + draw,
+    thisMonth: { win: mWin, lose: mLose, draw: mDraw, total: mWin + mLose + mDraw },
+  };
 }
 
 // 최근 30경기 - 등록된 스트리머와 붙었던 경기만 (미등록 상대와의 일반 매칭은 제외)
