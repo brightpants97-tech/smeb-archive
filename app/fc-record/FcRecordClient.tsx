@@ -348,7 +348,7 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
           ) : (
             <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
           )}
-          <span style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{o.displayName}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, paddingRight: hasSquad ? '52px' : 0 }}>{o.displayName}</span>
         </div>
 
         {/* 중단: 승/무/패 색깔 원 + 연승/연패 배지 (자리는 항상 확보해서 카드 높이가 흔들리지 않게) */}
@@ -385,12 +385,13 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
           onClick={(e) => { e.stopPropagation(); setShowSquadModal(true); }}
           title="최근 경기 스쿼드 보기"
           style={{
-            position: 'absolute', top: '6px', right: '6px', width: '26px', height: '26px', borderRadius: '50%',
+            position: 'absolute', top: '6px', right: '6px', height: '20px', padding: '0 8px', borderRadius: '100px',
             background: active ? 'rgba(255,255,255,0.9)' : ORANGE, border: 'none',
             boxShadow: active ? '0 1px 4px rgba(0,0,0,0.2)' : `0 2px 6px ${ORANGE}70`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.85rem', padding: 0,
+            display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer',
+            fontFamily: FONT, fontSize: '0.6rem', fontWeight: 900, color: active ? ORANGE : '#fff', whiteSpace: 'nowrap' as const,
           }}
-        >⚽</button>
+        >⚽ 스쿼드</button>
       )}
 
       {/* 마우스를 올렸을 때만 나타나는 '탭 가능함' 안내 */}
