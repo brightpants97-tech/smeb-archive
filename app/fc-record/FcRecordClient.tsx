@@ -385,9 +385,10 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
           onClick={(e) => { e.stopPropagation(); setShowSquadModal(true); }}
           title="최근 경기 스쿼드 보기"
           style={{
-            position: 'absolute', top: '6px', right: '6px', width: '24px', height: '24px', borderRadius: '50%',
-            background: active ? 'rgba(255,255,255,0.25)' : '#fafafa', border: `1px solid ${active ? 'rgba(255,255,255,0.4)' : '#eee'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.8rem', padding: 0,
+            position: 'absolute', top: '6px', right: '6px', width: '26px', height: '26px', borderRadius: '50%',
+            background: active ? 'rgba(255,255,255,0.9)' : ORANGE, border: 'none',
+            boxShadow: active ? '0 1px 4px rgba(0,0,0,0.2)' : `0 2px 6px ${ORANGE}70`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.85rem', padding: 0,
           }}
         >⚽</button>
       )}
@@ -402,14 +403,15 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
         }}>👆 탭해서 검색</span>
       )}
 
-      {/* 스쿼드 모달 - 그리드 정렬이 깨지지 않도록 카드 내부 확장 대신 오버레이로 띄움 */}
+      {/* 스쿼드 모달 - 원래 매치카드가 그려지던 폭(980px 컨테이너)만큼 넉넉하게 잡아야 핏치 위
+          선수 칩들이 겹치지 않음 (예전 640px로는 좁아서 22명이 서로 겹쳐 보였음) */}
       {showSquadModal && (
         <div onClick={() => setShowSquadModal(false)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 998,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            width: '100%', maxWidth: '640px', maxHeight: '85vh', overflowY: 'auto',
+            width: '100%', maxWidth: '920px', maxHeight: '85vh', overflowY: 'auto',
             background: '#fff', borderRadius: '18px', padding: '20px', fontFamily: FONT,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
