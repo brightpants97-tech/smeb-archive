@@ -1158,14 +1158,33 @@ export default function FcRecordClient() {
                   </div>
                 )}
                 {(overall as any).recent15 && (overall as any).recent15.total > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
-                    <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent15.total}경기</span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent15.win}승</span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).recent15.draw}무</span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).recent15.lose}패</span>
-                    <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
-                      · 승률 {Math.round(((overall as any).recent15.win / (overall as any).recent15.total) * 100)}%
-                    </span>
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent15.total}경기</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent15.win}승</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).recent15.draw}무</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).recent15.lose}패</span>
+                      <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
+                        · 승률 {Math.round(((overall as any).recent15.win / (overall as any).recent15.total) * 100)}%
+                      </span>
+                    </div>
+                    {/* 누구랑 붙었는지 한눈에 - 왼쪽부터 시간순(오래된 것→최신), 클릭하면 바로 그 상대로 검색 */}
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
+                      {(overall as any).recent15.matches?.map((m: any, i: number) => {
+                        const c = OUTCOME_COLOR[m.outcome];
+                        return (
+                          <button key={i} onClick={() => search(m.nickname)} title={`${m.displayName} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${formatMatchDate(m.matchDate)}`} style={{
+                            position: 'relative', width: '28px', height: '28px', borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0,
+                          }}>
+                            {m.profileImage ? (
+                              <img src={m.profileImage} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${c}` }} />
+                            ) : (
+                              <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%', background: m.teamColor, border: `2px solid ${c}` }} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
