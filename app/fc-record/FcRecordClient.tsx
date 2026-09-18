@@ -994,9 +994,10 @@ export default function FcRecordClient() {
           @keyframes fc-blob-d { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4%) scale(1.05); } }
           @keyframes fc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes fc-spin { to { transform: rotate(360deg); } }
-          /* 넓은 화면(1440px+)에서만 결과 요약 사이드 패널 노출 - 스크롤 안 해도 핵심 결과가 바로 보이게 */
+          /* 넓은 화면(1680px+)에서만 결과 요약 사이드 패널 노출 - 콘텐츠(980px) 바로 옆에 붙이다보니
+             화면이 너무 좁으면 패널이 화면 밖으로 잘려서, 안전하게 보이는 폭부터만 노출함 */
           .fc-side-summary { display: none; }
-          @media (min-width: 1440px) {
+          @media (min-width: 1680px) {
             .fc-side-summary { display: flex !important; }
           }
         `}</style>
@@ -1013,7 +1014,7 @@ export default function FcRecordClient() {
         const last5 = [...result.matches].slice(0, 5).reverse();
         return (
           <div className="fc-side-summary" style={{
-            position: 'fixed', top: '130px', right: '28px', width: '300px', zIndex: 2,
+            position: 'fixed', top: '130px', left: 'calc(50% + 490px + 24px)', width: '300px', zIndex: 2,
             flexDirection: 'column' as const, gap: '14px', padding: '22px', borderRadius: '20px',
             background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', border: `2px solid ${tone}55`,
             boxShadow: `0 10px 30px ${tone}25`,
