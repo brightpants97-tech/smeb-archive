@@ -1146,12 +1146,25 @@ export default function FcRecordClient() {
                 </div>
                 {overall!.thisMonth && overall!.thisMonth.total > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
-                    <span style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800 }}>이번 달</span>
+                    <span style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800 }}>
+                      이번 달{(overall!.thisMonth as any).rangeLabel ? ` (${(overall!.thisMonth as any).rangeLabel})` : ''}
+                    </span>
                     <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{overall!.thisMonth.win}승</span>
                     <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{overall!.thisMonth.draw}무</span>
                     <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{overall!.thisMonth.lose}패</span>
                     <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
                       · 승률 {Math.round((overall!.thisMonth.win / overall!.thisMonth.total) * 100)}% (총 {overall!.thisMonth.total}경기)
+                    </span>
+                  </div>
+                )}
+                {(overall as any).recent15 && (overall as any).recent15.total > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
+                    <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent15.total}경기</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent15.win}승</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).recent15.draw}무</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).recent15.lose}패</span>
+                    <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
+                      · 승률 {Math.round(((overall as any).recent15.win / (overall as any).recent15.total) * 100)}%
                     </span>
                   </div>
                 )}

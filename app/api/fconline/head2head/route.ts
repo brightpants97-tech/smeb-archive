@@ -393,35 +393,52 @@ function judgeOutcome(participant: any): 'win' | 'lose' | 'draw' | 'unknown' {
   return 'unknown';
 }
 
-// 넥슨 matchDate(UTC0)를 KST 기준 'YYYY-MM'으로 변환 - '이번 달' 집계 판단용
-function toKstYearMonth(dateStr: string): string {
+// 넥슨 matchDate는 UTC0라 KST로 보정해서 다뤄야 '이번 달' 경계가 정확함
+function toKstDate(dateStr: string): Date {
   const d = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
-  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-  return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, '0')}`;
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000); // 이 시점부터는 getUTC*를 쓰면 KST 값이 나옴
+}
+function formatKstLabel(d: Date): string {
+  return `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`;
 }
 
 async function fetchOverallLive() {
-  if (!SME_NICKNAME) return { win: 0, lose: 0, draw: 0, total: 0, thisMonth: { win: 0, lose: 0, draw: 0, total: 0 } };
+  const empty = { win: 0, lose: 0, draw: 0, total: 0 };
+  if (!SME_NICKNAME) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent15: { ...empty } };
   const meOuid = await getOuid(SME_NICKNAME);
-  if (!meOuid) return { win: 0, lose: 0, draw: 0, total: 0, thisMonth: { win: 0, lose: 0, draw: 0, total: 0 } };
+  if (!meOuid) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent15: { ...empty } };
 
   const streamers = await listStreamers();
   const registeredNicknames = new Set(streamers.map(s => s.fcNickname));
-  const nowYm = toKstYearMonth(new Date().toISOString());
+  const nowKst = toKstDate(new Date().toISOString());
+  const nowYm = `${nowKst.getUTCFullYear()}-${String(nowKst.getUTCMonth() + 1).padStart(2, '0')}`;
+  const monthStartKst = new Date(Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), 1));
+  const rangeLabel = `${formatKstLabel(monthStartKst)} ~ ${formatKstLabel(nowKst)}`;
 
   const raw = await getRecentMatchesRaw(meOuid); // 이미 기준일 이후, me 소유 전체 (Redis 기반)
+  const registeredMatches = raw.filter(m => registeredNicknames.has(m.oppNickname));
+
   let win = 0, lose = 0, draw = 0;
   let mWin = 0, mLose = 0, mDraw = 0; // 이번 달(KST 기준)
-  for (const m of raw) {
-    if (!registeredNicknames.has(m.oppNickname)) continue; // 등록된 스트리머와의 경기만 집계
-    const isThisMonth = toKstYearMonth(m.matchDate) === nowYm;
+  for (const m of registeredMatches) {
+    const isThisMonth = toKstDate(m.matchDate).getTime() >= monthStartKst.getTime() && `${toKstDate(m.matchDate).getUTCFullYear()}-${String(toKstDate(m.matchDate).getUTCMonth() + 1).padStart(2, '0')}` === nowYm;
     if (m.outcome === 'win') { win++; if (isThisMonth) mWin++; }
     else if (m.outcome === 'lose') { lose++; if (isThisMonth) mLose++; }
     else if (m.outcome === 'draw') { draw++; if (isThisMonth) mDraw++; }
   }
+
+  // 최근 15경기 (등록된 스트리머와의 경기만, 날짜 최신순)
+  const sortedDesc = [...registeredMatches].sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
+  const last15 = sortedDesc.slice(0, 15);
+  let r15Win = 0, r15Lose = 0, r15Draw = 0;
+  for (const m of last15) {
+    if (m.outcome === 'win') r15Win++; else if (m.outcome === 'lose') r15Lose++; else if (m.outcome === 'draw') r15Draw++;
+  }
+
   return {
     win, lose, draw, total: win + lose + draw,
-    thisMonth: { win: mWin, lose: mLose, draw: mDraw, total: mWin + mLose + mDraw },
+    thisMonth: { win: mWin, lose: mLose, draw: mDraw, total: mWin + mLose + mDraw, rangeLabel },
+    recent15: { win: r15Win, lose: r15Lose, draw: r15Draw, total: last15.length },
   };
 }
 
