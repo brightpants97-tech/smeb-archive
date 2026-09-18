@@ -235,8 +235,8 @@ function PlayerDetailModal({ p, onClose }: { p: SquadPlayer; onClose: () => void
         ]} last />
 
         <button onClick={() => setShowZero(z => !z)} style={{
-          width: '100%', marginTop: '6px', padding: '6px', borderRadius: '8px', border: 'none',
-          background: 'none', color: '#bbb', fontSize: '0.66rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+          width: '100%', marginTop: '8px', padding: '8px', borderRadius: '8px', border: '1px solid #eee',
+          background: '#fafafa', color: '#777', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', fontFamily: FONT,
         }}>{showZero ? '기록 없는 항목 숨기기 ▴' : '기록 없는 항목까지 모두 보기 ▾'}</button>
       </div>
     </div>
@@ -348,7 +348,7 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
           ) : (
             <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
           )}
-          <span style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, paddingRight: hasSquad ? '52px' : 0 }}>{o.displayName}</span>
+          <span title={o.displayName} style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, paddingRight: hasSquad ? '52px' : 0 }}>{o.displayName}</span>
         </div>
 
         {/* 중단: 승/무/패 색깔 원 + 연승/연패 배지 (자리는 항상 확보해서 카드 높이가 흔들리지 않게) */}
@@ -385,7 +385,7 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
           onClick={(e) => { e.stopPropagation(); setShowSquadModal(true); }}
           title="최근 경기 스쿼드 보기"
           style={{
-            position: 'absolute', top: '6px', right: '6px', height: '20px', padding: '0 8px', borderRadius: '100px',
+            position: 'absolute', top: '6px', right: '6px', height: '28px', padding: '0 10px', borderRadius: '100px',
             background: active ? 'rgba(255,255,255,0.9)' : ORANGE, border: 'none',
             boxShadow: active ? '0 1px 4px rgba(0,0,0,0.2)' : `0 2px 6px ${ORANGE}70`,
             display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer',
@@ -522,13 +522,11 @@ function MatchCard({ match, index = 0 }: { match: MatchRow; index?: number }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.88rem',
             }}>{OUTCOME_LABEL[match.outcome]}</span>
             <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0a0a0a', flex: 1 }}>{match.meGoal ?? '-'} : {match.oppGoal ?? '-'}</span>
+            <span style={{ fontSize: '0.76rem', color: '#a8a8a8', fontWeight: 600, flexShrink: 0 }}>{formatMatchDate(match.matchDate)}</span>
             <span style={{ color: '#ccc', fontSize: '0.85rem', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
           </button>
           {open && (
             <div style={{ padding: '0 18px 22px' }}>
-              <p style={{ fontSize: '0.74rem', color: '#a8a8a8', fontWeight: 600, margin: '0 0 14px', borderTop: '1px solid #f2f2f2', paddingTop: '14px' }}>
-                {formatMatchDate(match.matchDate)}
-              </p>
               <MatchPitch meSquad={match.meSquad} oppSquad={match.oppSquad} />
             </div>
           )}
@@ -662,8 +660,8 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
           ]} last />
 
           <button onClick={() => setShowZero(z => !z)} style={{
-            width: '100%', marginTop: '6px', padding: '6px', borderRadius: '8px', border: 'none',
-            background: 'none', color: '#bbb', fontSize: '0.66rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+            width: '100%', marginTop: '8px', padding: '8px', borderRadius: '8px', border: '1px solid #eee',
+            background: '#fafafa', color: '#777', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', fontFamily: FONT,
           }}>{showZero ? '기록 없는 항목 숨기기 ▴' : '기록 없는 항목까지 모두 보기 ▾'}</button>
         </div>
       )}
@@ -863,7 +861,6 @@ export default function FcRecordClient() {
   const resultRef = useRef<Result | null>(null);
   useEffect(() => { resultRef.current = result; }, [result]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
   const [showAllStats, setShowAllStats] = useState(false);
   useEffect(() => {
     // 검색 결과가 새로 뜨면 자동으로 그 위치까지 스크롤 - 직접 내려서 찾아야 하는 불편함 해소
@@ -994,6 +991,12 @@ export default function FcRecordClient() {
           @keyframes fc-blob-d { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4%) scale(1.05); } }
           @keyframes fc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes fc-spin { to { transform: rotate(360deg); } }
+          /* 3) 키보드(Tab)로 이동할 때 지금 어디에 포커스가 있는지 명확히 보이게.
+             마우스 클릭 시엔 안 보이고, 키보드 탐색일 때만 보이도록 :focus-visible만 사용 */
+          main button:focus-visible, main input:focus-visible, main a:focus-visible {
+            outline: 2.5px solid ${ORANGE};
+            outline-offset: 2px;
+          }
           /* 넓은 화면(1680px+)에서만 결과 요약 사이드 패널 노출 - 콘텐츠(980px) 바로 옆에 붙이다보니
              화면이 너무 좁으면 패널이 화면 밖으로 잘려서, 안전하게 보이는 폭부터만 노출함 */
           .fc-side-summary { display: none; }
@@ -1032,7 +1035,7 @@ export default function FcRecordClient() {
                 )}
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: '0.7rem', color: '#bbb', fontWeight: 800, letterSpacing: '0.04em' }}>스맵 VS</p>
-                  <p style={{ margin: '1px 0 0', fontSize: '1.05rem', color: '#222', fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{result.oppDisplay.name}</p>
+                  <p title={result.oppDisplay.name} style={{ margin: '1px 0 0', fontSize: '1.05rem', color: '#222', fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{result.oppDisplay.name}</p>
                 </div>
               </div>
 
@@ -1094,32 +1097,19 @@ export default function FcRecordClient() {
 
         <div style={{ marginBottom: '28px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', color: ORANGE, marginBottom: '8px' }}>FC ONLINE HEAD-TO-HEAD</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111', margin: 0, lineHeight: 1.15 }}>
-              상대 스트리머와의 전적
-            </h1>
-            <button onClick={() => setShowHelp(h => !h)} title="용어 설명 보기" style={{
-              width: '26px', height: '26px', borderRadius: '50%', border: '1.5px solid #ddd', background: showHelp ? '#f5f5f5' : '#fff',
-              color: '#999', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', flexShrink: 0, fontFamily: FONT,
-            }}>?</button>
-          </div>
+          <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111', margin: 0, lineHeight: 1.15 }}>
+            상대 스트리머와의 전적
+          </h1>
           <p style={{ fontSize: '0.88rem', color: '#999', marginTop: '10px', lineHeight: 1.6 }}>
             상대 스트리머의 FC 온라인 닉네임을 입력하면, 스맵과 맞붙었던 경기 전적과 그날 서로 사용한 스쿼드를 보여줘요.
           </p>
+          {/* 기준일 안내는 페이지에서 여기 한 곳에만 - 통산전적 옆에도 중복으로 있던 걸 통합하고, 시인성 위해 확대 */}
           <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '12px', padding: '6px 12px', borderRadius: '100px',
-            background: `${ORANGE}15`, border: `1px solid ${ORANGE}40`, color: ORANGE, fontSize: '0.78rem', fontWeight: 800,
+            display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '12px', padding: '8px 16px', borderRadius: '100px',
+            background: ORANGE, color: '#fff', fontSize: '0.85rem', fontWeight: 900, boxShadow: `0 2px 8px ${ORANGE}50`,
           }}>
-            <Icon name="calendar" size={12} color={ORANGE} /> 2026년 8월 10일부터의 전적만 집계돼요
+            <Icon name="calendar" size={13} color="#fff" /> 2026년 8월 10일부터의 전적만 집계돼요
           </span>
-          {/* 7) 처음 오는 사람도 핵심 용어를 바로 이해할 수 있게 짧은 도움말 */}
-          {showHelp && (
-            <div style={{ marginTop: '14px', padding: '14px 16px', borderRadius: '12px', background: '#fafafa', border: '1px solid #eee', fontSize: '0.78rem', color: '#666', lineHeight: 1.8 }}>
-              <p style={{ margin: '0 0 4px' }}>· 기록은 <b style={{ color: '#333' }}>2026년 8월 10일 이후</b> 경기만 집계돼요.</p>
-              <p style={{ margin: '0 0 4px' }}>· <b style={{ color: ORANGE }}>⭐ BEST</b> / <b style={{ color: RED }}>🔻 WORST</b>는 <b>가장 최근 경기에 뛴 선수들</b> 중에서만 뽑아요.</p>
-              <p style={{ margin: 0 }}>· 선수 스탯의 "이전에 사용됐던 선수"는 예전엔 뛰었지만 최근 경기엔 없었던 선수예요.</p>
-            </div>
-          )}
         </div>
 
         {(overallLoading || (overall && overall.total > 0)) && (
@@ -1146,12 +1136,6 @@ export default function FcRecordClient() {
                 <span style={{ fontWeight: 900, color: GRAY }}>{overall!.draw}무</span>
                 <span style={{ fontWeight: 900, color: RED }}>{overall!.lose}패</span>
                 <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 600 }}>(총 {overall!.total}경기)</span>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '100px',
-                  background: `${ORANGE}15`, border: `1px solid ${ORANGE}40`, color: ORANGE, fontSize: '0.74rem', fontWeight: 800,
-                }}>
-                  <Icon name="calendar" size={11} color={ORANGE} /> 2026.8.10부터 집계
-                </span>
               </div>
             )}
           </div>
@@ -1179,7 +1163,7 @@ export default function FcRecordClient() {
                     <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
                   )}
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.displayName}</p>
+                    <p title={o.displayName} style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.displayName}</p>
                     <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#999' }}>
                       총 {o.total}경기 · <span style={{ color: WIN_BLUE, fontWeight: 700 }}>{o.win}승</span> <span style={{ color: RED, fontWeight: 700 }}>{o.lose}패</span>
                     </p>
@@ -1209,6 +1193,16 @@ export default function FcRecordClient() {
             fontFamily: FONT, whiteSpace: 'nowrap' as const,
           }}>{loading ? '조회 중...' : '전적 조회'}</button>
         </div>
+
+        {/* 로딩 중엔 아무것도 안 보이던 걸, 실제 카드 그리드와 같은 모양의 스켈레톤으로 대체 */}
+        {opponentsLoading && (
+          <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0' }}>
+            <Skel w="160px" h="30px" r={100} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 240px))', gap: '10px', marginTop: '14px' }}>
+              {Array.from({ length: 8 }).map((_, i) => <Skel key={i} w="100%" h="92px" r={12} />)}
+            </div>
+          </div>
+        )}
 
         {/* 액션성 섹션: 클릭하면 바로 검색되는 상대 선택 - 주황 틴트로 "탭 가능함"을 명확히 표시 */}
         {!opponentsLoading && opponents && opponents.length > 0 && (
