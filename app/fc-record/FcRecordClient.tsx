@@ -1113,7 +1113,7 @@ export default function FcRecordClient() {
         </div>
 
         {(overallLoading || (overall && overall.total > 0)) && (
-          <div style={{ padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '24px', minHeight: '20px' }}>
+          <div style={{ padding: '16px 20px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '32px', minHeight: '20px' }}>
             {overallLoading ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -1138,39 +1138,6 @@ export default function FcRecordClient() {
                 <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 600 }}>(총 {overall!.total}경기)</span>
               </div>
             )}
-          </div>
-        )}
-
-        {!opponentsLoading && opponents && opponents.length > 0 && (
-          <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontSize: '0.72rem', color: '#999', fontWeight: 800, marginBottom: '10px' }}>역대 최다 격돌 상대 TOP 5</p>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
-              {opponents.slice(0, 5).map((o, i) => (
-                <button key={o.nickname} onClick={() => search(o.nickname)} style={{
-                  flex: '1 1 200px', minWidth: '180px', display: 'flex', alignItems: 'center', gap: '10px',
-                  padding: '12px 14px', borderRadius: '14px', border: '1px solid #eee', background: '#fff',
-                  cursor: 'pointer', fontFamily: FONT, textAlign: 'left', position: 'relative',
-                }}>
-                  <span style={{
-                    position: 'absolute', top: '-6px', left: '10px', width: '20px', height: '20px', borderRadius: '50%',
-                    background: i === 0 ? '#F2C94C' : i === 1 ? '#BDBDBD' : i === 2 ? '#D08A4C' : '#ccc', color: '#fff',
-                    fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                  }}>{i + 1}</span>
-                  {o.profileImage ? (
-                    <img src={o.profileImage} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${o.teamColor}`, flexShrink: 0 }} />
-                  ) : (
-                    <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
-                  )}
-                  <div style={{ minWidth: 0 }}>
-                    <p title={o.displayName} style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: '#111', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.displayName}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#999' }}>
-                      총 {o.total}경기 · <span style={{ color: WIN_BLUE, fontWeight: 700 }}>{o.win}승</span> <span style={{ color: RED, fontWeight: 700 }}>{o.lose}패</span>
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
         )}
 
