@@ -1003,6 +1003,12 @@ export default function FcRecordClient() {
           @media (min-width: 1680px) {
             .fc-side-summary { display: flex !important; }
           }
+          /* 상대목록 카드 그리드 - 좁은 화면은 2열, 640px부터 4열로 고정해서 좌우 빈 공간 없이 꽉 채움
+             (auto-fill+고정폭 대신 1fr로 늘어나게 해서 줄 끝에 남는 여백이 생기지 않게 함) */
+          .fc-opp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          @media (min-width: 640px) {
+            .fc-opp-grid { grid-template-columns: repeat(4, 1fr); }
+          }
         `}</style>
       </div>
 
@@ -1165,7 +1171,7 @@ export default function FcRecordClient() {
         {opponentsLoading && (
           <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: '#fafafa', border: '1px solid #f0f0f0' }}>
             <Skel w="160px" h="30px" r={100} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 240px))', gap: '10px', marginTop: '14px' }}>
+            <div className="fc-opp-grid" style={{ marginTop: '14px' }}>
               {Array.from({ length: 8 }).map((_, i) => <Skel key={i} w="100%" h="92px" r={12} />)}
             </div>
           </div>
@@ -1177,7 +1183,7 @@ export default function FcRecordClient() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginBottom: '14px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50` }}>
               <Icon name="target" size={15} color="#fff" /> <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: 900 }}>탭하면 바로 검색돼요</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 240px))', gap: '10px' }}>
+            <div className="fc-opp-grid">
               {opponents.map((o, i) => (
                 <OpponentCard key={o.nickname} o={o} rank={i + 1} active={nickname === o.nickname} loading={loading} isSearching={loading && nickname === o.nickname} onSearch={() => search(o.nickname)} />
               ))}
