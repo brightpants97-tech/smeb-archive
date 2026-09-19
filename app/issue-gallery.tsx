@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface IssueImage {
   dataUrl: string;
@@ -28,8 +29,42 @@ function issueWidthPercent(img: IssueImage, count: number): number {
 
 export default function IssueGallery({ images }: { images: IssueImage[] }) {
   const [zoomIdx, setZoomIdx] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // 확대 모드일 때는 배경 스크롤을 막아서 뷰포트 중앙에 그대로 고정되도록 함
+  useEffect(() => {
+    if (zoomIdx === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, [zoomIdx]);
+
   if (images.length === 0) return null;
   const zoomed = zoomIdx !== null ? images[zoomIdx] : null;
+
+  const lightbox = zoomed && (
+    <div
+      className="issue-lightbox"
+      onClick={() => setZoomIdx(null)}
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        type="button"
+        className="issue-lightbox-close"
+        onClick={() => setZoomIdx(null)}
+        aria-label="닫기"
+      >✕</button>
+      <img
+        src={zoomed.dataUrl}
+        alt={zoomed.caption || '최근 이슈'}
+        className="issue-lightbox-img"
+        onClick={e => e.stopPropagation()}
+      />
+    </div>
+  );
 
   return (
     <>
@@ -55,27 +90,7 @@ export default function IssueGallery({ images }: { images: IssueImage[] }) {
         ))}
       </div>
 
-      {zoomed && (
-        <div
-          className="issue-lightbox"
-          onClick={() => setZoomIdx(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            type="button"
-            className="issue-lightbox-close"
-            onClick={() => setZoomIdx(null)}
-            aria-label="닫기"
-          >✕</button>
-          <img
-            src={zoomed.dataUrl}
-            alt={zoomed.caption || '최근 이슈'}
-            className="issue-lightbox-img"
-            onClick={e => e.stopPropagation()}
-          />
-        </div>
-      )}
+      {mounted && zoomed && createPortal(lightbox, document.body)}
     </>
   );
 }
