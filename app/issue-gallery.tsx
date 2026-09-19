@@ -8,6 +8,7 @@ interface IssueImage {
   scale?: number;
   position?: string;
   fit?: 'cover' | 'contain';
+  link?: string;
   caption?: string;
 }
 
@@ -75,8 +76,14 @@ export default function IssueGallery({ images }: { images: IssueImage[] }) {
             type="button"
             className={`issue-item size-${effectiveIssueSize(img, images.length)}`}
             style={{ flex: `0 1 ${issueWidthPercent(img, images.length)}%` }}
-            onClick={() => setZoomIdx(idx)}
-            aria-label="이미지 확대"
+            onClick={() => {
+              if (img.link) {
+                window.open(img.link, '_blank', 'noopener,noreferrer');
+              } else {
+                setZoomIdx(idx);
+              }
+            }}
+            aria-label={img.link ? '이슈 링크로 이동' : '이미지 확대'}
           >
             <div className={`issue-item-frame${img.fit === 'contain' ? ' fit-contain' : ''}`}>
               <img

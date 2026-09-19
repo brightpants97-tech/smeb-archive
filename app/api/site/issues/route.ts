@@ -44,6 +44,12 @@ export async function POST(request: Request) {
     if (img.fit !== 'contain') {
       img.fit = 'cover';
     }
+    if (typeof img.link === 'string') {
+      const trimmed = img.link.trim();
+      img.link = /^https?:\/\/.+/.test(trimmed) ? trimmed : undefined;
+    } else {
+      img.link = undefined;
+    }
   }
   try {
     await saveSiteIssues(images);

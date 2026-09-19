@@ -10,6 +10,7 @@ interface IssueImage {
   scale?: number;
   position?: string;
   fit?: 'cover' | 'contain';
+  link?: string;
   caption?: string;
 }
 
@@ -179,6 +180,10 @@ export default function IssuesAdminClient() {
     setImages(prev => prev.map((img, i) => (i === idx ? { ...img, fit } : img)));
   };
 
+  const setLink = (idx: number, link: string) => {
+    setImages(prev => prev.map((img, i) => (i === idx ? { ...img, link } : img)));
+  };
+
   const moveImage = (idx: number, dir: -1 | 1) => {
     setImages(prev => {
       const target = idx + dir;
@@ -343,6 +348,16 @@ export default function IssuesAdminClient() {
                         padding: '6px 12px', borderRadius: '8px', border: '1px solid #f0c0c0',
                         background: '#fff5f5', color: '#e05252', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
                       }}>삭제</button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label style={{ fontSize: '0.72rem', color: '#999', flexShrink: 0 }}>링크(선택)</label>
+                      <input
+                        type="text"
+                        value={img.link || ''}
+                        onChange={e => setLink(idx, e.target.value)}
+                        placeholder="https://... (입력하면 클릭 시 이동, 비우면 확대)"
+                        style={{ flex: 1, padding: '7px 9px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.8rem' }}
+                      />
                     </div>
                   </div>
                 </div>
