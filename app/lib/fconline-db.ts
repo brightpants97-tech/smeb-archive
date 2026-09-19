@@ -132,6 +132,7 @@ export interface IssueImage {
   size: 'auto' | 'large' | 'medium' | 'small'; // 기본 크기 (장수에 따른 자동 배치 기준)
   scale?: number; // 50~150(%), 기본 크기에 추가로 곱해지는 배율. 관리자가 직접 스케일 조절
   position?: string; // CSS object-position 값 (예: 'center', 'top left'). 이미지가 잘릴 때 보여줄 위치
+  fit?: 'cover' | 'contain'; // cover: 꽉 채우고 잘림 허용(기본) / contain: 여백을 채워서 전체 내용을 다 보여줌
   caption?: string;
 }
 

@@ -41,6 +41,9 @@ export async function POST(request: Request) {
     if (typeof img.position !== 'string' || !ALLOWED_POSITIONS.includes(img.position)) {
       img.position = 'center';
     }
+    if (img.fit !== 'contain') {
+      img.fit = 'cover';
+    }
   }
   try {
     await saveSiteIssues(images);

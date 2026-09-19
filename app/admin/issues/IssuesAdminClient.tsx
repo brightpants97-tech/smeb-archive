@@ -9,6 +9,7 @@ interface IssueImage {
   size: 'auto' | 'large' | 'medium' | 'small';
   scale?: number;
   position?: string;
+  fit?: 'cover' | 'contain';
   caption?: string;
 }
 
@@ -124,7 +125,7 @@ export default function IssuesAdminClient() {
     const toAdd = Array.from(files).slice(0, remaining);
     try {
       const compressed = await Promise.all(toAdd.map(f => compressImage(f)));
-      setImages(prev => [...prev, ...compressed.map(dataUrl => ({ dataUrl, size: 'auto' as const, scale: 100, position: 'center' }))]);
+      setImages(prev => [...prev, ...compressed.map(dataUrl => ({ dataUrl, size: 'auto' as const, scale: 100, position: 'center', fit: 'cover' as const }))]);
     } catch (e: any) {
       setError(e?.message || '이미지 처리 중 문제가 생겼어요.');
     }
@@ -145,6 +146,10 @@ export default function IssuesAdminClient() {
 
   const setPosition = (idx: number, position: string) => {
     setImages(prev => prev.map((img, i) => (i === idx ? { ...img, position } : img)));
+  };
+
+  const setFit = (idx: number, fit: IssueImage['fit']) => {
+    setImages(prev => prev.map((img, i) => (i === idx ? { ...img, fit } : img)));
   };
 
   const moveImage = (idx: number, dir: -1 | 1) => {
@@ -222,7 +227,8 @@ export default function IssuesAdminClient() {
         <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '10px 0 6px', color: '#111' }}>최근 이슈 관리</h1>
         <p style={{ fontSize: '0.82rem', color: '#999', marginBottom: '24px' }}>
           메인페이지 [최근 이슈] 섹션에 표시할 이미지를 최대 3장까지 등록해요.
-          1장이면 크게, 2장이면 중간, 3장이면 작게 자동으로 배치되고, 이미지별로 기본 크기·스케일(50~150%)·잘리는 위치·순서를 직접 조절할 수 있어요.
+          1장이면 크게, 2장이면 중간, 3장이면 작게 자동으로 배치되고, 이미지별로 기본 크기·스케일(50~150%)·순서를 직접 조절할 수 있어요.
+          "전체 보기"를 선택하면 잘리는 부분 없이 사진 전체가 여백과 함께 보여요.
         </p>
 
         {loading ? (
@@ -232,11 +238,17 @@ export default function IssuesAdminClient() {
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '12px', marginBottom: '20px' }}>
               {images.map((img, idx) => (
                 <div key={idx} style={{ display: 'flex', gap: '14px', padding: '14px', borderRadius: '12px', border: '1px solid #eee' }}>
-                  <img
-                    src={img.dataUrl}
-                    alt=""
-                    style={{ width: '110px', height: '78px', objectFit: 'cover', objectPosition: img.position || 'center', borderRadius: '8px', flexShrink: 0, border: '1px solid #eee' }}
-                  />
+                  <div style={{
+                    width: '110px', height: '78px', borderRadius: '8px', flexShrink: 0, border: '1px solid #eee', overflow: 'hidden',
+                    background: img.fit === 'contain' ? '#f5f5f5' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <img
+                      src={img.dataUrl}
+                      alt=""
+                      style={{ width: '100%', height: '100%', objectFit: img.fit === 'contain' ? 'contain' : 'cover', objectPosition: img.position || 'center' }}
+                    />
+                  </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: '10px', minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
                       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
@@ -252,10 +264,22 @@ export default function IssuesAdminClient() {
                         </select>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+                        <label style={{ fontSize: '0.72rem', color: '#999' }}>표시 방식</label>
+                        <select
+                          value={img.fit === 'contain' ? 'contain' : 'cover'}
+                          onChange={e => setFit(idx, e.target.value as IssueImage['fit'])}
+                          style={{ padding: '7px 9px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.82rem' }}
+                        >
+                          <option value="cover">꽉 채우기(크롭)</option>
+                          <option value="contain">전체 보기(레터박스)</option>
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px', opacity: img.fit === 'contain' ? 0.4 : 1 }}>
                         <label style={{ fontSize: '0.72rem', color: '#999' }}>사진 속 위치(크롭)</label>
                         <select
                           value={img.position || 'center'}
                           onChange={e => setPosition(idx, e.target.value)}
+                          disabled={img.fit === 'contain'}
                           style={{ padding: '7px 9px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.82rem' }}
                         >
                           {POSITION_OPTIONS.map(p => (

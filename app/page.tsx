@@ -246,6 +246,7 @@ export default async function Home() {
           box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
         }
         [data-theme="dark"] .issue-item-frame { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+        .issue-item-frame.fit-contain { background: var(--bg-deeper); }
         .issue-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
         .issue-item.size-large { aspect-ratio: 16 / 7; }
         .issue-item.size-medium { aspect-ratio: 16 / 10; }
@@ -400,8 +401,13 @@ export default async function Home() {
                     className={`issue-item size-${effectiveIssueSize(img, issueImages.length)}`}
                     style={{ flex: `0 1 ${issueWidthPercent(img, issueImages.length)}%` }}
                   >
-                    <div className="issue-item-frame">
-                      <img src={img.dataUrl} alt={img.caption || '최근 이슈'} loading="lazy" style={{ objectPosition: img.position || 'center' }} />
+                    <div className={`issue-item-frame${img.fit === 'contain' ? ' fit-contain' : ''}`}>
+                      <img
+                        src={img.dataUrl}
+                        alt={img.caption || '최근 이슈'}
+                        loading="lazy"
+                        style={{ objectFit: img.fit === 'contain' ? 'contain' : 'cover', objectPosition: img.position || 'center' }}
+                      />
                     </div>
                   </div>
                 ))}
