@@ -7,6 +7,8 @@ const ORANGE = '#EB701A';
 interface IssueImage {
   dataUrl: string;
   size: 'auto' | 'large' | 'medium' | 'small';
+  scale?: number;
+  position?: string;
   caption?: string;
 }
 
@@ -16,6 +18,18 @@ const SIZE_LABEL: Record<IssueImage['size'], string> = {
   medium: '중간',
   small: '작게',
 };
+
+const POSITION_OPTIONS: { value: string; label: string }[] = [
+  { value: 'top left', label: '↖ 좌상단' },
+  { value: 'top', label: '↑ 상단' },
+  { value: 'top right', label: '↗ 우상단' },
+  { value: 'left', label: '← 좌측' },
+  { value: 'center', label: '● 중앙' },
+  { value: 'right', label: '→ 우측' },
+  { value: 'bottom left', label: '↙ 좌하단' },
+  { value: 'bottom', label: '↓ 하단' },
+  { value: 'bottom right', label: '↘ 우하단' },
+];
 
 function compressImage(file: File, maxWidth = 1400, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -110,7 +124,7 @@ export default function IssuesAdminClient() {
     const toAdd = Array.from(files).slice(0, remaining);
     try {
       const compressed = await Promise.all(toAdd.map(f => compressImage(f)));
-      setImages(prev => [...prev, ...compressed.map(dataUrl => ({ dataUrl, size: 'auto' as const }))]);
+      setImages(prev => [...prev, ...compressed.map(dataUrl => ({ dataUrl, size: 'auto' as const, scale: 100, position: 'center' }))]);
     } catch (e: any) {
       setError(e?.message || '이미지 처리 중 문제가 생겼어요.');
     }
@@ -123,6 +137,24 @@ export default function IssuesAdminClient() {
 
   const setSize = (idx: number, size: IssueImage['size']) => {
     setImages(prev => prev.map((img, i) => (i === idx ? { ...img, size } : img)));
+  };
+
+  const setScale = (idx: number, scale: number) => {
+    setImages(prev => prev.map((img, i) => (i === idx ? { ...img, scale } : img)));
+  };
+
+  const setPosition = (idx: number, position: string) => {
+    setImages(prev => prev.map((img, i) => (i === idx ? { ...img, position } : img)));
+  };
+
+  const moveImage = (idx: number, dir: -1 | 1) => {
+    setImages(prev => {
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
   };
 
   const save = async () => {
@@ -190,7 +222,7 @@ export default function IssuesAdminClient() {
         <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '10px 0 6px', color: '#111' }}>최근 이슈 관리</h1>
         <p style={{ fontSize: '0.82rem', color: '#999', marginBottom: '24px' }}>
           메인페이지 [최근 이슈] 섹션에 표시할 이미지를 최대 3장까지 등록해요.
-          1장이면 크게, 2장이면 중간, 3장이면 작게 자동으로 배치되고, 이미지별로 크기를 직접 지정할 수도 있어요.
+          1장이면 크게, 2장이면 중간, 3장이면 작게 자동으로 배치되고, 이미지별로 기본 크기·스케일(50~150%)·잘리는 위치·순서를 직접 조절할 수 있어요.
         </p>
 
         {loading ? (
@@ -199,24 +231,69 @@ export default function IssuesAdminClient() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '12px', marginBottom: '20px' }}>
               {images.map((img, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', borderRadius: '12px', border: '1px solid #eee' }}>
-                  <img src={img.dataUrl} alt="" style={{ width: '96px', height: '64px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0, border: '1px solid #eee' }} />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: '6px' }}>
-                    <label style={{ fontSize: '0.74rem', color: '#999' }}>표시 크기</label>
-                    <select
-                      value={img.size}
-                      onChange={e => setSize(idx, e.target.value as IssueImage['size'])}
-                      style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.84rem', width: 'fit-content' }}
-                    >
-                      {(Object.keys(SIZE_LABEL) as IssueImage['size'][]).map(s => (
-                        <option key={s} value={s}>{SIZE_LABEL[s]}</option>
-                      ))}
-                    </select>
+                <div key={idx} style={{ display: 'flex', gap: '14px', padding: '14px', borderRadius: '12px', border: '1px solid #eee' }}>
+                  <img
+                    src={img.dataUrl}
+                    alt=""
+                    style={{ width: '110px', height: '78px', objectFit: 'cover', objectPosition: img.position || 'center', borderRadius: '8px', flexShrink: 0, border: '1px solid #eee' }}
+                  />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: '10px', minWidth: 0 }}>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+                        <label style={{ fontSize: '0.72rem', color: '#999' }}>기본 크기</label>
+                        <select
+                          value={img.size}
+                          onChange={e => setSize(idx, e.target.value as IssueImage['size'])}
+                          style={{ padding: '7px 9px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.82rem' }}
+                        >
+                          {(Object.keys(SIZE_LABEL) as IssueImage['size'][]).map(s => (
+                            <option key={s} value={s}>{SIZE_LABEL[s]}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+                        <label style={{ fontSize: '0.72rem', color: '#999' }}>사진 속 위치(크롭)</label>
+                        <select
+                          value={img.position || 'center'}
+                          onChange={e => setPosition(idx, e.target.value)}
+                          style={{ padding: '7px 9px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.82rem' }}
+                        >
+                          {POSITION_OPTIONS.map(p => (
+                            <option key={p.value} value={p.value}>{p.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+                        <label style={{ fontSize: '0.72rem', color: '#999' }}>순서</label>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button onClick={() => moveImage(idx, -1)} disabled={idx === 0} style={{
+                            padding: '7px 10px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff',
+                            fontSize: '0.82rem', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.4 : 1,
+                          }}>◀</button>
+                          <button onClick={() => moveImage(idx, 1)} disabled={idx === images.length - 1} style={{
+                            padding: '7px 10px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff',
+                            fontSize: '0.82rem', cursor: idx === images.length - 1 ? 'default' : 'pointer', opacity: idx === images.length - 1 ? 0.4 : 1,
+                          }}>▶</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <label style={{ fontSize: '0.72rem', color: '#999', flexShrink: 0 }}>스케일 {img.scale ?? 100}%</label>
+                      <input
+                        type="range"
+                        min={50}
+                        max={150}
+                        step={5}
+                        value={img.scale ?? 100}
+                        onChange={e => setScale(idx, Number(e.target.value))}
+                        style={{ flex: 1 }}
+                      />
+                      <button onClick={() => removeImage(idx)} style={{
+                        padding: '6px 12px', borderRadius: '8px', border: '1px solid #f0c0c0',
+                        background: '#fff5f5', color: '#e05252', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                      }}>삭제</button>
+                    </div>
                   </div>
-                  <button onClick={() => removeImage(idx)} style={{
-                    padding: '8px 14px', borderRadius: '8px', border: '1px solid #f0c0c0',
-                    background: '#fff5f5', color: '#e05252', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
-                  }}>삭제</button>
                 </div>
               ))}
               {images.length === 0 && (

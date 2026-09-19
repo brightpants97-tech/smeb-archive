@@ -14,6 +14,14 @@ function effectiveIssueSize(img: IssueImage, count: number): 'large' | 'medium' 
   return 'small';
 }
 
+// 기본 크기(large/medium/small)에 관리자가 지정한 스케일(50~150%)을 곱해 실제 폭(%)을 계산
+const ISSUE_BASE_WIDTH: Record<'large' | 'medium' | 'small', number> = { large: 100, medium: 48.5, small: 31.5 };
+function issueWidthPercent(img: IssueImage, count: number): number {
+  const base = ISSUE_BASE_WIDTH[effectiveIssueSize(img, count)];
+  const scale = (img.scale ?? 100) / 100;
+  return Math.min(100, Math.max(18, base * scale));
+}
+
 const getYoutubeVideos = unstable_cache(async () => {
   try {
     const KEY = process.env.YOUTUBE_API_KEY!;
@@ -221,13 +229,13 @@ export default async function Home() {
         .logo-link:hover .logo-shine-rect{ transform:translateX(360px); }
         
         .issue-grid { display: flex; flex-wrap: wrap; gap: 16px; }
-        .issue-item { position: relative; border-radius: var(--radius-card,24px); overflow: hidden; border: 1px solid var(--card-border); box-shadow: var(--card-shadow); background: var(--card); }
+        .issue-item { position: relative; min-width: 140px; border-radius: var(--radius-card,24px); overflow: hidden; border: 1px solid var(--card-border); box-shadow: var(--card-shadow); background: var(--card); }
         .issue-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
-        .issue-item.size-large { flex: 1 1 100%; aspect-ratio: 16 / 7; }
-        .issue-item.size-medium { flex: 1 1 calc(50% - 8px); aspect-ratio: 16 / 10; }
-        .issue-item.size-small { flex: 1 1 calc(33.333% - 11px); aspect-ratio: 4 / 3; }
+        .issue-item.size-large { aspect-ratio: 16 / 7; }
+        .issue-item.size-medium { aspect-ratio: 16 / 10; }
+        .issue-item.size-small { aspect-ratio: 4 / 3; }
         @media (max-width: 768px) {
-          .issue-item.size-medium, .issue-item.size-small { flex: 1 1 calc(50% - 8px); aspect-ratio: 4 / 3; }
+          .issue-item { aspect-ratio: 4 / 3 !important; min-width: calc(50% - 8px); }
         }
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
@@ -371,8 +379,12 @@ export default async function Home() {
               </div>
               <div className="issue-grid">
                 {issueImages.map((img, idx) => (
-                  <div key={idx} className={`issue-item size-${effectiveIssueSize(img, issueImages.length)}`}>
-                    <img src={img.dataUrl} alt={img.caption || '최근 이슈'} loading="lazy" />
+                  <div
+                    key={idx}
+                    className={`issue-item size-${effectiveIssueSize(img, issueImages.length)}`}
+                    style={{ flex: `0 1 ${issueWidthPercent(img, issueImages.length)}%` }}
+                  >
+                    <img src={img.dataUrl} alt={img.caption || '최근 이슈'} loading="lazy" style={{ objectPosition: img.position || 'center' }} />
                   </div>
                 ))}
               </div>

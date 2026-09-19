@@ -129,7 +129,9 @@ export async function getLatestStoredMatchDate(matchtype?: number): Promise<stri
 // Redis String: site:issues = JSON.stringify({ images: IssueImage[], updatedAt })
 export interface IssueImage {
   dataUrl: string;
-  size: 'auto' | 'large' | 'medium' | 'small';
+  size: 'auto' | 'large' | 'medium' | 'small'; // 기본 크기 (장수에 따른 자동 배치 기준)
+  scale?: number; // 50~150(%), 기본 크기에 추가로 곱해지는 배율. 관리자가 직접 스케일 조절
+  position?: string; // CSS object-position 값 (예: 'center', 'top left'). 이미지가 잘릴 때 보여줄 위치
   caption?: string;
 }
 

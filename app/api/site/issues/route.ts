@@ -35,6 +35,12 @@ export async function POST(request: Request) {
     if (!['auto', 'large', 'medium', 'small'].includes(img.size)) {
       img.size = 'auto';
     }
+    const scaleNum = Number(img.scale);
+    img.scale = Number.isFinite(scaleNum) ? Math.min(150, Math.max(50, Math.round(scaleNum))) : 100;
+    const ALLOWED_POSITIONS = ['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'];
+    if (typeof img.position !== 'string' || !ALLOWED_POSITIONS.includes(img.position)) {
+      img.position = 'center';
+    }
   }
   try {
     await saveSiteIssues(images);
