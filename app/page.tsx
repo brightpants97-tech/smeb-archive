@@ -4,6 +4,15 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 import ScheduleEmbed from './schedule-embed';
+import { getSiteIssues, IssueImage } from './lib/fconline-db';
+
+// 1장→크게, 2장→중간, 3장→작게. 관리자가 개별 이미지에 수동으로 크기를 지정하면 그걸 우선 적용
+function effectiveIssueSize(img: IssueImage, count: number): 'large' | 'medium' | 'small' {
+  if (img.size && img.size !== 'auto') return img.size;
+  if (count <= 1) return 'large';
+  if (count === 2) return 'medium';
+  return 'small';
+}
 
 const getYoutubeVideos = unstable_cache(async () => {
   try {
@@ -119,7 +128,7 @@ export default async function Home() {
     } catch { return { isLive: false, title: '', viewers: 0, broadNo: '' }; }
   };
 
-  const [videos, soopData, notices, liveStatus] = await Promise.all([getYoutubeVideos(), getAllVods(), getNotices(), getLiveStatus()]);
+  const [videos, soopData, notices, liveStatus, issueImages] = await Promise.all([getYoutubeVideos(), getAllVods(), getNotices(), getLiveStatus(), getSiteIssues()]);
   const footerYear = new Date().getFullYear();
   const vods: any[] = soopData.vods || [];
   const today = new Date();
@@ -211,6 +220,15 @@ export default async function Home() {
         .logo-shine-rect{ transform:translateX(-120px); transition:transform 0.7s cubic-bezier(0.22,1,0.36,1); }
         .logo-link:hover .logo-shine-rect{ transform:translateX(360px); }
         
+        .issue-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+        .issue-item { position: relative; border-radius: var(--radius-card,24px); overflow: hidden; border: 1px solid var(--card-border); box-shadow: var(--card-shadow); background: var(--card); }
+        .issue-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .issue-item.size-large { flex: 1 1 100%; aspect-ratio: 16 / 7; }
+        .issue-item.size-medium { flex: 1 1 calc(50% - 8px); aspect-ratio: 16 / 10; }
+        .issue-item.size-small { flex: 1 1 calc(33.333% - 11px); aspect-ratio: 4 / 3; }
+        @media (max-width: 768px) {
+          .issue-item.size-medium, .issue-item.size-small { flex: 1 1 calc(50% - 8px); aspect-ratio: 4 / 3; }
+        }
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
         .gemini-steps { display: flex; flex-direction: column; gap: 0; }
@@ -345,6 +363,21 @@ export default async function Home() {
 
       <section id="top3" className="sec-main mob-section" style={{padding:'48px clamp(1.5rem,5vw,3rem) 0'}}>
         <div style={{maxWidth:'1400px',margin:'0 auto',paddingBottom:'40px'}} className="fade-in-up">
+          {issueImages.length > 0 && (
+            <div id="issues" style={{marginBottom:'48px'}}>
+              <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'3px solid #EB701A',width:'fit-content'}}>
+                <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>ISSUES</span>
+                <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>최근 이슈</h2>
+              </div>
+              <div className="issue-grid">
+                {issueImages.map((img, idx) => (
+                  <div key={idx} className={`issue-item size-${effectiveIssueSize(img, issueImages.length)}`}>
+                    <img src={img.dataUrl} alt={img.caption || '최근 이슈'} loading="lazy" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'3px solid #EB701A',width:'fit-content'}}>
           <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>YOUTUBE</span>
           <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>유튜브 TOP 10</h2>

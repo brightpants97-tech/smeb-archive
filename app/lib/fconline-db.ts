@@ -125,6 +125,25 @@ export async function getLatestStoredMatchDate(matchtype?: number): Promise<stri
   return match?.matchDate || null;
 }
 
+// ── 메인페이지 "최근 이슈" 이미지 ────────────────────────────────────────────
+// Redis String: site:issues = JSON.stringify({ images: IssueImage[], updatedAt })
+export interface IssueImage {
+  dataUrl: string;
+  size: 'auto' | 'large' | 'medium' | 'small';
+  caption?: string;
+}
+
+export async function getSiteIssues(): Promise<IssueImage[]> {
+  if (!hasRedis) return [];
+  const data = await redis.get<{ images: IssueImage[] }>('site:issues');
+  return data?.images || [];
+}
+
+export async function saveSiteIssues(images: IssueImage[]) {
+  if (!hasRedis) throw new Error('저장소가 연결되어 있지 않아요.');
+  await redis.set('site:issues', { images, updatedAt: Date.now() });
+}
+
 // ── 스캔 진행률 (통산전적 최신화 중 % 표시용) ────────────────────────────────
 export async function setScanProgress(done: number, total: number) {
   if (!hasRedis) return;
