@@ -229,13 +229,29 @@ export default async function Home() {
         .logo-link:hover .logo-shine-rect{ transform:translateX(360px); }
         
         .issue-grid { display: flex; flex-wrap: wrap; gap: 16px; }
-        .issue-item { position: relative; min-width: 140px; border-radius: var(--radius-card,24px); overflow: hidden; border: 1px solid var(--card-border); box-shadow: var(--card-shadow); background: var(--card); }
+        .issue-item {
+          position: relative; min-width: 140px;
+          border-radius: var(--radius-card,24px);
+          background: var(--card);
+          border: 1px solid var(--card-border);
+          box-shadow: var(--card-shadow);
+          padding: 10px;
+          transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
+        }
+        .issue-item:hover { transform: translateY(-4px); box-shadow: var(--card-shadow-hover); }
+        .issue-item-frame {
+          position: relative; width: 100%; height: 100%;
+          border-radius: calc(var(--radius-card,24px) - 10px);
+          overflow: hidden;
+          box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+        }
+        [data-theme="dark"] .issue-item-frame { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
         .issue-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
         .issue-item.size-large { aspect-ratio: 16 / 7; }
         .issue-item.size-medium { aspect-ratio: 16 / 10; }
         .issue-item.size-small { aspect-ratio: 4 / 3; }
         @media (max-width: 768px) {
-          .issue-item { aspect-ratio: 4 / 3 !important; min-width: calc(50% - 8px); }
+          .issue-item { aspect-ratio: 4 / 3 !important; min-width: calc(50% - 8px); padding: 7px; }
         }
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
@@ -384,7 +400,9 @@ export default async function Home() {
                     className={`issue-item size-${effectiveIssueSize(img, issueImages.length)}`}
                     style={{ flex: `0 1 ${issueWidthPercent(img, issueImages.length)}%` }}
                   >
-                    <img src={img.dataUrl} alt={img.caption || '최근 이슈'} loading="lazy" style={{ objectPosition: img.position || 'center' }} />
+                    <div className="issue-item-frame">
+                      <img src={img.dataUrl} alt={img.caption || '최근 이슈'} loading="lazy" style={{ objectPosition: img.position || 'center' }} />
+                    </div>
                   </div>
                 ))}
               </div>
