@@ -114,23 +114,50 @@ export default function IssuesAdminClient() {
     }
   };
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const addFiles = async (fileArr: File[]) => {
+    if (fileArr.length === 0) return;
     setError(null);
     const remaining = 3 - images.length;
     if (remaining <= 0) {
       setError('이미지는 최대 3장까지 등록할 수 있어요. 먼저 삭제해주세요.');
       return;
     }
-    const toAdd = Array.from(files).slice(0, remaining);
+    const toAdd = fileArr.slice(0, remaining);
     try {
       const compressed = await Promise.all(toAdd.map(f => compressImage(f)));
       setImages(prev => [...prev, ...compressed.map(dataUrl => ({ dataUrl, size: 'auto' as const, scale: 100, position: 'center', fit: 'cover' as const }))]);
     } catch (e: any) {
       setError(e?.message || '이미지 처리 중 문제가 생겼어요.');
     }
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    await addFiles(Array.from(files));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  // 클립보드에 복사된 이미지를 Ctrl+V(Cmd+V)로 바로 붙여넣기
+  useEffect(() => {
+    if (!authed) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const pastedFiles: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const f = item.getAsFile();
+          if (f) pastedFiles.push(f);
+        }
+      }
+      if (pastedFiles.length > 0) {
+        e.preventDefault();
+        addFiles(pastedFiles);
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [authed, images]);
 
   const removeImage = (idx: number) => {
     setImages(prev => prev.filter((_, i) => i !== idx));
@@ -335,7 +362,7 @@ export default function IssuesAdminClient() {
                   onChange={e => handleFiles(e.target.files)}
                   style={{ fontSize: '0.85rem' }}
                 />
-                <p style={{ fontSize: '0.72rem', color: '#bbb', marginTop: '6px' }}>{3 - images.length}장 더 등록할 수 있어요.</p>
+                <p style={{ fontSize: '0.72rem', color: '#bbb', marginTop: '6px' }}>{3 - images.length}장 더 등록할 수 있어요. 이미지를 복사한 뒤 이 페이지에서 Ctrl+V(맥은 ⌘+V)로 바로 붙여넣어도 돼요.</p>
               </div>
             )}
 
