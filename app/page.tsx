@@ -4,23 +4,8 @@ import ScrollObserver from './scroll-observer';
 import YoutubeSection from './youtube-modal';
 import ThemeToggle from './theme-toggle';
 import ScheduleEmbed from './schedule-embed';
-import { getSiteIssues, IssueImage } from './lib/fconline-db';
-
-// 1장→크게, 2장→중간, 3장→작게. 관리자가 개별 이미지에 수동으로 크기를 지정하면 그걸 우선 적용
-function effectiveIssueSize(img: IssueImage, count: number): 'large' | 'medium' | 'small' {
-  if (img.size && img.size !== 'auto') return img.size;
-  if (count <= 1) return 'large';
-  if (count === 2) return 'medium';
-  return 'small';
-}
-
-// 기본 크기(large/medium/small)에 관리자가 지정한 스케일(50~150%)을 곱해 실제 폭(%)을 계산
-const ISSUE_BASE_WIDTH: Record<'large' | 'medium' | 'small', number> = { large: 100, medium: 48.5, small: 31.5 };
-function issueWidthPercent(img: IssueImage, count: number): number {
-  const base = ISSUE_BASE_WIDTH[effectiveIssueSize(img, count)];
-  const scale = (img.scale ?? 100) / 100;
-  return Math.min(100, Math.max(18, base * scale));
-}
+import { getSiteIssues } from './lib/fconline-db';
+import IssueGallery from './issue-gallery';
 
 const getYoutubeVideos = unstable_cache(async () => {
   try {
@@ -237,6 +222,7 @@ export default async function Home() {
           box-shadow: var(--card-shadow);
           padding: 10px;
           transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
+          font: inherit; cursor: zoom-in; display: block;
         }
         .issue-item:hover { transform: translateY(-4px); box-shadow: var(--card-shadow-hover); }
         .issue-item-frame {
@@ -254,6 +240,29 @@ export default async function Home() {
         @media (max-width: 768px) {
           .issue-item { aspect-ratio: 4 / 3 !important; min-width: calc(50% - 8px); padding: 7px; }
         }
+        .issue-lightbox {
+          position: fixed; inset: 0; z-index: 500;
+          background: rgba(0,0,0,0.86);
+          display: flex; align-items: center; justify-content: center;
+          padding: clamp(16px,5vw,56px);
+          cursor: zoom-out;
+          animation: issue-lightbox-fade 0.2s ease-out;
+        }
+        @keyframes issue-lightbox-fade { from { opacity: 0; } to { opacity: 1; } }
+        .issue-lightbox-img {
+          max-width: 100%; max-height: 100%;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+          cursor: default;
+        }
+        .issue-lightbox-close {
+          position: absolute; top: clamp(12px,3vw,28px); right: clamp(12px,3vw,28px);
+          width: 40px; height: 40px; border-radius: 50%; border: none;
+          background: rgba(255,255,255,0.12); color: #fff; font-size: 1.1rem;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; transition: background 0.2s;
+        }
+        .issue-lightbox-close:hover { background: rgba(255,255,255,0.22); }
         .gemini-open-btn { transition: opacity 0.2s, box-shadow 0.2s; }
         .gemini-open-btn:hover { opacity: 0.88; box-shadow: 0 8px 28px rgba(66,133,244,0.45) !important; }
         .gemini-steps { display: flex; flex-direction: column; gap: 0; }
@@ -394,24 +403,7 @@ export default async function Home() {
                 <span style={{fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.18em',color:'var(--text-muted)',textTransform:'uppercase'}}>ISSUES</span>
                 <h2 style={{fontSize:'clamp(1.6rem,3.5vw,2.6rem)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1,color:'var(--text)',margin:0}}>최근 이슈</h2>
               </div>
-              <div className="issue-grid">
-                {issueImages.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className={`issue-item size-${effectiveIssueSize(img, issueImages.length)}`}
-                    style={{ flex: `0 1 ${issueWidthPercent(img, issueImages.length)}%` }}
-                  >
-                    <div className={`issue-item-frame${img.fit === 'contain' ? ' fit-contain' : ''}`}>
-                      <img
-                        src={img.dataUrl}
-                        alt={img.caption || '최근 이슈'}
-                        loading="lazy"
-                        style={{ objectFit: img.fit === 'contain' ? 'contain' : 'cover', objectPosition: img.position || 'center' }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <IssueGallery images={issueImages} />
             </div>
           )}
 <div style={{display:'flex',flexDirection:'column',gap:'4px',marginBottom:'24px',paddingBottom:'14px',borderBottom:'3px solid #EB701A',width:'fit-content'}}>
