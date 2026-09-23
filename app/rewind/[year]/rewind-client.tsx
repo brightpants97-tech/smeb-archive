@@ -441,21 +441,8 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   // 9) 타임라인이 사라지고 그리드가 메인 뷰가 되므로, 날짜순/조회수순 정렬 기준을 직접 선택 가능하게
   const [sortMode, setSortMode] = useState<'date' | 'views'>('date');
-  // 4) 월 히트맵 박스에 마우스를 올렸을 때 상위 영상 미리보기
-  const [monthHover, setMonthHover] = useState<{ month: number; rect: DOMRect } | null>(null);
-
   const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
-
-  // 7) 고정 구간 대신, 이 해의 실제 최고 조회수 대비 상대값으로 명도를 계산해서
-  //    달 사이 격차가 작아도 색 대비가 뚜렷하게 드러나게 함
-  const overallMaxView = Math.max(1, ...monthlyData.flatMap(m => m.topVideos.map(v => v.views)));
-  function getOpacity(m: MonthData) {
-    if (!m.topVideos.length) return 0.07;
-    const max = Math.max(...m.topVideos.map(v => v.views));
-    const ratio = max / overallMaxView;
-    return 0.18 + ratio * 0.82;
-  }
 
   function tier(ratio: number) {
     if (ratio > 0.7) return { dot: '#FFB800', stem: '#FFB800', border: 'rgba(255,184,0,0.55)', card: 'rgba(255,184,0,0.06)' };
@@ -497,104 +484,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
           <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '6px' }}>
             {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
           </h2>
-          <p style={{ color: 'var(--rw-text3)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
-          {initialMonth != null && (
-            <p style={{ color: 'var(--rw-text3)', fontSize: '0.76rem', marginTop: '4px' }}>
-              💡 가장 활발했던 <strong style={{ color: ORANGE }}>{MONTH_KO[initialMonth - 1]}</strong>이 먼저 펼쳐져 있어요
-            </p>
-          )}
         </div>
-
-        {/* 히트맵 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '8px', marginBottom: '12px' }}>
-          {monthlyData.map(m => {
-            const op = getOpacity(m);
-            const isActive = activeMonth === m.month;
-            const hasVideos = m.topVideos.length > 0;
-            return (
-              <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)', fontWeight: 600 }}>{MONTH_KO[m.month - 1]}</span>
-                <div
-                  onClick={() => hasVideos && setActiveMonth(prev => {
-                    if (isActive) return null;
-                    setDir(prev != null && m.month < prev ? -1 : 1);
-                    return m.month;
-                  })}
-                  // 4) 클릭하지 않아도 상위 영상을 미리 볼 수 있도록 호버 시 프리뷰 노출
-                  onMouseEnter={(e) => hasVideos && setMonthHover({ month: m.month, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() })}
-                  onMouseLeave={() => setMonthHover(null)}
-                  // 9) 키보드로도 월을 탐색/선택할 수 있게
-                  tabIndex={hasVideos ? 0 : -1}
-                  onKeyDown={(e) => {
-                    if (!hasVideos) return;
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDir(activeMonth != null && m.month < activeMonth ? -1 : 1); setActiveMonth(isActive ? null : m.month); }
-                  }}
-                  style={{
-                    width: '100%', aspectRatio: '1', borderRadius: '6px',
-                    background: hasVideos ? '#EB701A' : 'transparent',
-                    opacity: hasVideos ? op : 1,
-                    border: hasVideos ? 'none' : '1.5px dashed var(--rw-border2)',
-                    boxSizing: 'border-box' as const,
-                    cursor: hasVideos ? 'pointer' : 'default',
-                    outline: isActive ? '2.5px solid #EB701A' : '2.5px solid transparent',
-                    outlineOffset: '2px',
-                    transition: 'opacity 0.15s, outline 0.1s, transform 0.1s',
-                    transform: isActive ? 'scale(1.08)' : 'scale(1)',
-                  }}
-                  title={hasVideos ? `${m.ytCount}개 업로드 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}회` : '업로드 없음'}
-                />
-                {/* 7) 개수 숫자를 더 뚜렷하게 - 대비 강화된 히트맵과 함께 한눈에 스캔되도록 */}
-                <span style={{ fontSize: '0.66rem', fontWeight: 800, color: hasVideos ? 'var(--rw-text2)' : 'var(--rw-text4)' }}>
-                  {m.ytCount > 0 ? `${m.ytCount}개` : '-'}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 범례 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px', flexWrap: 'wrap' as const }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>낮음</span>
-          {[0.3, 0.5, 0.75, 1].map((o, i) => (
-            <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: '#EB701A', opacity: o }} />
-          ))}
-          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>높음</span>
-          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text4)', marginLeft: '4px' }}>(그 달 최고 조회수 기준 · 업로드 개수 아님)</span>
-        </div>
-
-        {/* 4) 월 히트맵 호버 미리보기 - 클릭 전에 그 달 상위 영상을 바로 확인 */}
-        {monthHover && (() => {
-          const md = monthlyData.find(m => m.month === monthHover.month);
-          if (!md || md.topVideos.length === 0) return null;
-          const top3 = [...md.topVideos].sort((a, b) => b.views - a.views).slice(0, 3);
-          const PW = 320;
-          const PH_EST = 60 + top3.length * 60; // 대략적인 예상 높이
-          const r = monthHover.rect;
-          const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
-          // 8) 화면 하단 끝에서 호버하면 팝업이 뷰포트 밖으로 잘리지 않도록, 아래 공간이 부족하면 박스 위쪽에 표시
-          const showAbove = r.bottom + 10 + PH_EST > window.innerHeight;
-          const top = showAbove ? Math.max(12, r.top - PH_EST - 10) : r.bottom + 10;
-          return (
-            <div style={{
-              position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${PW}px`, zIndex: 9999,
-              pointerEvents: 'none', background: '#1e1e1e', border: '1px solid rgba(235,112,26,0.5)',
-              borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 48px rgba(0,0,0,0.7)', padding: '10px',
-              animation: 'rwFadeUp 0.15s cubic-bezier(0.34,1.56,0.64,1) both',
-            }}>
-              <p style={{ margin: '0 0 8px', fontSize: '0.7rem', fontWeight: 800, color: ORANGE }}>{MONTH_KO[monthHover.month - 1]} 상위 영상</p>
-              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px' }}>
-                {top3.map(v => (
-                  <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '54px', aspectRatio: '16/9', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, background: '#0a0a0a' }}>
-                      <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <p style={{ margin: 0, fontSize: '0.68rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
 
         {/* 타임라인 */}
         {activeData && (
@@ -679,10 +569,6 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                     }}><span aria-hidden="true">{icon}</span>{label}</button>
                   ))}
                 </div>
-                <button
-                  onClick={() => setActiveMonth(null)}
-                  style={{ background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', color: 'var(--rw-text3)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit', marginLeft: '4px' }}
-                >닫기</button>
               </div>
             </div>
 
