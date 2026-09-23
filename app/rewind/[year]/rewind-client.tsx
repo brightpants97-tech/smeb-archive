@@ -404,17 +404,24 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
   const [hovered, setHovered] = useState<{ id: string; rect: DOMRect; above: boolean } | null>(null);
   const tlRef = useRef<HTMLDivElement>(null);
   const [scrollable, setScrollable] = useState({ left: false, right: false });
+  // 2) + 10) 타임라인(기본) / 그리드(전체 보기) / 리스트(텍스트) 세 가지 보기 모드
+  const [viewMode, setViewMode] = useState<'timeline' | 'grid' | 'list'>('timeline');
+  // 4) 월 히트맵 박스에 마우스를 올렸을 때 상위 영상 미리보기
+  const [monthHover, setMonthHover] = useState<{ month: number; rect: DOMRect } | null>(null);
+  // 1) 화살표 클릭 없이도 드래그로 타임라인을 넘길 수 있게
+  const dragState = useRef<{ dragging: boolean; startX: number; startScroll: number } | null>(null);
 
   const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
 
+  // 7) 고정 구간 대신, 이 해의 실제 최고 조회수 대비 상대값으로 명도를 계산해서
+  //    달 사이 격차가 작아도 색 대비가 뚜렷하게 드러나게 함
+  const overallMaxView = Math.max(1, ...monthlyData.flatMap(m => m.topVideos.map(v => v.views)));
   function getOpacity(m: MonthData) {
     if (!m.topVideos.length) return 0.07;
     const max = Math.max(...m.topVideos.map(v => v.views));
-    if (max > 500000) return 1;
-    if (max > 200000) return 0.75;
-    if (max > 100000) return 0.5;
-    return 0.3;
+    const ratio = max / overallMaxView;
+    return 0.18 + ratio * 0.82;
   }
 
   function tier(ratio: number) {
@@ -437,10 +444,45 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
     return () => el.removeEventListener('scroll', updateScrollState);
   }, [activeMonth]);
 
+  // 3) 카드가 반쯤 잘린 채로 끝나지 않도록, 고정 320px 대신 실제 보이는 너비만큼 한 세트로 이동
   function scroll(dir: 'left' | 'right') {
     const el = tlRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
+    const pageAmount = Math.max(el.clientWidth * 0.9, 320);
+    el.scrollBy({ left: dir === 'left' ? -pageAmount : pageAmount, behavior: 'smooth' });
+  }
+  // 9) 타임라인에 포커스가 있을 때 방향키로도 넘길 수 있게
+  function onTimelineKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); scroll('left'); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); scroll('right'); }
+  }
+  // 1) 마우스 드래그로 타임라인을 붙잡고 옆으로 끌 수 있게 (화살표 클릭 없이 탐색)
+  const dragMoved = useRef(false);
+  function onTimelinePointerDown(e: React.PointerEvent) {
+    const el = tlRef.current;
+    if (!el) return;
+    dragMoved.current = false;
+    dragState.current = { dragging: true, startX: e.clientX, startScroll: el.scrollLeft };
+    el.setPointerCapture(e.pointerId);
+  }
+  function onTimelinePointerMove(e: React.PointerEvent) {
+    const el = tlRef.current;
+    const ds = dragState.current;
+    if (!el || !ds?.dragging) return;
+    const delta = e.clientX - ds.startX;
+    if (Math.abs(delta) > 4) dragMoved.current = true;
+    el.scrollLeft = ds.startScroll - delta;
+  }
+  function onTimelinePointerUp() {
+    if (dragState.current) dragState.current.dragging = false;
+  }
+  // 1) 트랙패드/휠의 세로 스크롤도 가로 이동으로 받아들여서, 페이지를 세로로 훑다가도 자연스럽게 넘어가게
+  function onTimelineWheel(e: React.WheelEvent) {
+    const el = tlRef.current;
+    if (!el) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      el.scrollLeft += e.deltaY;
+    }
   }
 
   const activeData = monthlyData.find(m => m.month === activeMonth);
@@ -490,6 +532,15 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                     setDir(prev != null && m.month < prev ? -1 : 1);
                     return m.month;
                   })}
+                  // 4) 클릭하지 않아도 상위 영상을 미리 볼 수 있도록 호버 시 프리뷰 노출
+                  onMouseEnter={(e) => hasVideos && setMonthHover({ month: m.month, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() })}
+                  onMouseLeave={() => setMonthHover(null)}
+                  // 9) 키보드로도 월을 탐색/선택할 수 있게
+                  tabIndex={hasVideos ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (!hasVideos) return;
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDir(activeMonth != null && m.month < activeMonth ? -1 : 1); setActiveMonth(isActive ? null : m.month); }
+                  }}
                   style={{
                     width: '100%', aspectRatio: '1', borderRadius: '6px',
                     background: '#EB701A', opacity: op,
@@ -501,7 +552,8 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                   }}
                   title={hasVideos ? `${m.ytCount}개 업로드 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
                 />
-                <span style={{ fontSize: '0.6rem', color: 'var(--rw-text4)' }}>
+                {/* 7) 개수 숫자를 더 뚜렷하게 - 대비 강화된 히트맵과 함께 한눈에 스캔되도록 */}
+                <span style={{ fontSize: '0.66rem', fontWeight: 800, color: hasVideos ? 'var(--rw-text2)' : 'var(--rw-text4)' }}>
                   {m.ytCount > 0 ? `${m.ytCount}개` : '-'}
                 </span>
               </div>
@@ -517,6 +569,36 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
           ))}
           <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>높음</span>
         </div>
+
+        {/* 4) 월 히트맵 호버 미리보기 - 클릭 전에 그 달 상위 영상을 바로 확인 */}
+        {monthHover && (() => {
+          const md = monthlyData.find(m => m.month === monthHover.month);
+          if (!md || md.topVideos.length === 0) return null;
+          const top3 = [...md.topVideos].sort((a, b) => b.views - a.views).slice(0, 3);
+          const PW = 320;
+          const r = monthHover.rect;
+          const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
+          return (
+            <div style={{
+              position: 'fixed', left: `${left}px`, top: `${r.bottom + 10}px`, width: `${PW}px`, zIndex: 9999,
+              pointerEvents: 'none', background: '#1e1e1e', border: '1px solid rgba(235,112,26,0.5)',
+              borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 48px rgba(0,0,0,0.7)', padding: '10px',
+              animation: 'rwFadeUp 0.15s cubic-bezier(0.34,1.56,0.64,1) both',
+            }}>
+              <p style={{ margin: '0 0 8px', fontSize: '0.7rem', fontWeight: 800, color: ORANGE }}>{MONTH_KO[monthHover.month - 1]} 상위 영상</p>
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px' }}>
+                {top3.map(v => (
+                  <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '54px', aspectRatio: '16/9', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, background: '#0a0a0a' }}>
+                      <img src={v.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.68rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 타임라인 */}
         {activeData && (
@@ -585,6 +667,17 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >›</button>
+                {/* 2) + 10) 타임라인/그리드(전체 보기)/리스트(텍스트) 보기 전환 */}
+                <div style={{ display: 'flex', background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', borderRadius: '8px', padding: '2px', marginLeft: '4px' }}>
+                  {([['timeline', '타임라인'], ['grid', '전체 보기'], ['list', '리스트']] as const).map(([mode, label]) => (
+                    <button key={mode} onClick={() => setViewMode(mode)} style={{
+                      padding: '4px 9px', borderRadius: '6px', border: 'none',
+                      background: viewMode === mode ? ORANGE : 'transparent',
+                      color: viewMode === mode ? '#1a1200' : 'var(--rw-text3)',
+                      fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
+                    }}>{label}</button>
+                  ))}
+                </div>
                 <button
                   onClick={() => setActiveMonth(null)}
                   style={{ background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', color: 'var(--rw-text3)', cursor: 'pointer', fontSize: '0.78rem', padding: '5px 12px', borderRadius: '8px', fontFamily: 'inherit', marginLeft: '4px' }}
@@ -593,6 +686,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
             </div>
 
             {/* 스크롤 컨트롤 */}
+            {viewMode === 'timeline' && (
             <div style={{ position: 'relative' }}>
               {/* 왼쪽 화살표 */}
               {scrollable.left && (
@@ -631,14 +725,23 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                 <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent)', zIndex: 10, pointerEvents: 'none', borderRadius: '0 0 20px 0' }} />
               )}
 
-              {/* 타임라인 스크롤 영역 */}
+              {/* 타임라인 스크롤 영역 - 1) 드래그/휠, 9) 방향키로도 탐색 가능 */}
               <div
                 ref={tlRef}
                 className="tl-wrap"
+                tabIndex={0}
+                onKeyDown={onTimelineKeyDown}
+                onWheel={onTimelineWheel}
+                onPointerDown={onTimelinePointerDown}
+                onPointerMove={onTimelinePointerMove}
+                onPointerUp={onTimelinePointerUp}
+                onPointerLeave={onTimelinePointerUp}
                 style={{
                   overflowX: 'auto',
                   overflowY: 'visible',
                   padding: `20px 32px`,
+                  cursor: 'grab',
+                  touchAction: 'pan-y',
                 }}
               >
                 {(() => {
@@ -678,10 +781,17 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                               transform: isHov ? 'scale(1.6)' : 'scale(1)',
                             }} />
 
+                            {/* 6) 카드를 열어보지 않아도 시간순 흐름을 바로 알 수 있도록 점 옆에 날짜 표기 */}
+                            <span style={{
+                              position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+                              whiteSpace: 'nowrap' as const, fontSize: '0.58rem', fontWeight: 700, color: 'var(--rw-text4)',
+                              ...(above ? { top: `${dotSz / 2 + 4}px` } : { bottom: `${dotSz / 2 + 4}px` }),
+                            }}>{new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}</span>
+
                             {/* 썸네일 카드 */}
                             <div
                               className="tl-card"
-                              onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
+                              onClick={() => { if (!dragMoved.current) window.open(`https://youtube.com/watch?v=${v.id}`, '_blank'); }}
                               onMouseEnter={(e) => setHovered({ id: v.id, rect: (e.currentTarget as HTMLElement).getBoundingClientRect(), above })}
                               onMouseLeave={() => setHovered(null)}
                               style={{
@@ -700,11 +810,19 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
                                 <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
+                                {/* 5) 등급을 카드 자체에서도 바로 알아볼 수 있게 코너 배지 추가 */}
+                                {ratio > 0.7 && (
+                                  <span style={{ position: 'absolute', top: '5px', left: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
+                                )}
                                 <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
                               </div>
                               <div style={{ padding: '7px 9px 9px' }}>
                                 <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                                <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getDate()}일</span>
+                                {/* 8) 코너의 작은 오버레이 숫자만으론 눈에 잘 안 띄어서, 본문에도 조회수를 명시 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                  <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getDate()}일</span>
+                                  <span style={{ fontSize: '0.62rem', fontWeight: 800, color: t.dot }}>👁 {fmt(v.views)}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -715,6 +833,54 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                 })()}
               </div>
             </div>
+            )}
+
+            {/* 2) 전체 보기 - 화살표 없이 그 달 업로드 전체를 격자로 한눈에 스캔 */}
+            {viewMode === 'grid' && (
+              <div style={{ padding: '4px 28px 8px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '14px' }}>
+                {[...activeData.topVideos].sort((a, b) => b.views - a.views).map(v => {
+                  const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
+                  const t = tier(v.views / maxV);
+                  return (
+                    <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
+                      background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
+                    }}>
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
+                        <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
+                        <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
+                      </div>
+                      <div style={{ padding: '7px 9px 9px' }}>
+                        <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                        <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 10) 리스트 보기 - 썸네일 없이 제목/날짜/조회수만 빠르게 스캔 */}
+            {viewMode === 'list' && (
+              <div style={{ padding: '4px 28px 8px', display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
+                {[...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()).map(v => {
+                  const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
+                  const t = tier(v.views / maxV);
+                  return (
+                    <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} style={{
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 10px', borderRadius: '8px',
+                      cursor: 'pointer', borderLeft: `3px solid ${t.dot}`, background: 'rgba(255,255,255,0.02)',
+                    }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--rw-text3)', flexShrink: 0, width: '42px' }}>
+                        {new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}
+                      </span>
+                      <p style={{ margin: 0, flex: 1, minWidth: 0, fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{v.title}</p>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 800, color: t.dot, flexShrink: 0 }}>👁 {fmt(v.views)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
