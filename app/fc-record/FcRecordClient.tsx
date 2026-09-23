@@ -579,6 +579,8 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
   const group = posGroup(p.position);
   const posColor = group ? GROUP_COLOR[group] : '#ddd';
   const posLabel = typeof p.position === 'number' ? POSITION_MAP[p.position]?.label : null;
+  // 5) BEST/WORST가 아닌 선수도 평점 구간으로 한눈에 잘한 선수를 구분할 수 있게
+  const ratingTone = p.avgRating != null ? (p.avgRating >= 7 ? '#2E9E5B' : p.avgRating < 6 ? RED : null) : null;
   return (
     <TiltWrapper maxTilt={1.8}>
     <div style={{
@@ -624,7 +626,8 @@ function PlayerStatRowExpandable({ p, accent, rank }: { p: PlayerStat; accent: s
         </div>
         <div style={{
           flexShrink: 0, width: '38px', height: '38px', borderRadius: '50%',
-          background: tone ? tone : '#f2f2f2', color: tone ? '#fff' : '#555',
+          background: tone ? tone : ratingTone ? `${ratingTone}1f` : '#f2f2f2', color: tone ? '#fff' : ratingTone || '#555',
+          border: !tone && ratingTone ? `1.5px solid ${ratingTone}` : 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '0.8rem', fontWeight: 900,
         }}>{p.avgRating ?? '-'}</div>
@@ -878,6 +881,43 @@ export default function FcRecordClient() {
     }
   }, [result?.opponentNickname]);
   useEffect(() => { setShowAllStats(false); }, [result?.opponentNickname]); // 상대가 바뀌면 다시 '종합'만 보이는 기본 상태로
+  // 3) 우측 고정 요약 카드를 닫을 수 있게 - 상대가 바뀌면 다시 보이도록 초기화
+  const [sideSummaryClosed, setSideSummaryClosed] = useState(false);
+  useEffect(() => { setSideSummaryClosed(false); }, [result?.opponentNickname]);
+  // 7) 매치업 링크 복사 버튼의 "복사됨" 피드백
+  const [shareCopied, setShareCopied] = useState(false);
+  // 8) 상세 정보까지 보면 페이지가 길어져서, 일정 이상 내려가면 맨 위로 가기 버튼 노출
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 800);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // 9) 미니 탭의 활성 상태를 스크롤 위치에 맞춰 추적하고, 밑줄이 부드럽게 이동하도록
+  const SECTION_IDS = ['section-summary', 'section-players', 'section-matches'] as const;
+  const [activeSection, setActiveSection] = useState<string>('section-summary');
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const tabRowRef = useRef<HTMLDivElement>(null);
+  const [underline, setUnderline] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  useEffect(() => {
+    if (!result) return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      if (visible[0]) setActiveSection(visible[0].target.id);
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+    SECTION_IDS.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
+    return () => observer.disconnect();
+  }, [result?.opponentNickname]);
+  useEffect(() => {
+    const btn = tabRefs.current[activeSection];
+    const row = tabRowRef.current;
+    if (btn && row) {
+      const btnRect = btn.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      setUnderline({ left: btnRect.left - rowRect.left, width: btnRect.width });
+    }
+  }, [activeSection, result?.opponentNickname]);
   useEffect(() => {
     if (!result) return;
     const { win, total } = result.summary;
@@ -898,6 +938,24 @@ export default function FcRecordClient() {
   const [sortMode, setSortMode] = useState<'games' | 'winrate' | 'recent'>('games');
   // 4) 우세/백중/열세 필터 - 기본은 전체 다 보임, 눌러서 끄고 켤 수 있음
   const [toneFilter, setToneFilter] = useState<Record<'adv' | 'even' | 'dis', boolean>>({ adv: true, even: true, dis: true });
+
+  // 4) 최근 검색 기록 - 브라우저에만 저장, 입력창에 포커스하면 최근 검색한 닉네임을 바로 다시 선택할 수 있게
+  const RECENT_SEARCH_KEY = 'fc-record-recent-searches';
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showRecentDropdown, setShowRecentDropdown] = useState(false);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RECENT_SEARCH_KEY);
+      if (raw) setRecentSearches(JSON.parse(raw));
+    } catch {}
+  }, []);
+  const pushRecentSearch = (nick: string) => {
+    try {
+      const next = [nick, ...recentSearches.filter(n => n !== nick)].slice(0, 6);
+      setRecentSearches(next);
+      localStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(next));
+    } catch {}
+  };
 
   // 상대목록+통산전적을 한 번의 요청으로 같이 받아옴 (API 왕복 횟수 절반으로 절감)
   const loadCombined = () => {
@@ -960,13 +1018,22 @@ export default function FcRecordClient() {
       const res = await fetch(`/api/fconline/head2head?opponent=${encodeURIComponent(target)}`, silent ? { cache: 'no-store' } : undefined);
       const data = await res.json();
       if (!res.ok || data.error) { if (!silent) setErrorMsg(data.error || '조회에 실패했어요.'); }
-      else setResult(data); // silent여도 최신 데이터로 조용히 교체
+      else { setResult(data); if (!silent) pushRecentSearch(target); } // silent여도 최신 데이터로 조용히 교체
     } catch {
       if (!silent) setErrorMsg('조회 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
     } finally {
       if (!silent) setLoading(false);
     }
   };
+
+  // 7) 링크로 공유된 특정 상대 매치업 - URL에 ?opponent=닉네임이 있으면 페이지 진입 시 바로 그 상대를 조회
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get('opponent');
+      if (q && q.trim()) { setNickname(q.trim()); search(q.trim()); }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 우세/백중/열세 카테고리 판정 - OpponentCard 안의 tone 계산과 기준을 맞춤
   const oppTone = (o: any): 'adv' | 'even' | 'dis' => {
@@ -1089,7 +1156,7 @@ export default function FcRecordClient() {
       {/* 넓은 화면 여백 활용: 검색 결과가 있으면 우측에 핵심 요약을 고정 표시해서
           아래로 스크롤하지 않아도 승패/승률을 바로 볼 수 있게 함. 새로운 데이터를 더
           불러오는 게 아니라 이미 받아온 result를 재사용하는 거라 서버 부담은 없음 */}
-      {result && !errorMsg && !loading && (() => {
+      {result && !errorMsg && !loading && !sideSummaryClosed && (() => {
         const winRate = result.summary.total > 0 ? (result.summary.win / result.summary.total) * 100 : 50;
         // 4) 우세/열세에 따른 톤 - 숫자를 안 읽어도 색으로 바로 감이 오게
         const tone = result.summary.total === 0 ? '#ddd' : winRate > 55 ? WIN_BLUE : winRate < 45 ? RED : GRAY;
@@ -1102,6 +1169,12 @@ export default function FcRecordClient() {
             background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', border: `2px solid ${tone}55`,
             boxShadow: `0 10px 30px ${tone}25`,
           }}>
+            {/* 3) 계속 떠 있는 게 불편할 때 닫을 수 있게 */}
+            <button onClick={() => setSideSummaryClosed(true)} title="닫기" style={{
+              position: 'absolute', top: '10px', right: '10px', width: '22px', height: '22px', borderRadius: '50%',
+              background: '#f2f2f2', border: 'none', color: '#999', fontSize: '0.7rem', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT,
+            }}>✕</button>
             <button onClick={() => document.getElementById('result-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{
               display: 'flex', flexDirection: 'column' as const, gap: '14px', background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: FONT, textAlign: 'left', padding: 0, width: '100%',
@@ -1177,9 +1250,18 @@ export default function FcRecordClient() {
 
         <div style={{ marginBottom: '28px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', color: ORANGE, marginBottom: '8px' }}>FC ONLINE HEAD-TO-HEAD</p>
-          <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111', margin: 0, lineHeight: 1.15 }}>
-            상대 스트리머와의 전적
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const }}>
+            <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#111', margin: 0, lineHeight: 1.15 }}>
+              상대 스트리머와의 전적
+            </h1>
+            {/* 10) 전체 규모를 제목 옆에서 바로 보여줌 */}
+            {!opponentsLoading && opponents && opponents.length > 0 && (
+              <span style={{
+                padding: '4px 12px', borderRadius: '100px', background: '#f2f2f2', color: '#888',
+                fontSize: '0.74rem', fontWeight: 800, whiteSpace: 'nowrap' as const,
+              }}>총 {opponents.length}명과 대결</span>
+            )}
+          </div>
           <p style={{ fontSize: '0.88rem', color: '#999', marginTop: '10px', lineHeight: 1.6 }}>
             상대 스트리머의 FC 온라인 닉네임을 입력하면, 스맵과 맞붙었던 경기 전적과 그날 서로 사용한 스쿼드를 보여줘요.
           </p>
@@ -1263,6 +1345,14 @@ export default function FcRecordClient() {
                             ) : (
                               <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%', background: m.teamColor, border: `2px solid ${c}` }} />
                             )}
+                            {/* 1) 테두리 색만으론 색약 사용자나 빠른 스캔 시 승/패 구분이 어려울 수 있어 텍스트 배지로 보강 */}
+                            {m.outcome !== 'unknown' && (
+                              <span style={{
+                                position: 'absolute', bottom: '-3px', right: '-3px', width: '13px', height: '13px', borderRadius: '50%',
+                                background: c, color: '#fff', fontSize: '0.5rem', fontWeight: 900, lineHeight: '13px', textAlign: 'center' as const,
+                                border: '1.5px solid #fff',
+                              }}>{OUTCOME_LABEL[m.outcome]}</span>
+                            )}
                           </button>
                         );
                       })}
@@ -1279,13 +1369,33 @@ export default function FcRecordClient() {
           padding: '10px 0', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)',
           boxShadow: '0 6px 14px -8px rgba(0,0,0,0.12)',
         }}>
-          <input
-            value={nickname}
-            onChange={e => setNickname(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') search(); }}
-            placeholder="상대 닉네임 입력 (예: 호날두팬클럽)"
-            style={{ flex: 1, padding: '14px 18px', borderRadius: '12px', border: '1px solid #ddd', background: '#fff', color: '#111', fontSize: '0.95rem', outline: 'none', fontFamily: FONT }}
-          />
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              value={nickname}
+              onChange={e => setNickname(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { search(); setShowRecentDropdown(false); } if (e.key === 'Escape') setShowRecentDropdown(false); }}
+              onFocus={() => setShowRecentDropdown(true)}
+              onBlur={() => setTimeout(() => setShowRecentDropdown(false), 120)}
+              placeholder="상대 닉네임 입력 (예: 호날두팬클럽)"
+              style={{ width: '100%', padding: '14px 18px', borderRadius: '12px', border: '1px solid #ddd', background: '#fff', color: '#111', fontSize: '0.95rem', outline: 'none', fontFamily: FONT }}
+            />
+            {/* 4) 최근 검색한 닉네임을 드롭다운으로 제안 - 같은 상대를 반복 조회할 때 다시 타이핑하지 않아도 되게 */}
+            {showRecentDropdown && recentSearches.length > 0 && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 10,
+                background: '#fff', border: '1px solid #eee', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                overflow: 'hidden', padding: '6px',
+              }}>
+                <p style={{ margin: '4px 8px 6px', fontSize: '0.62rem', fontWeight: 800, color: '#bbb' }}>최근 검색</p>
+                {recentSearches.map(n => (
+                  <button key={n} onMouseDown={() => { setNickname(n); search(n); setShowRecentDropdown(false); }} style={{
+                    display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: '8px',
+                    background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: '0.84rem', color: '#333',
+                  }}>{n}</button>
+                ))}
+              </div>
+            )}
+          </div>
           <button onClick={() => search()} disabled={loading || !nickname.trim()} style={{
             padding: '14px 24px', borderRadius: '12px', border: 'none',
             background: loading || !nickname.trim() ? '#eee' : ORANGE,
@@ -1367,6 +1477,12 @@ export default function FcRecordClient() {
                 );
               })}
             </div>
+            {/* 2) 필터를 걸었을 때 전체 대비 몇 명이 보이는 중인지 한 줄로 요약 - pill 개수 표시와 별개로 전체 맥락을 바로 파악 */}
+            {displayedOpponents.length !== (opponents || []).length && (
+              <p style={{ margin: '0 0 12px', fontSize: '0.7rem', color: '#aaa', fontWeight: 700 }}>
+                전체 {(opponents || []).length}명 중 <span style={{ color: ORANGE, fontWeight: 900 }}>{displayedOpponents.length}명</span> 표시 중
+              </p>
+            )}
             {displayedOpponents.length === 0 ? (
               <div style={{ textAlign: 'center' as const, padding: '24px 0' }}>
                 <p style={{ margin: '0 0 10px', fontSize: '0.8rem', color: '#bbb' }}>선택한 조건에 맞는 상대가 없어요.</p>
@@ -1410,7 +1526,7 @@ export default function FcRecordClient() {
             </div>
 
             {/* 5) 피라미드 구조의 최상단 - 표/숫자를 보기 전에 결론부터 한 줄 자연어로 전달 */}
-            <p style={{ textAlign: 'center' as const, fontSize: '0.95rem', fontWeight: 700, color: '#555', marginBottom: '20px' }}>
+            <p style={{ textAlign: 'center' as const, fontSize: '0.95rem', fontWeight: 700, color: '#555', marginBottom: '10px' }}>
               {result.summary.total === 0
                 ? `${result.oppDisplay.name}님과 붙은 기록이 아직 없어요`
                 : (() => {
@@ -1419,32 +1535,60 @@ export default function FcRecordClient() {
                   })()}
             </p>
 
-            {/* sticky 미니 탭 - 섹션이 길어서 스크롤 중에도 바로 이동 가능하게 */}
-            <div style={{
+            {/* 7) 이 매치업만 담긴 링크를 복사해서 바로 공유할 수 있게 */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <button onClick={async () => {
+                const url = `${window.location.origin}${window.location.pathname}?opponent=${encodeURIComponent(result.opponentNickname)}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                  setShareCopied(true);
+                  setTimeout(() => setShareCopied(false), 1800);
+                } catch {}
+              }} style={{
+                display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 14px', borderRadius: '100px',
+                border: '1px solid #eee', background: '#fafafa', color: '#999', fontSize: '0.7rem', fontWeight: 700,
+                cursor: 'pointer', fontFamily: FONT,
+              }}>{shareCopied ? '링크 복사됨 ✓' : `🔗 ${result.oppDisplay.name}님과의 전적 링크 복사`}</button>
+            </div>
+
+            {/* sticky 미니 탭 - 섹션이 길어서 스크롤 중에도 바로 이동 가능하게. 9) 지금 보고 있는 섹션에 맞춰
+                밑줄이 부드럽게 슬라이드 이동해서 탭과 실제 스크롤 위치가 항상 일치함을 보여줌 */}
+            <div ref={tabRowRef} style={{
               position: 'sticky', top: 0, zIndex: 5, display: 'flex', gap: '6px', justifyContent: 'center',
               padding: '8px 0', marginBottom: '24px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
               borderBottom: '1px solid #f0f0f0',
             }}>
               {[['요약', 'section-summary'], ['선수', 'section-players'], ['경기', 'section-matches']].map(([label, id]) => (
-                <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{
-                  padding: '5px 14px', borderRadius: '100px', border: '1px solid #eee', background: '#fafafa',
-                  color: '#888', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
-                }}>{label}</button>
+                <button
+                  key={id}
+                  ref={el => { tabRefs.current[id] = el; }}
+                  onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  style={{
+                    padding: '5px 14px', borderRadius: '100px', border: `1px solid ${activeSection === id ? ORANGE : '#eee'}`,
+                    background: activeSection === id ? `${ORANGE}12` : '#fafafa',
+                    color: activeSection === id ? ORANGE : '#888', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                    transition: 'background 0.2s, border-color 0.2s, color 0.2s',
+                  }}>{label}</button>
               ))}
+              <span style={{
+                position: 'absolute', bottom: '-1px', left: `${underline.left}px`, width: `${underline.width}px`,
+                height: '2px', background: ORANGE, borderRadius: '100px', transition: 'left 0.25s ease, width 0.25s ease',
+              }} />
             </div>
 
             <div id="section-summary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(20px,6vw,48px)', padding: '28px 20px', borderRadius: '18px', background: '#fafafa', border: '1px solid #f0f0f0', marginBottom: '36px' }}>
+              {/* 6) 숫자만으론 전체 대비 비중이 바로 안 와닿아서 각 숫자 아래 비율(%)을 함께 표기 */}
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ fontSize: '2.2rem', fontWeight: 900, color: WIN_BLUE }}>{result.summary.win}</div>
-                <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>승</div>
+                <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>승{result.summary.total > 0 ? ` · ${Math.round((result.summary.win / result.summary.total) * 100)}%` : ''}</div>
               </div>
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ fontSize: '2.2rem', fontWeight: 900, color: GRAY }}>{result.summary.draw}</div>
-                <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>무</div>
+                <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>무{result.summary.total > 0 ? ` · ${Math.round((result.summary.draw / result.summary.total) * 100)}%` : ''}</div>
               </div>
               <div style={{ textAlign: 'center' as const }}>
                 <div style={{ fontSize: '2.2rem', fontWeight: 900, color: RED }}>{result.summary.lose}</div>
-                <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>패</div>
+                <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700 }}>패{result.summary.total > 0 ? ` · ${Math.round((result.summary.lose / result.summary.total) * 100)}%` : ''}</div>
               </div>
             </div>
 
@@ -1528,6 +1672,16 @@ export default function FcRecordClient() {
           <Link href="/fc-record/admin" style={{ fontSize: '0.72rem', color: '#ccc', textDecoration: 'none' }}>관리자</Link>
         </div>
       </div>
+
+      {/* 8) 맨 위로 가기 - 상세 정보(선수/경기 탭 등)까지 보면 길어지는 페이지를 빠르게 빠져나올 수 있게 */}
+      {showScrollTop && (
+        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} title="맨 위로" style={{
+          position: 'fixed', right: 'clamp(16px,4vw,32px)', bottom: 'clamp(16px,4vw,32px)', zIndex: 7,
+          width: '44px', height: '44px', borderRadius: '50%', border: 'none', background: ORANGE, color: '#fff',
+          fontSize: '1.1rem', cursor: 'pointer', boxShadow: `0 4px 14px ${ORANGE}55`, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', fontFamily: FONT,
+        }}>↑</button>
+      )}
     </main>
   );
 }
