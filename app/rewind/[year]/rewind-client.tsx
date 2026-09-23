@@ -476,8 +476,19 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
         <style>{`
           .tl-card { transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; position: relative; }
           .tl-card:hover { transform: scale(1.05) !important; z-index: 30 !important; box-shadow: 0 10px 28px rgba(0,0,0,0.55) !important; }
-          /* 7) 카드를 호버하면 날짜 배지만 살짝 확대/강조되어 날짜 확인을 유도 */
+          /* 10) 클릭 시 살짝 눌리는 느낌으로 클릭 반응성 표시 */
+          .tl-card:active { transform: scale(0.97) !important; }
+          /* 카드를 호버하면 날짜 배지만 살짝 확대/강조되어 날짜 확인을 유도 */
           .tl-card:hover .date-badge { transform: scale(1.18); filter: brightness(1.15); }
+          /* 6) 카드는 고정한 채 썸네일 이미지만 살짝 확대되는 켄번즈 느낌의 모션 */
+          .thumb-img { transition: transform 0.4s ease; }
+          .tl-card:hover .thumb-img { transform: scale(1.08); }
+          /* 8) 인기도 바가 로드 시 0%에서 실제 값까지 차오르는 애니메이션 */
+          @keyframes growBar { from { width: 0; } to { width: var(--bar-w); } }
+          .bar-fill { animation: growBar 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+          /* 9) 가장 최근 날짜 배지에만 은은한 펄스 효과로 최신임을 강조 */
+          @keyframes badgePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(235,112,26,0.55); } 50% { box-shadow: 0 0 0 5px rgba(235,112,26,0); } }
+          .badge-latest { animation: badgePulse 1.8s ease-out infinite; }
         `}</style>
 
         {/* 헤더 */}
@@ -729,40 +740,48 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                         // 8) 날짜순 정렬일 땐 날짜가 더 중요한 정보이므로 좌상단(눈에 잘 띄는 자리)에,
                         //    조회수순 정렬일 땐 순번이 더 중요하므로 순번을 좌상단에 두고 날짜는 좌하단으로
                         const dateBadgeTop = sortMode === 'date';
+                        const isLatestDate = dKey === latestDateKey;
                         return (
                           <Fragment key={v.id}>
                             <div onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
                               background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
                               borderLeft: sortMode === 'date' ? `3px solid ${t.border}` : `1px solid ${t.border}`,
+                              // 7) 카드가 순서대로 살짝 아래에서 올라오며 나타나는 등장 애니메이션
+                              animation: `rwFadeUp 0.4s ${Math.min(i, 12) * 0.035}s both`,
                             }}>
-                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
-                                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                                {/* 6) 상/하단 그라디언트로 코너 배지들이 어떤 썸네일 위에서도 잘 보이게 */}
+                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a', overflow: 'hidden' }}>
+                                <img src={v.thumbnail} alt={v.title} className="thumb-img" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                {/* 상/하단 그라디언트로 코너 배지들이 어떤 썸네일 위에서도 잘 보이게 */}
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 45%), linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 30%)' }} />
-                                {/* 1)+3)+5)+8) 날짜 배지 - 같은 날짜는 같은 색, 가장 최근 날짜는 오렌지로 강조, 정렬 기준에 따라 상/하단 위치 스왑 */}
-                                <span className="date-badge" title={`${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()} (${WEEKDAY_KO[d.getDay()]})`} style={{
-                                  position: 'absolute', left: '5px', [dateBadgeTop ? 'top' : 'bottom']: '5px',
-                                  background: 'rgba(0,0,0,0.65)', border: `1px solid ${dColor}`, color: dColor,
-                                  fontSize: '0.6rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px',
-                                  textShadow: '0 1px 2px rgba(0,0,0,0.8)', transition: 'transform 0.15s',
-                                } as React.CSSProperties}>{d.getMonth() + 1}/{d.getDate()}</span>
+                                {/* 1)+2)+3)+4)+9) 날짜 배지 - 하단 날짜 텍스트를 없앤 만큼 크게 키우고 완전 불투명 배경 + 그림자, 요일까지 함께 표기,
+                                       같은 날짜는 같은 색, 가장 최근 날짜는 오렌지 + 펄스로 강조 */}
+                                <span
+                                  className={`date-badge${isLatestDate ? ' badge-latest' : ''}`}
+                                  title={`${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()} (${WEEKDAY_KO[d.getDay()]})`}
+                                  style={{
+                                    position: 'absolute', left: '6px', [dateBadgeTop ? 'top' : 'bottom']: '6px',
+                                    background: '#151515', border: `1.5px solid ${dColor}`, color: dColor,
+                                    fontSize: '0.72rem', fontWeight: 900, padding: '2px 7px', borderRadius: '5px',
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.5)', transition: 'transform 0.15s',
+                                  } as React.CSSProperties}
+                                >{d.getMonth() + 1}/{d.getDate()} {WEEKDAY_KO[d.getDay()]}</span>
                                 {/* 업로드 순번 배지 */}
                                 <span style={{
-                                  position: 'absolute', left: '5px', [dateBadgeTop ? 'bottom' : 'top']: '5px', background: 'rgba(0,0,0,0.6)',
+                                  position: 'absolute', left: '6px', [dateBadgeTop ? 'bottom' : 'top']: '6px', background: 'rgba(0,0,0,0.6)',
                                   border: '1px solid rgba(255,255,255,0.35)', color: '#fff', fontSize: '0.58rem', fontWeight: 800,
                                   padding: '1px 5px', borderRadius: '4px',
                                 } as React.CSSProperties}>#{i + 1}</span>
                                 {ratio > 0.7 && (
-                                  <span style={{ position: 'absolute', top: '5px', right: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
+                                  <span style={{ position: 'absolute', top: '6px', right: '6px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
                                 )}
                                 <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.62rem', fontWeight: 900, color: t.dot }}>👁 {fmt(v.views)}</div>
                               </div>
-                              <div style={{ padding: '8px 10px 10px' }}>
-                                <p title={v.title} style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 4px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                                {/* 2) 썸네일 배지엔 날짜 숫자만, 요일은 카드 하단 텍스트에 남겨서 정보를 분산 */}
-                                <span style={{ fontSize: '0.62rem', color: 'var(--rw-text3)' }}>{d.getMonth() + 1}/{d.getDate()} ({WEEKDAY_KO[d.getDay()]})</span>
-                                <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                                  <div style={{ width: `${barPct}%`, height: '100%', background: t.dot, borderRadius: '2px' }} />
+                              <div style={{ padding: '9px 10px 10px' }}>
+                                {/* 5) 하단 날짜 텍스트 삭제로 생긴 공간만큼 제목을 더 크고 굵게, 줄간격도 살짝 좁혀 가독성 강화 */}
+                                <p title={v.title} style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.94)', lineHeight: 1.3, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                                {/* 8) 인기도 바 - 로드 시 0%에서 실제 값까지 차오르는 애니메이션 */}
+                                <div style={{ marginTop: '8px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                                  <div className="bar-fill" style={{ '--bar-w': `${barPct}%`, width: `${barPct}%`, height: '100%', background: t.dot, borderRadius: '2px' } as React.CSSProperties} />
                                 </div>
                               </div>
                             </div>
