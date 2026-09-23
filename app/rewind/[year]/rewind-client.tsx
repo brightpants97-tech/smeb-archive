@@ -761,8 +761,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
   // ── 섹션 진행 인디케이터 ──
   const SECTIONS = [
     { key: 'open',  label: '인트로',    inView: openInView,  ref: openRef },
-    { key: 'cal',   label: '캘린더',    inView: calInView,   ref: calRef },
     { key: 'stats', label: '숫자',      inView: statsInView, ref: statsRef },
+    { key: 'cal',   label: '캘린더',    inView: calInView,   ref: calRef },
     { key: 'top10', label: 'TOP 10',    inView: top10InView, ref: top10Ref },
     { key: 'end',   label: '엔딩',      inView: endInView,   ref: endRef },
   ] as const;
@@ -953,31 +953,6 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         </div>
       </section>
 
-      {/* ───────────────── ②-b 업로드 캘린더 (메인 콘텐츠 - 통계보다 먼저 배치) ───────────────── */}
-      <div ref={calRef as React.RefObject<HTMLDivElement>}>
-        <UploadCalendar monthlyData={monthlyData} year={year} defaultMonth={stats.peakMonth.month} />
-      </div>
-
-      {/* 섹션 진행 인디케이터 */}
-      <div style={{
-        position: 'fixed', right: '18px', top: '50%', transform: 'translateY(-50%)', zIndex: 150,
-        display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '10px',
-      }}>
-        {SECTIONS.map((s, i) => (
-          <button key={s.key} onClick={() => scrollToSection(i)} aria-label={s.label}
-            title={s.label}
-            style={{
-              width: i === activeSectionIdx ? '10px' : '7px',
-              height: i === activeSectionIdx ? '10px' : '7px',
-              borderRadius: '50%', padding: 0, cursor: 'pointer',
-              background: i === activeSectionIdx ? ORANGE : 'var(--rw-text4)',
-              border: 'none', transition: 'all 0.25s ease',
-              boxShadow: i === activeSectionIdx ? '0 0 10px rgba(235,112,26,0.6)' : 'none',
-            }}
-          />
-        ))}
-      </div>
-
       {/* ───────────────── ② 숫자로 보는 한 해 ───────────────── */}
       <section ref={statsRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -1039,6 +1014,31 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </div>
         </div>
       </section>
+      {/* ───────────────── ③ 업로드 캘린더 ───────────────── */}
+      <div ref={calRef as React.RefObject<HTMLDivElement>}>
+        <UploadCalendar monthlyData={monthlyData} year={year} defaultMonth={stats.peakMonth.month} />
+      </div>
+
+      {/* 섹션 진행 인디케이터 */}
+      <div style={{
+        position: 'fixed', right: '18px', top: '50%', transform: 'translateY(-50%)', zIndex: 150,
+        display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '10px',
+      }}>
+        {SECTIONS.map((s, i) => (
+          <button key={s.key} onClick={() => scrollToSection(i)} aria-label={s.label}
+            title={s.label}
+            style={{
+              width: i === activeSectionIdx ? '10px' : '7px',
+              height: i === activeSectionIdx ? '10px' : '7px',
+              borderRadius: '50%', padding: 0, cursor: 'pointer',
+              background: i === activeSectionIdx ? ORANGE : 'var(--rw-text4)',
+              border: 'none', transition: 'all 0.25s ease',
+              boxShadow: i === activeSectionIdx ? '0 0 10px rgba(235,112,26,0.6)' : 'none',
+            }}
+          />
+        ))}
+      </div>
+
 
 
       {/* ───────────────── ④ 올해의 TOP10 ───────────────── */}
