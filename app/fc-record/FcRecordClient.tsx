@@ -322,7 +322,7 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
 
   return (
     <div style={{
-      position: 'relative', height: '92px', borderRadius: '12px', overflow: 'hidden',
+      position: 'relative', height: '104px', borderRadius: '12px', overflow: 'hidden',
       border: `1.5px solid ${active ? ORANGE : tone}`, background: active ? ORANGE : (hovered ? '#fff8f0' : '#fff'),
       transition: 'background 0.15s',
     }}>
@@ -331,41 +331,41 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
         onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         style={{
           width: '100%', height: '100%', display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between',
-          padding: '10px', background: 'none', border: 'none', cursor: loading ? 'default' : 'pointer',
+          padding: '12px', background: 'none', border: 'none', cursor: loading ? 'default' : 'pointer',
           fontFamily: FONT, textAlign: 'left',
         }}
       >
-        {/* 상단: 순위 배지 + 프로필 + 이름 */}
+        {/* 상단: 순위 배지 + 프로필 + 이름 - 1~3위만 색이 있는 원형 배지로 강조하고, 나머지는 배경 없이 옅은 숫자로만 표시해 이름에 시선이 먼저 가게 함 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{
             flexShrink: 0, width: '18px', height: '18px', borderRadius: '50%', fontSize: '0.62rem', fontWeight: 900,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: rankColor || (active ? 'rgba(255,255,255,0.25)' : '#f2f2f2'),
-            color: rankColor ? '#fff' : (active ? 'rgba(255,255,255,0.8)' : '#bbb'),
+            background: rankColor || 'transparent',
+            color: rankColor ? '#fff' : (active ? 'rgba(255,255,255,0.6)' : '#ccc'),
           }}>{rank}</span>
           {o.profileImage ? (
-            <img src={o.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
+            <img src={o.profileImage} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${active ? '#fff' : o.teamColor}`, flexShrink: 0 }} />
           ) : (
-            <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
+            <span style={{ width: '36px', height: '36px', borderRadius: '50%', background: o.teamColor, flexShrink: 0 }} />
           )}
-          <span title={o.displayName} style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, paddingRight: hasSquad ? '52px' : 0 }}>{o.displayName}</span>
+          <span title={o.displayName} style={{ flex: 1, minWidth: 0, fontSize: '0.84rem', fontWeight: 800, color: active ? '#fff' : '#222', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, paddingRight: hasSquad ? '56px' : 0 }}>{o.displayName}</span>
         </div>
 
-        {/* 중단: 승/무/패 색깔 원 + 연승/연패 배지 (자리는 항상 확보해서 카드 높이가 흔들리지 않게) */}
+        {/* 중단: 승/무/패 칩 + 연승/연패 배지 (자리는 항상 확보해서 카드 높이가 흔들리지 않게) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ minWidth: '20px', height: '20px', padding: '0 4px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.25)' : `${WIN_BLUE}18`, color: active ? '#fff' : WIN_BLUE, fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.win}</span>
-          {o.draw > 0 && <span style={{ minWidth: '20px', height: '20px', padding: '0 4px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.25)' : '#eee', color: active ? '#fff' : GRAY, fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.draw}</span>}
-          <span style={{ minWidth: '20px', height: '20px', padding: '0 4px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.25)' : `${RED}18`, color: active ? '#fff' : RED, fontSize: '0.66rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.lose}</span>
+          <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.28)' : `${WIN_BLUE}22`, color: active ? '#fff' : WIN_BLUE, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.win}</span>
+          {o.draw > 0 && <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.28)' : '#e9e9e9', color: active ? '#fff' : GRAY, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.draw}</span>}
+          <span style={{ minWidth: '22px', height: '22px', padding: '0 5px', borderRadius: '10px', background: active ? 'rgba(255,255,255,0.28)' : `${RED}22`, color: active ? '#fff' : RED, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{o.lose}</span>
           {o.streakCount >= 2 && (
             <span style={{
-              flexShrink: 0, padding: '1px 6px', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
-              background: active ? 'rgba(255,255,255,0.25)' : (o.streakType === 'win' ? `${WIN_BLUE}18` : `${RED}18`),
-              color: active ? '#fff' : (o.streakType === 'win' ? WIN_BLUE : RED),
+              flexShrink: 0, padding: '2px 7px', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 900, whiteSpace: 'nowrap' as const,
+              background: active ? 'rgba(255,255,255,0.9)' : (o.streakType === 'win' ? WIN_BLUE : RED),
+              color: active ? (o.streakType === 'win' ? WIN_BLUE : RED) : '#fff',
             }}>{o.streakCount}연{o.streakType === 'win' ? '승' : '패'}</span>
           )}
         </div>
 
-        {/* 하단: 총 경기수 / 조회중 스피너 */}
+        {/* 하단: 총 경기수·승률 / 조회중 스피너 */}
         {isSearching ? (
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: 800, color: active ? '#fff' : ORANGE }}>
             <span style={{
@@ -375,21 +375,22 @@ function OpponentCard({ o, rank, active, loading, isSearching, onSearch }: { o: 
             조회 중...
           </span>
         ) : (
-          <span style={{ fontSize: '0.66rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>{total}경기</span>
+          <span style={{ fontSize: '0.66rem', fontWeight: 700, color: active ? 'rgba(255,255,255,0.75)' : '#bbb' }}>
+            {total}경기{total > 0 ? ` · 승률 ${Math.round(winRate)}%` : ''}
+          </span>
         )}
       </button>
 
-      {/* 최근 경기 스쿼드 보기 - 별도 아이콘으로 분리해서 카드 안에서 클릭 영역이 겹치지 않게 함 */}
+      {/* 최근 경기 스쿼드 보기 - 별도 아이콘으로 분리해서 카드 안에서 클릭 영역이 겹치지 않게 함. 보조 액션이라 톤다운된 아웃라인 스타일로 시선을 승패 정보 뒤로 낮춤 */}
       {hasSquad && (
         <button
           onClick={(e) => { e.stopPropagation(); setShowSquadModal(true); }}
           title="최근 경기 스쿼드 보기"
           style={{
-            position: 'absolute', top: '6px', right: '6px', height: '28px', padding: '0 10px', borderRadius: '100px',
-            background: active ? 'rgba(255,255,255,0.9)' : ORANGE, border: 'none',
-            boxShadow: active ? '0 1px 4px rgba(0,0,0,0.2)' : `0 2px 6px ${ORANGE}70`,
+            position: 'absolute', top: '8px', right: '8px', height: '26px', padding: '0 10px', borderRadius: '100px',
+            background: active ? 'rgba(255,255,255,0.15)' : '#fff', border: `1.3px solid ${active ? 'rgba(255,255,255,0.6)' : ORANGE}`,
             display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer',
-            fontFamily: FONT, fontSize: '0.6rem', fontWeight: 900, color: active ? ORANGE : '#fff', whiteSpace: 'nowrap' as const,
+            fontFamily: FONT, fontSize: '0.6rem', fontWeight: 900, color: active ? '#fff' : ORANGE, whiteSpace: 'nowrap' as const,
           }}
         >⚽ 스쿼드</button>
       )}
@@ -1005,7 +1006,7 @@ export default function FcRecordClient() {
           }
           /* 상대목록 카드 그리드 - 좁은 화면은 2열, 640px부터 4열로 고정해서 좌우 빈 공간 없이 꽉 채움
              (auto-fill+고정폭 대신 1fr로 늘어나게 해서 줄 끝에 남는 여백이 생기지 않게 함) */
-          .fc-opp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .fc-opp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
           @media (min-width: 640px) {
             .fc-opp-grid { grid-template-columns: repeat(4, 1fr); }
           }
@@ -1145,7 +1146,7 @@ export default function FcRecordClient() {
                   <span style={{ fontSize: '0.76rem', color: '#999', fontWeight: 600 }}>(총 {overall!.total}경기)</span>
                 </div>
                 {overall!.thisMonth && overall!.thisMonth.total > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: `${ORANGE}0d` }}>
                     <span style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800 }}>
                       이번 달{(overall!.thisMonth as any).rangeLabel ? ` (${(overall!.thisMonth as any).rangeLabel})` : ''}
                     </span>
@@ -1158,7 +1159,7 @@ export default function FcRecordClient() {
                   </div>
                 )}
                 {(overall as any).recent15 && (overall as any).recent15.total > 0 && (
-                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
+                  <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: `${WIN_BLUE}0d` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginBottom: '8px' }}>
                       <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent15.total}경기</span>
                       <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent15.win}승</span>
@@ -1225,8 +1226,22 @@ export default function FcRecordClient() {
         {/* 액션성 섹션: 클릭하면 바로 검색되는 상대 선택 - 주황 틴트로 "탭 가능함"을 명확히 표시 */}
         {!opponentsLoading && opponents && opponents.length > 0 && (
           <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0d`, border: `1.5px solid ${ORANGE}45` }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginBottom: '14px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50` }}>
-              <Icon name="target" size={15} color="#fff" /> <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: 900 }}>탭하면 바로 검색돼요</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '10px', marginBottom: '14px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50` }}>
+                <Icon name="target" size={15} color="#fff" /> <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: 900 }}>탭하면 바로 검색돼요</span>
+              </div>
+              {/* 카드 테두리 색이 무슨 기준인지 안내하는 범례 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.7rem', color: '#999', fontWeight: 700 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', border: `2px solid ${WIN_BLUE}`, flexShrink: 0 }} /> 우세(승률 55%↑)
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', border: '2px solid #e5d9c8', flexShrink: 0 }} /> 백중
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', border: `2px solid ${RED}`, flexShrink: 0 }} /> 열세(승률 45%↓)
+                </span>
+              </div>
             </div>
             <div className="fc-opp-grid">
               {opponents.map((o, i) => (
