@@ -681,11 +681,6 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
               const sorted = sortMode === 'date'
                 ? [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime())
                 : [...activeData.topVideos].sort((a, b) => b.views - a.views);
-              // 7) 같은 날짜끼리 묶어서 구분선/소제목으로 표시 (날짜순 정렬일 때만 의미가 있음)
-              const dateKey = (v: typeof sorted[number]) => {
-                const d = new Date(v.publishedAt);
-                return `${d.getMonth() + 1}/${d.getDate()}`;
-              };
               return (
                 <div style={{ padding: '4px 28px 8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '8px', marginBottom: '14px' }}>
@@ -704,28 +699,17 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                       ))}
                     </div>
                   </div>
-                  {/* 2) + 3) + 4) 카드 최소폭을 190px로 키운 고정 그리드 - 화면이 넓어도 한 줄 개수가 과도하게 늘지 않도록
-                         컨테이너 자체를 1280px로 제한하고 auto-fill/minmax로 화면 크기별 컬럼 수를 자동 조정 (모바일 2~3개, 데스크톱 5~6개) */}
+                  {/* 한 줄에 항상 4개씩 고정 - 날짜별로 줄바꿈을 강제하지 않아 스크롤 길이를 줄이고,
+                         같은 날짜인지는 카드 왼쪽 색 바 + 카드 안 날짜/요일 표기로 충분히 구분되게 함 */}
                   <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
                       {sorted.map((v, i) => {
                         const ratio = v.views / maxV;
                         const t = tier(ratio);
                         const barPct = Math.max(4, Math.round(ratio * 100));
                         const d = new Date(v.publishedAt);
-                        // 7) 날짜순 정렬일 때만, 바로 앞 카드와 날짜가 바뀌는 지점에 소제목 표시
-                        const prevKey = i > 0 ? dateKey(sorted[i - 1]) : null;
-                        const showDateHeader = sortMode === 'date' && dateKey(v) !== prevKey;
-                        const sameDayCount = sortMode === 'date' ? sorted.filter(x => dateKey(x) === dateKey(v)).length : 0;
                         return (
                           <Fragment key={v.id}>
-                            {showDateHeader && (
-                              <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '8px', margin: i === 0 ? '0 0 -6px' : '10px 0 -6px' }}>
-                                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--rw-text2)' }}>{d.getMonth() + 1}월 {d.getDate()}일 ({WEEKDAY_KO[d.getDay()]})</span>
-                                <span style={{ fontSize: '0.64rem', color: 'var(--rw-text4)' }}>· {sameDayCount}개</span>
-                                <div style={{ flex: 1, height: '1px', background: 'var(--rw-border2)' }} />
-                              </div>
-                            )}
                             <div onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
                               background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
                               // 6) 날짜순 정렬일 때 같은 날짜끼리는 왼쪽에 옅은 색 바로 묶음을 표시
