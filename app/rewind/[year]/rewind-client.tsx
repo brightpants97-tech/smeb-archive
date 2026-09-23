@@ -479,11 +479,37 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
         `}</style>
 
         {/* 헤더 */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: ORANGE, marginBottom: '8px' }}>Upload Calendar</p>
           <h2 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '6px' }}>
             {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
           </h2>
+        </div>
+
+        {/* 1~12월 버튼 - 원하는 달로 바로 이동 */}
+        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px', marginBottom: '20px' }}>
+          {monthlyData.map(m => {
+            const hasVideos = m.topVideos.length > 0;
+            const isActive = activeMonth === m.month;
+            return (
+              <button
+                key={m.key}
+                disabled={!hasVideos}
+                onClick={() => { setDir(activeMonth != null && m.month < activeMonth ? -1 : 1); setActiveMonth(m.month); }}
+                title={hasVideos ? `${m.ytCount}개 업로드` : '업로드 없음'}
+                style={{
+                  minWidth: '46px', padding: '7px 10px', borderRadius: '8px',
+                  background: isActive ? ORANGE : 'var(--rw-bg4)',
+                  border: `1px solid ${isActive ? ORANGE : 'var(--rw-border2)'}`,
+                  color: isActive ? '#1a1200' : hasVideos ? 'var(--rw-text2)' : 'var(--rw-text4)',
+                  fontWeight: isActive ? 800 : 600, fontSize: '0.78rem', fontFamily: 'inherit',
+                  cursor: hasVideos ? 'pointer' : 'default',
+                  opacity: hasVideos ? 1 : 0.4,
+                  transition: 'background 0.15s, color 0.15s, border 0.15s',
+                }}
+              >{m.month}월</button>
+            );
+          })}
         </div>
 
         {/* 타임라인 */}
