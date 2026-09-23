@@ -463,7 +463,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
   function tier(ratio: number) {
     if (ratio > 0.7) return { dot: '#FFB800', stem: '#FFB800', border: 'rgba(255,184,0,0.55)', card: 'rgba(255,184,0,0.06)' };
     if (ratio > 0.35) return { dot: ORANGE, stem: ORANGE, border: 'rgba(235,112,26,0.45)', card: 'rgba(235,112,26,0.05)' };
-    return { dot: 'rgba(255,255,255,0.32)', stem: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.1)', card: 'rgba(255,255,255,0.03)' };
+    return { dot: 'rgba(255,255,255,0.5)', stem: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.22)', card: 'rgba(255,255,255,0.05)' };
   }
 
   function updateScrollState() {
@@ -551,6 +551,11 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
             {year}년 <em style={{ color: ORANGE, fontStyle: 'italic' }}>업로드 캘린더</em>
           </h2>
           <p style={{ color: 'var(--rw-text3)', fontSize: '0.84rem' }}>월을 클릭하면 타임라인이 펼쳐져요 · 썸네일에 마우스를 올리면 확대돼요</p>
+          {initialMonth != null && (
+            <p style={{ color: 'var(--rw-text3)', fontSize: '0.76rem', marginTop: '4px' }}>
+              💡 가장 활발했던 <strong style={{ color: ORANGE }}>{MONTH_KO[initialMonth - 1]}</strong>이 먼저 펼쳐져 있어요
+            </p>
+          )}
         </div>
 
         {/* 히트맵 */}
@@ -579,14 +584,17 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                   }}
                   style={{
                     width: '100%', aspectRatio: '1', borderRadius: '6px',
-                    background: '#EB701A', opacity: op,
+                    background: hasVideos ? '#EB701A' : 'transparent',
+                    opacity: hasVideos ? op : 1,
+                    border: hasVideos ? 'none' : '1.5px dashed var(--rw-border2)',
+                    boxSizing: 'border-box' as const,
                     cursor: hasVideos ? 'pointer' : 'default',
                     outline: isActive ? '2.5px solid #EB701A' : '2.5px solid transparent',
                     outlineOffset: '2px',
                     transition: 'opacity 0.15s, outline 0.1s, transform 0.1s',
                     transform: isActive ? 'scale(1.08)' : 'scale(1)',
                   }}
-                  title={hasVideos ? `${m.ytCount}개 업로드 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}` : '업로드 없음'}
+                  title={hasVideos ? `${m.ytCount}개 업로드 · 최고 ${fmt(Math.max(...m.topVideos.map(v => v.views)))}회` : '업로드 없음'}
                 />
                 {/* 7) 개수 숫자를 더 뚜렷하게 - 대비 강화된 히트맵과 함께 한눈에 스캔되도록 */}
                 <span style={{ fontSize: '0.66rem', fontWeight: 800, color: hasVideos ? 'var(--rw-text2)' : 'var(--rw-text4)' }}>
@@ -598,12 +606,13 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
         </div>
 
         {/* 범례 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '28px', flexWrap: 'wrap' as const }}>
           <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>낮음</span>
           {[0.3, 0.5, 0.75, 1].map((o, i) => (
             <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: '#EB701A', opacity: o }} />
           ))}
           <span style={{ fontSize: '0.68rem', color: 'var(--rw-text3)' }}>높음</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--rw-text4)', marginLeft: '4px' }}>(그 달 최고 조회수 기준 · 업로드 개수 아님)</span>
         </div>
 
         {/* 4) 월 히트맵 호버 미리보기 - 클릭 전에 그 달 상위 영상을 바로 확인 */}
@@ -612,11 +621,15 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
           if (!md || md.topVideos.length === 0) return null;
           const top3 = [...md.topVideos].sort((a, b) => b.views - a.views).slice(0, 3);
           const PW = 320;
+          const PH_EST = 60 + top3.length * 60; // 대략적인 예상 높이
           const r = monthHover.rect;
           const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
+          // 8) 화면 하단 끝에서 호버하면 팝업이 뷰포트 밖으로 잘리지 않도록, 아래 공간이 부족하면 박스 위쪽에 표시
+          const showAbove = r.bottom + 10 + PH_EST > window.innerHeight;
+          const top = showAbove ? Math.max(12, r.top - PH_EST - 10) : r.bottom + 10;
           return (
             <div style={{
-              position: 'fixed', left: `${left}px`, top: `${r.bottom + 10}px`, width: `${PW}px`, zIndex: 9999,
+              position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${PW}px`, zIndex: 9999,
               pointerEvents: 'none', background: '#1e1e1e', border: '1px solid rgba(235,112,26,0.5)',
               borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 48px rgba(0,0,0,0.7)', padding: '10px',
               animation: 'rwFadeUp 0.15s cubic-bezier(0.34,1.56,0.64,1) both',
@@ -652,10 +665,11 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                   )}
                 </span>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' as const }}>
+                  {/* 카드 자체의 티어 색상(tier() 함수)과 동일한 색으로 맞춰서, 범례를 보고 바로 카드에서 같은 색을 찾을 수 있게 함 */}
                   {[
-                    { label: '상위 30%', color: COMP,                     bg: 'rgba(0,201,255,0.12)',   border: 'rgba(0,201,255,0.4)',   dot: 11, glow: true },
+                    { label: '상위 30%', color: '#FFB800',              bg: 'rgba(255,184,0,0.12)',   border: 'rgba(255,184,0,0.4)',   dot: 11, glow: true },
                     { label: '중간',     color: ORANGE,                    bg: 'rgba(235,112,26,0.1)',   border: 'rgba(235,112,26,0.35)', dot: 9,  glow: false },
-                    { label: '하위',     color: 'var(--rw-text3)',  bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', dot: 7, glow: false },
+                    { label: '하위',     color: 'rgba(255,255,255,0.7)',  bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.22)', dot: 7, glow: false },
                   ].map((t, i) => (
                     <div key={i} style={{
                       background: t.bg,
@@ -667,7 +681,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                       <div style={{
                         width: `${t.dot}px`, height: `${t.dot}px`,
                         borderRadius: '50%', background: t.color, flexShrink: 0,
-                        boxShadow: t.glow ? '0 0 6px rgba(0,201,255,0.55)' : 'none',
+                        boxShadow: t.glow ? '0 0 6px rgba(255,184,0,0.55)' : 'none',
                       }} />
                       <span style={{ fontSize: '0.7rem', fontWeight: i === 0 ? 700 : 600, color: t.color, whiteSpace: 'nowrap' as const }}>
                         {t.label}
@@ -677,41 +691,45 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* 10) 아래 타임라인 안쪽 스크롤 화살표(원형, 영상 단위 이동)와 헷갈리지 않도록,
+                       이 달 단위 이동 버튼은 텍스트 라벨이 있는 알약 모양으로 구분 */}
                 <button
                   onClick={goPrevMonth}
                   disabled={activeIdx <= 0}
-                  title="이전 달"
+                  title="이전 달로 이동"
                   style={{
-                    width: '32px', height: '32px', borderRadius: '8px',
+                    height: '32px', padding: '0 12px', borderRadius: '100px',
                     background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)',
                     color: 'var(--rw-text2)', cursor: activeIdx > 0 ? 'pointer' : 'default',
-                    fontSize: '1rem', fontWeight: 700, fontFamily: 'inherit',
+                    fontSize: '0.76rem', fontWeight: 700, fontFamily: 'inherit',
                     opacity: activeIdx > 0 ? 1 : 0.3,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' as const,
                   }}
-                >‹</button>
+                >‹ 이전 달</button>
                 <button
                   onClick={goNextMonth}
                   disabled={activeIdx === -1 || activeIdx >= monthsWithVideos.length - 1}
-                  title="다음 달"
+                  title="다음 달로 이동"
                   style={{
-                    width: '32px', height: '32px', borderRadius: '8px',
+                    height: '32px', padding: '0 12px', borderRadius: '100px',
                     background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)',
                     color: 'var(--rw-text2)', cursor: (activeIdx !== -1 && activeIdx < monthsWithVideos.length - 1) ? 'pointer' : 'default',
-                    fontSize: '1rem', fontWeight: 700, fontFamily: 'inherit',
+                    fontSize: '0.76rem', fontWeight: 700, fontFamily: 'inherit',
                     opacity: (activeIdx !== -1 && activeIdx < monthsWithVideos.length - 1) ? 1 : 0.3,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' as const,
                   }}
-                >›</button>
+                >다음 달 ›</button>
                 {/* 2) + 10) 타임라인/그리드(전체 보기)/리스트(텍스트) 보기 전환 */}
                 <div style={{ display: 'flex', background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', borderRadius: '8px', padding: '2px', marginLeft: '4px' }}>
-                  {([['timeline', '타임라인'], ['grid', '전체 보기'], ['list', '리스트']] as const).map(([mode, label]) => (
-                    <button key={mode} onClick={() => setViewMode(mode)} style={{
+                  {/* 6) 이름만으로는 차이를 예측하기 어려워서 각 모드를 상징하는 아이콘을 이름 앞에 추가 */}
+                  {([['timeline', '📍', '타임라인'], ['grid', '▦', '전체 보기'], ['list', '☰', '리스트']] as const).map(([mode, icon, label]) => (
+                    <button key={mode} onClick={() => setViewMode(mode)} title={label} style={{
                       padding: '4px 9px', borderRadius: '6px', border: 'none',
                       background: viewMode === mode ? ORANGE : 'transparent',
                       color: viewMode === mode ? '#1a1200' : 'var(--rw-text3)',
                       fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
-                    }}>{label}</button>
+                      display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    }}><span aria-hidden="true">{icon}</span>{label}</button>
                   ))}
                 </div>
                 <button
@@ -796,7 +814,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                         const above = i % 2 === 0;
                         const ratio = v.views / maxV;
                         const t = tier(ratio);
-                        const dotSz = ratio > 0.7 ? 14 : ratio > 0.35 ? 10 : 7;
+                        const dotSz = ratio > 0.7 ? 15 : ratio > 0.35 ? 11 : 9;
                         const isHov = hovered?.id === v.id;
 
                         return (
@@ -808,14 +826,17 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                               ...(above ? { bottom: `${dotSz / 2}px` } : { top: `${dotSz / 2}px` }),
                             }} />
 
-                            {/* 점 */}
-                            <div style={{
-                              width: `${dotSz}px`, height: `${dotSz}px`, borderRadius: '50%',
-                              background: t.dot, position: 'relative', zIndex: 2,
-                              boxShadow: `0 0 0 ${Math.ceil(dotSz / 2)}px ${t.dot === '#FFB800' ? 'rgba(255,184,0,0.2)' : t.dot === ORANGE ? 'rgba(235,112,26,0.2)' : 'rgba(255,255,255,0.08)'}`,
-                              transition: 'transform 0.15s',
-                              transform: isHov ? 'scale(1.6)' : 'scale(1)',
-                            }} />
+                            {/* 점 — 5) 처음 보는 사람도 클릭 가능한 요소로 인식하도록 크기를 키우고 정확한 조회수를 툴팁으로 표시 */}
+                            <div
+                              title={`${v.title} · ${new Date(v.publishedAt).getMonth() + 1}/${new Date(v.publishedAt).getDate()} · ${v.views.toLocaleString('ko-KR')}회`}
+                              style={{
+                                width: `${dotSz}px`, height: `${dotSz}px`, borderRadius: '50%',
+                                background: t.dot, position: 'relative', zIndex: 2, cursor: 'pointer',
+                                boxShadow: `0 0 0 ${Math.ceil(dotSz / 2)}px ${t.dot === '#FFB800' ? 'rgba(255,184,0,0.2)' : t.dot === ORANGE ? 'rgba(235,112,26,0.2)' : 'rgba(255,255,255,0.1)'}`,
+                                transition: 'transform 0.15s',
+                                transform: isHov ? 'scale(1.6)' : 'scale(1)',
+                              }}
+                            />
 
                             {/* 6) 카드를 열어보지 않아도 시간순 흐름을 바로 알 수 있도록 점 옆에 날짜 표기 */}
                             <span style={{
@@ -850,14 +871,14 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                                 {ratio > 0.7 && (
                                   <span style={{ position: 'absolute', top: '5px', left: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
                                 )}
-                                <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
+                                <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
                               </div>
                               <div style={{ padding: '7px 9px 9px' }}>
                                 <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                                {/* 8) 코너의 작은 오버레이 숫자만으론 눈에 잘 안 띄어서, 본문에도 조회수를 명시 */}
+                                {/* 8) 코너의 작은 오버레이 숫자만으론 눈에 잘 안 띄어서, 본문에도 조회수를 명시 · 9) 정확한 숫자는 title 툴팁으로 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                                   <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getDate()}일</span>
-                                  <span style={{ fontSize: '0.62rem', fontWeight: 800, color: t.dot }}>👁 {fmt(v.views)}</span>
+                                  <span title={`${v.views.toLocaleString('ko-KR')}회`} style={{ fontSize: '0.62rem', fontWeight: 800, color: t.dot }}>👁 {fmt(v.views)}</span>
                                 </div>
                               </div>
                             </div>
@@ -884,7 +905,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                       <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
                         <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
-                        <div style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
+                        <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
                       </div>
                       <div style={{ padding: '7px 9px 9px' }}>
                         <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
@@ -911,7 +932,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                         {new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}
                       </span>
                       <p style={{ margin: 0, flex: 1, minWidth: 0, fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{v.title}</p>
-                      <span style={{ fontSize: '0.76rem', fontWeight: 800, color: t.dot, flexShrink: 0 }}>👁 {fmt(v.views)}</span>
+                      <span title={`${v.views.toLocaleString('ko-KR')}회`} style={{ fontSize: '0.76rem', fontWeight: 800, color: t.dot, flexShrink: 0 }}>👁 {fmt(v.views)}</span>
                     </div>
                   );
                 })}
