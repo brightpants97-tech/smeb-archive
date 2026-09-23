@@ -539,7 +539,8 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
           .tl-wrap::-webkit-scrollbar { display: none; }
           .tl-wrap { -ms-overflow-style: none; scrollbar-width: none; }
           .tl-card { transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; }
-          .tl-card:hover { transform: scale(1.1) !important; z-index: 30 !important; }
+          .tl-card { position: relative; }
+          .tl-card:hover { transform: scale(1.1) !important; z-index: 30 !important; box-shadow: 0 10px 28px rgba(0,0,0,0.55) !important; }
           .scroll-btn { transition: background 0.15s, opacity 0.15s; }
           .scroll-btn:hover { background: rgba(235,112,26,0.25) !important; }
         `}</style>
@@ -892,30 +893,60 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
             </div>
             )}
 
-            {/* 2) 전체 보기 - 화살표 없이 그 달 업로드 전체를 격자로 한눈에 스캔 */}
-            {viewMode === 'grid' && (
-              <div style={{ padding: '4px 28px 8px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '14px' }}>
-                {[...activeData.topVideos].sort((a, b) => b.views - a.views).map(v => {
-                  const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
-                  const t = tier(v.views / maxV);
-                  return (
-                    <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
-                      background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
-                    }}>
-                      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
-                        <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
-                        <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
-                      </div>
-                      <div style={{ padding: '7px 9px 9px' }}>
-                        <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                        <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {/* 2) 전체 보기 - 화살표 없이 그 달 업로드 전체를 격자로 한눈에 스캔 (날짜순 배치) */}
+            {viewMode === 'grid' && (() => {
+              const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+              const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
+              // 1) 조회수가 아니라 업로드 날짜순(오래된 순)으로 배치 - 리스트 보기와 동일한 기준
+              const sorted = [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
+              return (
+                <div style={{ padding: '4px 28px 8px' }}>
+                  <p style={{ margin: '0 0 12px', fontSize: '0.7rem', color: 'var(--rw-text3)' }}>📅 업로드 날짜순으로 배치했어요 (오래된 순)</p>
+                  {/* 7) 그리드 대신 flex-wrap을 써서 마지막 줄 카드가 늘어나지 않고 왼쪽 정렬되게 함 */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '14px' }}>
+                    {sorted.map((v, i) => {
+                      const ratio = v.views / maxV;
+                      const t = tier(ratio);
+                      const barPct = Math.max(4, Math.round(ratio * 100));
+                      const d = new Date(v.publishedAt);
+                      return (
+                        <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
+                          background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
+                          width: '150px', flexShrink: 0,
+                        }}>
+                          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
+                            <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
+                            {/* 2) 업로드 순번 배지 - 날짜순이므로 몇 번째로 올라온 영상인지 표시 */}
+                            <span style={{
+                              position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)',
+                              border: '1px solid rgba(255,255,255,0.35)', color: '#fff', fontSize: '0.58rem', fontWeight: 800,
+                              padding: '1px 5px', borderRadius: '4px',
+                            }}>#{i + 1}</span>
+                            {/* 4) 타임라인 보기와 동일하게 상위 티어 영상엔 TOP 배지 표시 (일관성) */}
+                            {ratio > 0.7 && (
+                              <span style={{ position: 'absolute', top: '5px', right: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
+                            )}
+                            {/* 5) 숫자만으론 무엇인지 애매해서 눈 아이콘 + '회' 단위를 함께 표기 */}
+                            <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.62rem', fontWeight: 900, color: t.dot }}>👁 {fmt(v.views)}</div>
+                          </div>
+                          <div style={{ padding: '7px 9px 9px' }}>
+                            {/* 6) 두 줄로 잘리는 제목은 title 툴팁으로 전체 내용 확인 가능하게 */}
+                            <p title={v.title} style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                            {/* 8) 날짜에 요일을 함께 표기해 최신/과거 감각을 더 쉽게 파악 */}
+                            <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{d.getMonth() + 1}/{d.getDate()} ({WEEKDAY_KO[d.getDay()]})</span>
+                            {/* 10) 1위(최고 조회수) 대비 상대적인 인기도를 막대로 표시 */}
+                            <div style={{ marginTop: '5px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                              <div style={{ width: `${barPct}%`, height: '100%', background: t.dot, borderRadius: '2px' }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 10) 리스트 보기 - 썸네일 없이 제목/날짜/조회수만 빠르게 스캔 */}
             {viewMode === 'list' && (
