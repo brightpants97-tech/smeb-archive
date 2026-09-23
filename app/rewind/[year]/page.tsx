@@ -157,7 +157,7 @@ export default async function RewindPage({ params }: { params: Promise<{ year: s
       key, month: i + 1,
       topYT: ytM[0] || null,
       top3: ytM.slice(0, 3),
-      topVideos: ytM.slice(0, 10),
+      topVideos: ytM,
       ytCount: ytM.length,
       soopCount: soopM.length,
       totalMonthViews: ytM.reduce((s, v) => s + v.views, 0),
