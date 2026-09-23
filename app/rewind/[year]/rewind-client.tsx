@@ -47,17 +47,50 @@ function useInView(threshold = 0.2) {
   return [ref, inView] as const;
 }
 
+// ── 정보 툴팁 아이콘 ──
+function InfoTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'help' }}
+    >
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: '14px', height: '14px', borderRadius: '50%',
+        border: '1px solid var(--rw-text3)', color: 'var(--rw-text3)',
+        fontSize: '0.62rem', fontWeight: 700, fontStyle: 'italic' as const,
+      }}>i</span>
+      {open && (
+        <span style={{
+          position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--rw-text)', color: 'var(--rw-bg)',
+          fontSize: '0.7rem', fontWeight: 600, lineHeight: 1.4,
+          padding: '8px 12px', borderRadius: '10px', width: 'max-content', maxWidth: '200px',
+          textAlign: 'center' as const, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', zIndex: 20,
+          whiteSpace: 'normal' as const,
+        }}>
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
 // ── 통계 카드 ──
-function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
-  value: number; label: string; suffix?: string; delay?: number; active: boolean; subText?: string;
+function StatCard({ value, label, suffix = '', delay = 0, active, subText, tip }: {
+  value: number; label: string; suffix?: string; delay?: number; active: boolean; subText?: string; tip?: string;
 }) {
   const [go, setGo] = useState(false);
   useEffect(() => { if (active) { const t = setTimeout(() => setGo(true), delay); return () => clearTimeout(t); } }, [active, delay]);
   const count = useCountUp(value, 2400, go);
+  const noData = value === 0;
   return (
     <div style={{ textAlign: 'center', padding: '24px 16px', background: 'rgba(235,112,26,0.07)', border: '1px solid rgba(235,112,26,0.13)', borderRadius: '20px', flex: 1, minWidth: '140px', overflow: 'hidden' }}>
       <div style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', fontWeight: 900, letterSpacing: '-0.03em', color: ORANGE, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' as const, overflow: 'hidden', wordBreak: 'break-all' as const }}>
-        {fmt(count)}{suffix}
+        {noData ? '-' : `${fmt(count)}${suffix}`}
       </div>
       {subText && (
         <div style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px',
@@ -68,7 +101,10 @@ function StatCard({ value, label, suffix = '', delay = 0, active, subText }: {
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--rw-text2)' }}>{subText}</span>
         </div>
       )}
-      <div style={{ fontSize: '0.8rem', color: 'var(--rw-text2)', marginTop: '8px', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: '0.8rem', color: 'var(--rw-text2)', marginTop: '8px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+        {label}
+        {tip && <InfoTip text={tip} />}
+      </div>
     </div>
   );
 }
@@ -949,7 +985,26 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
   const [statsRef, statsInView] = useInView(0.2);
   const [top10Ref, top10InView] = useInView(0.05);
   const [endRef, endInView]     = useInView(0.2);
+  const [openRef, openInView]   = useInView(0.3);
+  const [calRef, calInView]     = useInView(0.15);
   const [lightMode, setLightMode] = useState(false);
+
+  // ── 섹션 진행 인디케이터 ──
+  const SECTIONS = [
+    { key: 'open',  label: '인트로',    inView: openInView,  ref: openRef },
+    { key: 'cal',   label: '캘린더',    inView: calInView,   ref: calRef },
+    { key: 'stats', label: '숫자',      inView: statsInView, ref: statsRef },
+    { key: 'top10', label: 'TOP 10',    inView: top10InView, ref: top10Ref },
+    { key: 'end',   label: '엔딩',      inView: endInView,   ref: endRef },
+  ] as const;
+  const activeSectionIdx = (() => {
+    for (let i = SECTIONS.length - 1; i >= 0; i--) if (SECTIONS[i].inView) return i;
+    return 0;
+  })();
+  const scrollToSection = (idx: number) => {
+    const el = (SECTIONS[idx].ref as React.RefObject<HTMLElement>).current;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div data-rw={lightMode ? 'light' : 'dark'} style={{ background: 'var(--rw-bg)', color: 'var(--rw-text)', minHeight: '100vh', fontFamily: "'Pretendard', system-ui, -apple-system, sans-serif", overflowX: 'hidden', transition: 'background 0.3s, color 0.3s' }}>
@@ -958,13 +1013,13 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
         [data-rw="dark"] {
           --rw-bg: #0b0b0b; --rw-bg2: #111; --rw-bg3: rgba(255,255,255,0.03); --rw-bg4: rgba(255,255,255,0.06);
           --rw-border: rgba(255,255,255,0.08); --rw-border2: rgba(255,255,255,0.14);
-          --rw-text: #fff; --rw-text2: rgba(255,255,255,0.65); --rw-text3: rgba(255,255,255,0.38); --rw-text4: rgba(255,255,255,0.22);
+          --rw-text: #fff; --rw-text2: rgba(255,255,255,0.68); --rw-text3: rgba(255,255,255,0.5); --rw-text4: rgba(255,255,255,0.32);
           --rw-card: rgba(255,255,255,0.04); --rw-thumb: #0a0a0a;
         }
         [data-rw="light"] {
           --rw-bg: #f5f3ee; --rw-bg2: #e8e5dd; --rw-bg3: rgba(18,18,16,0.06); --rw-bg4: rgba(18,18,16,0.1);
           --rw-border: rgba(18,18,16,0.18); --rw-border2: rgba(18,18,16,0.32);
-          --rw-text: #121210; --rw-text2: rgba(18,18,16,0.72); --rw-text3: rgba(18,18,16,0.5); --rw-text4: rgba(18,18,16,0.32);
+          --rw-text: #121210; --rw-text2: rgba(18,18,16,0.75); --rw-text3: rgba(18,18,16,0.6); --rw-text4: rgba(18,18,16,0.42);
           --rw-card: rgba(18,18,16,0.06); --rw-thumb: #d8d5cc;
           --rw-nav-bg: rgba(255,252,246,0.96); --rw-nav-border: rgba(18,18,16,0.14);
           --rw-btn-bg: rgba(18,18,16,0.08); --rw-btn-border: rgba(18,18,16,0.22); --rw-btn-color: #121210;
@@ -980,7 +1035,7 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       `}</style>
 
       {/* ───────────────── ① 오프닝 ───────────────── */}
-      <section style={{
+      <section ref={openRef as React.RefObject<HTMLElement>} style={{
         minHeight: '100vh',
         display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden', paddingTop: '72px',
@@ -1034,7 +1089,13 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
           </div>
 
           {/* 연도 탭 */}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const }}>
+            <span style={{
+              fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.08em',
+              color: 'var(--rw-text3)', background: 'var(--rw-bg3)',
+              border: '1px solid var(--rw-border)', borderRadius: '100px',
+              padding: '4px 10px', whiteSpace: 'nowrap' as const, flexShrink: 0,
+            }}>연간 리포트</span>
             {validYears.map(y => {
               const isActive = y === year;
               return (
@@ -1124,7 +1185,29 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
       </section>
 
       {/* ───────────────── ②-b 업로드 캘린더 (메인 콘텐츠 - 통계보다 먼저 배치) ───────────────── */}
-      <UploadCalendar monthlyData={monthlyData} year={year} defaultMonth={stats.peakMonth.month} />
+      <div ref={calRef as React.RefObject<HTMLDivElement>}>
+        <UploadCalendar monthlyData={monthlyData} year={year} defaultMonth={stats.peakMonth.month} />
+      </div>
+
+      {/* 섹션 진행 인디케이터 */}
+      <div style={{
+        position: 'fixed', right: '18px', top: '50%', transform: 'translateY(-50%)', zIndex: 150,
+        display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '10px',
+      }}>
+        {SECTIONS.map((s, i) => (
+          <button key={s.key} onClick={() => scrollToSection(i)} aria-label={s.label}
+            title={s.label}
+            style={{
+              width: i === activeSectionIdx ? '10px' : '7px',
+              height: i === activeSectionIdx ? '10px' : '7px',
+              borderRadius: '50%', padding: 0, cursor: 'pointer',
+              background: i === activeSectionIdx ? ORANGE : 'var(--rw-text4)',
+              border: 'none', transition: 'all 0.25s ease',
+              boxShadow: i === activeSectionIdx ? '0 0 10px rgba(235,112,26,0.6)' : 'none',
+            }}
+          />
+        ))}
+      </div>
 
       {/* ───────────────── ② 숫자로 보는 한 해 ───────────────── */}
       <section ref={statsRef as React.RefObject<HTMLElement>} style={{ padding: 'clamp(60px,10vw,100px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)' }}>
@@ -1145,24 +1228,45 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
               </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}>
-              <StatCard value={stats.ytUploads}  label="업로드 영상 수"    suffix="개" delay={0}   active={statsInView} />
-              <StatCard value={stats.totalViews} label="총 조회수"          suffix="회" delay={150} active={statsInView} />
-              <StatCard value={stats.avgViews}   label="영상당 평균 조회수" suffix="회" delay={300} active={statsInView} />
+              <StatCard value={stats.ytUploads}  label="업로드 영상 수"    suffix="개" delay={0}   active={statsInView} tip="이 해에 유튜브에 올라온 영상 개수예요" />
+              <StatCard value={stats.totalViews} label="총 조회수"          suffix="회" delay={150} active={statsInView} tip="이 해에 올라온 모든 영상 조회수의 합이에요" />
+              <StatCard value={stats.avgViews}   label="영상당 평균 조회수" suffix="회" delay={300} active={statsInView} tip="총 조회수 ÷ 업로드 영상 수로 계산해요" />
             </div>
           </div>
 
 
 
           {/* ── 가장 바빴던 달 ── */}
-          <div style={{ marginTop: '12px', padding: '18px 20px', background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '16px', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', gap: '16px', width: '100%', boxSizing: 'border-box' as const }}>
-            <div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--rw-text3)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>가장 바빴던 달</div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
+          <div style={{ marginTop: '12px', padding: '18px 20px', background: 'var(--rw-bg3)', border: '1px solid var(--rw-border)', borderRadius: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: '20px', width: '100%', boxSizing: 'border-box' as const, flexWrap: 'wrap' as const }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--rw-text3)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>가장 바빴던 달</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: ORANGE }}>{MONTH_KO[stats.peakMonth.month - 1]}</div>
+              </div>
+              <InfoTip text="유튜브 업로드와 SOOP 방송을 합쳐 가장 많았던 달이에요" />
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--rw-text3)', lineHeight: 1.7 }}>
-              <div><span style={{ color: '#ff6b6b' }}>YT</span> {stats.peakMonth.ytCount}개</div>
-              <div><span style={{ color: '#60a8ff' }}>SOOP</span> {stats.peakMonth.soopCount}개</div>
-            </div>
+            {(() => {
+              const yt = stats.peakMonth.ytCount, soop = stats.peakMonth.soopCount;
+              const maxV = Math.max(yt, soop, 1);
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '7px', flex: 1, minWidth: '140px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#ff6b6b', width: '38px', flexShrink: 0 }}>YT</span>
+                    <div style={{ flex: 1, height: '8px', borderRadius: '5px', background: 'var(--rw-bg4)', overflow: 'hidden' }}>
+                      <div style={{ width: `${(yt / maxV) * 100}%`, height: '100%', background: '#ff6b6b', borderRadius: '5px', transition: 'width 0.6s ease' }} />
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--rw-text3)', width: '38px', textAlign: 'right' as const, flexShrink: 0 }}>{yt}개</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#60a8ff', width: '38px', flexShrink: 0 }}>SOOP</span>
+                    <div style={{ flex: 1, height: '8px', borderRadius: '5px', background: 'var(--rw-bg4)', overflow: 'hidden' }}>
+                      <div style={{ width: `${(soop / maxV) * 100}%`, height: '100%', background: '#60a8ff', borderRadius: '5px', transition: 'width 0.6s ease' }} />
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--rw-text3)', width: '38px', textAlign: 'right' as const, flexShrink: 0 }}>{soop}개</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </section>
@@ -1181,11 +1285,13 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
 
           {top10InView && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'clamp(8px,1.2vw,16px)' }}>
-              {top10.map((v, i) => {
+              {(() => {
+                const maxViews = Math.max(1, ...top10.map(v => v.views));
+                return top10.map((v, i) => {
                 const isTop3 = i < 3;
-                const TOP3_BORDER = ['#FFB800', '#C0C0C0', '#CD7F32'];
-                const TOP3_GLOW   = ['rgba(255,184,0,0.5)', 'rgba(192,192,192,0.45)', 'rgba(205,127,50,0.4)'];
-                const MEDAL = ['🥇','🥈','🥉'];
+                const TOP3_BG = ['#FFB800', '#C0C0C0', '#CD7F32'];
+                const TOP3_GLOW = ['rgba(255,184,0,0.5)', 'rgba(192,192,192,0.45)', 'rgba(205,127,50,0.4)'];
+                const barPct = Math.max(4, Math.round((v.views / maxViews) * 100));
                 return (
                   <div key={v.id}
                     onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')}
@@ -1195,8 +1301,8 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
                       borderRadius: 'clamp(8px,1vw,12px)', overflow: 'hidden',
                       width: '100%', aspectRatio: '16/9', position: 'relative', background: 'var(--rw-thumb)',
                       boxShadow: isTop3
-                        ? `0 0 0 2px ${TOP3_BORDER[i]}, 0 4px 16px ${TOP3_GLOW[i]}`
-                        : 'none',
+                        ? `0 0 0 2px ${TOP3_BG[i]}, 0 4px 16px ${TOP3_GLOW[i]}`
+                        : '0 0 0 1px var(--rw-border2)',
                       transition: 'transform 0.2s, box-shadow 0.2s',
                     }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)'}
@@ -1204,31 +1310,40 @@ export default function RewindClient({ year, validYears, stats, monthlyData, top
                     >
                       <img src={v.thumbnail} alt={v.title}
                         style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
-                      {/* 순위 뱃지 */}
+                      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.15) 62%, transparent 78%)' }} />
+                      {/* 순위 뱃지 — 모든 순위 동일한 원형 배지 스타일 */}
                       <div style={{
-                        position:'absolute', top:'6px', left:'7px',
-                        fontSize: isTop3 ? '0.78rem' : '0.68rem',
-                        fontWeight:900, color: i === 1 ? '#1A1A1A' : '#fff',
-                        background: isTop3 ? TOP3_BORDER[i] : 'rgba(0,0,0,0.55)',
-                        padding: isTop3 ? '3px 7px' : '2px 6px',
-                        borderRadius:'5px', letterSpacing:'-0.02em', lineHeight:1,
+                        position:'absolute', top:'7px', left:'7px',
+                        width: isTop3 ? '26px' : '22px', height: isTop3 ? '26px' : '22px',
+                        borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: isTop3 ? '0.72rem' : '0.64rem',
+                        fontWeight: 900, color: isTop3 ? '#1A1A1A' : '#fff',
+                        background: isTop3 ? TOP3_BG[i] : 'rgba(0,0,0,0.6)',
+                        border: isTop3 ? 'none' : '1px solid rgba(255,255,255,0.35)',
+                        letterSpacing:'-0.02em', lineHeight:1, flexShrink: 0,
                       }}>
-                        {isTop3 ? `${MEDAL[i]} ${i+1}` : `#${i+1}`}
+                        {i+1}
                       </div>
                       {/* 조회수 + 제목 */}
                       <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'8px 10px' }}>
                         <p style={{
                           fontSize:'0.74rem', fontWeight:600, color:'rgba(255,255,255,0.92)',
-                          lineHeight:1.35, margin:'0 0 3px',
+                          lineHeight:1.35, margin:'0 0 4px',
                           display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden',
                         } as React.CSSProperties}>{v.title}</p>
-                        <span style={{ fontSize:'0.65rem', fontWeight:800, color:ORANGE }}>{fmt(v.views)}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize:'0.65rem', fontWeight:800, color:ORANGE, flexShrink: 0 }}>{fmt(v.views)}회</span>
+                          <div style={{ flex: 1, height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.18)', overflow: 'hidden', minWidth: '20px' }}>
+                            <div style={{ width: `${barPct}%`, height: '100%', background: ORANGE, borderRadius: '2px' }} />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
-              })}
+                });
+              })()}
               {top10.length === 0 && (
                 <div style={{ gridColumn: '1/-1', padding: '60px', textAlign: 'center', color: 'var(--rw-text3)', fontSize: '0.9rem' }}>데이터를 불러오는 중이에요</div>
               )}
