@@ -1,5 +1,5 @@
 'use client'; // build:1785597211
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import type { Video, MonthData, RewindStats } from './page';
 
 const ORANGE = '#EB701A';
@@ -437,15 +437,12 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
     : firstMonth;
   const [activeMonth, setActiveMonth] = useState<number | null>(initialMonth);
   const [dir, setDir] = useState<1 | -1>(1);
-  const [hovered, setHovered] = useState<{ id: string; rect: DOMRect; above: boolean } | null>(null);
-  const tlRef = useRef<HTMLDivElement>(null);
-  const [scrollable, setScrollable] = useState({ left: false, right: false });
-  // 2) + 10) 타임라인(기본) / 그리드(전체 보기) / 리스트(텍스트) 세 가지 보기 모드
-  const [viewMode, setViewMode] = useState<'timeline' | 'grid' | 'list'>('timeline');
+  // 1) 타임라인 제거 - 그리드(전체 보기) / 리스트(텍스트) 두 가지 보기 모드만 남김, 기본은 그리드
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  // 9) 타임라인이 사라지고 그리드가 메인 뷰가 되므로, 날짜순/조회수순 정렬 기준을 직접 선택 가능하게
+  const [sortMode, setSortMode] = useState<'date' | 'views'>('date');
   // 4) 월 히트맵 박스에 마우스를 올렸을 때 상위 영상 미리보기
   const [monthHover, setMonthHover] = useState<{ month: number; rect: DOMRect } | null>(null);
-  // 1) 화살표 클릭 없이도 드래그로 타임라인을 넘길 수 있게
-  const dragState = useRef<{ dragging: boolean; startX: number; startScroll: number } | null>(null);
 
   const MONTH_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const fmt = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
@@ -466,83 +463,19 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
     return { dot: 'rgba(255,255,255,0.5)', stem: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.22)', card: 'rgba(255,255,255,0.05)' };
   }
 
-  function updateScrollState() {
-    const el = tlRef.current;
-    if (!el) return;
-    setScrollable({ left: el.scrollLeft > 8, right: el.scrollLeft < el.scrollWidth - el.clientWidth - 8 });
-  }
-
-  useEffect(() => {
-    const el = tlRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', updateScrollState, { passive: true });
-    setTimeout(updateScrollState, 100);
-    return () => el.removeEventListener('scroll', updateScrollState);
-  }, [activeMonth]);
-
-  // 3) 카드가 반쯤 잘린 채로 끝나지 않도록, 고정 320px 대신 실제 보이는 너비만큼 한 세트로 이동
-  function scroll(dir: 'left' | 'right') {
-    const el = tlRef.current;
-    if (!el) return;
-    const pageAmount = Math.max(el.clientWidth * 0.9, 320);
-    el.scrollBy({ left: dir === 'left' ? -pageAmount : pageAmount, behavior: 'smooth' });
-  }
-  // 9) 타임라인에 포커스가 있을 때 방향키로도 넘길 수 있게
-  function onTimelineKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); scroll('left'); }
-    if (e.key === 'ArrowRight') { e.preventDefault(); scroll('right'); }
-  }
-  // 1) 마우스 드래그로 타임라인을 붙잡고 옆으로 끌 수 있게 (화살표 클릭 없이 탐색)
-  const dragMoved = useRef(false);
-  function onTimelinePointerDown(e: React.PointerEvent) {
-    const el = tlRef.current;
-    if (!el) return;
-    dragMoved.current = false;
-    dragState.current = { dragging: true, startX: e.clientX, startScroll: el.scrollLeft };
-    el.setPointerCapture(e.pointerId);
-  }
-  function onTimelinePointerMove(e: React.PointerEvent) {
-    const el = tlRef.current;
-    const ds = dragState.current;
-    if (!el || !ds?.dragging) return;
-    const delta = e.clientX - ds.startX;
-    if (Math.abs(delta) > 4) dragMoved.current = true;
-    el.scrollLeft = ds.startScroll - delta;
-  }
-  function onTimelinePointerUp() {
-    if (dragState.current) dragState.current.dragging = false;
-  }
-  // 1) 트랙패드/휠의 세로 스크롤도 가로 이동으로 받아들여서, 페이지를 세로로 훑다가도 자연스럽게 넘어가게
-  function onTimelineWheel(e: React.WheelEvent) {
-    const el = tlRef.current;
-    if (!el) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      el.scrollLeft += e.deltaY;
-    }
-  }
-
   const activeData = monthlyData.find(m => m.month === activeMonth);
   const monthsWithVideos = monthlyData.filter(m => m.topVideos.length > 0).map(m => m.month);
   const activeIdx = activeMonth != null ? monthsWithVideos.indexOf(activeMonth) : -1;
   const goToMonth = (m: number, direction: 1 | -1) => { setDir(direction); setActiveMonth(m); };
   const goPrevMonth = () => { if (activeIdx > 0) goToMonth(monthsWithVideos[activeIdx - 1], -1); };
   const goNextMonth = () => { if (activeIdx !== -1 && activeIdx < monthsWithVideos.length - 1) goToMonth(monthsWithVideos[activeIdx + 1], 1); };
-  const CARD_W = 148;
-  const STEM_H = 40;
-  const CARD_H = Math.round(CARD_W * 9 / 16) + 56;
-  const TL_HEIGHT = CARD_H * 2 + STEM_H * 2 + 20;
 
   return (
     <section style={{ padding: 'clamp(48px,8vw,80px) clamp(1.5rem,5vw,5rem)', borderTop: '1px solid var(--rw-border)', background: 'var(--rw-bg3)' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
         <style>{`
-          .tl-wrap::-webkit-scrollbar { display: none; }
-          .tl-wrap { -ms-overflow-style: none; scrollbar-width: none; }
-          .tl-card { transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; }
-          .tl-card { position: relative; }
-          .tl-card:hover { transform: scale(1.1) !important; z-index: 30 !important; box-shadow: 0 10px 28px rgba(0,0,0,0.55) !important; }
-          .scroll-btn { transition: background 0.15s, opacity 0.15s; }
-          .scroll-btn:hover { background: rgba(235,112,26,0.25) !important; }
+          .tl-card { transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; position: relative; }
+          .tl-card:hover { transform: scale(1.05) !important; z-index: 30 !important; box-shadow: 0 10px 28px rgba(0,0,0,0.55) !important; }
         `}</style>
 
         {/* 헤더 */}
@@ -720,10 +653,10 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' as const,
                   }}
                 >다음 달 ›</button>
-                {/* 2) + 10) 타임라인/그리드(전체 보기)/리스트(텍스트) 보기 전환 */}
+                {/* 1) 타임라인 제거 - 그리드(전체 보기)/리스트(텍스트) 두 가지 보기 전환만 남김 */}
                 <div style={{ display: 'flex', background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', borderRadius: '8px', padding: '2px', marginLeft: '4px' }}>
                   {/* 6) 이름만으로는 차이를 예측하기 어려워서 각 모드를 상징하는 아이콘을 이름 앞에 추가 */}
-                  {([['timeline', '📍', '타임라인'], ['grid', '▦', '전체 보기'], ['list', '☰', '리스트']] as const).map(([mode, icon, label]) => (
+                  {([['grid', '▦', '전체 보기'], ['list', '☰', '리스트']] as const).map(([mode, icon, label]) => (
                     <button key={mode} onClick={() => setViewMode(mode)} title={label} style={{
                       padding: '4px 9px', borderRadius: '6px', border: 'none',
                       background: viewMode === mode ? ORANGE : 'transparent',
@@ -740,209 +673,90 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
               </div>
             </div>
 
-            {/* 스크롤 컨트롤 */}
-            {viewMode === 'timeline' && (
-            <div style={{ position: 'relative' }}>
-              {/* 왼쪽 화살표 */}
-              {scrollable.left && (
-                <button
-                  className="scroll-btn"
-                  onClick={() => scroll('left')}
-                  style={{
-                    position: 'absolute', left: '6px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid var(--rw-border2)',
-                    borderRadius: '50%', width: '40px', height: '40px',
-                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >‹</button>
-              )}
-              {/* 오른쪽 화살표 */}
-              {scrollable.right && (
-                <button
-                  className="scroll-btn"
-                  onClick={() => scroll('right')}
-                  style={{
-                    position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)',
-                    zIndex: 20, background: 'rgba(0,0,0,0.65)', border: '1px solid var(--rw-border2)',
-                    borderRadius: '50%', width: '40px', height: '40px',
-                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >›</button>
-              )}
-              {/* 왼쪽 페이드 */}
-              {scrollable.left && (
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to right, rgba(0,0,0,0.4), transparent)', zIndex: 10, pointerEvents: 'none', borderRadius: '0 0 0 20px' }} />
-              )}
-              {/* 오른쪽 페이드 */}
-              {scrollable.right && (
-                <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent)', zIndex: 10, pointerEvents: 'none', borderRadius: '0 0 20px 0' }} />
-              )}
-
-              {/* 타임라인 스크롤 영역 - 1) 드래그/휠, 9) 방향키로도 탐색 가능 */}
-              <div
-                ref={tlRef}
-                className="tl-wrap"
-                tabIndex={0}
-                onKeyDown={onTimelineKeyDown}
-                onWheel={onTimelineWheel}
-                onPointerDown={onTimelinePointerDown}
-                onPointerMove={onTimelinePointerMove}
-                onPointerUp={onTimelinePointerUp}
-                onPointerLeave={onTimelinePointerUp}
-                style={{
-                  overflowX: 'auto',
-                  overflowY: 'visible',
-                  padding: `20px 32px`,
-                  cursor: 'grab',
-                  touchAction: 'pan-y',
-                }}
-              >
-                {(() => {
-                  const videos = [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
-                  const W = Math.max(700, videos.length * (CARD_W + 28) + 120);
-                  const step = (W - 100) / (videos.length + 1);
-                  const maxV = Math.max(...videos.map(v => v.views), 1);
-
-                  return (
-                    <div style={{ position: 'relative', minWidth: `${W}px`, height: `${TL_HEIGHT}px` }}>
-                      {/* 중앙선 */}
-                      <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1.5px', background: 'var(--rw-bg4)', transform: 'translateY(-50%)' }} />
-
-                      {videos.map((v, i) => {
-                        const x = 50 + step * (i + 1);
-                        const above = i % 2 === 0;
-                        const ratio = v.views / maxV;
-                        const t = tier(ratio);
-                        const dotSz = ratio > 0.7 ? 15 : ratio > 0.35 ? 11 : 9;
-                        const isHov = hovered?.id === v.id;
-
-                        return (
-                          <div key={v.id} style={{ position: 'absolute', left: `${x}px`, top: '50%', transform: 'translate(-50%, -50%)', zIndex: isHov ? 50 : 1 }}>
-                            {/* 줄기 */}
-                            <div style={{
-                              position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-                              width: '1.5px', height: `${STEM_H}px`, background: t.stem,
-                              ...(above ? { bottom: `${dotSz / 2}px` } : { top: `${dotSz / 2}px` }),
-                            }} />
-
-                            {/* 점 — 5) 처음 보는 사람도 클릭 가능한 요소로 인식하도록 크기를 키우고 정확한 조회수를 툴팁으로 표시 */}
-                            <div
-                              title={`${v.title} · ${new Date(v.publishedAt).getMonth() + 1}/${new Date(v.publishedAt).getDate()} · ${v.views.toLocaleString('ko-KR')}회`}
-                              style={{
-                                width: `${dotSz}px`, height: `${dotSz}px`, borderRadius: '50%',
-                                background: t.dot, position: 'relative', zIndex: 2, cursor: 'pointer',
-                                boxShadow: `0 0 0 ${Math.ceil(dotSz / 2)}px ${t.dot === '#FFB800' ? 'rgba(255,184,0,0.2)' : t.dot === ORANGE ? 'rgba(235,112,26,0.2)' : 'rgba(255,255,255,0.1)'}`,
-                                transition: 'transform 0.15s',
-                                transform: isHov ? 'scale(1.6)' : 'scale(1)',
-                              }}
-                            />
-
-                            {/* 6) 카드를 열어보지 않아도 시간순 흐름을 바로 알 수 있도록 점 옆에 날짜 표기 */}
-                            <span style={{
-                              position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-                              whiteSpace: 'nowrap' as const, fontSize: '0.58rem', fontWeight: 700, color: 'var(--rw-text4)',
-                              ...(above ? { top: `${dotSz / 2 + 4}px` } : { bottom: `${dotSz / 2 + 4}px` }),
-                            }}>{new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}</span>
-
-                            {/* 썸네일 카드 */}
-                            <div
-                              className="tl-card"
-                              onClick={() => { if (!dragMoved.current) window.open(`https://youtube.com/watch?v=${v.id}`, '_blank'); }}
-                              onMouseEnter={(e) => setHovered({ id: v.id, rect: (e.currentTarget as HTMLElement).getBoundingClientRect(), above })}
-                              onMouseLeave={() => setHovered(null)}
-                              style={{
-                                position: 'absolute',
-                                left: `${-CARD_W / 2}px`,
-                                ...(above
-                                  ? { bottom: `${dotSz / 2 + STEM_H + 10}px` }
-                                  : { top: `${dotSz / 2 + STEM_H + 10}px` }),
-                                width: `${CARD_W}px`,
-                                background: t.card,
-                                border: `1px solid ${isHov ? t.dot : t.border}`,
-                                borderRadius: '10px', overflow: 'hidden',
-                                transformOrigin: above ? 'bottom center' : 'top center',
-                              }}
-                            >
-                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
-                                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
-                                {/* 5) 등급을 카드 자체에서도 바로 알아볼 수 있게 코너 배지 추가 */}
-                                {ratio > 0.7 && (
-                                  <span style={{ position: 'absolute', top: '5px', left: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
-                                )}
-                                <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.65rem', fontWeight: 900, color: t.dot }}>{fmt(v.views)}</div>
-                              </div>
-                              <div style={{ padding: '7px 9px 9px' }}>
-                                <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                                {/* 8) 코너의 작은 오버레이 숫자만으론 눈에 잘 안 띄어서, 본문에도 조회수를 명시 · 9) 정확한 숫자는 title 툴팁으로 */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-                                  <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{new Date(v.publishedAt).getDate()}일</span>
-                                  <span title={`${v.views.toLocaleString('ko-KR')}회`} style={{ fontSize: '0.62rem', fontWeight: 800, color: t.dot }}>👁 {fmt(v.views)}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-            )}
-
             {/* 2) 전체 보기 - 화살표 없이 그 달 업로드 전체를 격자로 한눈에 스캔 (날짜순 배치) */}
             {viewMode === 'grid' && (() => {
               const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
               const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
-              // 1) 조회수가 아니라 업로드 날짜순(오래된 순)으로 배치 - 리스트 보기와 동일한 기준
-              const sorted = [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
+              // 9) 정렬 기준을 날짜순/조회수순 중에서 직접 선택 (기본은 날짜순)
+              const sorted = sortMode === 'date'
+                ? [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime())
+                : [...activeData.topVideos].sort((a, b) => b.views - a.views);
+              // 7) 같은 날짜끼리 묶어서 구분선/소제목으로 표시 (날짜순 정렬일 때만 의미가 있음)
+              const dateKey = (v: typeof sorted[number]) => {
+                const d = new Date(v.publishedAt);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+              };
               return (
                 <div style={{ padding: '4px 28px 8px' }}>
-                  <p style={{ margin: '0 0 12px', fontSize: '0.7rem', color: 'var(--rw-text3)' }}>📅 업로드 날짜순으로 배치했어요 (오래된 순)</p>
-                  {/* 7) 그리드 대신 flex-wrap을 써서 마지막 줄 카드가 늘어나지 않고 왼쪽 정렬되게 함 */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '14px' }}>
-                    {sorted.map((v, i) => {
-                      const ratio = v.views / maxV;
-                      const t = tier(ratio);
-                      const barPct = Math.max(4, Math.round(ratio * 100));
-                      const d = new Date(v.publishedAt);
-                      return (
-                        <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
-                          background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
-                          width: '150px', flexShrink: 0,
-                        }}>
-                          <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
-                            <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
-                            {/* 2) 업로드 순번 배지 - 날짜순이므로 몇 번째로 올라온 영상인지 표시 */}
-                            <span style={{
-                              position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)',
-                              border: '1px solid rgba(255,255,255,0.35)', color: '#fff', fontSize: '0.58rem', fontWeight: 800,
-                              padding: '1px 5px', borderRadius: '4px',
-                            }}>#{i + 1}</span>
-                            {/* 4) 타임라인 보기와 동일하게 상위 티어 영상엔 TOP 배지 표시 (일관성) */}
-                            {ratio > 0.7 && (
-                              <span style={{ position: 'absolute', top: '5px', right: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '8px', marginBottom: '14px' }}>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--rw-text3)' }}>
+                      {sortMode === 'date' ? '📅 업로드 날짜순으로 배치했어요 (오래된 순)' : '🔥 조회수 높은 순으로 배치했어요'}
+                    </p>
+                    {/* 9) 정렬 기준 토글 */}
+                    <div style={{ display: 'flex', background: 'var(--rw-bg4)', border: '1px solid var(--rw-border2)', borderRadius: '7px', padding: '2px' }}>
+                      {([['date', '날짜순'], ['views', '조회수순']] as const).map(([mode, label]) => (
+                        <button key={mode} onClick={() => setSortMode(mode)} style={{
+                          padding: '3px 8px', borderRadius: '5px', border: 'none',
+                          background: sortMode === mode ? ORANGE : 'transparent',
+                          color: sortMode === mode ? '#1a1200' : 'var(--rw-text3)',
+                          fontSize: '0.66rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' as const,
+                        }}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* 2) + 3) + 4) 카드 최소폭을 190px로 키운 고정 그리드 - 화면이 넓어도 한 줄 개수가 과도하게 늘지 않도록
+                         컨테이너 자체를 1280px로 제한하고 auto-fill/minmax로 화면 크기별 컬럼 수를 자동 조정 (모바일 2~3개, 데스크톱 5~6개) */}
+                  <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '20px' }}>
+                      {sorted.map((v, i) => {
+                        const ratio = v.views / maxV;
+                        const t = tier(ratio);
+                        const barPct = Math.max(4, Math.round(ratio * 100));
+                        const d = new Date(v.publishedAt);
+                        // 7) 날짜순 정렬일 때만, 바로 앞 카드와 날짜가 바뀌는 지점에 소제목 표시
+                        const prevKey = i > 0 ? dateKey(sorted[i - 1]) : null;
+                        const showDateHeader = sortMode === 'date' && dateKey(v) !== prevKey;
+                        const sameDayCount = sortMode === 'date' ? sorted.filter(x => dateKey(x) === dateKey(v)).length : 0;
+                        return (
+                          <Fragment key={v.id}>
+                            {showDateHeader && (
+                              <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '8px', margin: i === 0 ? '0 0 -6px' : '10px 0 -6px' }}>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--rw-text2)' }}>{d.getMonth() + 1}월 {d.getDate()}일 ({WEEKDAY_KO[d.getDay()]})</span>
+                                <span style={{ fontSize: '0.64rem', color: 'var(--rw-text4)' }}>· {sameDayCount}개</span>
+                                <div style={{ flex: 1, height: '1px', background: 'var(--rw-border2)' }} />
+                              </div>
                             )}
-                            {/* 5) 숫자만으론 무엇인지 애매해서 눈 아이콘 + '회' 단위를 함께 표기 */}
-                            <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.62rem', fontWeight: 900, color: t.dot }}>👁 {fmt(v.views)}</div>
-                          </div>
-                          <div style={{ padding: '7px 9px 9px' }}>
-                            {/* 6) 두 줄로 잘리는 제목은 title 툴팁으로 전체 내용 확인 가능하게 */}
-                            <p title={v.title} style={{ fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 3px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
-                            {/* 8) 날짜에 요일을 함께 표기해 최신/과거 감각을 더 쉽게 파악 */}
-                            <span style={{ fontSize: '0.6rem', color: 'var(--rw-text3)' }}>{d.getMonth() + 1}/{d.getDate()} ({WEEKDAY_KO[d.getDay()]})</span>
-                            {/* 10) 1위(최고 조회수) 대비 상대적인 인기도를 막대로 표시 */}
-                            <div style={{ marginTop: '5px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                              <div style={{ width: `${barPct}%`, height: '100%', background: t.dot, borderRadius: '2px' }} />
+                            <div onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
+                              background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
+                              // 6) 날짜순 정렬일 때 같은 날짜끼리는 왼쪽에 옅은 색 바로 묶음을 표시
+                              borderLeft: sortMode === 'date' ? `3px solid ${t.border}` : `1px solid ${t.border}`,
+                            }}>
+                              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
+                                <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
+                                {/* 업로드 순번 배지 - 현재 정렬 기준으로 몇 번째인지 표시 */}
+                                <span style={{
+                                  position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)',
+                                  border: '1px solid rgba(255,255,255,0.35)', color: '#fff', fontSize: '0.58rem', fontWeight: 800,
+                                  padding: '1px 5px', borderRadius: '4px',
+                                }}>#{i + 1}</span>
+                                {ratio > 0.7 && (
+                                  <span style={{ position: 'absolute', top: '5px', right: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
+                                )}
+                                <div title={`${v.views.toLocaleString('ko-KR')}회`} style={{ position: 'absolute', bottom: '5px', right: '6px', fontSize: '0.62rem', fontWeight: 900, color: t.dot }}>👁 {fmt(v.views)}</div>
+                              </div>
+                              <div style={{ padding: '8px 10px 10px' }}>
+                                <p title={v.title} style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 4px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                                <span style={{ fontSize: '0.62rem', color: 'var(--rw-text3)' }}>{d.getMonth() + 1}/{d.getDate()} ({WEEKDAY_KO[d.getDay()]})</span>
+                                <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                                  <div style={{ width: `${barPct}%`, height: '100%', background: t.dot, borderRadius: '2px' }} />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                          </Fragment>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               );
@@ -972,43 +786,6 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
           </div>
         )}
 
-        {/* ── 타임라인 호버 프리뷰 팝업 (position: fixed) ── */}
-        {hovered && (() => {
-          const activeVideos = monthlyData.find(m => m.month === activeMonth)?.topVideos ?? [];
-          const v = activeVideos.find(x => x.id === hovered.id);
-          if (!v) return null;
-          const PW = 400;
-          const r = hovered.rect;
-          const left = Math.min(Math.max(r.left + r.width / 2 - PW / 2, 12), window.innerWidth - PW - 12);
-          const top = hovered.above ? r.top - (PW * 9 / 16) - 90 : r.bottom + 14;
-          const fmt2 = (n: number) => n >= 10000 ? (n / 10000).toFixed(1) + '만' : n.toLocaleString();
-          return (
-            <div style={{
-              position: 'fixed', left: `${left}px`, top: `${Math.max(8, top)}px`,
-              width: `${PW}px`, zIndex: 9999, pointerEvents: 'none',
-              background: '#1e1e1e', border: '1px solid rgba(235,112,26,0.5)',
-              borderRadius: '12px', overflow: 'hidden',
-              boxShadow: '0 20px 48px rgba(0,0,0,0.7)',
-              animation: 'rwFadeUp 0.18s cubic-bezier(0.34,1.56,0.64,1) both',
-            }}>
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
-                <img src={v.thumbnail} alt={v.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%)' }} />
-                <div style={{ position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 900, color: ORANGE, letterSpacing: '-0.03em' }}>{fmt2(v.views)}</span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--rw-text2)' }}>조회</span>
-                </div>
-              </div>
-              <div style={{ padding: '10px 14px 14px' }}>
-                <p style={{ fontSize: '0.88rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', lineHeight: 1.4, margin: '0 0 6px' }}>{v.title}</p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--rw-text3)' }}>
-                  {new Date(v.publishedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 업로드
-                </span>
-              </div>
-            </div>
-          );
-        })()}
       </div>
     </section>
   );
