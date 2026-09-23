@@ -476,6 +476,8 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
         <style>{`
           .tl-card { transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; position: relative; }
           .tl-card:hover { transform: scale(1.05) !important; z-index: 30 !important; box-shadow: 0 10px 28px rgba(0,0,0,0.55) !important; }
+          /* 7) 카드를 호버하면 날짜 배지만 살짝 확대/강조되어 날짜 확인을 유도 */
+          .tl-card:hover .date-badge { transform: scale(1.18); filter: brightness(1.15); }
         `}</style>
 
         {/* 헤더 */}
@@ -681,6 +683,20 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
               const sorted = sortMode === 'date'
                 ? [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime())
                 : [...activeData.topVideos].sort((a, b) => b.views - a.views);
+              // 3) 같은 날짜는 같은 배지 색으로 - 등장 순서대로 고유 날짜에 색상을 순환 배정
+              const DATE_PALETTE = ['#EB701A', '#00C9FF', '#FF6B9D', '#7ED957', '#B18CFF', '#FFD93D'];
+              const dateKeyOf = (v: typeof sorted[number]) => {
+                const dd = new Date(v.publishedAt);
+                return `${dd.getMonth() + 1}/${dd.getDate()}`;
+              };
+              const uniqueDateKeys: string[] = [];
+              for (const v of [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime())) {
+                const k = dateKeyOf(v);
+                if (!uniqueDateKeys.includes(k)) uniqueDateKeys.push(k);
+              }
+              const dateColorOf = (v: typeof sorted[number]) => DATE_PALETTE[uniqueDateKeys.indexOf(dateKeyOf(v)) % DATE_PALETTE.length];
+              // 5) 가장 최근 날짜는 배지를 브랜드 오렌지로 강조
+              const latestDateKey = uniqueDateKeys[uniqueDateKeys.length - 1];
               return (
                 <div style={{ padding: '4px 28px 8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '8px', marginBottom: '14px' }}>
@@ -708,22 +724,34 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                         const t = tier(ratio);
                         const barPct = Math.max(4, Math.round(ratio * 100));
                         const d = new Date(v.publishedAt);
+                        const dKey = dateKeyOf(v);
+                        const dColor = dKey === latestDateKey ? ORANGE : dateColorOf(v);
+                        // 8) 날짜순 정렬일 땐 날짜가 더 중요한 정보이므로 좌상단(눈에 잘 띄는 자리)에,
+                        //    조회수순 정렬일 땐 순번이 더 중요하므로 순번을 좌상단에 두고 날짜는 좌하단으로
+                        const dateBadgeTop = sortMode === 'date';
                         return (
                           <Fragment key={v.id}>
                             <div onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} className="tl-card" style={{
                               background: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden',
-                              // 6) 날짜순 정렬일 때 같은 날짜끼리는 왼쪽에 옅은 색 바로 묶음을 표시
                               borderLeft: sortMode === 'date' ? `3px solid ${t.border}` : `1px solid ${t.border}`,
                             }}>
                               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#0a0a0a' }}>
                                 <img src={v.thumbnail} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)' }} />
-                                {/* 업로드 순번 배지 - 현재 정렬 기준으로 몇 번째인지 표시 */}
+                                {/* 6) 상/하단 그라디언트로 코너 배지들이 어떤 썸네일 위에서도 잘 보이게 */}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 45%), linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 30%)' }} />
+                                {/* 1)+3)+5)+8) 날짜 배지 - 같은 날짜는 같은 색, 가장 최근 날짜는 오렌지로 강조, 정렬 기준에 따라 상/하단 위치 스왑 */}
+                                <span className="date-badge" title={`${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()} (${WEEKDAY_KO[d.getDay()]})`} style={{
+                                  position: 'absolute', left: '5px', [dateBadgeTop ? 'top' : 'bottom']: '5px',
+                                  background: 'rgba(0,0,0,0.65)', border: `1px solid ${dColor}`, color: dColor,
+                                  fontSize: '0.6rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px',
+                                  textShadow: '0 1px 2px rgba(0,0,0,0.8)', transition: 'transform 0.15s',
+                                } as React.CSSProperties}>{d.getMonth() + 1}/{d.getDate()}</span>
+                                {/* 업로드 순번 배지 */}
                                 <span style={{
-                                  position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)',
+                                  position: 'absolute', left: '5px', [dateBadgeTop ? 'bottom' : 'top']: '5px', background: 'rgba(0,0,0,0.6)',
                                   border: '1px solid rgba(255,255,255,0.35)', color: '#fff', fontSize: '0.58rem', fontWeight: 800,
                                   padding: '1px 5px', borderRadius: '4px',
-                                }}>#{i + 1}</span>
+                                } as React.CSSProperties}>#{i + 1}</span>
                                 {ratio > 0.7 && (
                                   <span style={{ position: 'absolute', top: '5px', right: '5px', background: '#FFB800', color: '#1a1200', fontSize: '0.56rem', fontWeight: 900, padding: '1px 5px', borderRadius: '4px' }}>TOP</span>
                                 )}
@@ -731,6 +759,7 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
                               </div>
                               <div style={{ padding: '8px 10px 10px' }}>
                                 <p title={v.title} style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, margin: '0 0 4px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{v.title}</p>
+                                {/* 2) 썸네일 배지엔 날짜 숫자만, 요일은 카드 하단 텍스트에 남겨서 정보를 분산 */}
                                 <span style={{ fontSize: '0.62rem', color: 'var(--rw-text3)' }}>{d.getMonth() + 1}/{d.getDate()} ({WEEKDAY_KO[d.getDay()]})</span>
                                 <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
                                   <div style={{ width: `${barPct}%`, height: '100%', background: t.dot, borderRadius: '2px' }} />
@@ -746,27 +775,49 @@ function UploadCalendar({ monthlyData, year, defaultMonth }: { monthlyData: Mont
               );
             })()}
 
-            {/* 10) 리스트 보기 - 썸네일 없이 제목/날짜/조회수만 빠르게 스캔 */}
-            {viewMode === 'list' && (
-              <div style={{ padding: '4px 28px 8px', display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
-                {[...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()).map(v => {
-                  const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
-                  const t = tier(v.views / maxV);
-                  return (
-                    <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} style={{
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 10px', borderRadius: '8px',
-                      cursor: 'pointer', borderLeft: `3px solid ${t.dot}`, background: 'rgba(255,255,255,0.02)',
-                    }}>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--rw-text3)', flexShrink: 0, width: '42px' }}>
-                        {new Date(v.publishedAt).getMonth() + 1}/{new Date(v.publishedAt).getDate()}
-                      </span>
-                      <p style={{ margin: 0, flex: 1, minWidth: 0, fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{v.title}</p>
-                      <span title={`${v.views.toLocaleString('ko-KR')}회`} style={{ fontSize: '0.76rem', fontWeight: 800, color: t.dot, flexShrink: 0 }}>👁 {fmt(v.views)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {/* 10) 리스트 보기 - 그리드와 동일한 날짜 배지 스타일(색상 캡슐)을 적용해 뷰 전환 시 이질감 없게 */}
+            {viewMode === 'list' && (() => {
+              const listSorted = [...activeData.topVideos].sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
+              const DATE_PALETTE = ['#EB701A', '#00C9FF', '#FF6B9D', '#7ED957', '#B18CFF', '#FFD93D'];
+              const dateKeyOf = (v: typeof listSorted[number]) => {
+                const dd = new Date(v.publishedAt);
+                return `${dd.getMonth() + 1}/${dd.getDate()}`;
+              };
+              const uniqueDateKeys: string[] = [];
+              for (const v of listSorted) {
+                const k = dateKeyOf(v);
+                if (!uniqueDateKeys.includes(k)) uniqueDateKeys.push(k);
+              }
+              const latestDateKey = uniqueDateKeys[uniqueDateKeys.length - 1];
+              const dateColorOf = (v: typeof listSorted[number]) => {
+                const k = dateKeyOf(v);
+                return k === latestDateKey ? ORANGE : DATE_PALETTE[uniqueDateKeys.indexOf(k) % DATE_PALETTE.length];
+              };
+              return (
+                <div style={{ padding: '4px 28px 8px', display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
+                  {listSorted.map(v => {
+                    const maxV = Math.max(...activeData.topVideos.map(x => x.views), 1);
+                    const t = tier(v.views / maxV);
+                    const dColor = dateColorOf(v);
+                    const d = new Date(v.publishedAt);
+                    return (
+                      <div key={v.id} onClick={() => window.open(`https://youtube.com/watch?v=${v.id}`, '_blank')} style={{
+                        display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 10px', borderRadius: '8px',
+                        cursor: 'pointer', borderLeft: `3px solid ${t.dot}`, background: 'rgba(255,255,255,0.02)',
+                      }}>
+                        <span style={{
+                          flexShrink: 0, fontSize: '0.66rem', fontWeight: 800, color: dColor,
+                          background: `${dColor}1a`, border: `1px solid ${dColor}`, borderRadius: '100px',
+                          padding: '2px 8px', textAlign: 'center' as const,
+                        }}>{d.getMonth() + 1}/{d.getDate()}</span>
+                        <p style={{ margin: 0, flex: 1, minWidth: 0, fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{v.title}</p>
+                        <span title={`${v.views.toLocaleString('ko-KR')}회`} style={{ fontSize: '0.76rem', fontWeight: 800, color: t.dot, flexShrink: 0 }}>👁 {fmt(v.views)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
