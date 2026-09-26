@@ -192,7 +192,7 @@ function DayPanel({
 
   const label = (() => {
     const d = new Date(date + 'T00:00:00');
-    return `${d.getFullYear()}년 ${d.getMonth( + 1}월 ${d.getDate()}일`;
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
   })();
 
   // 클릭한 날짜 셀 위치에서 모달이 확장되어 나오는 것처럼 보이도록 초기 transform 계산
