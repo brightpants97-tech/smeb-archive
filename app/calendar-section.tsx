@@ -307,7 +307,7 @@ function DayPanel({
         onClick={e => e.stopPropagation()}
         style={{
           position: 'relative',
-          width: '100%', maxWidth: '760px', maxHeight: '88vh',
+          width: '100%', maxWidth: 'min(1100px, 96vw)', maxHeight: '95vh',
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
