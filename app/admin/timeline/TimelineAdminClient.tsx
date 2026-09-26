@@ -103,6 +103,27 @@ export default function TimelineAdminClient() {
     setNewS(s > 0 ? String(s) : '');
   }, [swSec]);
 
+  // 클립보드 URL에서 t= 파라미터 읽어서 시간 채우기
+  const [clipMsg, setClipMsg] = useState('');
+  const pasteFromClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const match = text.match(/[?&]t=(\d+)/);
+      if (!match) { setClipMsg('URL에 t= 파라미터가 없어요'); setTimeout(() => setClipMsg(''), 2500); return; }
+      const totalSec = parseInt(match[1], 10);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      setNewH(h > 0 ? String(h) : '');
+      setNewM(String(m));
+      setNewS(s > 0 ? String(s) : '');
+      setClipMsg(`✓ ${h > 0 ? `${h}:` : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+      setTimeout(() => setClipMsg(''), 2500);
+    } catch {
+      setClipMsg('클립보드 접근 실패'); setTimeout(() => setClipMsg(''), 2500);
+    }
+  }, []);
+
   // VOD 바뀌면 스톱워치 초기화
   useEffect(() => {
     swReset();
@@ -484,34 +505,36 @@ export default function TimelineAdminClient() {
                   )}
                 </div>
 
-                {/* Stopwatch */}
-                {(() => {
-                  const h = Math.floor(swSec / 3600);
-                  const m = Math.floor((swSec % 3600) / 60);
-                  const s = swSec % 60;
-                  const display = h > 0
-                    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
-                    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '8px 12px' }}>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--subtext)', fontWeight: 600, marginRight: 2 }}>⏱ 스톱워치</span>
-                      <span style={{ fontFamily: 'monospace', fontSize: '1.05rem', fontWeight: 800, color: swRunning ? '#EB701A' : 'var(--text)', minWidth: 62, textAlign: 'center' }}>{display}</span>
-                      <button
-                        onClick={swRunning ? swPause : swStart}
-                        style={{ padding: '4px 10px', borderRadius: 6, background: swRunning ? '#555' : '#2ecc71', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.78rem' }}
-                      >{swRunning ? '⏸ 일시정지' : '▶ 시작'}</button>
-                      <button
-                        onClick={swReset}
-                        style={{ padding: '4px 8px', borderRadius: 6, background: 'transparent', color: 'var(--subtext)', border: '1px solid var(--card-border)', fontWeight: 600, cursor: 'pointer', fontSize: '0.78rem' }}
-                      >↺</button>
-                      <button
-                        onClick={() => { swCapture(); }}
-                        disabled={swSec === 0}
-                        style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 6, background: swSec > 0 ? '#EB701A' : 'var(--card-border)', color: swSec > 0 ? '#fff' : 'var(--subtext)', border: 'none', fontWeight: 700, cursor: swSec > 0 ? 'pointer' : 'default', fontSize: '0.78rem' }}
-                      >현재 시간으로 입력</button>
-                    </div>
-                  );
-                })()}
+                {/* 시간 입력 도우미 */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {/* 클립보드 URL 붙여넣기 (주 방법) */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '7px 12px', flex: 1 }}>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--subtext)', fontWeight: 600 }}>📋 URL 복사 후</span>
+                    <button
+                      onClick={pasteFromClipboard}
+                      style={{ padding: '4px 12px', borderRadius: 6, background: '#EB701A', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
+                    >시간 자동 입력</button>
+                    {clipMsg && <span style={{ fontSize: '0.75rem', color: clipMsg.startsWith('✓') ? '#2ecc71' : '#e74c3c', fontFamily: 'monospace', fontWeight: 700 }}>{clipMsg}</span>}
+                  </div>
+                  {/* 스톱워치 (보조) */}
+                  {(() => {
+                    const h = Math.floor(swSec / 3600);
+                    const m = Math.floor((swSec % 3600) / 60);
+                    const s = swSec % 60;
+                    const display = h > 0
+                      ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+                      : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '7px 10px' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--subtext)', fontWeight: 600 }}>⏱</span>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.92rem', fontWeight: 800, color: swRunning ? '#EB701A' : 'var(--text)', minWidth: 52, textAlign: 'center' }}>{display}</span>
+                        <button onClick={swRunning ? swPause : swStart} style={{ padding: '3px 8px', borderRadius: 5, background: swRunning ? '#555' : '#2ecc71', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.72rem' }}>{swRunning ? '⏸' : '▶'}</button>
+                        <button onClick={swReset} style={{ padding: '3px 6px', borderRadius: 5, background: 'transparent', color: 'var(--subtext)', border: '1px solid var(--card-border)', cursor: 'pointer', fontSize: '0.72rem' }}>↺</button>
+                        <button onClick={swCapture} disabled={swSec === 0} style={{ padding: '3px 8px', borderRadius: 5, background: swSec > 0 ? '#555' : 'transparent', color: swSec > 0 ? '#fff' : 'var(--subtext)', border: 'none', fontWeight: 600, cursor: swSec > 0 ? 'pointer' : 'default', fontSize: '0.72rem' }}>입력</button>
+                      </div>
+                    );
+                  })()}
+                </div>
 
                 {/* Add entry form */}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '10px 12px' }}>
