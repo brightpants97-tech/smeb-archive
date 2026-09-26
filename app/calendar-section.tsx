@@ -167,6 +167,9 @@ function DayPanel({
   // 외부(TOP5·검색) 영상이 열리면 패널 내 플레이어 닫기
   useEffect(() => { if (externallyPlaying) setPanelPlayer(null); }, [externallyPlaying]);
 
+  // 현재 재생 중인 VOD의 타임라인
+  const currentTimeline = panelPlayer ? (timelineData[panelPlayer.id] || []) : [];
+
   // ── 플레이어 크기 조절 ──────────────────────────────────────────────────────
   const [playerPct, setPlayerPct] = useState(100);
   const [isDragging, setIsDragging] = useState(false);
@@ -312,7 +315,9 @@ function DayPanel({
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-          display: 'grid', gridTemplateRows: panelPlayer ? 'auto auto auto' : 'auto minmax(0, 1fr)',
+          display: 'grid', gridTemplateRows: panelPlayer
+            ? (currentTimeline.length > 0 ? 'auto auto auto auto' : 'auto auto auto')
+            : 'auto minmax(0, 1fr)',
           overflow: 'hidden',
           transform: visible ? 'translate(0,0) scale(1)' : originTransform,
           opacity: visible ? 1 : 0,
@@ -413,12 +418,58 @@ function DayPanel({
           </div>
         )}
 
+        {/* 고정 타임라인 스트립 */}
+        {panelPlayer && currentTimeline.length > 0 && (
+          <div style={{
+            borderTop: '1px solid var(--card-border)',
+            borderBottom: '1px solid var(--card-border)',
+            background: 'rgba(235,112,26,0.03)',
+            padding: '8px 12px',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            display: 'flex',
+            gap: '6px',
+            flexWrap: 'nowrap',
+            WebkitOverflowScrolling: 'touch',
+          } as React.CSSProperties}>
+            {currentTimeline.map((entry, i) => {
+              const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
+              const timeStr = entry.h
+                ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
+                : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
+              const isActive = secs === panelPlayer.startTime;
+              return (
+                <button
+                  key={i}
+                  onClick={() => { onClearExternal(); setPanelPlayer({ id: panelPlayer.id, title: panelPlayer.title, startTime: secs }); }}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '5px 10px',
+                    borderRadius: '8px',
+                    border: isActive ? '1px solid #EB701A' : '1px solid rgba(235,112,26,0.2)',
+                    background: isActive ? 'rgba(235,112,26,0.18)' : 'rgba(235,112,26,0.05)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    outline: 'none',
+                  }}
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.12)'; }}
+                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.05)'; }}
+                >
+                  <span style={{ fontFamily: 'monospace', fontSize: '0.68rem', fontWeight: 800, color: '#EB701A', letterSpacing: '0.02em' }}>{timeStr}</span>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 600, color: isActive ? 'var(--text)' : 'var(--text-muted)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* 목록 */}
         <div style={{ position: 'relative', minHeight: 0 }}>
           <div
             ref={listRef}
             onScroll={handleScroll}
-            style={{ maxHeight: panelPlayer ? '260px' : '100%', height: panelPlayer ? undefined : '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+            style={{ maxHeight: panelPlayer ? '200px' : '100%', height: panelPlayer ? undefined : '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => {
               const vodTimeline = timelineData[vod.id] || [];
