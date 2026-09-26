@@ -72,8 +72,14 @@ export default function TimelineAdminClient() {
 
   useEffect(() => {
     const saved = sessionStorage.getItem(ADMIN_PW_KEY);
-    if (saved) { setPw(saved); setAuthed(true); }
-  }, []);
+    if (saved) {
+      setPw(saved);
+      load(saved).then(ok => {
+        if (ok) setAuthed(true);
+        else sessionStorage.removeItem(ADMIN_PW_KEY); // 비밀번호 만료 시 초기화
+      });
+    }
+  }, [load]);
 
   const load = useCallback(async (password: string) => {
     setLoading(true); setError('');
