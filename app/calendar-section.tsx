@@ -9,6 +9,13 @@ interface Props {
   today: string;
 }
 
+interface TimelineEntry {
+  label: string;
+  h?: number;
+  m: number;
+  s?: number;
+}
+
 // ── 스크롤 진입 시 0→목표값으로 올라가는 카운트업 ──────────────────────────
 function CountUp({ value, formatFn, duration = 900 }: { value: number; formatFn: (n: number) => string; duration?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -72,7 +79,7 @@ function VodStats({ views, duration, fmtDuration, size = 'sm' }: {
 }
 
 // ─── SOOP VOD 재생 팝업 ────────────────────────────────────────────────────────
-function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onClose: () => void }) {
+function VodPlayerModal({ id, title, startTime, onClose }: { id: string; title: string; startTime?: number; onClose: () => void }) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
@@ -127,7 +134,7 @@ function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onC
         </div>
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
           <iframe
-            src={`https://vod.sooplive.com/player/${id}/embed?autoPlay=true&showChat=false&mutePlay=false`}
+            src={`https://vod.sooplive.com/player/${id}/embed?autoPlay=true&showChat=false&mutePlay=false${startTime ? `&startTime=${startTime}` : ''}`}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
             allow="autoplay; encrypted-media; fullscreen"
             allowFullScreen
@@ -141,11 +148,12 @@ function VodPlayerModal({ id, title, onClose }: { id: string; title: string; onC
 
 // 슬라이드오버 패널
 function DayPanel({
-  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile, origin, onPlayVod,
+  date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile, origin, onPlayVod, timelineData,
 }: {
   date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean; isMobile: boolean;
-  origin: { x: number; y: number } | null; onPlayVod: (id: string, title: string) => void;
+  origin: { x: number; y: number } | null; onPlayVod: (id: string, title: string, startTime?: number) => void;
+  timelineData: Record<string, TimelineEntry[]>;
 }) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -184,7 +192,7 @@ function DayPanel({
 
   const label = (() => {
     const d = new Date(date + 'T00:00:00');
-    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+    return `${d.getFullYear()}년 ${d.getMonth( + 1}월 ${d.getDate()}일`;
   })();
 
   // 클릭한 날짜 셀 위치에서 모달이 확장되어 나오는 것처럼 보이도록 초기 transform 계산
@@ -279,61 +287,100 @@ function DayPanel({
             onScroll={handleScroll}
             style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
-            {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => (
-              <div
-                key={i}
-                onClick={() => onPlayVod(vod.id, vod.title)}
-                style={{
-                  position: 'relative',
-                  width: '100%', aspectRatio: '16/9',
-                  borderRadius: '14px',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  boxShadow: '0 0 0 0px rgba(235,112,26,0)',
-                  transition: 'transform 0.15s, box-shadow 0.2s',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 2px #EB701A, 0 8px 22px rgba(0,0,0,0.18)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = '';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 0px rgba(235,112,26,0)';
-                }}
-              >
-                {vod.thumb ? (
-                  <div className="vod-thumb-wrap" style={{ position: 'absolute', inset: 0 }}>
-                    <img
-                      src={vod.thumb} alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
+            {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => {
+              const vodTimeline = timelineData[vod.id] || [];
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0', flexShrink: 0 }}>
+                  {/* 썸네일 카드 */}
+                  <div
+                    onClick={() => onPlayVod(vod.id, vod.title)}
+                    style={{
+                      position: 'relative',
+                      width: '100%', aspectRatio: '16/9',
+                      borderRadius: vodTimeline.length > 0 ? '14px 14px 0 0' : '14px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      boxShadow: '0 0 0 0px rgba(235,112,26,0)',
+                      transition: 'transform 0.15s, box-shadow 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 2px #EB701A, 0 8px 22px rgba(0,0,0,0.18)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.transform = '';
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 0px rgba(235,112,26,0)';
+                    }}
+                  >
+                    {vod.thumb ? (
+                      <div className="vod-thumb-wrap" style={{ position: 'absolute', inset: 0 }}>
+                        <img
+                          src={vod.thumb} alt=""
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'var(--card)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6,
+                      }}>🎬</div>
+                    )}
+                    {/* 제목 오버레이 */}
+                    <div style={{
+                      position: 'absolute', left: 0, right: 0, bottom: 0,
+                      padding: '28px 14px 12px',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
+                      pointerEvents: 'none',
+                    }}>
+                      <p style={{
+                        fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0,
+                        wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      } as React.CSSProperties}>
+                       {vod.title}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'var(--card)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6,
-                  }}>🎬</div>
-                )}
-                {/* 제목 오버레이 (하단 그라데이션 스크림 위) */}
-                <div style={{
-                  position: 'absolute', left: 0, right: 0, bottom: 0,
-                  padding: '28px 14px 12px',
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
-                  pointerEvents: 'none',
-                }}>
-                  <p style={{
-                    fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0,
-                    wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)',
-                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                  } as React.CSSProperties}>
-                    {vod.title}
-                  </p>
+                  {/* 타을덼인 버튼 */}
+                  {vodTimeline.length > 0 && (
+                    <div style={{
+                      padding: '8px 10px 10px',
+                      background: 'rgba(235,112,26,0.04)',
+                      border: '1px solid rgba(235,112,26,0.2)',
+                      borderTop: 'none',
+                      borderRadius: '0 0 14px 14px',
+                      display: 'flex', flexWrap: 'wrap', gap: '6px',
+                    }}>
+                      {vodTimeline.map((entry, ei) => {
+                        const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
+                        const timeStr = entry.h
+                          ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
+                          : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
+                        return (
+                          <button
+                            key={ei}
+                            onClick={() => onPlayVod(vod.id, vod.title, secs)}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '5px',
+                              padding: '4px 10px', borderRadius: '100px',
+                              border: '1px solid rgba(235,112,26,0.35)', background: 'rgba(235,112,26,0.08)',
+                              color: '#EB701A', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.22)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.08)'}
+                          >
+                            ▶ {timeStr} {entry.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {/* 스크롤 가능함을 알리는 하단 페이드 힌트 */}
           {canScrollMore && (
@@ -477,8 +524,18 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
   const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const [search, setSearch] = useState('');
   const [panelDay, setPanelDay] = useState<{ date: string; vods: any[]; origin?: { x: number; y: number } } | null>(null);
-  const [playingVod, setPlayingVod] = useState<{ id: string; title: string } | null>(null);
-  const openVod = (id: string, title: string) => setPlayingVod({ id, title });
+  const [playingVod, setPlayingVod] = useState<{ id: string; title: string; startTime?: number } | null>(null);
+  const openVod = (id: string, title: string, startTime?: number) => setPlayingVod({ id, title, startTime });
+  const [timelineData, setTimelineData] = useState<Record<string, TimelineEntry[]>>({});
+  useEffect(() => {
+    fetch('/timeline-data.json')
+      .then(r => r.json())
+      .then(data => {
+        const { _guide: _, ...rest } = data as Record<string, unknown>;
+        setTimelineData(rest as Record<string, TimelineEntry[]>);
+      })
+      .catch(() => {});
+  }, []);
 
   const monthsInYear = useMemo(() => {
     return sortedMonths.filter(m => m.startsWith(selectedYear));
@@ -602,6 +659,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           isMobile={isMobile}
           origin={panelDay.origin || null}
           onPlayVod={openVod}
+          timelineData={timelineData}
         />
       )}
 
@@ -609,6 +667,7 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
         <VodPlayerModal
           id={playingVod.id}
           title={playingVod.title}
+          startTime={playingVod.startTime}
           onClose={() => setPlayingVod(null)}
         />
       )}
