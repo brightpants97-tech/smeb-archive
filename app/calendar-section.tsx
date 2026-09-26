@@ -315,9 +315,7 @@ function DayPanel({
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-          display: 'grid', gridTemplateRows: panelPlayer
-            ? (currentTimeline.length > 0 ? 'auto auto auto auto' : 'auto auto auto')
-            : 'auto minmax(0, 1fr)',
+          display: 'grid', gridTemplateRows: panelPlayer ? 'auto auto auto' : 'auto minmax(0, 1fr)',
           overflow: 'hidden',
           transform: visible ? 'translate(0,0) scale(1)' : originTransform,
           opacity: visible ? 1 : 0,
@@ -373,94 +371,77 @@ function DayPanel({
           </div>
         </div>
 
-        {/* 내장 플레이어 */}
+        {/* 내장 플레이어 + 우측 타임라인 */}
         {panelPlayer && (
-          <div ref={playerWrapRef} style={{ background: '#111', padding: '6px 6px 0', userSelect: isDragging ? 'none' : undefined }}>
-            <div style={{ width: `${playerPct}%`, position: 'relative', transition: isDragging ? 'none' : 'width 0.08s' }}>
-              <iframe
-                ref={iframeRef}
-                key={panelPlayer.id}
-                src={`https://vod.sooplive.com/player/${panelPlayer.id}/embed?autoPlay=true&showChat=false&mutePlay=false&change_second=${panelPlayer.startTime}`}
-                style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: 0 }}
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-              />
-              {/* 닫기 */}
-              <button
-                onClick={() => setPanelPlayer(null)}
-                style={{
-                  position: 'absolute', top: 6, left: 6,
-                  width: 24, height: 24, borderRadius: '50%',
-                  border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff',
-                  cursor: 'pointer', fontSize: '0.8rem',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >✕</button>
-              {/* 크기 조절 핸들 (오른쪽 하단) */}
-              <div
-                onMouseDown={onResizeMouseDown}
-                onTouchStart={onResizeTouchStart}
-                title="드래그해서 크기 조절"
-                style={{
-                  position: 'absolute', bottom: 0, right: 0,
-                  width: 28, height: 28, cursor: 'ew-resize',
-                  display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
-                  padding: '4px',
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M12 1L1 12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M12 5L5 12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M12 9L9 12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--card-border)', userSelect: isDragging ? 'none' : undefined }}>
+            {/* 플레이어 */}
+            <div ref={playerWrapRef} style={{ flex: 1, minWidth: 0, background: '#111', padding: '6px 0 0 6px' }}>
+              <div style={{ width: `${playerPct}%`, position: 'relative', transition: isDragging ? 'none' : 'width 0.08s' }}>
+                <iframe
+                  ref={iframeRef}
+                  key={panelPlayer.id}
+                  src={`https://vod.sooplive.com/player/${panelPlayer.id}/embed?autoPlay=true&showChat=false&mutePlay=false&change_second=${panelPlayer.startTime}`}
+                  style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: 0 }}
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                />
+                <button
+                  onClick={() => setPanelPlayer(null)}
+                  style={{
+                    position: 'absolute', top: 6, left: 6,
+                    width: 24, height: 24, borderRadius: '50%',
+                    border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff',
+                    cursor: 'pointer', fontSize: '0.8rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >✕</button>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* 고정 타임라인 스트립 */}
-        {panelPlayer && currentTimeline.length > 0 && (
-          <div style={{
-            borderTop: '1px solid var(--card-border)',
-            borderBottom: '1px solid var(--card-border)',
-            background: 'rgba(235,112,26,0.03)',
-            padding: '8px 12px',
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            display: 'flex',
-            gap: '6px',
-            flexWrap: 'nowrap',
-            WebkitOverflowScrolling: 'touch',
-          } as React.CSSProperties}>
-            {currentTimeline.map((entry, i) => {
-              const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
-              const timeStr = entry.h
-                ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
-                : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
-              const isActive = secs === panelPlayer.startTime;
-              return (
-                <button
-                  key={i}
-                  onClick={() => { onClearExternal(); setPanelPlayer({ id: panelPlayer.id, title: panelPlayer.title, startTime: secs }); }}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    border: isActive ? '1px solid #EB701A' : '1px solid rgba(235,112,26,0.2)',
-                    background: isActive ? 'rgba(235,112,26,0.18)' : 'rgba(235,112,26,0.05)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    outline: 'none',
-                  }}
-                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.12)'; }}
-                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.05)'; }}
-                >
-                  <span style={{ fontFamily: 'monospace', fontSize: '0.68rem', fontWeight: 800, color: '#EB701A', letterSpacing: '0.02em' }}>{timeStr}</span>
-                  <span style={{ fontSize: '0.74rem', fontWeight: 600, color: isActive ? 'var(--text)' : 'var(--text-muted)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.label}</span>
-                </button>
-              );
-            })}
+            {/* 우측 타임라인 사이드바 */}
+            {currentTimeline.length > 0 && (
+              <div style={{
+                width: isMobile ? '130px' : '210px',
+                flexShrink: 0,
+                borderLeft: '1px solid var(--card-border)',
+                background: 'var(--bg-deeper)',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+              }}>
+                <div style={{ padding: '8px 10px 4px', fontSize: '0.62rem', fontWeight: 800, color: '#EB701A', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid var(--card-border)' }}>
+                  타임라인
+                </div>
+                {currentTimeline.map((entry, i) => {
+                  const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
+                  const timeStr = entry.h
+                    ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
+                    : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
+                  const isActive = secs === panelPlayer.startTime;
+                  const isLast = i === currentTimeline.length - 1;
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => { onClearExternal(); setPanelPlayer({ id: panelPlayer.id, title: panelPlayer.title, startTime: secs }); }}
+                      style={{
+                        display: 'flex', flexDirection: 'column', gap: '2px',
+                        padding: '8px 10px',
+                        borderBottom: isLast ? 'none' : '1px solid var(--card-border)',
+                        cursor: 'pointer',
+                        background: isActive ? 'rgba(235,112,26,0.12)' : 'transparent',
+                        transition: 'background 0.12s',
+                        borderLeft: isActive ? '3px solid #EB701A' : '3px solid transparent',
+                      }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.07)'; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.65rem', fontWeight: 800, color: '#EB701A' }}>{timeStr}</span>
+                      <span style={{ fontSize: isMobile ? '0.68rem' : '0.73rem', fontWeight: 600, color: isActive ? 'var(--text)' : 'var(--text-muted)', lineHeight: 1.3, wordBreak: 'keep-all' }}>{entry.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
