@@ -307,11 +307,12 @@ function DayPanel({
         onClick={e => e.stopPropagation()}
         style={{
           position: 'relative',
-          width: '100%', maxWidth: 'min(1100px, 96vw)', maxHeight: '95vh',
+          width: '100%', maxWidth: 'min(1100px, 96vw)',
+          maxHeight: panelPlayer ? 'none' : '95vh',
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-          display: 'grid', gridTemplateRows: panelPlayer ? 'auto auto minmax(0, 1fr)' : 'auto minmax(0, 1fr)',
+          display: 'grid', gridTemplateRows: panelPlayer ? 'auto auto auto' : 'auto minmax(0, 1fr)',
           overflow: 'hidden',
           transform: visible ? 'translate(0,0) scale(1)' : originTransform,
           opacity: visible ? 1 : 0,
@@ -417,7 +418,7 @@ function DayPanel({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            style={{ height: '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+            style={{ maxHeight: panelPlayer ? '260px' : '100%', height: panelPlayer ? undefined : '100%', overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
             {[...vods].sort((a, b) => Number(a.id) - Number(b.id)).map((vod: any, i: number) => {
               const vodTimeline = timelineData[vod.id] || [];
