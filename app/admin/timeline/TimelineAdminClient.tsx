@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 interface TimelineEntry {
   label: string;
@@ -70,16 +70,46 @@ export default function TimelineAdminClient() {
   const [newS, setNewS] = useState('');
   const [newLabel, setNewLabel] = useState('');
 
+  // Stopwatch
+  const [swSec, setSwSec] = useState(0);
+  const [swRunning, setSwRunning] = useState(false);
+  const swIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const swStart = useCallback(() => {
+    if (swRunning) return;
+    setSwRunning(true);
+    swIntervalRef.current = setInterval(() => setSwSec(s => s + 1), 1000);
+  }, [swRunning]);
+
+  const swPause = useCallback(() => {
+    if (!swRunning) return;
+    setSwRunning(false);
+    if (swIntervalRef.current) clearInterval(swIntervalRef.current);
+  }, [swRunning]);
+
+  const swReset = useCallback(() => {
+    setSwRunning(false);
+    if (swIntervalRef.current) clearInterval(swIntervalRef.current);
+    setSwSec(0);
+  }, []);
+
+  // 스톱워치 → 입력 필드 채우기
+  const swCapture = useCallback(() => {
+    const h = Math.floor(swSec / 3600);
+    const m = Math.floor((swSec % 3600) / 60);
+    const s = swSec % 60;
+    setNewH(h > 0 ? String(h) : '');
+    setNewM(String(m));
+    setNewS(s > 0 ? String(s) : '');
+  }, [swSec]);
+
+  // VOD 바뀌면 스톱워치 초기화
   useEffect(() => {
-    const saved = sessionStorage.getItem(ADMIN_PW_KEY);
-    if (saved) {
-      setPw(saved);
-      load(saved).then(ok => {
-        if (ok) setAuthed(true);
-        else sessionStorage.removeItem(ADMIN_PW_KEY); // 비밀번호 만료 시 초기화
-      });
-    }
-  }, [load]);
+    swReset();
+  }, [selectedVod]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 언마운트 시 정리
+  useEffect(() => () => { if (swIntervalRef.current) clearInterval(swIntervalRef.current); }, []);
 
   const load = useCallback(async (password: string) => {
     setLoading(true); setError('');
@@ -101,6 +131,17 @@ export default function TimelineAdminClient() {
       setError('네트워크 오류'); setLoading(false); return false;
     }
   }, []);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem(ADMIN_PW_KEY);
+    if (saved) {
+      setPw(saved);
+      load(saved).then(ok => {
+        if (ok) setAuthed(true);
+        else sessionStorage.removeItem(ADMIN_PW_KEY);
+      });
+    }
+  }, [load]);
 
   const loadVodList = useCallback(async () => {
     setVodListLoading(true);
@@ -442,6 +483,35 @@ export default function TimelineAdminClient() {
                     <button onClick={() => removeVod(selectedId!)} style={{ background: 'transparent', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '0.8rem' }}>VOD 전체 삭제</button>
                   )}
                 </div>
+
+                {/* Stopwatch */}
+                {(() => {
+                  const h = Math.floor(swSec / 3600);
+                  const m = Math.floor((swSec % 3600) / 60);
+                  const s = swSec % 60;
+                  const display = h > 0
+                    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+                    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '8px 12px' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--subtext)', fontWeight: 600, marginRight: 2 }}>⏱ 스톱워치</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: '1.05rem', fontWeight: 800, color: swRunning ? '#EB701A' : 'var(--text)', minWidth: 62, textAlign: 'center' }}>{display}</span>
+                      <button
+                        onClick={swRunning ? swPause : swStart}
+                        style={{ padding: '4px 10px', borderRadius: 6, background: swRunning ? '#555' : '#2ecc71', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.78rem' }}
+                      >{swRunning ? '⏸ 일시정지' : '▶ 시작'}</button>
+                      <button
+                        onClick={swReset}
+                        style={{ padding: '4px 8px', borderRadius: 6, background: 'transparent', color: 'var(--subtext)', border: '1px solid var(--card-border)', fontWeight: 600, cursor: 'pointer', fontSize: '0.78rem' }}
+                      >↺</button>
+                      <button
+                        onClick={() => { swCapture(); }}
+                        disabled={swSec === 0}
+                        style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 6, background: swSec > 0 ? '#EB701A' : 'var(--card-border)', color: swSec > 0 ? '#fff' : 'var(--subtext)', border: 'none', fontWeight: 700, cursor: swSec > 0 ? 'pointer' : 'default', fontSize: '0.78rem' }}
+                      >현재 시간으로 입력</button>
+                    </div>
+                  );
+                })()}
 
                 {/* Add entry form */}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 8, padding: '10px 12px' }}>
