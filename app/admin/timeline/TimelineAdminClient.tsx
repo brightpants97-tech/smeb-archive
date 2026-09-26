@@ -121,8 +121,8 @@ export default function TimelineAdminClient() {
         setTimeout(() => setClipMsg(''), 3000);
         return;
       }
-      // URL에서 t= 파라미터 추출 (초 단위)
-      const match = text.match(/[?&]t=(\d+)/);
+      // URL에서 시간 파라미터 추출 (초 단위) - SOOP: change_second=, 일반: t=
+      const match = text.match(/[?&](?:change_second|t)=(\d+)/);
       if (match) {
         const totalSec = parseInt(match[1], 10);
         const h = Math.floor(totalSec / 3600);
