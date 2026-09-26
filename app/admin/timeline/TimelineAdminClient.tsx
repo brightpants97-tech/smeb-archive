@@ -108,19 +108,39 @@ export default function TimelineAdminClient() {
   const pasteFromClipboard = useCallback(async () => {
     try {
       const text = await navigator.clipboard.readText();
+      // 숫자만 있으면 직접 초로 해석
+      if (/^\d+$/.test(text.trim())) {
+        const totalSec = parseInt(text.trim(), 10);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        setNewH(h > 0 ? String(h) : '');
+        setNewM(String(m));
+        setNewS(s > 0 ? String(s) : '');
+        setClipMsg(`✓ ${h > 0 ? `${h}:` : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+        setTimeout(() => setClipMsg(''), 3000);
+        return;
+      }
+      // URL에서 t= 파라미터 추출 (초 단위)
       const match = text.match(/[?&]t=(\d+)/);
-      if (!match) { setClipMsg('URL에 t= 파라미터가 없어요'); setTimeout(() => setClipMsg(''), 2500); return; }
-      const totalSec = parseInt(match[1], 10);
-      const h = Math.floor(totalSec / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = totalSec % 60;
-      setNewH(h > 0 ? String(h) : '');
-      setNewM(String(m));
-      setNewS(s > 0 ? String(s) : '');
-      setClipMsg(`✓ ${h > 0 ? `${h}:` : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
-      setTimeout(() => setClipMsg(''), 2500);
-    } catch {
-      setClipMsg('클립보드 접근 실패'); setTimeout(() => setClipMsg(''), 2500);
+      if (match) {
+        const totalSec = parseInt(match[1], 10);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        setNewH(h > 0 ? String(h) : '');
+        setNewM(String(m));
+        setNewS(s > 0 ? String(s) : '');
+        setClipMsg(`✓ ${h > 0 ? `${h}:` : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+        setTimeout(() => setClipMsg(''), 3000);
+        return;
+      }
+      // 파싱 실패 시 클립보드 내용 그대로 보여주기 (디버그용)
+      setClipMsg(`파싱 실패: "${text.slice(0, 60)}"`);
+      setTimeout(() => setClipMsg(''), 6000);
+    } catch (e) {
+      setClipMsg(`클립보드 접근 실패: ${String(e).slice(0,40)}`);
+      setTimeout(() => setClipMsg(''), 4000);
     }
   }, []);
 
