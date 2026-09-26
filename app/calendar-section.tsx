@@ -97,6 +97,8 @@ function VodPlayerModal({ id, title, startTime, onClose }: { id: string; title: 
     setTimeout(onClose, 220);
   };
 
+  const src = `https://vod.sooplive.com/player/${id}/embed?autoPlay=true&showChat=false&mutePlay=false${startTime ? `&change_second=${startTime}` : ''}`;
+
   return createPortal(
     <div
       onClick={handleClose}
@@ -134,7 +136,8 @@ function VodPlayerModal({ id, title, startTime, onClose }: { id: string; title: 
         </div>
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
           <iframe
-            src={`https://vod.sooplive.com/player/${id}/embed?autoPlay=true&showChat=false&mutePlay=false${startTime ? `&startTime=${startTime}` : ''}`}
+            key={src}
+            src={src}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
             allow="autoplay; encrypted-media; fullscreen"
             allowFullScreen
@@ -155,6 +158,8 @@ function DayPanel({
   origin: { x: number; y: number } | null; onPlayVod: (id: string, title: string, startTime?: number) => void;
   timelineData: Record<string, TimelineEntry[]>;
 }) {
+  const [panelPlayer, setPanelPlayer] = useState<{ id: string; title: string; startTime: number } | null>(null);
+  useEffect(() => { setPanelPlayer(null); }, [date]);
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -224,7 +229,7 @@ function DayPanel({
           borderRadius: '20px',
           background: 'var(--card)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-          display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)',
+          display: 'grid', gridTemplateRows: panelPlayer ? 'auto auto minmax(0, 1fr)' : 'auto minmax(0, 1fr)',
           overflow: 'hidden',
           transform: visible ? 'translate(0,0) scale(1)' : originTransform,
           opacity: visible ? 1 : 0,
@@ -279,6 +284,29 @@ function DayPanel({
             >✕</button>
           </div>
         </div>
+
+        {/* 내장 플레이어 */}
+        {panelPlayer && (
+          <div style={{ background: '#000', position: 'relative' }}>
+            <iframe
+              key={`${panelPlayer.id}-${panelPlayer.startTime}`}
+              src={`https://vod.sooplive.com/player/${panelPlayer.id}/embed?autoPlay=true&showChat=false&mutePlay=false&change_second=${panelPlayer.startTime}`}
+              style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: 0 }}
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+            />
+            <button
+              onClick={() => setPanelPlayer(null)}
+              style={{
+                position: 'absolute', top: 8, right: 8,
+                width: 26, height: 26, borderRadius: '50%',
+                border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff',
+                cursor: 'pointer', fontSize: '0.85rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >✕</button>
+          </div>
+        )}
 
         {/* 목록 */}
         <div style={{ position: 'relative', minHeight: 0 }}>
@@ -362,7 +390,7 @@ function DayPanel({
                         return (
                           <div
                             key={ei}
-                            onClick={() => onPlayVod(vod.id, vod.title, secs)}
+                            onClick={() => setPanelPlayer({ id: vod.id, title: vod.title, startTime: secs })}
                             style={{
                               display: 'flex', alignItems: 'center', gap: '10px',
                               padding: '7px 10px 7px 0',
