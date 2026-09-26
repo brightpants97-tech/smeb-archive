@@ -184,6 +184,21 @@ export default function TimelineAdminClient() {
     return vodList.filter(v => v.title.toLowerCase().includes(q) || String(v.date).includes(q));
   }, [vodList, search]);
 
+  const groupedList = useMemo(() => {
+    const groups: { month: string; label: string; vods: VodItem[] }[] = [];
+    const map = new Map<string, VodItem[]>();
+    for (const vod of filteredList) {
+      const month = String(vod.date).slice(0, 7); // YYYY-MM
+      if (!map.has(month)) map.set(month, []);
+      map.get(month)!.push(vod);
+    }
+    for (const [month, items] of map) {
+      const [y, m] = month.split('-');
+      groups.push({ month, label: `${y}년 ${parseInt(m)}월`, vods: items });
+    }
+    return groups;
+  }, [filteredList]);
+
   const hasTimeline = (vodId: string) => {
     const v = vods.find(v => v.id === vodId);
     return v && v.entries.length > 0;
@@ -251,49 +266,67 @@ export default function TimelineAdminClient() {
             {!vodListLoading && filteredList.length === 0 && (
               <div style={{ padding: '20px', textAlign: 'center', color: 'var(--subtext)', fontSize: '0.85rem' }}>영상이 없습니다</div>
             )}
-            {filteredList.map(vod => {
-              const vid = String(vod.id);
-              const isSelected = selectedId === vid;
-              const hasTL = hasTimeline(vid);
-              return (
-                <div
-                  key={vid}
-                  onClick={() => setSelectedVod(vod)}
-                  style={{
-                    display: 'flex',
-                    gap: 10,
-                    padding: '10px 12px',
-                    cursor: 'pointer',
-                    borderLeft: isSelected ? '3px solid #EB701A' : '3px solid transparent',
-                    background: isSelected ? 'rgba(235,112,26,0.08)' : 'transparent',
-                    borderBottom: '1px solid var(--card-border)',
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  {vod.thumb && (
-                    <img
-                      src={vod.thumb}
-                      alt=""
-                      style={{ width: 72, height: 46, objectFit: 'cover', borderRadius: 5, flexShrink: 0, background: '#333' }}
-                    />
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                      {vod.title}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--subtext)' }}>{vod.date}</span>
-                      {vod.duration > 0 && <span style={{ fontSize: '0.68rem', color: 'var(--subtext)' }}>{fmtDuration(vod.duration)}</span>}
-                      {hasTL && (
-                        <span style={{ fontSize: '0.62rem', background: '#EB701A', color: '#fff', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>
-                          타임라인 {selectedVodData && selectedId === vid ? selectedVodData.entries.length : vods.find(v => v.id === vid)?.entries.length}개
-                        </span>
-                      )}
-                    </div>
-                  </div>
+            {groupedList.map(group => (
+              <div key={group.month}>
+                {/* Month header */}
+                <div style={{ padding: '8px 12px 6px', background: 'var(--card)', borderBottom: '1px solid var(--card-border)', position: 'sticky', top: 0, zIndex: 1 }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#EB701A' }}>{group.label}</span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--subtext)', marginLeft: 6 }}>{group.vods.length}개</span>
                 </div>
-              );
-            })}
+                {group.vods.map(vod => {
+                  const vid = String(vod.id);
+                  const isSelected = selectedId === vid;
+                  const hasTL = hasTimeline(vid);
+                  const day = String(vod.date).slice(8, 10);
+                  const dayOfWeek = ['일','월','화','수','목','금','토'][new Date(vod.date + 'T00:00:00').getDay()];
+                  return (
+                    <div
+                      key={vid}
+                      onClick={() => setSelectedVod(vod)}
+                      style={{
+                        display: 'flex',
+                        gap: 0,
+                        cursor: 'pointer',
+                        borderLeft: isSelected ? '3px solid #EB701A' : '3px solid transparent',
+                        background: isSelected ? 'rgba(235,112,26,0.07)' : 'transparent',
+                        borderBottom: '1px solid var(--card-border)',
+                        transition: 'background 0.12s',
+                        alignItems: 'stretch',
+                      }}
+                    >
+                      {/* Date column */}
+                      <div style={{ width: 44, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 0', borderRight: '1px solid var(--card-border)', gap: 1 }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 800, lineHeight: 1, color: isSelected ? '#EB701A' : 'var(--text)' }}>{parseInt(day)}</span>
+                        <span style={{ fontSize: '0.65rem', color: dayOfWeek === '일' ? '#e74c3c' : dayOfWeek === '토' ? '#3498db' : 'var(--subtext)' }}>{dayOfWeek}</span>
+                      </div>
+                      {/* Thumbnail + info */}
+                      <div style={{ display: 'flex', gap: 8, padding: '8px 10px', flex: 1, minWidth: 0, alignItems: 'center' }}>
+                        {vod.thumb && (
+                          <img
+                            src={vod.thumb}
+                            alt=""
+                            style={{ width: 64, height: 40, objectFit: 'cover', borderRadius: 4, flexShrink: 0, background: '#333' }}
+                          />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '0.78rem', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                            {vod.title}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3, flexWrap: 'wrap' }}>
+                            {vod.duration > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--subtext)' }}>{fmtDuration(vod.duration)}</span>}
+                            {hasTL && (
+                              <span style={{ fontSize: '0.6rem', background: '#EB701A', color: '#fff', borderRadius: 3, padding: '1px 4px', fontWeight: 700 }}>
+                                ▶ {vods.find(v => v.id === vid)?.entries.length}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
 
