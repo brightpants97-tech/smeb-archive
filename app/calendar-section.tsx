@@ -343,37 +343,58 @@ function DayPanel({
                       </p>
                     </div>
                   </div>
-                  {/* 타을덼인 버튼 */}
+                  {/* 타임라인 */}
                   {vodTimeline.length > 0 && (
                     <div style={{
-                      padding: '8px 10px 10px',
                       background: 'rgba(235,112,26,0.04)',
                       border: '1px solid rgba(235,112,26,0.2)',
                       borderTop: 'none',
                       borderRadius: '0 0 14px 14px',
-                      display: 'flex', flexWrap: 'wrap', gap: '6px',
+                      overflow: 'hidden',
+                      paddingLeft: '14px',
                     }}>
                       {vodTimeline.map((entry, ei) => {
                         const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
                         const timeStr = entry.h
                           ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
                           : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
+                        const isLast = ei === vodTimeline.length - 1;
                         return (
-                          <button
+                          <div
                             key={ei}
                             onClick={() => onPlayVod(vod.id, vod.title, secs)}
                             style={{
-                              display: 'inline-flex', alignItems: 'center', gap: '5px',
-                              padding: '4px 10px', borderRadius: '100px',
-                              border: '1px solid rgba(235,112,26,0.35)', background: 'rgba(235,112,26,0.08)',
-                              color: '#EB701A', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
-                              transition: 'background 0.15s',
+                              display: 'flex', alignItems: 'center', gap: '10px',
+                              padding: '7px 10px 7px 0',
+                              borderBottom: isLast ? 'none' : '1px solid rgba(235,112,26,0.1)',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              transition: 'background 0.13s',
                             }}
-                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.22)'}
-                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.08)'}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.1)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                           >
-                            ▶ {timeStr} {entry.label}
-                          </button>
+                            {/* 세로선 + 점 */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: '14px', alignSelf: 'stretch', position: 'relative' }}>
+                              {ei > 0 && <div style={{ width: '2px', flex: '0 0 6px', background: 'rgba(235,112,26,0.3)' }} />}
+                              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#EB701A', flexShrink: 0, boxShadow: '0 0 0 2px rgba(235,112,26,0.2)' }} />
+                              {!isLast && <div style={{ width: '2px', flex: 1, background: 'rgba(235,112,26,0.3)' }} />}
+                            </div>
+                            {/* 시간 뱃지 */}
+                            <span style={{
+                              fontFamily: 'monospace', fontSize: '0.72rem', fontWeight: 800,
+                              color: '#EB701A', background: 'rgba(235,112,26,0.12)',
+                              border: '1px solid rgba(235,112,26,0.25)',
+                              padding: '2px 7px', borderRadius: '6px', flexShrink: 0,
+                              letterSpacing: '0.02em',
+                            }}>{timeStr}</span>
+                            {/* 라벨 */}
+                            <span style={{ flex: 1, fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {entry.label}
+                            </span>
+                            {/* 호버 화살표 */}
+                            <span style={{ fontSize: '0.8rem', color: '#EB701A', opacity: 0.5, flexShrink: 0, paddingRight: '4px' }}>›</span>
+                          </div>
                         );
                       })}
                     </div>
