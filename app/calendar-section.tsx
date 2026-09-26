@@ -167,6 +167,55 @@ function DayPanel({
   // 외부(TOP5·검색) 영상이 열리면 패널 내 플레이어 닫기
   useEffect(() => { if (externallyPlaying) setPanelPlayer(null); }, [externallyPlaying]);
 
+  // ── 플레이어 크기 조절 ──────────────────────────────────────────────────────
+  const [playerPct, setPlayerPct] = useState(100);
+  const [isDragging, setIsDragging] = useState(false);
+  const playerWrapRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ startX: number; startPct: number; containerW: number } | null>(null);
+  // 새 VOD 로드 시 크기 초기화
+  useEffect(() => { setPlayerPct(100); }, [panelPlayer?.id]);
+
+  const startResize = (clientX: number) => {
+    const containerW = playerWrapRef.current?.offsetWidth || 540;
+    dragRef.current = { startX: clientX, startPct: playerPct, containerW };
+    setIsDragging(true);
+  };
+
+  const onResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    startResize(e.clientX);
+    const onMove = (me: MouseEvent) => {
+      if (!dragRef.current) return;
+      const deltaPct = ((me.clientX - dragRef.current.startX) / dragRef.current.containerW) * 100;
+      setPlayerPct(Math.min(Math.max(dragRef.current.startPct + deltaPct, 25), 100));
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      setIsDragging(false);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  const onResizeTouchStart = (e: React.TouchEvent) => {
+    startResize(e.touches[0].clientX);
+    const onMove = (te: TouchEvent) => {
+      if (!dragRef.current) return;
+      const deltaPct = ((te.touches[0].clientX - dragRef.current.startX) / dragRef.current.containerW) * 100;
+      setPlayerPct(Math.min(Math.max(dragRef.current.startPct + deltaPct, 25), 100));
+    };
+    const onEnd = () => {
+      dragRef.current = null;
+      setIsDragging(false);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onEnd);
+  };
+
   // 같은 VOD에서 다른 타임라인 클릭 → postMessage로 시간 이동 (iframe 재마운트 없음 → 광고 없음)
   useEffect(() => {
     if (!panelPlayer) { prevPlayerRef.current = null; return; }
@@ -320,25 +369,46 @@ function DayPanel({
 
         {/* 내장 플레이어 */}
         {panelPlayer && (
-          <div style={{ background: '#000', position: 'relative' }}>
-            <iframe
-              ref={iframeRef}
-              key={panelPlayer.id}
-              src={`https://vod.sooplive.com/player/${panelPlayer.id}/embed?autoPlay=true&showChat=false&mutePlay=false&change_second=${panelPlayer.startTime}`}
-              style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: 0 }}
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-            />
-            <button
-              onClick={() => setPanelPlayer(null)}
-              style={{
-                position: 'absolute', top: 8, right: 8,
-                width: 26, height: 26, borderRadius: '50%',
-                border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff',
-                cursor: 'pointer', fontSize: '0.85rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >✕</button>
+          <div ref={playerWrapRef} style={{ background: '#111', padding: '6px 6px 0', userSelect: isDragging ? 'none' : undefined }}>
+            <div style={{ width: `${playerPct}%`, position: 'relative', transition: isDragging ? 'none' : 'width 0.08s' }}>
+              <iframe
+                ref={iframeRef}
+                key={panelPlayer.id}
+                src={`https://vod.sooplive.com/player/${panelPlayer.id}/embed?autoPlay=true&showChat=false&mutePlay=false&change_second=${panelPlayer.startTime}`}
+                style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: 0 }}
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+              />
+              {/* 닫기 */}
+              <button
+                onClick={() => setPanelPlayer(null)}
+                style={{
+                  position: 'absolute', top: 6, left: 6,
+                  width: 24, height: 24, borderRadius: '50%',
+                  border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff',
+                  cursor: 'pointer', fontSize: '0.8rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >✕</button>
+              {/* 크기 조절 핸들 (오른쪽 하단) */}
+              <div
+                onMouseDown={onResizeMouseDown}
+                onTouchStart={onResizeTouchStart}
+                title="드래그해서 크기 조절"
+                style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  width: 28, height: 28, cursor: 'ew-resize',
+                  display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
+                  padding: '4px',
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M12 1L1 12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M12 5L5 12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M12 9L9 12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            </div>
           </div>
         )}
 
