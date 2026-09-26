@@ -159,7 +159,36 @@ function DayPanel({
   timelineData: Record<string, TimelineEntry[]>;
 }) {
   const [panelPlayer, setPanelPlayer] = useState<{ id: string; title: string; startTime: number } | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const prevPlayerRef = useRef<{ id: string; startTime: number } | null>(null);
   useEffect(() => { setPanelPlayer(null); }, [date]);
+
+  // 같은 VOD에서 다른 타임라인 클릭 → postMessage로 시간 이동 (iframe 재마운트 없음 → 광고 없음)
+  useEffect(() => {
+    if (!panelPlayer) { prevPlayerRef.current = null; return; }
+    const prev = prevPlayerRef.current;
+    prevPlayerRef.current = { id: panelPlayer.id, startTime: panelPlayer.startTime };
+    if (!prev || prev.id !== panelPlayer.id) return; // 다른 VOD이면 key 변경으로 iframe 재마운트
+    if (prev.startTime === panelPlayer.startTime) return; // 같은 시간
+    const iframe = iframeRef.current;
+    if (!iframe?.contentWindow) return;
+    const secs = panelPlayer.startTime;
+    // SOOP 플레이어 postMessage API는 비공개이므로 여러 형식으로 시도
+    const attempts: (object | string)[] = [
+      { type: 'seek', time: secs },
+      { type: 'seekTo', position: secs },
+      { type: 'change_second', value: secs },
+      { event: 'seek', value: secs },
+      { event: 'seekTo', time: secs },
+      { command: 'seek', args: secs },
+      { action: 'change_second', second: secs },
+      { api: 'seek', position: secs },
+    ];
+    attempts.forEach(msg => {
+      try { iframe.contentWindow?.postMessage(msg, '*'); } catch {}
+      try { iframe.contentWindow?.postMessage(JSON.stringify(msg), '*'); } catch {}
+    });
+  }, [panelPlayer]);
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -289,7 +318,8 @@ function DayPanel({
         {panelPlayer && (
           <div style={{ background: '#000', position: 'relative' }}>
             <iframe
-              key={`${panelPlayer.id}-${panelPlayer.startTime}`}
+              ref={iframeRef}
+              key={panelPlayer.id}
               src={`https://vod.sooplive.com/player/${panelPlayer.id}/embed?autoPlay=true&showChat=false&mutePlay=false&change_second=${panelPlayer.startTime}`}
               style={{ display: 'block', width: '100%', aspectRatio: '16/9', border: 0 }}
               allow="autoplay; encrypted-media; fullscreen"
