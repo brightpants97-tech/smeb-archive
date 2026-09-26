@@ -409,37 +409,93 @@ function DayPanel({
                 display: 'flex',
                 flexDirection: 'column',
               }}>
+                <style>{`
+                  @keyframes tl-pulse {
+                    0%   { box-shadow: 0 0 0 0   rgba(235,112,26,0.7); }
+                    70%  { box-shadow: 0 0 0 5px rgba(235,112,26,0);   }
+                    100% { box-shadow: 0 0 0 0   rgba(235,112,26,0);   }
+                  }
+                  @keyframes tl-playing-fade {
+                    0%, 100% { opacity: 1; }
+                    50%       { opacity: 0.45; }
+                  }
+                  .tl-item:hover { background: rgba(235,112,26,0.07) !important; }
+                `}</style>
                 <div style={{ padding: '8px 10px 4px', fontSize: '0.62rem', fontWeight: 800, color: '#EB701A', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid var(--card-border)' }}>
                   타임라인
                 </div>
-                {currentTimeline.map((entry, i) => {
-                  const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
-                  const timeStr = entry.h
-                    ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
-                    : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
-                  const isActive = secs === panelPlayer.startTime;
-                  const isLast = i === currentTimeline.length - 1;
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => { onClearExternal(); setPanelPlayer({ id: panelPlayer.id, title: panelPlayer.title, startTime: secs }); }}
-                      style={{
-                        display: 'flex', flexDirection: 'column', gap: '2px',
-                        padding: '8px 10px',
-                        borderBottom: isLast ? 'none' : '1px solid var(--card-border)',
-                        cursor: 'pointer',
-                        background: isActive ? 'rgba(235,112,26,0.12)' : 'transparent',
-                        transition: 'background 0.12s',
-                        borderLeft: isActive ? '3px solid #EB701A' : '3px solid transparent',
-                      }}
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.07)'; }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.65rem', fontWeight: 800, color: '#EB701A' }}>{timeStr}</span>
-                      <span style={{ fontSize: isMobile ? '0.68rem' : '0.73rem', fontWeight: 600, color: isActive ? 'var(--text)' : 'var(--text-muted)', lineHeight: 1.3, wordBreak: 'keep-all' }}>{entry.label}</span>
-                    </div>
-                  );
-                })}
+                <div style={{ padding: '6px 0 4px', position: 'relative' }}>
+                  {currentTimeline.map((entry, i) => {
+                    const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
+                    const timeStr = entry.h
+                      ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
+                      : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
+                    const isActive = secs === panelPlayer.startTime;
+                    const isLast = i === currentTimeline.length - 1;
+                    return (
+                      <div
+                        key={i}
+                        className="tl-item"
+                        onClick={() => { onClearExternal(); setPanelPlayer({ id: panelPlayer.id, title: panelPlayer.title, startTime: secs }); }}
+                        style={{
+                          display: 'flex', flexDirection: 'row', alignItems: 'flex-start',
+                          padding: '0 8px 0 0',
+                          cursor: 'pointer',
+                          background: isActive ? 'rgba(235,112,26,0.11)' : 'transparent',
+                          transition: 'background 0.12s',
+                        }}
+                      >
+                        {/* 세로선 + 점 컬럼 */}
+                        <div style={{ width: '24px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          {/* 위쪽 선 */}
+                          <div style={{ width: '2px', background: i === 0 ? 'transparent' : 'rgba(235,112,26,0.28)', flex: '0 0 8px' }} />
+                          {/* 점 */}
+                          <div style={{
+                            width: isActive ? '10px' : '7px',
+                            height: isActive ? '10px' : '7px',
+                            borderRadius: '50%',
+                            flexShrink: 0,
+                            background: isActive ? '#EB701A' : 'rgba(235,112,26,0.4)',
+                            border: isActive ? '2px solid rgba(255,255,255,0.25)' : '1.5px solid rgba(235,112,26,0.2)',
+                            animation: isActive ? 'tl-pulse 1.5s ease-out infinite' : 'none',
+                            transition: 'width 0.15s, height 0.15s, background 0.15s',
+                          }} />
+                          {/* 아래쪽 선 */}
+                          <div style={{ width: '2px', background: isLast ? 'transparent' : 'rgba(235,112,26,0.28)', flex: 1, minHeight: '8px' }} />
+                        </div>
+                        {/* 내용 컬럼 */}
+                        <div style={{ flex: 1, minWidth: 0, paddingTop: '6px', paddingBottom: '6px' }}>
+                          {/* 시간 pill 뱃지 */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                            <span style={{
+                              fontFamily: 'monospace',
+                              fontSize: '0.62rem',
+                              fontWeight: 800,
+                              color: '#EB701A',
+                              background: 'rgba(235,112,26,0.13)',
+                              border: '1px solid rgba(235,112,26,0.28)',
+                              borderRadius: '5px',
+                              padding: '1px 5px',
+                              letterSpacing: '0.03em',
+                              lineHeight: 1.5,
+                            }}>{timeStr}</span>
+                            {isActive && (
+                              <span style={{
+                                fontSize: '0.58rem',
+                                fontWeight: 700,
+                                color: '#EB701A',
+                                animation: 'tl-playing-fade 1.2s ease-in-out infinite',
+                                letterSpacing: '0.04em',
+                              }}>▶ 재생 중</span>
+                            )}
+                          </div>
+                          {/* 레이블 */}
+                          <span style={{ fontSize: isMobile ? '0.67rem' : '0.72rem', fontWeight: 600, color: isActive ? 'var(--text)' : 'var(--text-muted)', lineHeight: 1.3, wordBreak: 'keep-all', display: 'block' }}>{entry.label}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
