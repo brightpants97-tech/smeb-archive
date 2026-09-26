@@ -152,16 +152,20 @@ function VodPlayerModal({ id, title, startTime, onClose }: { id: string; title: 
 // 슬라이드오버 패널
 function DayPanel({
   date, vods, onClose, fmtDuration, onPrev, onNext, hasPrev, hasNext, isMobile, origin, onPlayVod, timelineData,
+  externallyPlaying, onClearExternal,
 }: {
   date: string; vods: any[]; onClose: () => void; fmtDuration: (s: number) => string;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean; isMobile: boolean;
   origin: { x: number; y: number } | null; onPlayVod: (id: string, title: string, startTime?: number) => void;
   timelineData: Record<string, TimelineEntry[]>;
+  externallyPlaying: boolean; onClearExternal: () => void;
 }) {
   const [panelPlayer, setPanelPlayer] = useState<{ id: string; title: string; startTime: number } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const prevPlayerRef = useRef<{ id: string; startTime: number } | null>(null);
   useEffect(() => { setPanelPlayer(null); }, [date]);
+  // 외부(TOP5·검색) 영상이 열리면 패널 내 플레이어 닫기
+  useEffect(() => { if (externallyPlaying) setPanelPlayer(null); }, [externallyPlaying]);
 
   // 같은 VOD에서 다른 타임라인 클릭 → postMessage로 시간 이동 (iframe 재마운트 없음 → 광고 없음)
   useEffect(() => {
@@ -351,7 +355,7 @@ function DayPanel({
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0', flexShrink: 0 }}>
                   {/* 썸네일 카드 */}
                   <div
-                    onClick={() => onPlayVod(vod.id, vod.title)}
+                    onClick={() => { onClearExternal(); setPanelPlayer({ id: vod.id, title: vod.title, startTime: 0 }); }}
                     style={{
                       position: 'relative',
                       width: '100%', aspectRatio: '16/9',
@@ -420,7 +424,7 @@ function DayPanel({
                         return (
                           <div
                             key={ei}
-                            onClick={() => setPanelPlayer({ id: vod.id, title: vod.title, startTime: secs })}
+                            onClick={() => { onClearExternal(); setPanelPlayer({ id: vod.id, title: vod.title, startTime: secs }); }}
                             style={{
                               display: 'flex', alignItems: 'center', gap: '10px',
                               padding: '7px 10px 7px 0',
@@ -739,6 +743,8 @@ export default function CalendarSection({ sortedMonths, monthMap, monthTop5, tod
           origin={panelDay.origin || null}
           onPlayVod={openVod}
           timelineData={timelineData}
+          externallyPlaying={!!playingVod}
+          onClearExternal={() => setPlayingVod(null)}
         />
       )}
 
