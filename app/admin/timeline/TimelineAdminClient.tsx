@@ -36,6 +36,13 @@ function fmtDuration(s: number) {
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
+function getMonthDays(year: number, month: number) {
+  // month: 0-based
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return { firstDay, daysInMonth };
+}
+
 export default function TimelineAdminClient() {
   const [pw, setPw] = useState('');
   const [authed, setAuthed] = useState(false);
@@ -49,8 +56,13 @@ export default function TimelineAdminClient() {
   // VOD browser state
   const [vodList, setVodList] = useState<VodItem[]>([]);
   const [vodListLoading, setVodListLoading] = useState(false);
-  const [search, setSearch] = useState('');
   const [selectedVod, setSelectedVod] = useState<VodItem | null>(null);
+
+  // Calendar state
+  const now = new Date();
+  const [calYear, setCalYear] = useState(now.getFullYear());
+  const [calMonth, setCalMonth] = useState(now.getMonth()); // 0-based
+  const [selectedDate, setSelectedDate] = useState<string | null>(null); // YYYY-MM-DD
 
   // New entry form
   const [newH, setNewH] = useState('');
@@ -89,9 +101,21 @@ export default function TimelineAdminClient() {
     try {
       const res = await fetch('/api/soop');
       const json = await res.json();
-      if (json.vods) setVodList(json.vods.map((v: VodItem) => ({ ...v, id: String(v.id) })));
+      if (json.vods) {
+        const list = json.vods.map((v: VodItem) => ({ ...v, id: String(v.id) }));
+        setVodList(list);
+        // 가장 최신 VOD가 있는 달로 이동
+        if (list.length > 0) {
+          const latest = list[0].date as string;
+          if (latest) {
+            const d = new Date(latest + 'T00:00:00');
+            setCalYear(d.getFullYear());
+            setCalMonth(d.getMonth());
+          }
+        }
+      }
     } catch {
-      // silently fail — VOD list is non-critical
+      // silently fail
     }
     setVodListLoading(false);
   }, []);
@@ -178,26 +202,16 @@ export default function TimelineAdminClient() {
     if (selectedVod && String(selectedVod.id) === vodId) setSelectedVod(null);
   };
 
-  const filteredList = useMemo(() => {
-    if (!search.trim()) return vodList;
-    const q = search.toLowerCase();
-    return vodList.filter(v => v.title.toLowerCase().includes(q) || String(v.date).includes(q));
-  }, [vodList, search]);
-
-  const groupedList = useMemo(() => {
-    const groups: { month: string; label: string; vods: VodItem[] }[] = [];
+  // VOD를 날짜별로 매핑
+  const vodsByDate = useMemo(() => {
     const map = new Map<string, VodItem[]>();
-    for (const vod of filteredList) {
-      const month = String(vod.date).slice(0, 7); // YYYY-MM
-      if (!map.has(month)) map.set(month, []);
-      map.get(month)!.push(vod);
+    for (const vod of vodList) {
+      const d = String(vod.date).slice(0, 10);
+      if (!map.has(d)) map.set(d, []);
+      map.get(d)!.push(vod);
     }
-    for (const [month, items] of map) {
-      const [y, m] = month.split('-');
-      groups.push({ month, label: `${y}년 ${parseInt(m)}월`, vods: items });
-    }
-    return groups;
-  }, [filteredList]);
+    return map;
+  }, [vodList]);
 
   const hasTimeline = (vodId: string) => {
     const v = vods.find(v => v.id === vodId);
@@ -206,6 +220,22 @@ export default function TimelineAdminClient() {
 
   const selectedId = selectedVod ? String(selectedVod.id) : null;
   const selectedVodData = selectedId ? vods.find(v => v.id === selectedId) : null;
+
+  // 선택된 날짜의 VOD 목록
+  const dateVods = selectedDate ? (vodsByDate.get(selectedDate) || []) : [];
+
+  // 달력 계산
+  const { firstDay, daysInMonth } = getMonthDays(calYear, calMonth);
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
+    else setCalMonth(m => m - 1);
+    setSelectedDate(null);
+  };
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0); }
+    else setCalMonth(m => m + 1);
+    setSelectedDate(null);
+  };
 
   if (!authed) {
     return (
@@ -241,92 +271,130 @@ export default function TimelineAdminClient() {
         </div>
       </div>
 
-      {/* Status banners */}
       {error && <div style={{ background: '#3b1212', color: '#e74c3c', padding: '8px 20px', fontSize: '0.85rem', flexShrink: 0 }}>{error}</div>}
       {success && <div style={{ background: '#0d2b0d', color: '#2ecc71', padding: '8px 20px', fontSize: '0.85rem', flexShrink: 0 }}>{success}</div>}
 
-      {/* Main two-panel layout */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* Left panel: VOD list */}
-        <div style={{ width: 320, flexShrink: 0, borderRight: '1px solid var(--card-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--card-border)', flexShrink: 0 }}>
-            <input
-              type="text"
-              placeholder="영상 검색..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width: '100%', padding: '7px 10px', borderRadius: 7, border: '1px solid var(--card-border)', background: 'var(--bg)', color: 'var(--text)', fontSize: '0.85rem', boxSizing: 'border-box' }}
-            />
+        {/* Left panel: Calendar */}
+        <div style={{ width: 300, flexShrink: 0, borderRight: '1px solid var(--card-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+          {/* Month nav */}
+          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: '1rem', padding: '2px 6px' }}>‹</button>
+            <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>{calYear}년 {calMonth + 1}월</span>
+            <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: '1rem', padding: '2px 6px' }}>›</button>
           </div>
+
+          {/* Day-of-week header */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid var(--card-border)', flexShrink: 0 }}>
+            {['일','월','화','수','목','금','토'].map((d, i) => (
+              <div key={d} style={{ textAlign: 'center', padding: '6px 0', fontSize: '0.7rem', fontWeight: 700, color: i === 0 ? '#e74c3c' : i === 6 ? '#3498db' : 'var(--subtext)' }}>{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', flexShrink: 0, borderBottom: '1px solid var(--card-border)' }}>
+            {/* empty cells */}
+            {Array.from({ length: firstDay }).map((_, i) => (
+              <div key={`e${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const dayVods = vodsByDate.get(dateStr) || [];
+              const hasVod = dayVods.length > 0;
+              const hasTL = hasVod && dayVods.some(v => hasTimeline(String(v.id)));
+              const isSelected = selectedDate === dateStr;
+              const dow = (firstDay + i) % 7;
+              const isToday = dateStr === `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+              return (
+                <div
+                  key={day}
+                  onClick={() => hasVod ? setSelectedDate(isSelected ? null : dateStr) : null}
+                  style={{
+                    padding: '6px 2px',
+                    textAlign: 'center',
+                    cursor: hasVod ? 'pointer' : 'default',
+                    background: isSelected ? '#EB701A' : 'transparent',
+                    borderRadius: isSelected ? 0 : 0,
+                    position: 'relative',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: 26, height: 26, lineHeight: '26px',
+                    borderRadius: '50%',
+                    fontSize: '0.78rem',
+                    fontWeight: hasVod ? 800 : 400,
+                    background: isSelected ? '#EB701A' : isToday ? 'rgba(235,112,26,0.15)' : 'transparent',
+                    color: isSelected ? '#fff' : dow === 0 ? '#e74c3c' : dow === 6 ? '#3498db' : hasVod ? 'var(--text)' : 'var(--subtext)',
+                    opacity: hasVod ? 1 : 0.35,
+                  }}>
+                    {day}
+                  </span>
+                  {/* VOD dot */}
+                  {hasVod && !isSelected && (
+                    <span style={{
+                      display: 'block',
+                      width: 5, height: 5,
+                      borderRadius: '50%',
+                      background: hasTL ? '#EB701A' : 'var(--subtext)',
+                      margin: '2px auto 0',
+                    }} />
+                  )}
+                  {/* VOD count badge for selected */}
+                  {isSelected && dayVods.length > 1 && (
+                    <span style={{ display: 'block', fontSize: '0.55rem', color: '#fff', marginTop: 1 }}>{dayVods.length}개</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Selected date VOD list */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {vodListLoading && (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--subtext)', fontSize: '0.85rem' }}>불러오는 중...</div>
+              <div style={{ padding: '16px', textAlign: 'center', color: 'var(--subtext)', fontSize: '0.82rem' }}>불러오는 중...</div>
             )}
-            {!vodListLoading && filteredList.length === 0 && (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--subtext)', fontSize: '0.85rem' }}>영상이 없습니다</div>
+            {!vodListLoading && !selectedDate && (
+              <div style={{ padding: '16px', textAlign: 'center', color: 'var(--subtext)', fontSize: '0.82rem' }}>날짜를 선택하세요</div>
             )}
-            {groupedList.map(group => (
-              <div key={group.month}>
-                {/* Month header */}
-                <div style={{ padding: '8px 12px 6px', background: 'var(--card)', borderBottom: '1px solid var(--card-border)', position: 'sticky', top: 0, zIndex: 1 }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#EB701A' }}>{group.label}</span>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--subtext)', marginLeft: 6 }}>{group.vods.length}개</span>
-                </div>
-                {group.vods.map(vod => {
-                  const vid = String(vod.id);
-                  const isSelected = selectedId === vid;
-                  const hasTL = hasTimeline(vid);
-                  const day = String(vod.date).slice(8, 10);
-                  const dayOfWeek = ['일','월','화','수','목','금','토'][new Date(vod.date + 'T00:00:00').getDay()];
-                  return (
-                    <div
-                      key={vid}
-                      onClick={() => setSelectedVod(vod)}
-                      style={{
-                        display: 'flex',
-                        gap: 0,
-                        cursor: 'pointer',
-                        borderLeft: isSelected ? '3px solid #EB701A' : '3px solid transparent',
-                        background: isSelected ? 'rgba(235,112,26,0.07)' : 'transparent',
-                        borderBottom: '1px solid var(--card-border)',
-                        transition: 'background 0.12s',
-                        alignItems: 'stretch',
-                      }}
-                    >
-                      {/* Date column */}
-                      <div style={{ width: 44, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 0', borderRight: '1px solid var(--card-border)', gap: 1 }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, lineHeight: 1, color: isSelected ? '#EB701A' : 'var(--text)' }}>{parseInt(day)}</span>
-                        <span style={{ fontSize: '0.65rem', color: dayOfWeek === '일' ? '#e74c3c' : dayOfWeek === '토' ? '#3498db' : 'var(--subtext)' }}>{dayOfWeek}</span>
-                      </div>
-                      {/* Thumbnail + info */}
-                      <div style={{ display: 'flex', gap: 8, padding: '8px 10px', flex: 1, minWidth: 0, alignItems: 'center' }}>
-                        {vod.thumb && (
-                          <img
-                            src={vod.thumb}
-                            alt=""
-                            style={{ width: 64, height: 40, objectFit: 'cover', borderRadius: 4, flexShrink: 0, background: '#333' }}
-                          />
-                        )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '0.78rem', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                            {vod.title}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3, flexWrap: 'wrap' }}>
-                            {vod.duration > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--subtext)' }}>{fmtDuration(vod.duration)}</span>}
-                            {hasTL && (
-                              <span style={{ fontSize: '0.6rem', background: '#EB701A', color: '#fff', borderRadius: 3, padding: '1px 4px', fontWeight: 700 }}>
-                                ▶ {vods.find(v => v.id === vid)?.entries.length}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+            {selectedDate && dateVods.length === 0 && (
+              <div style={{ padding: '16px', textAlign: 'center', color: 'var(--subtext)', fontSize: '0.82rem' }}>이 날엔 영상이 없어요</div>
+            )}
+            {dateVods.map(vod => {
+              const vid = String(vod.id);
+              const isSelected = selectedId === vid;
+              const hasTL = hasTimeline(vid);
+              return (
+                <div
+                  key={vid}
+                  onClick={() => setSelectedVod(vod)}
+                  style={{
+                    display: 'flex', gap: 8, padding: '10px 12px', cursor: 'pointer',
+                    borderLeft: isSelected ? '3px solid #EB701A' : '3px solid transparent',
+                    background: isSelected ? 'rgba(235,112,26,0.08)' : 'transparent',
+                    borderBottom: '1px solid var(--card-border)',
+                    transition: 'background 0.12s',
+                    alignItems: 'center',
+                  }}
+                >
+                  {vod.thumb && (
+                    <img src={vod.thumb} alt="" style={{ width: 68, height: 42, objectFit: 'cover', borderRadius: 4, flexShrink: 0, background: '#333' }} />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {vod.title}
                     </div>
-                  );
-                })}
-              </div>
-            ))}
+                    <div style={{ display: 'flex', gap: 5, marginTop: 3, alignItems: 'center' }}>
+                      {vod.duration > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--subtext)' }}>{fmtDuration(vod.duration)}</span>}
+                      {hasTL && <span style={{ fontSize: '0.6rem', background: '#EB701A', color: '#fff', borderRadius: 3, padding: '1px 4px', fontWeight: 700 }}>▶ {vods.find(v => v.id === vid)?.entries.length}</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -337,13 +405,13 @@ export default function TimelineAdminClient() {
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3 }}>
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
-              <span style={{ fontSize: '0.9rem' }}>왼쪽에서 영상을 선택하세요</span>
+              <span style={{ fontSize: '0.9rem' }}>달력에서 날짜 → 영상을 선택하세요</span>
             </div>
           ) : (
             <>
               {/* Player */}
               <div style={{ background: '#000', flexShrink: 0 }}>
-                <div style={{ position: 'relative', width: '100%', paddingBottom: '42%', maxHeight: '60vh' }}>
+                <div style={{ position: 'relative', width: '100%', paddingBottom: '42%' }}>
                   <iframe
                     key={selectedId}
                     src={`https://vod.sooplive.com/player/${selectedId}/embed?autoPlay=false&showChat=false&mutePlay=false`}
@@ -362,9 +430,7 @@ export default function TimelineAdminClient() {
                     <a href={`https://www.sooplive.com/vod/${selectedId}`} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, fontSize: '0.72rem', color: '#EB701A' }}>SOOP ↗</a>
                   </div>
                   {selectedVodData && selectedVodData.entries.length > 0 && (
-                    <button onClick={() => removeVod(selectedId!)} style={{ background: 'transparent', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '0.8rem' }}>
-                      VOD 전체 삭제
-                    </button>
+                    <button onClick={() => removeVod(selectedId!)} style={{ background: 'transparent', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '0.8rem' }}>VOD 전체 삭제</button>
                   )}
                 </div>
 
@@ -386,16 +452,12 @@ export default function TimelineAdminClient() {
                     onChange={e => setNewLabel(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') addEntry(); }}
                     style={{ flex: 1, minWidth: 140, padding: '5px 9px', borderRadius: 6, border: '1px solid var(--card-border)', background: 'var(--bg)', color: 'var(--text)', fontSize: '0.85rem' }} />
-                  <button onClick={addEntry} style={{ padding: '5px 14px', borderRadius: 6, background: '#EB701A', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>
-                    추가
-                  </button>
+                  <button onClick={addEntry} style={{ padding: '5px 14px', borderRadius: 6, background: '#EB701A', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>추가</button>
                 </div>
 
                 {/* Entry list */}
                 {(!selectedVodData || selectedVodData.entries.length === 0) ? (
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--subtext)', fontSize: '0.85rem' }}>
-                    타임라인 항목이 없습니다
-                  </div>
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--subtext)', fontSize: '0.85rem' }}>타임라인 항목이 없습니다</div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {selectedVodData.entries.map((entry, ei) => (
