@@ -175,12 +175,15 @@ export default function TimelineAdminClient() {
     const s = newS !== '' ? parseInt(newS, 10) : undefined;
     const entry: TimelineEntry = { label, m, ...(h !== undefined && h > 0 ? { h } : {}), ...(s !== undefined && s > 0 ? { s } : {}) };
     const id = String(selectedVod.id);
-    ensureVod(id);
-    setVods(prev => prev.map(v => {
-      if (v.id !== id) return v;
-      const updated = [...v.entries, entry].sort((a, b) => toSeconds(a) - toSeconds(b));
-      return { ...v, entries: updated };
-    }));
+    setVods(prev => {
+      const exists = prev.find(v => v.id === id);
+      const list = exists ? prev : [...prev, { id, entries: [] }];
+      return list.map(v => {
+        if (v.id !== id) return v;
+        const updated = [...v.entries, entry].sort((a, b) => toSeconds(a) - toSeconds(b));
+        return { ...v, entries: updated };
+      });
+    });
     setNewH(''); setNewM(''); setNewS(''); setNewLabel('');
   };
 
