@@ -706,7 +706,7 @@ function DayPanel({
                     <>
                       <div
                         onClick={() => { onClearExternal(); setPanelPlayer({ id: vod.id, title: vod.title, startTime: 0 }); }}
-                        style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: vodTimeline.length > 0 ? '0' : '0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.15s' }}
+                        style={{ position: 'relative', width: '100%', aspectRatio: '16/9', maxHeight: '140px', borderRadius: vodTimeline.length > 0 ? '0' : '0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.15s' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; }}
                       >
