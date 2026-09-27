@@ -667,11 +667,11 @@ function DayPanel({
                     <div style={{ borderRadius: '0 0 14px 14px', overflow: 'hidden', border: '1px solid rgba(235,112,26,0.2)', borderTop: 'none' }}>
                       {/* accordion 헤더 */}
                       <button
-                        onClick={e => { e.stopPropagation(); setTimelineOpen(prev => ({ ...prev, [vod.id]: !prev[vod.id] })); }}
+                        onClick={e => { e.stopPropagation(); setTimelineOpen(prev => ({ ...prev, [vod.id]: prev[vod.id] === false ? undefined : false })); }}
                         style={{
                           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '6px 12px', border: 'none', cursor: 'pointer',
-                          background: 'rgba(235,112,26,0.06)', borderBottom: timelineOpen[vod.id] ? '1px solid rgba(235,112,26,0.15)' : 'none',
+                          background: 'rgba(235,112,26,0.06)', borderBottom: timelineOpen[vod.id] !== false ? '1px solid rgba(235,112,26,0.15)' : 'none',
                           transition: 'background 0.13s',
                         }}
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.12)'}
@@ -680,10 +680,10 @@ function DayPanel({
                         <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#EB701A', letterSpacing: '0.05em' }}>
                           타임라인 {vodTimeline.length}개
                         </span>
-                        <span style={{ fontSize: '0.75rem', color: '#EB701A', transition: 'transform 0.2s', display: 'inline-block', transform: timelineOpen[vod.id] ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                        <span style={{ fontSize: '0.75rem', color: '#EB701A', transition: 'transform 0.2s', display: 'inline-block', transform: timelineOpen[vod.id] !== false ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                       </button>
                       {/* accordion 내용 */}
-                      <div style={{ maxHeight: timelineOpen[vod.id] ? `${vodTimeline.length * 48}px` : '0px', overflow: 'hidden', transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)', background: 'rgba(235,112,26,0.03)', paddingLeft: '14px' }}>
+                      <div style={{ maxHeight: timelineOpen[vod.id] !== false ? `${vodTimeline.length * 48}px` : '0px', overflow: 'hidden', transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)', background: 'rgba(235,112,26,0.03)', paddingLeft: '14px' }}>
                         {vodTimeline.map((entry, ei) => {
                           const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
                           const timeStr = entry.h
