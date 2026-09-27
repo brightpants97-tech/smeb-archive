@@ -599,121 +599,166 @@ function DayPanel({
               const vodTimeline = timelineData[vod.id] || [];
               const isPlaying = panelPlayer?.id === vod.id;
               return (
-                /* #1: 카드 경계 — 배경 미묘한 교차 + 구분감 */
-                <div key={i} ref={el => { vodCardRefs.current[vod.id] = el; }} style={{ display: 'flex', flexDirection: 'column', gap: '0', flexShrink: 0, borderRadius: '14px', boxShadow: isPlaying ? '0 0 0 2px #EB701A' : '0 0 0 1px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s' }}>
-                  {/* #2: 순번 뱃지 + 썸네일 카드 */}
-                  <div
-                    onClick={() => {
-                      onClearExternal();
-                      setPanelPlayer({ id: vod.id, title: vod.title, startTime: 0 });
-                      /* #7: 스크롤 초기화 방지 — 클릭한 카드 위치 유지 */
-                      setTimeout(() => {
-                        vodCardRefs.current[vod.id]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                      }, 50);
-                    }}
-                    style={{
-                      position: 'relative',
-                      width: '100%', aspectRatio: '16/9',
-                      borderRadius: vodTimeline.length > 0 ? '14px 14px 0 0' : '14px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      transition: 'transform 0.15s',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; }}
-                  >
-                    {vod.thumb ? (
-                      <div className="vod-thumb-wrap" style={{ position: 'absolute', inset: 0 }}>
-                        <img src={vod.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div key={i} ref={el => { vodCardRefs.current[vod.id] = el; }} style={{
+                  display: 'flex', flexDirection: 'column', gap: '0', flexShrink: 0,
+                  borderRadius: '12px',
+                  boxShadow: isPlaying ? '0 0 0 2px #EB701A' : '0 0 0 1px rgba(0,0,0,0.06)',
+                  transition: 'box-shadow 0.2s',
+                  overflow: 'hidden',
+                }}>
+                  {panelPlayer && isPlaying ? (
+                    /* ── #2: 재생 중인 VOD → 미니 행 ── */
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '8px 10px', background: 'rgba(235,112,26,0.08)',
+                      cursor: 'default',
+                    }}>
+                      {/* 미니 썸네일 */}
+                      <div style={{ width: '72px', height: '40px', borderRadius: '7px', overflow: 'hidden', flexShrink: 0, position: 'relative', background: '#111' }}>
+                        {vod.thumb
+                          ? <img src={vod.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>🎬</div>
+                        }
                       </div>
-                    ) : (
-                      <div style={{ position: 'absolute', inset: 0, background: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6 }}>🎬</div>
-                    )}
-                    {/* #2: 순번 뱃지 (VOD 여러 개일 때만) */}
-                    {vods.length > 1 && (
-                      <div style={{
-                        position: 'absolute', top: 8, left: 8,
-                        background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
-                        border: '1px solid rgba(255,255,255,0.18)',
-                        borderRadius: '7px', padding: '2px 8px',
-                        fontSize: '0.68rem', fontWeight: 800, color: '#fff',
-                        letterSpacing: '0.04em',
-                      }}>#{i + 1}</div>
-                    )}
-                    {/* #3: 재생 중 오버레이 */}
-                    {isPlaying && (
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        border: '2px solid #EB701A', borderRadius: vodTimeline.length > 0 ? '14px 14px 0 0' : '14px',
-                        pointerEvents: 'none',
-                      }}>
-                        <div style={{
-                          position: 'absolute', top: 8, right: 8,
-                          background: '#EB701A', borderRadius: '6px', padding: '2px 8px',
-                          fontSize: '0.65rem', fontWeight: 800, color: '#fff', letterSpacing: '0.04em',
-                          animation: 'tl-playing-fade 1.2s ease-in-out infinite',
-                        }}>▶ 재생 중</div>
+                      {/* 제목 + 재생 중 뱃지 */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {vods.length > 1 && (
+                          <span style={{ fontSize: '0.6rem', fontWeight: 800, color: 'rgba(235,112,26,0.7)', marginRight: '5px' }}>#{i + 1}</span>
+                        )}
+                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{vod.title}</span>
                       </div>
-                    )}
-                    {/* 제목 오버레이 */}
-                    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '28px 14px 12px', background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)', pointerEvents: 'none' }}>
-                      <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0, wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
-                        {vod.title}
-                      </p>
+                      {/* 재생 중 표시 */}
+                      <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#EB701A', flexShrink: 0, animation: 'tl-playing-fade 1.2s ease-in-out infinite', letterSpacing: '0.03em' }}>▶ 재생 중</span>
                     </div>
-                  </div>
-                  {/* #4: 타임라인 accordion */}
-                  {vodTimeline.length > 0 && (
-                    <div style={{ borderRadius: '0 0 14px 14px', overflow: 'hidden', border: '1px solid rgba(235,112,26,0.2)', borderTop: 'none' }}>
-                      {/* accordion 헤더 */}
-                      <button
-                        onClick={e => { e.stopPropagation(); setTimelineOpen(prev => ({ ...prev, [vod.id]: prev[vod.id] === false ? undefined : false })); }}
-                        style={{
-                          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '6px 12px', border: 'none', cursor: 'pointer',
-                          background: 'rgba(235,112,26,0.06)', borderBottom: timelineOpen[vod.id] !== false ? '1px solid rgba(235,112,26,0.15)' : 'none',
-                          transition: 'background 0.13s',
+                  ) : panelPlayer ? (
+                    /* ── #1: 다른 VOD → 가로형 카드 ── */
+                    <>
+                      <div
+                        onClick={() => {
+                          onClearExternal();
+                          setPanelPlayer({ id: vod.id, title: vod.title, startTime: 0 });
+                          setTimeout(() => { vodCardRefs.current[vod.id]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 50);
                         }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.12)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.06)'}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', cursor: 'pointer', transition: 'background 0.13s' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.06)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                       >
-                        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#EB701A', letterSpacing: '0.05em' }}>
-                          타임라인 {vodTimeline.length}개
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: '#EB701A', transition: 'transform 0.2s', display: 'inline-block', transform: timelineOpen[vod.id] !== false ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
-                      </button>
-                      {/* accordion 내용 */}
-                      <div style={{ maxHeight: timelineOpen[vod.id] !== false ? `${vodTimeline.length * 48}px` : '0px', overflow: 'hidden', transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)', background: 'rgba(235,112,26,0.03)', paddingLeft: '14px' }}>
-                        {vodTimeline.map((entry, ei) => {
-                          const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
-                          const timeStr = entry.h
-                            ? `${entry.h}:${String(entry.m).padStart(2, '0')}:${String(entry.s || 0).padStart(2, '0')}`
-                            : `${entry.m}:${String(entry.s || 0).padStart(2, '0')}`;
-                          const isLast = ei === vodTimeline.length - 1;
-                          return (
-                            <div key={ei}
-                              onClick={() => {
-                                onClearExternal();
-                                setPanelPlayer({ id: vod.id, title: vod.title, startTime: secs });
-                                setTimeout(() => { vodCardRefs.current[vod.id]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 50);
-                              }}
-                              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 10px 7px 0', borderBottom: isLast ? 'none' : '1px solid rgba(235,112,26,0.1)', cursor: 'pointer', transition: 'background 0.13s' }}
-                              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.1)'}
-                              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
-                            >
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: '14px', alignSelf: 'stretch' }}>
-                                {ei > 0 && <div style={{ width: '2px', flex: '0 0 6px', background: 'rgba(235,112,26,0.3)' }} />}
-                                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#EB701A', flexShrink: 0, boxShadow: '0 0 0 2px rgba(235,112,26,0.2)' }} />
-                                {!isLast && <div style={{ width: '2px', flex: 1, background: 'rgba(235,112,26,0.3)' }} />}
-                              </div>
-                              <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', fontWeight: 800, color: '#EB701A', background: 'rgba(235,112,26,0.12)', border: '1px solid rgba(235,112,26,0.25)', padding: '2px 7px', borderRadius: '6px', flexShrink: 0, letterSpacing: '0.02em' }}>{timeStr}</span>
-                              <span style={{ flex: 1, fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.label}</span>
-                              <span style={{ fontSize: '0.8rem', color: '#EB701A', opacity: 0.5, flexShrink: 0, paddingRight: '4px' }}>›</span>
-                            </div>
-                          );
-                        })}
+                        {/* 가로형 썸네일 */}
+                        <div style={{ width: '100px', height: '56px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, position: 'relative', background: '#111' }}>
+                          {vod.thumb
+                            ? <img src={vod.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🎬</div>
+                          }
+                          {vods.length > 1 && (
+                            <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', borderRadius: '5px', padding: '1px 5px', fontSize: '0.6rem', fontWeight: 800, color: '#fff' }}>#{i + 1}</div>
+                          )}
+                        </div>
+                        {/* 제목 */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text)', margin: 0, lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'keep-all' } as React.CSSProperties}>{vod.title}</p>
+                          {vodTimeline.length > 0 && (
+                            <span style={{ fontSize: '0.65rem', color: '#EB701A', fontWeight: 600, marginTop: '3px', display: 'block' }}>타임라인 {vodTimeline.length}개</span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '0.9rem', color: '#EB701A', opacity: 0.5, flexShrink: 0 }}>›</span>
                       </div>
-                    </div>
+                      {/* 가로형에서도 타임라인 accordion */}
+                      {vodTimeline.length > 0 && (
+                        <div style={{ borderTop: '1px solid rgba(235,112,26,0.12)' }}>
+                          <button
+                            onClick={e => { e.stopPropagation(); setTimelineOpen(prev => ({ ...prev, [vod.id]: prev[vod.id] === false ? undefined : false })); }}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', border: 'none', cursor: 'pointer', background: 'rgba(235,112,26,0.04)', transition: 'background 0.13s' }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.1)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.04)'}
+                          >
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#EB701A' }}>타임라인 {vodTimeline.length}개</span>
+                            <span style={{ fontSize: '0.7rem', color: '#EB701A', transition: 'transform 0.2s', display: 'inline-block', transform: timelineOpen[vod.id] !== false ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                          </button>
+                          <div style={{ maxHeight: timelineOpen[vod.id] !== false ? `${vodTimeline.length * 40}px` : '0px', overflow: 'hidden', transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)', paddingLeft: '14px' }}>
+                            {vodTimeline.map((entry, ei) => {
+                              const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
+                              const timeStr = entry.h ? `${entry.h}:${String(entry.m).padStart(2,'0')}:${String(entry.s||0).padStart(2,'0')}` : `${entry.m}:${String(entry.s||0).padStart(2,'0')}`;
+                              const isLast = ei === vodTimeline.length - 1;
+                              return (
+                                <div key={ei}
+                                  onClick={() => { onClearExternal(); setPanelPlayer({ id: vod.id, title: vod.title, startTime: secs }); setTimeout(() => { vodCardRefs.current[vod.id]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 50); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 10px 5px 0', borderBottom: isLast ? 'none' : '1px solid rgba(235,112,26,0.08)', cursor: 'pointer', transition: 'background 0.13s' }}
+                                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.08)'}
+                                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                                >
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: '12px', alignSelf: 'stretch' }}>
+                                    {ei > 0 && <div style={{ width: '2px', flex: '0 0 4px', background: 'rgba(235,112,26,0.3)' }} />}
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EB701A', flexShrink: 0 }} />
+                                    {!isLast && <div style={{ width: '2px', flex: 1, background: 'rgba(235,112,26,0.3)' }} />}
+                                  </div>
+                                  <span style={{ fontFamily: 'monospace', fontSize: '0.68rem', fontWeight: 800, color: '#EB701A', background: 'rgba(235,112,26,0.12)', border: '1px solid rgba(235,112,26,0.25)', padding: '1px 5px', borderRadius: '5px', flexShrink: 0 }}>{timeStr}</span>
+                                  <span style={{ flex: 1, fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.label}</span>
+                                  <span style={{ fontSize: '0.75rem', color: '#EB701A', opacity: 0.4, flexShrink: 0, paddingRight: '4px' }}>›</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    /* ── 플레이어 없을 때 → 기존 세로형 16:9 카드 ── */
+                    <>
+                      <div
+                        onClick={() => { onClearExternal(); setPanelPlayer({ id: vod.id, title: vod.title, startTime: 0 }); }}
+                        style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: vodTimeline.length > 0 ? '0' : '0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.15s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+                      >
+                        {vod.thumb
+                          ? <div className="vod-thumb-wrap" style={{ position: 'absolute', inset: 0 }}><img src={vod.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>
+                          : <div style={{ position: 'absolute', inset: 0, background: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.6 }}>🎬</div>
+                        }
+                        {vods.length > 1 && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '7px', padding: '2px 8px', fontSize: '0.68rem', fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>#{i + 1}</div>
+                        )}
+                        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '28px 14px 12px', background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)', pointerEvents: 'none' }}>
+                          <p style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.4, color: '#fff', margin: 0, wordBreak: 'break-all', textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{vod.title}</p>
+                        </div>
+                      </div>
+                      {vodTimeline.length > 0 && (
+                        <div style={{ overflow: 'hidden', border: '1px solid rgba(235,112,26,0.2)', borderTop: 'none', borderRadius: '0 0 12px 12px' }}>
+                          <button
+                            onClick={e => { e.stopPropagation(); setTimelineOpen(prev => ({ ...prev, [vod.id]: prev[vod.id] === false ? undefined : false })); }}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', border: 'none', cursor: 'pointer', background: 'rgba(235,112,26,0.06)', borderBottom: timelineOpen[vod.id] !== false ? '1px solid rgba(235,112,26,0.15)' : 'none', transition: 'background 0.13s' }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.12)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.06)'}
+                          >
+                            <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#EB701A', letterSpacing: '0.05em' }}>타임라인 {vodTimeline.length}개</span>
+                            <span style={{ fontSize: '0.75rem', color: '#EB701A', transition: 'transform 0.2s', display: 'inline-block', transform: timelineOpen[vod.id] !== false ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                          </button>
+                          <div style={{ maxHeight: timelineOpen[vod.id] !== false ? `${vodTimeline.length * 48}px` : '0px', overflow: 'hidden', transition: 'max-height 0.25s cubic-bezier(0.4,0,0.2,1)', background: 'rgba(235,112,26,0.03)', paddingLeft: '14px' }}>
+                            {vodTimeline.map((entry, ei) => {
+                              const secs = (entry.h || 0) * 3600 + entry.m * 60 + (entry.s || 0);
+                              const timeStr = entry.h ? `${entry.h}:${String(entry.m).padStart(2,'0')}:${String(entry.s||0).padStart(2,'0')}` : `${entry.m}:${String(entry.s||0).padStart(2,'0')}`;
+                              const isLast = ei === vodTimeline.length - 1;
+                              return (
+                                <div key={ei}
+                                  onClick={() => { onClearExternal(); setPanelPlayer({ id: vod.id, title: vod.title, startTime: secs }); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 10px 7px 0', borderBottom: isLast ? 'none' : '1px solid rgba(235,112,26,0.1)', cursor: 'pointer', transition: 'background 0.13s' }}
+                                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(235,112,26,0.1)'}
+                                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                                >
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: '14px', alignSelf: 'stretch' }}>
+                                    {ei > 0 && <div style={{ width: '2px', flex: '0 0 6px', background: 'rgba(235,112,26,0.3)' }} />}
+                                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#EB701A', flexShrink: 0, boxShadow: '0 0 0 2px rgba(235,112,26,0.2)' }} />
+                                    {!isLast && <div style={{ width: '2px', flex: 1, background: 'rgba(235,112,26,0.3)' }} />}
+                                  </div>
+                                  <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', fontWeight: 800, color: '#EB701A', background: 'rgba(235,112,26,0.12)', border: '1px solid rgba(235,112,26,0.25)', padding: '2px 7px', borderRadius: '6px', flexShrink: 0, letterSpacing: '0.02em' }}>{timeStr}</span>
+                                  <span style={{ flex: 1, fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.label}</span>
+                                  <span style={{ fontSize: '0.8rem', color: '#EB701A', opacity: 0.5, flexShrink: 0, paddingRight: '4px' }}>›</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
