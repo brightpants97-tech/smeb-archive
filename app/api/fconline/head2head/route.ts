@@ -404,9 +404,9 @@ function formatKstLabel(d: Date): string {
 
 async function fetchOverallLive() {
   const empty = { win: 0, lose: 0, draw: 0, total: 0 };
-  if (!SME_NICKNAME) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent15: { ...empty } };
+  if (!SME_NICKNAME) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent20: { ...empty } };
   const meOuid = await getOuid(SME_NICKNAME);
-  if (!meOuid) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent15: { ...empty } };
+  if (!meOuid) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent20: { ...empty } };
 
   const streamers = await listStreamers();
   const registeredNicknames = new Set(streamers.map(s => s.fcNickname));
@@ -427,16 +427,16 @@ async function fetchOverallLive() {
     else if (m.outcome === 'draw') { draw++; if (isThisMonth) mDraw++; }
   }
 
-  // 최근 15경기 (등록된 스트리머와의 경기만, 날짜 최신순)
+  // 최근 20경기 (등록된 스트리머와의 경기만, 날짜 최신순)
   const byNickname = new Map(streamers.map(s => [s.fcNickname, s]));
   const sortedDesc = [...registeredMatches].sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
-  const last15 = sortedDesc.slice(0, 15);
-  let r15Win = 0, r15Lose = 0, r15Draw = 0;
-  for (const m of last15) {
-    if (m.outcome === 'win') r15Win++; else if (m.outcome === 'lose') r15Lose++; else if (m.outcome === 'draw') r15Draw++;
+  const last20 = sortedDesc.slice(0, 20);
+  let r20Win = 0, r20Lose = 0, r20Draw = 0;
+  for (const m of last20) {
+    if (m.outcome === 'win') r20Win++; else if (m.outcome === 'lose') r20Lose++; else if (m.outcome === 'draw') r20Draw++;
   }
   // 화면에서 왼쪽부터 시간순으로 읽히게 오래된 것 → 최신 순으로 뒤집음
-  const recent15Matches = [...last15].reverse().map(m => {
+  const recent20Matches = [...last20].reverse().map(m => {
     const s = byNickname.get(m.oppNickname);
     return {
       nickname: m.oppNickname, displayName: s?.displayName || m.oppNickname, profileImage: s?.profileImage || null,
@@ -447,7 +447,7 @@ async function fetchOverallLive() {
   return {
     win, lose, draw, total: win + lose + draw,
     thisMonth: { win: mWin, lose: mLose, draw: mDraw, total: mWin + mLose + mDraw, rangeLabel },
-    recent15: { win: r15Win, lose: r15Lose, draw: r15Draw, total: last15.length, matches: recent15Matches },
+    recent20: { win: r20Win, lose: r20Lose, draw: r20Draw, total: last20.length, matches: recent20Matches },
   };
 }
 

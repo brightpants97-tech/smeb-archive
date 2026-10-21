@@ -1321,24 +1321,33 @@ export default function FcRecordClient() {
                     </span>
                   </div>
                 )}
-                {(overall as any).recent15 && (overall as any).recent15.total > 0 && (
+                {(overall as any).recent20 && (overall as any).recent20.total > 0 && (
                   <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: `${WIN_BLUE}0d` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent15.total}경기</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent15.win}승</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).recent15.draw}무</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).recent15.lose}패</span>
+                      <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent20.total}경기</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent20.win}승</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).recent20.draw}무</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).recent20.lose}패</span>
                       <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
-                        · 승률 {Math.round(((overall as any).recent15.win / (overall as any).recent15.total) * 100)}%
+                        · 승률 {Math.round(((overall as any).recent20.win / (overall as any).recent20.total) * 100)}%
                       </span>
                     </div>
-                    {/* 누구랑 붙었는지 한눈에 - 왼쪽부터 시간순(오래된 것→최신), 클릭하면 바로 그 상대로 검색 */}
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
-                      {(overall as any).recent15.matches?.map((m: any, i: number) => {
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' as const, marginBottom: '8px', fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span style={{ color: '#526077' }}>왼쪽 과거</span>
+                      <span aria-hidden="true" style={{ color: '#526077' }}>→</span>
+                      <span style={{ color: WIN_BLUE }}>오른쪽 최신</span>
+                      <span style={{ color: '#526077', fontWeight: 500 }}>· 가로로 넘겨 보기</span>
+                    </div>
+                    {/* 줄바꿈 없이 과거→최신 순서를 유지하고, 좁은 화면에서는 가로 스크롤 */}
+                    <div role="group" aria-label="최근 경기, 왼쪽 과거에서 오른쪽 최신 순" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 4px 24px' }}>
+                      {(overall as any).recent20.matches?.map((m: any, i: number) => {
                         const c = OUTCOME_COLOR[m.outcome];
+                        const isLatest = i === (overall as any).recent20.matches.length - 1;
+                        const matchLabel = `${isLatest ? '최신 경기 · ' : ''}${m.displayName} · ${OUTCOME_LABEL[m.outcome]} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${formatMatchDate(m.matchDate)}`;
                         return (
-                          <button key={i} onClick={() => search(m.nickname)} title={`${m.displayName} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${formatMatchDate(m.matchDate)}`} style={{
+                          <button key={i} onClick={() => search(m.nickname)} title={matchLabel} aria-label={`${matchLabel} · 상대 전적 조회`} style={{
                             position: 'relative', width: '28px', height: '28px', borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0,
+                            outline: isLatest ? `2px solid ${WIN_BLUE}` : undefined, outlineOffset: isLatest ? '2px' : undefined,
                           }}>
                             {m.profileImage ? (
                               <img src={m.profileImage} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${c}` }} />
@@ -1352,6 +1361,13 @@ export default function FcRecordClient() {
                                 background: c, color: '#fff', fontSize: '0.5rem', fontWeight: 900, lineHeight: '13px', textAlign: 'center' as const,
                                 border: '1.5px solid #fff',
                               }}>{OUTCOME_LABEL[m.outcome]}</span>
+                            )}
+                            {isLatest && (
+                              <span style={{
+                                position: 'absolute', top: '35px', left: '50%', transform: 'translateX(-50%)',
+                                padding: '1px 4px', borderRadius: '4px', background: WIN_BLUE, color: '#fff',
+                                fontSize: '0.6rem', fontWeight: 800, lineHeight: '14px', whiteSpace: 'nowrap',
+                              }}>최신</span>
                             )}
                           </button>
                         );
