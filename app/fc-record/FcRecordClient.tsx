@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import RecordShareDialog from './RecordShareDialog';
 
 const ORANGE = '#EB701A';
 const RED = '#E05252';
@@ -931,6 +932,7 @@ export default function FcRecordClient() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [opponents, setOpponents] = useState<any[] | null>(null);
   const [opponentsLoading, setOpponentsLoading] = useState(true);
+  const [showRecordShare, setShowRecordShare] = useState(false);
   const [overall, setOverall] = useState<{ win: number; lose: number; draw: number; total: number; thisMonth?: { win: number; lose: number; draw: number; total: number } } | null>(null);
   const [overallLoading, setOverallLoading] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
@@ -1460,8 +1462,11 @@ export default function FcRecordClient() {
         {/* 액션성 섹션: 클릭하면 바로 검색되는 상대 선택 - 주황 틴트로 "탭 가능함"을 명확히 표시 */}
         {!opponentsLoading && opponents && opponents.length > 0 && (
           <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '14px', background: `${ORANGE}0d`, border: `1.5px solid ${ORANGE}45` }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50`, marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '6px 14px', borderRadius: '100px', background: ORANGE, boxShadow: `0 2px 8px ${ORANGE}50` }}>
               <Icon name="target" size={15} color="#fff" /> <span style={{ fontSize: '0.92rem', color: '#fff', fontWeight: 900 }}>탭하면 바로 검색돼요</span>
+            </div>
+            <button type="button" onClick={() => setShowRecordShare(true)} style={{ padding: '10px 14px', borderRadius: '10px', border: `1px solid ${ORANGE}`, background: '#fff', color: '#b7500b', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer', fontFamily: FONT }}>전적 이미지 만들기</button>
             </div>
             {/* 1) 정렬 기준과 4) 우세/백중/열세 필터를 한 줄에 같은 톤(알약 버튼)으로 묶어서 "이 목록을 조작하는 컨트롤"이라는 걸 한눈에 보이게 함 */}
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' as const, gap: '8px', marginBottom: '14px' }}>
@@ -1517,6 +1522,8 @@ export default function FcRecordClient() {
             )}
           </div>
         )}
+
+        {showRecordShare && opponents && <RecordShareDialog opponents={opponents} onClose={() => setShowRecordShare(false)} />}
 
         {errorMsg && (
           <div style={{ padding: '16px 18px', borderRadius: '12px', background: '#fff5f5', border: '1px solid #f4cccc', color: '#c0392b', fontSize: '0.85rem', marginBottom: '24px' }}>
