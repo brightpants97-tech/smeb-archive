@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { exportCsv, filterMessages, formatTime, parseSource, parseTime, type ChatMessage, type ChatSource } from '../lib/chat-inspector';
+import { exportCsv, filterMessages, formatTime, parseSource, parseTime, vodChunks, type ChatMessage, type ChatSource } from '../lib/chat-inspector';
 import { collectLive } from './live';
 import { deleteSession, saveBatch, savedMessages, savedSessions, type SavedSession } from './storage';
 import styles from './chat.module.css';
@@ -114,7 +114,7 @@ export default function ChatInspector() {
         });
         return;
       }
-      const chunks = source.files!.flatMap(file => Array.from({ length: Math.max(1, Math.ceil(file.duration / 300)) }, (_, index) => ({ file: file.index, start: index * 300, key: `${file.index}:${index * 300}` })));
+      const chunks = vodChunks(source.files!);
       const done = new Set(current.completedChunks); let completed = chunks.filter(c => done.has(c.key)).length;
       setProgress({ done: completed, total: chunks.length });
       for (const chunk of chunks) {

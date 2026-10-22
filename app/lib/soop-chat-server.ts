@@ -76,7 +76,7 @@ export async function getSource(input: string): Promise<ChatSource> {
 }
 
 export function parseVodXml(xml: string, source: ChatSource, fileIndex: number, chunkStart: number): ChatMessage[] {
-  if (!/<root[\s>]/.test(xml) || !/<\/root\s*>/.test(xml)) throw new SourceError('SOOP이 정상 채팅 파일을 반환하지 않았습니다.', 502);
+  if (!((/<root[\s>]/.test(xml) && /<\/root\s*>/.test(xml)) || /<root\s*\/>/.test(xml))) throw new SourceError('SOOP이 정상 채팅 파일을 반환하지 않았습니다.', 502);
   const $ = load(xml, { xml: true }); const file = source.files![fileIndex]; const messages: ChatMessage[] = [];
   $('root').children().each((index, element) => {
     const node = $(element), tag = element.type === 'tag' ? element.name : '';

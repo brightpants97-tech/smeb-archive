@@ -40,7 +40,7 @@ export function collectLive(source: ChatSource, signal: AbortSignal, onMessages:
               onStatus(attempt ? '생방송 수집 중 · 재연결 전 누락 구간 있음' : '생방송 수집 중 · 이 탭을 열어 두세요');
               heartbeat = setInterval(() => { if (ws.readyState === WebSocket.OPEN) ws.send(makePacket('0000', '\x0c')); }, 20000);
             }
-            if (packet.code === '0007') { close(); onError('SOOP 서버가 수집을 종료했습니다. 수집된 기록은 보관됩니다.'); return; }
+            // 0007 is SETBJSTAT, not a disconnect. Socket close + metadata checks handle stream end.
             const message = liveMessage(packet.code, packet.fields, `${sessionKey}:${sequence++}`, (Date.now() - started) / 1000, new Date().toISOString());
             if (message) messages.push(message);
           }

@@ -24,6 +24,10 @@ export type ChatSource = {
   chatNo?: string;
 };
 
+export function vodChunks(files: VodFile[]) {
+  return files.flatMap(file => Array.from({ length: Math.floor(file.duration / 300) + 1 }, (_, index) => ({ file: file.index, start: index * 300, key: `${file.index}:${index * 300}` })));
+}
+
 export function parseSource(input: string): { type: 'vod' | 'live'; id: string; streamerId?: string; url: string } {
   let url: URL;
   try { url = new URL(input.trim()); } catch { throw new Error('SOOP 생방송 또는 다시보기 주소를 입력해 주세요.'); }
