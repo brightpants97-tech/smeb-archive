@@ -3,6 +3,13 @@ import Link from 'next/link';
 
 const APPS = [
   {
+    href: '/soop-chat',
+    title: 'SOOP 채팅 부검',
+    tag: '채팅 분석',
+    desc: '생방송·다시보기 채팅을 아이디, 닉네임, 내용, 시간별로 검색',
+    color: '#EB701A',
+  },
+  {
     href: '/fa-teambuilder',
     title: 'FA 팀빌더',
     tag: '시뮬레이터',
