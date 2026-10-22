@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { saveMatches, getStreamerByNickname, getAllStoredMatches, getLatestStoredMatchDate, setScanProgress, clearScanProgress, getScanProgress, listStreamers, type StoredMatch } from '@/app/lib/fconline-db';
+import { matchesInCurrentKstMonth } from '@/app/lib/match-period';
+import { saveMatches, getStreamerByNickname, getAllStoredMatches, getLatestStoredMatchDate, setScanProgress, clearScanProgress, getScanProgress, listStreamers, indexStreamersByNickname, getStreamerRevision, type StoredMatch } from '@/app/lib/fconline-db';
 
 // ── NEXON Open API (FC 온라인) ──────────────────────────────────────────────
 // 문서: https://openapi.nexon.com/ko/game/fconline/
@@ -404,14 +405,14 @@ function formatKstLabel(d: Date): string {
 
 async function fetchOverallLive() {
   const empty = { win: 0, lose: 0, draw: 0, total: 0 };
-  if (!SME_NICKNAME) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent20: { ...empty } };
+  if (!SME_NICKNAME) return { ...empty, thisMonth: { ...empty, rangeLabel: '', matches: [] } };
   const meOuid = await getOuid(SME_NICKNAME);
-  if (!meOuid) return { ...empty, thisMonth: { ...empty, rangeLabel: '' }, recent20: { ...empty } };
+  if (!meOuid) return { ...empty, thisMonth: { ...empty, rangeLabel: '', matches: [] } };
 
   const streamers = await listStreamers();
-  const registeredNicknames = new Set(streamers.map(s => s.fcNickname));
-  const nowKst = toKstDate(new Date().toISOString());
-  const nowYm = `${nowKst.getUTCFullYear()}-${String(nowKst.getUTCMonth() + 1).padStart(2, '0')}`;
+  const registeredNicknames = new Set(indexStreamersByNickname(streamers).keys());
+  const now = new Date();
+  const nowKst = toKstDate(now.toISOString());
   const monthStartKst = new Date(Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), 1));
   const rangeLabel = `${formatKstLabel(monthStartKst)} ~ ${formatKstLabel(nowKst)}`;
 
@@ -419,35 +420,30 @@ async function fetchOverallLive() {
   const registeredMatches = raw.filter(m => registeredNicknames.has(m.oppNickname));
 
   let win = 0, lose = 0, draw = 0;
-  let mWin = 0, mLose = 0, mDraw = 0; // 이번 달(KST 기준)
   for (const m of registeredMatches) {
-    const isThisMonth = toKstDate(m.matchDate).getTime() >= monthStartKst.getTime() && `${toKstDate(m.matchDate).getUTCFullYear()}-${String(toKstDate(m.matchDate).getUTCMonth() + 1).padStart(2, '0')}` === nowYm;
-    if (m.outcome === 'win') { win++; if (isThisMonth) mWin++; }
-    else if (m.outcome === 'lose') { lose++; if (isThisMonth) mLose++; }
-    else if (m.outcome === 'draw') { draw++; if (isThisMonth) mDraw++; }
+    if (m.outcome === 'win') win++;
+    else if (m.outcome === 'lose') lose++;
+    else if (m.outcome === 'draw') draw++;
   }
 
-  // 최근 20경기 (등록된 스트리머와의 경기만, 날짜 최신순)
-  const byNickname = new Map(streamers.map(s => [s.fcNickname, s]));
-  const sortedDesc = [...registeredMatches].sort((a, b) => (a.matchDate < b.matchDate ? 1 : -1));
-  const last20 = sortedDesc.slice(0, 20);
-  let r20Win = 0, r20Lose = 0, r20Draw = 0;
-  for (const m of last20) {
-    if (m.outcome === 'win') r20Win++; else if (m.outcome === 'lose') r20Lose++; else if (m.outcome === 'draw') r20Draw++;
+  // 한국 시간 기준 이번 달 전체 경기. 개수 제한 없이 과거 → 최신 순서.
+  const byNickname = indexStreamersByNickname(streamers);
+  const monthMatches = matchesInCurrentKstMonth(registeredMatches, now);
+  let mWin = 0, mLose = 0, mDraw = 0;
+  for (const m of monthMatches) {
+    if (m.outcome === 'win') mWin++; else if (m.outcome === 'lose') mLose++; else if (m.outcome === 'draw') mDraw++;
   }
-  // 화면에서 왼쪽부터 시간순으로 읽히게 오래된 것 → 최신 순으로 뒤집음
-  const recent20Matches = [...last20].reverse().map(m => {
+  const thisMonthMatches = monthMatches.map(m => {
     const s = byNickname.get(m.oppNickname);
     return {
-      nickname: m.oppNickname, displayName: s?.displayName || m.oppNickname, profileImage: s?.profileImage || null,
+      nickname: s?.fcNickname || m.oppNickname, displayName: s?.displayName || m.oppNickname, profileImage: s?.profileImage || null,
       teamColor: s?.teamColor || '#999', outcome: m.outcome, meGoal: m.meGoal, oppGoal: m.oppGoal, matchDate: m.matchDate,
     };
   });
 
   return {
     win, lose, draw, total: win + lose + draw,
-    thisMonth: { win: mWin, lose: mLose, draw: mDraw, total: mWin + mLose + mDraw, rangeLabel },
-    recent20: { win: r20Win, lose: r20Lose, draw: r20Draw, total: last20.length, matches: recent20Matches },
+    thisMonth: { win: mWin, lose: mLose, draw: mDraw, total: monthMatches.length, rangeLabel, matches: thisMonthMatches },
   };
 }
 
@@ -458,7 +454,7 @@ async function fetchRecent30() {
   if (!meOuid) return { matches: [] };
 
   const streamers = await listStreamers();
-  const byNickname = new Map(streamers.map(s => [s.fcNickname, s]));
+  const byNickname = indexStreamersByNickname(streamers);
 
   const raw = await getRecentMatchesRaw(meOuid);
   const rows = raw
@@ -467,7 +463,7 @@ async function fetchRecent30() {
       const s = byNickname.get(m.oppNickname)!;
       return {
         matchId: m.matchId, matchDate: m.matchDate, outcome: m.outcome, meGoal: m.meGoal, oppGoal: m.oppGoal,
-        oppNickname: m.oppNickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
+        oppNickname: s.fcNickname, oppDisplayName: s.displayName, oppProfileImage: s.profileImage || null,
       };
     });
 
@@ -509,7 +505,7 @@ async function fetchOpponentsList(meNickname: string) {
   }
 
   const allStreamers = await listStreamers();
-  const byNickname = new Map(allStreamers.map(s => [s.fcNickname, s]));
+  const byNickname = indexStreamersByNickname(allStreamers);
 
   const opponents = [...map.values()]
     .filter(o => byNickname.has(o.nickname)) // 등록된 스트리머만
@@ -529,7 +525,7 @@ async function fetchOpponentsList(meNickname: string) {
         streakCount++;
       }
       return {
-        nickname: o.nickname, win: o.meWin, draw: o.meDraw, lose: o.meLose, total, oppWinRate, last5,
+        nickname: s.fcNickname, win: o.meWin, draw: o.meDraw, lose: o.meLose, total, oppWinRate, last5,
         streakType, streakCount,
         lastDate: o.lastDate, displayName: s.displayName, profileImage: s.profileImage || null, teamColor: s.teamColor,
         latestSquad: { meSquad: o.latestMeSquad, oppSquad: o.latestOppSquad, meGoal: o.latestMeGoal, oppGoal: o.latestOppGoal, date: o.lastDate },
@@ -654,9 +650,9 @@ async function withMemCache<T>(key: string, ttlMs: number, fn: () => Promise<T>)
   return data;
 }
 
-const getOverallLiveCached = () => withMemCache('overall', 900000, fetchOverallLive);
-const getRecent30Cached = () => withMemCache('recent30', 900000, fetchRecent30);
-const getOpponentsListCached = (meNickname: string) => withMemCache(`opponents:${meNickname}`, 900000, () => fetchOpponentsList(meNickname));
+const getOverallLiveCached = async () => withMemCache(`overall:${await getStreamerRevision()}:${toKstDate(new Date().toISOString()).toISOString().slice(0, 10)}`, 900000, fetchOverallLive);
+const getRecent30Cached = async () => withMemCache(`recent30:${await getStreamerRevision()}`, 900000, fetchRecent30);
+const getOpponentsListCached = async (meNickname: string) => withMemCache(`opponents:${meNickname}:${await getStreamerRevision()}`, 900000, () => fetchOpponentsList(meNickname));
 
 async function getOpponentsList(meNickname: string) {
   if (!NEXON_KEY) {

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 const ORANGE = '#EB701A';
@@ -31,6 +31,11 @@ export default function AdminClient() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingNickname, setEditingNickname] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('fc_admin_pw');
@@ -67,10 +72,14 @@ export default function AdminClient() {
 
   const loadStreamers = async () => {
     setLoadingList(true);
+    setListError(null);
     try {
-      const res = await fetch('/api/fconline/streamers');
+      const res = await fetch('/api/fconline/streamers', { cache: 'no-store' });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '목록을 불러오지 못했어요.');
       setStreamers(data.streamers || []);
+    } catch {
+      setListError('목록을 불러오지 못했어요. 다시 불러오기를 눌러주세요.');
     } finally {
       setLoadingList(false);
     }
@@ -96,32 +105,56 @@ export default function AdminClient() {
     }
   };
 
-  const submitAdd = async () => {
+  const resetForm = () => {
+    setEditingNickname(null);
+    setDisplayName('');
+    setFcNickname('');
+    setTeamColor('#E0A62F');
+    setProfileImage(null);
+    setSoopId('');
+    setFormError(null);
+    setLookupError(null);
+  };
+
+  const startEdit = (streamer: StreamerEntry) => {
+    setEditingNickname(streamer.fcNickname);
+    setDisplayName(streamer.displayName);
+    setFcNickname(streamer.fcNickname);
+    setTeamColor(streamer.teamColor);
+    setProfileImage(streamer.profileImage || null);
+    setSoopId('');
+    setFormError(null);
+    setLookupError(null);
+    setNotice(null);
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    nameInput.current?.focus({ preventScroll: true });
+  };
+
+  const submitSave = async () => {
+    if (saving || looking) return;
     if (!displayName.trim() || !fcNickname.trim()) {
       setFormError('스트리머명과 FC 온라인 닉네임을 모두 입력해주세요.');
       return;
     }
     setSaving(true);
     setFormError(null);
+    setNotice(null);
     try {
       const res = await fetch('/api/fconline/streamers', {
-        method: 'POST',
+        method: editingNickname ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-        body: JSON.stringify({ displayName: displayName.trim(), fcNickname: fcNickname.trim(), teamColor, profileImage }),
+        body: JSON.stringify({ originalNickname: editingNickname, displayName: displayName.trim(), fcNickname: fcNickname.trim(), teamColor, profileImage: profileImage?.trim() || null }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setFormError(data.error || '등록에 실패했어요.');
+        setFormError(data.error || (editingNickname ? '수정에 실패했어요.' : '등록에 실패했어요.'));
       } else {
-        setDisplayName('');
-        setFcNickname('');
-        setTeamColor('#E0A62F');
-        setProfileImage(null);
-        setSoopId('');
-        loadStreamers();
+        setNotice(editingNickname ? '수정 내용을 저장했어요.' : '스트리머를 등록했어요.');
+        resetForm();
+        await loadStreamers();
       }
     } catch {
-      setFormError('등록 중 문제가 생겼어요.');
+      setFormError('저장 중 문제가 생겼어요. 입력 내용은 유지되니 다시 시도해주세요.');
     } finally {
       setSaving(false);
     }
@@ -130,12 +163,14 @@ export default function AdminClient() {
   const remove = async (nick: string) => {
     if (!confirm(`'${nick}' 등록을 삭제할까요?`)) return;
     try {
-      await fetch(`/api/fconline/streamers?fcNickname=${encodeURIComponent(nick)}`, {
+      const res = await fetch(`/api/fconline/streamers?fcNickname=${encodeURIComponent(nick)}`, {
         method: 'DELETE',
         headers: { 'x-admin-password': password },
       });
-      loadStreamers();
-    } catch {}
+      if (!res.ok) throw new Error('삭제 실패');
+      if (editingNickname === nick) resetForm();
+      await loadStreamers();
+    } catch { setListError('삭제하지 못했어요. 다시 시도해주세요.'); }
   };
 
   if (!authed) {
@@ -185,11 +220,11 @@ export default function AdminClient() {
             <br />예: sooplive.com/<strong>townboy</strong> → 아이디는 <strong>townboy</strong>
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input value={soopId} onChange={e => setSoopId(e.target.value)}
+            <input value={soopId} disabled={saving || looking} onChange={e => setSoopId(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') lookupSoop(); }}
               placeholder="SOOP 방송국 아이디 (BJ ID)"
               style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.88rem' }} />
-            <button onClick={lookupSoop} disabled={looking || !soopId.trim()} style={{
+            <button onClick={lookupSoop} disabled={saving || looking || !soopId.trim()} style={{
               padding: '10px 18px', borderRadius: '8px', border: 'none',
               background: '#333', color: '#fff', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer',
               opacity: looking || !soopId.trim() ? 0.5 : 1, whiteSpace: 'nowrap' as const,
@@ -200,34 +235,45 @@ export default function AdminClient() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
               <img src={profileImage} alt="" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #eee' }} />
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111' }}>{displayName}</span>
-              <span style={{ fontSize: '0.72rem', color: '#2FAE6B', fontWeight: 700 }}>✓ 불러옴 - 아래에서 FC 닉네임을 입력하고 등록해주세요</span>
+              <span style={{ fontSize: '0.72rem', color: '#2FAE6B', fontWeight: 700 }}>아래 정보를 확인한 뒤 {editingNickname ? '수정 저장' : '등록'}해주세요</span>
             </div>
           )}
         </div>
 
-        {/* 등록 폼 */}
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px', padding: '20px', borderRadius: '14px', border: '1px solid #eee', marginBottom: '28px' }}>
+        {/* 등록 / 수정 공용 폼 */}
+        <div ref={formRef} style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px', padding: '20px', borderRadius: '14px', border: `1px solid ${editingNickname ? ORANGE : '#eee'}`, marginBottom: '28px' }}>
+          <h2 style={{ margin: 0, fontSize: '1rem', color: '#111' }}>{editingNickname ? `스트리머 수정 · ${editingNickname}` : '새 스트리머 등록'}</h2>
+          {editingNickname && <p style={{ margin: 0, fontSize: '0.76rem', color: '#666', lineHeight: 1.6 }}>같은 스트리머의 변경된 정보를 입력해주세요. FC 닉네임을 바꿔도 이전 닉네임의 기록은 유지돼요.</p>}
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
-            <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="스트리머명 (예: 임유진)"
+            <input ref={nameInput} aria-label="스트리머명" disabled={saving || looking} value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="스트리머명 (예: 임유진)"
               style={{ flex: '1 1 160px', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.88rem' }} />
-            <input value={fcNickname} onChange={e => setFcNickname(e.target.value)} placeholder="FC 온라인 닉네임"
+            <input aria-label="FC 온라인 닉네임" disabled={saving || looking} value={fcNickname} onChange={e => setFcNickname(e.target.value)} placeholder="FC 온라인 닉네임"
               style={{ flex: '1 1 160px', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.88rem' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input type="color" value={teamColor} onChange={e => setTeamColor(e.target.value)}
+              <input type="color" aria-label="메인 팀컬러" disabled={saving || looking} value={teamColor} onChange={e => setTeamColor(e.target.value)}
                 style={{ width: '40px', height: '38px', border: '1px solid #ddd', borderRadius: '8px', padding: '2px', cursor: 'pointer' }} />
               <span style={{ fontSize: '0.78rem', color: '#888' }}>메인 팀컬러</span>
             </div>
           </div>
+          <label style={{ fontSize: '0.76rem', color: '#666' }}>
+            프로필 이미지 주소 (선택 · 비우면 이미지 제거)
+            <input type="url" disabled={saving || looking} value={profileImage || ''} onChange={e => setProfileImage(e.target.value || null)} placeholder="https://…" style={{ display: 'block', boxSizing: 'border-box', width: '100%', marginTop: '6px', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
+          </label>
           {formError && <p style={{ color: '#e05252', fontSize: '0.8rem', margin: 0 }}>{formError}</p>}
-          <button onClick={submitAdd} disabled={saving} style={{
+          {notice && <p role="status" style={{ color: '#21834f', fontSize: '0.8rem', margin: 0 }}>{notice}</p>}
+          <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={submitSave} disabled={saving || looking} style={{
             alignSelf: 'flex-start', padding: '10px 20px', borderRadius: '8px', border: 'none',
             background: ORANGE, color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
             opacity: saving ? 0.6 : 1,
-          }}>{saving ? '등록 중...' : '+ 등록'}</button>
+          }}>{saving ? '저장 중...' : editingNickname ? '수정 저장' : '+ 등록'}</button>
+          {editingNickname && <button onClick={resetForm} disabled={saving || looking} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff', color: '#666', fontSize: '0.85rem', cursor: 'pointer' }}>수정 취소</button>}
+          </div>
         </div>
 
         {/* 목록 */}
         <p style={{ fontSize: '0.8rem', color: '#999', marginBottom: '12px' }}>등록된 스트리머 {streamers.length}명</p>
+        {listError && <p role="alert" style={{ color: '#e05252', fontSize: '0.8rem' }}>{listError} <button onClick={loadStreamers}>다시 불러오기</button></p>}
         {loadingList ? (
           <p style={{ color: '#999', fontSize: '0.85rem' }}>불러오는 중...</p>
         ) : streamers.length === 0 ? (
@@ -248,7 +294,8 @@ export default function AdminClient() {
                   <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>{s.displayName}</p>
                   <p style={{ margin: 0, fontSize: '0.76rem', color: '#999' }}>{s.fcNickname}</p>
                 </div>
-                <button onClick={() => remove(s.fcNickname)} style={{
+                <button onClick={() => startEdit(s)} disabled={saving || looking} aria-label={`${s.displayName} 수정`} style={{ padding: '6px 12px', borderRadius: '8px', border: `1px solid ${ORANGE}`, background: '#fff7ef', color: '#b7500b', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>수정</button>
+                <button onClick={() => remove(s.fcNickname)} disabled={saving || looking} style={{
                   padding: '6px 12px', borderRadius: '8px', border: '1px solid #f0c0c0',
                   background: '#fff5f5', color: '#e05252', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
                 }}>삭제</button>

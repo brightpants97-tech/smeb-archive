@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { listStreamers, addStreamer, deleteStreamer, hasRedis } from '@/app/lib/fconline-db';
+import { listStreamers, addStreamer, updateStreamer, deleteStreamer, hasRedis } from '@/app/lib/fconline-db';
 
 const ADMIN_PASSWORD = process.env.FC_ADMIN_PASSWORD || '';
 
@@ -46,6 +46,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, seeded });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || '등록 실패' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  if (!checkAuth(request)) return NextResponse.json({ error: '비밀번호가 올바르지 않아요.' }, { status: 401 });
+  if (!hasRedis) return NextResponse.json({ error: '저장소(Redis)가 연결되어 있지 않아요.' }, { status: 500 });
+  let body;
+  try { body = await request.json(); } catch {
+    return NextResponse.json({ error: '올바른 수정 정보를 보내주세요.' }, { status: 400 });
+  }
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: '올바른 수정 정보를 보내주세요.' }, { status: 400 });
+  const originalNickname = typeof body.originalNickname === 'string' ? body.originalNickname.trim() : '';
+  const fcNickname = typeof body.fcNickname === 'string' ? body.fcNickname.trim() : '';
+  const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : '';
+  const teamColor = typeof body.teamColor === 'string' ? body.teamColor.trim() : '';
+  const profileImage = typeof body.profileImage === 'string' ? body.profileImage.trim() || null : null;
+  if (!originalNickname || !fcNickname || !displayName) return NextResponse.json({ error: '스트리머명과 FC 온라인 닉네임을 모두 입력해주세요.' }, { status: 400 });
+  if (!/^#[0-9a-f]{6}$/i.test(teamColor)) return NextResponse.json({ error: '올바른 팀컬러를 선택해주세요.' }, { status: 400 });
+  if (profileImage) {
+    try {
+      const url = new URL(profileImage);
+      if (!['https:', 'http:'].includes(url.protocol)) throw new Error('Invalid image URL');
+    } catch {
+      return NextResponse.json({ error: '프로필 이미지는 http 또는 https 주소를 입력해주세요.' }, { status: 400 });
+    }
+  }
+  try {
+    const result = await updateStreamer(originalNickname, { fcNickname, displayName, teamColor, profileImage });
+    if (result === 0) return NextResponse.json({ error: '수정할 스트리머가 없어요. 목록을 새로고침해주세요.' }, { status: 404 });
+    if (result === -1) return NextResponse.json({ error: '이미 다른 스트리머에게 등록된 FC 닉네임이에요.' }, { status: 409 });
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: '수정 내용을 저장하지 못했어요. 다시 시도해주세요.' }, { status: 500 });
   }
 }
 
