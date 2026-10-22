@@ -16,6 +16,16 @@ export interface StreamerEntry {
   teamColor: string; // hex color, 예: '#EB701A'
   profileImage?: string | null; // SOOP 방송국 프로필 이미지 URL
   addedAt: number;
+  previousNicknames?: string[];
+}
+
+export function indexStreamersByNickname(streamers: StreamerEntry[]) {
+  const index = new Map<string, StreamerEntry>();
+  for (const streamer of streamers) {
+    for (const nickname of streamer.previousNicknames || []) index.set(nickname, streamer);
+  }
+  for (const streamer of streamers) index.set(streamer.fcNickname, streamer);
+  return index;
 }
 
 export async function listStreamers(): Promise<StreamerEntry[]> {
@@ -25,10 +35,54 @@ export async function listStreamers(): Promise<StreamerEntry[]> {
   return Object.values(all).sort((a, b) => a.displayName.localeCompare(b.displayName, 'ko'));
 }
 
+export async function getStreamerRevision(): Promise<number> {
+  if (!hasRedis) return 0;
+  return await redis.get<number>('fc:streamers:revision') || 0;
+}
+
 export async function getStreamerByNickname(fcNickname: string): Promise<StreamerEntry | null> {
   if (!hasRedis) return null;
   const entry = await redis.hget<StreamerEntry>('fc:streamers', fcNickname);
-  return entry || null;
+  return entry || indexStreamersByNickname(await listStreamers()).get(fcNickname) || null;
+}
+
+// Rename the registration atomically and retain aliases used by historical matches.
+// Return 0 for a missing entry, -1 for a nickname owned by another registration.
+export async function updateStreamer(originalNickname: string, fields: Omit<StreamerEntry, 'addedAt' | 'previousNicknames'>): Promise<number> {
+  if (!hasRedis) throw new Error('저장소가 연결되어 있지 않아요.');
+  return redis.eval<string[], number>(`
+    local raw = redis.call('HGET', KEYS[1], ARGV[1])
+    if not raw then return 0 end
+    local old = cjson.decode(raw)
+    local updated = cjson.decode(ARGV[2])
+    if updated.fcNickname ~= ARGV[1] then
+      local all = redis.call('HGETALL', KEYS[1])
+      for i = 1, #all, 2 do
+        if all[i] ~= ARGV[1] then
+          local other = cjson.decode(all[i + 1])
+          if all[i] == updated.fcNickname then return -1 end
+          for _, alias in ipairs(other.previousNicknames or {}) do
+            if alias == updated.fcNickname then return -1 end
+          end
+        end
+      end
+    end
+    local aliases = {}
+    for _, alias in ipairs(old.previousNicknames or {}) do
+      if alias ~= updated.fcNickname and alias ~= ARGV[1] then table.insert(aliases, alias) end
+    end
+    if updated.fcNickname ~= ARGV[1] then table.insert(aliases, ARGV[1]) end
+    old.fcNickname = updated.fcNickname
+    old.displayName = updated.displayName
+    old.teamColor = updated.teamColor
+    old.profileImage = updated.profileImage
+    old.previousNicknames = nil
+    if #aliases > 0 then old.previousNicknames = aliases end
+    redis.call('HSET', KEYS[1], updated.fcNickname, cjson.encode(old))
+    if updated.fcNickname ~= ARGV[1] then redis.call('HDEL', KEYS[1], ARGV[1]) end
+    redis.call('INCR', KEYS[2])
+    return 1
+  `, ['fc:streamers', 'fc:streamers:revision'], [originalNickname, JSON.stringify(fields)]);
 }
 
 export async function addStreamer(entry: StreamerEntry) {

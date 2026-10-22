@@ -1310,30 +1310,21 @@ export default function FcRecordClient() {
                     <span style={{ width: `${(overall!.lose / overall!.total) * 100}%`, background: RED }} />
                   </div>
                 )}
-                {overall!.thisMonth && overall!.thisMonth.total > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: `${ORANGE}0d` }}>
-                    <span style={{ fontSize: '0.72rem', color: ORANGE, fontWeight: 800 }}>
-                      이번 달{(overall!.thisMonth as any).rangeLabel ? ` (${(overall!.thisMonth as any).rangeLabel})` : ''}
-                    </span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{overall!.thisMonth.win}승</span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{overall!.thisMonth.draw}무</span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{overall!.thisMonth.lose}패</span>
-                    <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
-                      · 승률 {Math.round((overall!.thisMonth.win / overall!.thisMonth.total) * 100)}% (총 {overall!.thisMonth.total}경기)
-                    </span>
-                  </div>
-                )}
-                {(overall as any).recent20 && (overall as any).recent20.total > 0 && (
+                {(overall as any).thisMonth && (
                   <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: `${WIN_BLUE}0d` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' as const, marginBottom: '8px' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>최근 {(overall as any).recent20.total}경기</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).recent20.win}승</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).recent20.draw}무</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).recent20.lose}패</span>
+                      <span style={{ fontSize: '0.72rem', color: '#7a5200', fontWeight: 800 }}>이번 달 전체 {(overall as any).thisMonth.total}경기</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: WIN_BLUE }}>{(overall as any).thisMonth.win}승</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: GRAY }}>{(overall as any).thisMonth.draw}무</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: RED }}>{(overall as any).thisMonth.lose}패</span>
                       <span style={{ fontSize: '0.72rem', color: '#999', fontWeight: 700 }}>
-                        · 승률 {Math.round(((overall as any).recent20.win / (overall as any).recent20.total) * 100)}%
+                        · 승률 {(overall as any).thisMonth.total ? Math.round(((overall as any).thisMonth.win / (overall as any).thisMonth.total) * 100) : 0}%
                       </span>
                     </div>
+                    <p style={{ margin: '0 0 8px', color: '#526077', fontSize: '0.72rem' }}>{(overall as any).thisMonth.rangeLabel} · 한국 시간 기준</p>
+                    {(overall as any).thisMonth.total === 0 ? (
+                      <p style={{ margin: 0, color: '#526077', fontSize: '0.8rem' }}>이번 달 등록된 스트리머와의 경기 기록이 아직 없어요.</p>
+                    ) : <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' as const, marginBottom: '8px', fontSize: '0.72rem', fontWeight: 800 }}>
                       <span style={{ color: '#526077' }}>왼쪽 과거</span>
                       <span aria-hidden="true" style={{ color: '#526077' }}>→</span>
@@ -1341,10 +1332,10 @@ export default function FcRecordClient() {
                       <span style={{ color: '#526077', fontWeight: 500 }}>· 가로로 넘겨 보기</span>
                     </div>
                     {/* 줄바꿈 없이 과거→최신 순서를 유지하고, 좁은 화면에서는 가로 스크롤 */}
-                    <div role="group" aria-label="최근 경기, 왼쪽 과거에서 오른쪽 최신 순" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 4px 24px' }}>
-                      {(overall as any).recent20.matches?.map((m: any, i: number) => {
+                    <div role="group" aria-label="이번 달 전체 경기, 왼쪽 과거에서 오른쪽 최신 순" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 4px 24px' }}>
+                      {(overall as any).thisMonth.matches?.map((m: any, i: number) => {
                         const c = OUTCOME_COLOR[m.outcome];
-                        const isLatest = i === (overall as any).recent20.matches.length - 1;
+                        const isLatest = i === (overall as any).thisMonth.matches.length - 1;
                         const matchLabel = `${isLatest ? '최신 경기 · ' : ''}${m.displayName} · ${OUTCOME_LABEL[m.outcome]} · ${m.meGoal ?? '-'}:${m.oppGoal ?? '-'} · ${formatMatchDate(m.matchDate)}`;
                         return (
                           <button key={i} onClick={() => search(m.nickname)} title={matchLabel} aria-label={`${matchLabel} · 상대 전적 조회`} style={{
@@ -1375,6 +1366,7 @@ export default function FcRecordClient() {
                         );
                       })}
                     </div>
+                    </>}
                   </div>
                 )}
               </div>
