@@ -1,5 +1,6 @@
+import type { ReviewState } from '../lib/chat-review';
 import type { ChatMessage, ChatSource } from '../lib/chat-inspector';
-export type SavedSession = { id: string; source: ChatSource; createdAt: string; count: number; complete: boolean; completedChunks: string[] };
+export type SavedSession = { id: string; source: ChatSource; createdAt: string; count: number; complete: boolean; completedChunks: string[]; review?: ReviewState };
 let connection: Promise<IDBDatabase> | undefined;
 function db() {
   if (!connection) connection = new Promise<IDBDatabase>((resolve, reject) => {
@@ -25,7 +26,7 @@ export async function savedSessions(): Promise<SavedSession[]> {
   const database = await db();
   return new Promise((resolve, reject) => {
     const req = database.transaction('sessions').objectStore('sessions').getAll();
-    req.onsuccess = () => resolve((req.result as SavedSession[]).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    req.onsuccess = () => resolve((req.result as SavedSession[]).filter(s => s.source.type === 'vod').sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     req.onerror = () => reject(req.error);
   });
 }

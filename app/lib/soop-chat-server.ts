@@ -61,18 +61,7 @@ export async function getVodSource(id: string): Promise<ChatSource> {
 export async function getSource(input: string): Promise<ChatSource> {
   let source: ReturnType<typeof parseSource>;
   try { source = parseSource(input); } catch (e) { throw new SourceError((e as Error).message); }
-  if (source.type === 'vod') return getVodSource(source.id);
-  const result = JSON.parse(await upstream('https://live.sooplive.com/afreeca/player_live_api.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Referer: source.url, Origin: 'https://play.sooplive.com' },
-    body: new URLSearchParams({ bid: source.streamerId!, bno: source.id, type: 'live', pwd: '', player_type: 'html5', stream_type: 'common', quality: 'HD', mode: 'landing', from_api: '0' }).toString(),
-  }));
-  const c = result.CHANNEL;
-  if (!c || Number(c.RESULT) !== 1 || c.BSTATUS !== 'BROADING') throw new SourceError('방송이 종료되었거나 공개 채팅에 연결할 수 없습니다. 현재 생방송 주소를 확인해 주세요.', 409);
-  if (String(c.BNO) !== source.id || c.BJID !== source.streamerId) throw new SourceError('현재 방송 번호가 입력한 주소와 다릅니다. SOOP에서 새 생방송 주소를 복사해 주세요.', 409);
-  if (c.BPWD === 'Y' || Number(c.GRADE) > 0) throw new SourceError('비밀번호·성인 인증이 필요한 방송은 이 도구에서 지원하지 않습니다.', 403);
-  const host = String(c.CHDOMAIN), port = Number(c.CHPT) + 1;
-  if (!/^chat-[a-z0-9-]+\.sooplive\.(com|co\.kr)$/i.test(host) || port < 1 || port > 65535 || !/^\d+$/.test(String(c.CHATNO))) throw new SourceError('채팅 서버 주소를 확인할 수 없습니다.', 502);
-  return { ...source, streamerId: source.streamerId!, title: c.TITLE, nickname: c.BJNICK, duration: Number(c.BTIME) || 0, socketUrl: `wss://${host}:${port}/Websocket/${source.streamerId}`, chatNo: String(c.CHATNO) };
+  return getVodSource(source.id);
 }
 
 export function parseVodXml(xml: string, source: ChatSource, fileIndex: number, chunkStart: number): ChatMessage[] {
