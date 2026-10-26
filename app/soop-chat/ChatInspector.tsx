@@ -134,10 +134,11 @@ export default function ChatInspector() {
 
   async function openSaved(id: string) {
     if (busy || reviewBusy || !id) return;
-    const selected = archives.find(a => a.id === id); if (!selected) return;
     setError(''); setBusy(true); setStatus('저장된 기록을 여는 중…');
     try {
       await persistence.current;
+      const selected = (await savedSessions()).find(a => a.id === id);
+      if (!selected) throw new Error('저장 기록이 없습니다.');
       const rows = await savedMessages(id);
       sessionRef.current = selected; messagesRef.current = rows; setSession(selected); setMessages(rows); setUrl(selected.source.url); resetFilters();
       setStatus(selected.complete ? '이 브라우저에 저장된 기록입니다.' : '중단된 수집 기록입니다. 다시보기는 이어받을 수 있습니다.');
@@ -172,6 +173,7 @@ export default function ChatInspector() {
     if (!current) return;
     const next = { ...current, review };
     sessionRef.current = next; setSession(next); persist(next, []);
+    setArchives(previous => previous.map(item => item.id === next.id ? next : item));
   }
   function downloadCsv() {
     const href = URL.createObjectURL(new Blob([exportCsv(filtered)], { type: 'text/csv;charset=utf-8' }));
@@ -227,3 +229,4 @@ export default function ChatInspector() {
     </div>
   </main>;
 }
+
