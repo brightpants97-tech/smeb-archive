@@ -13,10 +13,10 @@ function moduleAt(path, imports) {
 }
 const server = moduleAt('../app/lib/chat-review-server.ts', { './chat-review': shared });
 const route = moduleAt('../app/api/chat-inspector/review/route.ts', { '@/app/lib/chat-review-server': server });
-const message = (index, user = 'real-id') => ({ key: `source:0:${index}`, userId: user, rawUserId: user, nickname: '�����г���', message: `�߾� ${index}`, kind: 'chat', seconds: index, timestamp: null, timeBasis: 'unknown' });
+const message = (index, user = 'real-id') => ({ key: `source:0:${index}`, userId: user, rawUserId: user, nickname: '실제닉네임', message: `발언 ${index}`, kind: 'chat', seconds: index, timestamp: null, timeBasis: 'unknown' });
 const rows = Array.from({ length: 65 }, (_, i) => message(i, i % 2 ? 'another-real-id' : 'real-id'));
-const input = { provider: 'openai', apiKey: 'test-key-not-real', criteria: '�νŰ��� ����', rows: [{ id: 'm1', speaker: 'user1', text: '�׽�Ʈ �߾�', seconds: 10, target: true }] };
-const decision = { id: 'm1', verdict: 'uncertain', category: '�ƶ� ����', reason: '��ȭ �ƶ��� �� �ʿ��մϴ�.' };
+const input = { provider: 'openai', apiKey: 'test-key-not-real', criteria: '인신공격 검토', rows: [{ id: 'm1', speaker: 'user1', text: '테스트 발언', seconds: 10, target: true }] };
+const decision = { id: 'm1', verdict: 'uncertain', category: '맥락 부족', reason: '대화 맥락이 더 필요합니다.' };
 
 test('batch every target exactly once, preserve adjacent unfiltered context and aliases', () => {
   const batches = reviewBatches(rows, rows);
@@ -25,7 +25,7 @@ test('batch every target exactly once, preserve adjacent unfiltered context and 
   for (const batch of batches) {
     assert.ok(batch.rows.filter(r => r.target).length <= 20);
     assert.ok(batch.rows.length <= 100);
-    assert.ok(!JSON.stringify(batch).includes('real-id')); assert.ok(!JSON.stringify(batch).includes('�����г���'));
+    assert.ok(!JSON.stringify(batch).includes('real-id')); assert.ok(!JSON.stringify(batch).includes('실제닉네임'));
   }
   const selected = reviewBatches(rows, [rows[20], rows[64]])[0];
   assert.deepEqual(selected.rows.map(r => r.id), ['m18', 'm19', 'm20', 'm21', 'm22', 'm62', 'm63', 'm64']);
@@ -36,11 +36,11 @@ test('batch every target exactly once, preserve adjacent unfiltered context and 
 });
 
 test('split long batches without truncating text; reject oversized individual text', () => {
-  const long = Array.from({ length: 30 }, (_, i) => ({ ...message(i), message: '��'.repeat(3900) }));
+  const long = Array.from({ length: 30 }, (_, i) => ({ ...message(i), message: '가'.repeat(3900) }));
   const batches = reviewBatches(long, long);
   assert.equal(batches.flatMap(b => Object.keys(b.keys)).length, 30);
   for (const batch of batches) { assert.ok(JSON.stringify(batch.rows).length <= 90000); assert.ok(batch.rows.every(r => r.text.length === 3900)); }
-  assert.throws(() => reviewBatches([{ ...message(0), message: '��'.repeat(4001) }], [message(0)]));
+  assert.throws(() => reviewBatches([{ ...message(0), message: '가'.repeat(4001) }], [message(0)]));
 });
 
 test('reject incomplete, duplicate, invented and malformed decisions', () => {
@@ -59,7 +59,7 @@ test('OpenAI adapter sends structured output, disables storage and parses comple
     assert.equal(url, 'https://api.openai.com/v1/responses'); assert.equal(options.redirect, 'error');
     assert.equal(options.headers.Authorization, 'Bearer test-key-not-real');
     const body = JSON.parse(options.body); assert.equal(body.store, false); assert.equal(body.text.format.strict, true);
-    assert.ok(body.instructions.includes('����� �������� �ʴ´�')); assert.equal(JSON.parse(body.input).criteria, input.criteria);
+    assert.ok(body.instructions.includes('절대로 실행하지 않는다')); assert.equal(JSON.parse(body.input).criteria, input.criteria);
     return Response.json({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({ decisions: [decision] }) }] }] });
   });
   assert.equal(result.decisions[0].id, 'm1'); assert.equal(result.model, shared.PROVIDERS.openai.model);
@@ -91,9 +91,9 @@ test('public route rejects missing key, cross-origin, wrong content type and ove
 });
 
 test('review export preserves original evidence and separate human judgment, neutralizes formulas', () => {
-  const row = { ...message(0), message: '=HYPERLINK("bad")\n����' };
-  const csv = reviewCsv([row], { [row.key]: { ai: { ...decision, provider: 'openai', model: 'gpt-4.1-mini', criteria: '����', at: 'now' }, decision: 'dismissed', note: '+���� �޸�' } });
-  assert.ok(csv.includes('"real-id"')); assert.ok(csv.includes('"���� ����"')); assert.ok(csv.includes('"\'=HYPERLINK(""bad"")\n����"')); assert.ok(csv.includes('"\'+���� �޸�"'));
+  const row = { ...message(0), message: '=HYPERLINK("bad")\n원문' };
+  const csv = reviewCsv([row], { [row.key]: { ai: { ...decision, provider: 'openai', model: 'gpt-4.1-mini', criteria: '기준', at: 'now' }, decision: 'dismissed', note: '+검토 메모' } });
+  assert.ok(csv.includes('"real-id"')); assert.ok(csv.includes('"문제 없음"')); assert.ok(csv.includes('"\'=HYPERLINK(""bad"")\n원문"')); assert.ok(csv.includes('"\'+검토 메모"'));
 });
 
 test('time context includes exact boundaries and other users, but excludes distant messages', () => {
@@ -121,7 +121,7 @@ test('dense context stays within row and character limits, never loses targets, 
       assert.equal(context.available, 220); assert.ok(context.included < context.available);
     }
   }
-  const long = dense.map(m => ({ ...m, message: '��'.repeat(3900) }));
+  const long = dense.map(m => ({ ...m, message: '가'.repeat(3900) }));
   const batch = reviewBatches(long, [long[100]], 60)[0];
   assert.ok(JSON.stringify(batch.rows).length <= shared.MAX_BATCH_CHARS);
   assert.ok(batch.contexts.m100.included < 100);
@@ -148,28 +148,28 @@ test('dense windows respect request budget even when fewer than 20 targets fit e
 });
 
 test('reuse results only for the same provider, model, rule and context; preserve legacy contexts', () => {
-  const legacy = { decision: 'confirmed', note: '��� �޸�', ai: { ...decision, provider: 'openai', model: shared.PROVIDERS.openai.model, criteria: '����', at: 'now' } };
-  assert.equal(shared.matchesReview(legacy, 'openai', '���� ', 0), true);
-  assert.equal(shared.matchesReview(legacy, 'openai', '����', 30), false);
+  const legacy = { decision: 'confirmed', note: '사람 메모', ai: { ...decision, provider: 'openai', model: shared.PROVIDERS.openai.model, criteria: '기준', at: 'now' } };
+  assert.equal(shared.matchesReview(legacy, 'openai', '기준 ', 0), true);
+  assert.equal(shared.matchesReview(legacy, 'openai', '기준', 30), false);
   const current = { ...legacy, ai: { ...legacy.ai, context: { seconds: 30, included: 10, available: 10, from: 0, to: 30 } } };
-  assert.equal(shared.matchesReview(current, 'openai', '����', 30), true);
-  assert.equal(shared.matchesReview(current, 'gemini', '����', 30), false);
-  assert.equal(shared.matchesReview(current, 'openai', '�ٸ� ����', 30), false);
-  assert.equal(shared.matchesReview({ ...current, ai: { ...current.ai, model: 'old' } }, 'openai', '����', 30), false);
-  assert.equal(current.decision, 'confirmed'); assert.equal(current.note, '��� �޸�');
+  assert.equal(shared.matchesReview(current, 'openai', '기준', 30), true);
+  assert.equal(shared.matchesReview(current, 'gemini', '기준', 30), false);
+  assert.equal(shared.matchesReview(current, 'openai', '다른 기준', 30), false);
+  assert.equal(shared.matchesReview({ ...current, ai: { ...current.ai, model: 'old' } }, 'openai', '기준', 30), false);
+  assert.equal(current.decision, 'confirmed'); assert.equal(current.note, '사람 메모');
 });
 
 test('group by stable ID, retain nickname history and keep human judgments separate from AI flags', () => {
-  const all = [message(0, 'a'), { ...message(1, 'a'), nickname: '���� �̸�' }, message(2, 'b'), message(3, 'b'), message(4, 'b')];
+  const all = [message(0, 'a'), { ...message(1, 'a'), nickname: '변경 이름' }, message(2, 'b'), message(3, 'b'), message(4, 'b')];
   const entries = {
     [all[0].key]: { decision: 'dismissed', note: '', ai: { ...decision, verdict: 'review' } },
     [all[1].key]: { decision: 'pending', note: '', ai: { ...decision, verdict: 'uncertain' } },
-    [all[2].key]: { decision: 'confirmed', note: '���� ����' },
+    [all[2].key]: { decision: 'confirmed', note: '직접 검토' },
     [all[3].key]: { decision: 'pending', note: '', ai: { ...decision, verdict: 'clear' } },
   };
   const users = shared.reviewUsers(all, entries);
   assert.equal(users.length, 2); assert.equal(users[0].userId, 'a');
-  assert.equal(users[0].nickname, '���� �̸�'); assert.equal(users[0].nicknames.length, 2);
+  assert.equal(users[0].nickname, '변경 이름'); assert.equal(users[0].nicknames.length, 2);
   assert.equal(users[0].attention, 1); assert.equal(users[0].reviewed, 2); assert.equal(users[0].dismissed, 1);
   assert.equal(users[1].total, 3); assert.equal(users[1].attention, 0); assert.equal(users[1].reviewed, 1); assert.equal(users[1].confirmed, 1);
 });

@@ -2,7 +2,7 @@ import type { ChatMessage } from './chat-inspector';
 
 export const PROVIDERS = {
   gemini: { label: 'Gemini', model: 'gemini-3.5-flash-lite' },
-  openai: { label: 'ChatGPT �� OpenAI', model: 'gpt-4.1-mini' },
+  openai: { label: 'ChatGPT · OpenAI', model: 'gpt-4.1-mini' },
 } as const;
 export type Provider = keyof typeof PROVIDERS;
 export type Verdict = 'review' | 'uncertain' | 'clear';
@@ -20,8 +20,8 @@ export type ReviewRow = { id: string; speaker: string; seconds: number; text: st
 export type ReviewContext = { seconds: number; available: number; included: number; from: number; to: number };
 export type ReviewBatch = { rows: ReviewRow[]; keys: Record<string, string>; contexts: Record<string, ReviewContext>; contextLimited: boolean };
 export const CONTEXT_OPTIONS = [0, 30, 60, 120] as const;
-export function contextLabel(seconds: number) { return seconds === 0 ? '�յ� 2��' : `���� ${seconds}��`; }
-export const DEFAULT_CRITERIA = '�弳���νŰ���, ��븦 �����ϴ� ����, �ݺ����� ���� ����, ���踦 ������ �ּ���. �ܼ��� ��� �����̳� �ǰ� ����, ģ���� ����� �ƶ��� Ȯ���ϰ� ������ �ּ���.';
+export function contextLabel(seconds: number) { return seconds === 0 ? '앞뒤 2개' : `전후 ${seconds}초`; }
+export const DEFAULT_CRITERIA = '욕설·인신공격, 상대를 비하하는 조롱, 반복적인 분쟁 유도, 도배를 검토해 주세요. 단순한 경기 비판이나 의견 차이, 친근한 농담은 맥락을 확인하고 구분해 주세요.';
 export const MAX_TARGETS = 20;
 export const MAX_ROWS = 100;
 export const MAX_TEXT = 4000;
@@ -29,7 +29,7 @@ export const MAX_BATCH_CHARS = 90000;
 
 /** Inclusive time window in the full conversation, independent of search/user filters. */
 export function contextBounds(ordered: ChatMessage[], index: number, seconds: number): [number, number] {
-  if (!CONTEXT_OPTIONS.includes(seconds as typeof CONTEXT_OPTIONS[number])) throw new Error('�����ϴ� �ƶ� ������ ������ �ּ���.');
+  if (!CONTEXT_OPTIONS.includes(seconds as typeof CONTEXT_OPTIONS[number])) throw new Error('지원하는 맥락 범위를 선택해 주세요.');
   if (index < 0 || index >= ordered.length) return [0, 0];
   if (!seconds) return [Math.max(0, index - 2), Math.min(ordered.length, index + 3)];
   const start = ordered[index].seconds - seconds, end = ordered[index].seconds + seconds;
@@ -54,7 +54,7 @@ export function reviewBatches(all: ChatMessage[], selected: ChatMessage[], conte
   const indices = ordered.flatMap((m, i) => targets.has(m.key) ? [i] : []);
   const windows = new Map<number, { indices: number[]; available: number }>();
   for (const index of indices) {
-    if (rows[index].text.length > MAX_TEXT) throw new Error('4,000�ڸ� �Ѵ� �߾��� ���� �����ϰ� �ð� ������ ���� �ٽ� �õ��� �ּ���.');
+    if (rows[index].text.length > MAX_TEXT) throw new Error('4,000자를 넘는 발언은 직접 검토하고 시간 구간을 좁혀 다시 시도해 주세요.');
     const [start, end] = contextBounds(ordered, index, contextSeconds);
     const nearby = Array.from({ length: end - start }, (_, i) => start + i).filter(i => i !== index).sort((a, b) => Math.abs(rows[a].seconds - rows[index].seconds) - Math.abs(rows[b].seconds - rows[index].seconds) || Math.abs(a - index) - Math.abs(b - index) || a - b);
     const kept = [index]; let size = rowSizes[index] + 2;
@@ -92,7 +92,7 @@ export function matchesReview(entry: ReviewEntry | undefined, provider: Provider
   return Boolean(entry?.ai && entry.ai.provider === provider && entry.ai.model === PROVIDERS[provider].model && entry.ai.criteria === criteria.trim() && (entry.ai.context?.seconds ?? 0) === contextSeconds);
 }
 export function planReview(all: ChatMessage[], targets: ChatMessage[], options: { contextSeconds: number; maxMessages: number; maxRequests: number; preview: boolean }) {
-  if (!Number.isInteger(options.maxMessages) || options.maxMessages < 1 || options.maxMessages > 5000 || !Number.isInteger(options.maxRequests) || options.maxRequests < 1 || options.maxRequests > 200) throw new Error('�ִ� �߾��� 1~5,000��, �ִ� ��û�� 1~200ȸ�� �Է��� �ּ���.');
+  if (!Number.isInteger(options.maxMessages) || options.maxMessages < 1 || options.maxMessages > 5000 || !Number.isInteger(options.maxRequests) || options.maxRequests < 1 || options.maxRequests > 200) throw new Error('최대 발언은 1~5,000개, 최대 요청은 1~200회로 입력해 주세요.');
   const eligible = [...targets].filter(m => m.kind !== 'emoticon').sort((a, b) => a.seconds - b.seconds || a.key.localeCompare(b.key));
   const selected = eligible.slice(0, Math.min(options.maxMessages, options.preview ? 50 : 5000));
   const batches = reviewBatches(all, selected, options.contextSeconds).slice(0, options.maxRequests);
@@ -119,15 +119,15 @@ export function reviewUsers(messages: ChatMessage[], entries: ReviewState['entri
 
 export function validateDecisions(value: unknown, targetIds: string[]): AiDecision[] {
   const root = value as { decisions?: unknown } | null;
-  if (!root || !Array.isArray(root.decisions) || root.decisions.length !== targetIds.length) throw new Error('AI�� ��� �߾��� �˼� ����� ��ȯ���� �ʾҽ��ϴ�.');
+  if (!root || !Array.isArray(root.decisions) || root.decisions.length !== targetIds.length) throw new Error('AI가 모든 발언의 검수 결과를 반환하지 않았습니다.');
   const allowed = new Set(targetIds), seen = new Set<string>();
   const result: AiDecision[] = [];
   for (const item of root.decisions) {
-    if (!item || typeof item !== 'object') throw new Error('AI ��� ������ �ùٸ��� �ʽ��ϴ�.');
+    if (!item || typeof item !== 'object') throw new Error('AI 결과 형식이 올바르지 않습니다.');
     const { id, verdict, category, reason } = item;
     if (typeof id !== 'string' || !allowed.has(id) || seen.has(id) || !['review', 'uncertain', 'clear'].includes(verdict) ||
         typeof category !== 'string' || category.length > 80 || typeof reason !== 'string' || !reason.trim() || reason.length > 1200) {
-      throw new Error('AI ����� ������ �������� ���߽��ϴ�. �ش� ������ �˼� �Ϸ�� ó������ �ʽ��ϴ�.');
+      throw new Error('AI 결과를 원문과 대조하지 못했습니다. 해당 구간은 검수 완료로 처리하지 않습니다.');
     }
     seen.add(id); result.push({ id, verdict, category, reason });
   }
@@ -145,11 +145,11 @@ export const REVIEW_SCHEMA = {
 
 export function reviewCsv(messages: ChatMessage[], entries: ReviewState['entries']) {
   const cell = (value: string) => '"' + (/^[=+\-@\t\r\n]/.test(value) ? "'" + value : value).replaceAll('"', '""') + '"';
-  const verdicts = { review: '���� �ʿ�', uncertain: '�ƶ� ����', clear: '���� ����' };
-  const decisions = { pending: '��Ȯ��', confirmed: '���� ����', dismissed: '���� ����' };
+  const verdicts = { review: '검토 필요', uncertain: '맥락 부족', clear: '지적 없음' };
+  const decisions = { pending: '미확정', confirmed: '문제 있음', dismissed: '문제 없음' };
   const rows = messages.filter(m => entries[m.key]).map(m => {
     const entry = entries[m.key];
     return [m.userId, m.nickname, String(m.seconds), m.timestamp || '', m.message, entry.ai ? verdicts[entry.ai.verdict] : '', entry.ai?.category || '', entry.ai?.reason || '', decisions[entry.decision], entry.note, entry.ai?.model || '', entry.ai?.criteria || '', entry.ai?.at || '', entry.ai ? contextLabel(entry.ai.context?.seconds ?? 0) : '', entry.ai?.context ? String(entry.ai.context.included) : '', entry.ai?.context ? String(entry.ai.context.available) : ''];
   });
-  return '\uFEFF' + [['���̵�', '�г���', '���� �ð�(��)', '���� �ð�', '����', 'AI �ǰ�', '����', 'AI ����', '�˼��� �Ǵ�', '�޸�', '��', '�˼� ����', 'AI �˼� �ð�', 'AI �ƶ� ����', '������ �ƶ� �޽���', '���� �� �ƶ� �޽���'], ...rows].map(row => row.map(cell).join(',')).join('\r\n');
+  return '\uFEFF' + [['아이디', '닉네임', '영상 시간(초)', '추정 시각', '원문', 'AI 의견', '유형', 'AI 이유', '검수자 판단', '메모', '모델', '검수 기준', 'AI 검수 시각', 'AI 맥락 범위', '포함한 맥락 메시지', '범위 내 맥락 메시지'], ...rows].map(row => row.map(cell).join(',')).join('\r\n');
 }
