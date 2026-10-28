@@ -35,6 +35,33 @@ review=기준에 해당하여 사람이 검토할 근거가 있음, uncertain=�
 category는 짧은 한국어 유형, reason은 300자 이내 한국어로 실제 문구에 근거한 설명. 확률을 만들어내지 않는다. clear도 정상 확정이 아니라 제한된 자료에서의 의견이다.
 id는 입력의 id를 그대로 사용한다. 목록 밖의 발언을 만들어내거나 인용문을 변형하지 않는다.`;
 
+// Never expose the upstream message: it can contain a credential or chat excerpt.
+async function providerFailure(provider: Provider, response: Response): Promise<ReviewError> {
+  let data: unknown;
+  try { data = await response.json(); } catch { /* Non-JSON errors still retain the HTTP status. */ }
+  const object = (value: unknown): Record<string, unknown> => value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  const error = object(object(data).error);
+  const message = typeof error.message === 'string' ? error.message.slice(0, 4000) : '';
+  const reasons = new Set([error.code, error.type, ...(Array.isArray(error.details) ? error.details.map(detail => object(detail).reason) : [])]);
+  const status = response.status;
+  const fail = (code: string, advice: string, clientStatus = status) => new ReviewError(`${PROVIDERS[provider].label} · ${code} (HTTP ${status}): ${advice} 완료된 검수 결과는 유지됩니다.`, clientStatus);
+  if (reasons.has('API_KEY_INVALID') || reasons.has('API_KEY_EXPIRED') || reasons.has('invalid_api_key') || status === 401 || /API key not valid|API key expired|invalid API key|incorrect API key/i.test(message)) {
+    return fail('KEY_INVALID', 'API 키가 유효하지 않습니다. 선택한 제공사에서 발급한 API 키인지 확인하고 다시 입력해 주세요.', 401);
+  }
+  if (/reported as leaked|key.*blocked/i.test(message)) return fail('KEY_BLOCKED', '제공사가 이 API 키를 차단했습니다. 제공사의 키 관리 화면을 확인해 주세요.', 403);
+  if (status === 402 || reasons.has('insufficient_quota') || reasons.has('billing_hard_limit_reached') || reasons.has('BILLING_DISABLED') || /billing|payment required|prepay|free tier.*not available|free tier.*unavailable/i.test(message)) {
+    return fail('BILLING_OR_QUOTA', 'API 사용 한도·잔액·결제 설정을 제공사에서 확인해 주세요. ChatGPT·Gemini 앱 구독과 API 사용량은 별개입니다.', 429);
+  }
+  if (status === 403) return fail('ACCESS_DENIED', 'API 키의 사용 제한과 프로젝트·모델 접근 권한을 제공사에서 확인해 주세요.', 403);
+  if (status === 404 || reasons.has('model_not_found')) return fail('MODEL_UNAVAILABLE', `${PROVIDERS[provider].model} 모델을 사용할 수 없습니다. 이 오류 코드를 사이트 관리자에게 알려 주세요.`, 502);
+  if (status === 429) return fail('RATE_OR_QUOTA_LIMIT', '요청 속도 또는 API 사용량 한도에 도달했습니다. 제공사의 사용량을 확인하고, 속도 제한이면 잠시 후 다시 실행해 주세요.', 429);
+  if (status === 400 || status === 422) return fail('REQUEST_REJECTED', '제공사가 요청 형식이나 설정을 거절했습니다. 반복 실행하지 말고 이 오류 코드를 사이트 관리자에게 알려 주세요.', 502);
+  if (status === 413) return fail('REQUEST_TOO_LARGE', '요청이 너무 큽니다. 대화 맥락과 검수 범위를 줄여 다시 실행해 주세요.', 413);
+  if (status === 408 || status === 504) return fail('PROVIDER_TIMEOUT', '제공사의 응답 시간이 초과되었습니다. 잠시 후 더 작은 범위로 다시 실행해 주세요.', 504);
+  if (status >= 500) return fail('PROVIDER_UNAVAILABLE', '제공사 서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 실행해 주세요.', 502);
+  return fail('PROVIDER_REJECTED', '제공사가 요청을 거절했습니다. 이 오류 코드를 사이트 관리자에게 알려 주세요.', 502);
+}
+
 export async function reviewWithProvider(input: ReviewInput, signal?: AbortSignal, fetcher: typeof fetch = fetch) {
   const { provider, apiKey, rows, criteria } = input;
   const model = PROVIDERS[provider].model;
@@ -52,11 +79,7 @@ export async function reviewWithProvider(input: ReviewInput, signal?: AbortSigna
       method: 'POST', headers: provider === 'openai' ? { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` } : { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(body), cache: 'no-store', redirect: 'error', signal: AbortSignal.any([AbortSignal.timeout(50000), ...(signal ? [signal] : [])]),
     });
-    if (!response.ok) {
-      if ([401, 403].includes(response.status)) throw new ReviewError('API 키 또는 모델 사용 권한을 확인해 주세요.', 401);
-      if (response.status === 429) throw new ReviewError('제공사의 사용량·결제 한도에 도달했습니다. 완료된 결과는 보관됩니다.', 429);
-      throw new ReviewError('AI 제공사가 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.', 502);
-    }
+    if (!response.ok) throw await providerFailure(provider, response);
     const data = await response.json();
     let output: string;
     if (provider === 'openai') {

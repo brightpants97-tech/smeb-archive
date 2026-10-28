@@ -185,3 +185,43 @@ test('provider receives bounded context metadata and rejects invalid window meta
     return Response.json({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({ decisions: [decision] }) }] }] });
   });
 });
+
+
+test('Gemini invalid-key HTTP 400 is diagnosed as authentication failure, without leaking provider text', async () => {
+  let requests = 0;
+  await assert.rejects(() => server.reviewWithProvider({ ...input, provider: 'gemini' }, undefined, async () => {
+    requests++;
+    return Response.json({ error: { code: 400, status: 'INVALID_ARGUMENT', message: `API key not valid. ${input.apiKey}`, details: [{ reason: 'API_KEY_INVALID' }] } }, { status: 400 });
+  }), error => error.status === 401 && error.message.includes('KEY_INVALID (HTTP 400)') && !error.message.includes(input.apiKey));
+  assert.equal(requests, 1);
+});
+
+test('provider rejection distinguishes permanent request, access, model, billing and transient failures', async () => {
+  const cases = [
+    [400, { status: 'INVALID_ARGUMENT', message: 'Unknown name responseFormat' }, 'REQUEST_REJECTED', 502],
+    [403, { status: 'PERMISSION_DENIED' }, 'ACCESS_DENIED', 403],
+    [403, { message: 'Your API key was reported as leaked.' }, 'KEY_BLOCKED', 403],
+    [404, { status: 'NOT_FOUND' }, 'MODEL_UNAVAILABLE', 502],
+    [400, { status: 'FAILED_PRECONDITION', message: 'Free tier is not available in your country. Please enable billing.' }, 'BILLING_OR_QUOTA', 429],
+    [402, {}, 'BILLING_OR_QUOTA', 429],
+    [429, { code: 'insufficient_quota' }, 'BILLING_OR_QUOTA', 429],
+    [429, { status: 'RESOURCE_EXHAUSTED' }, 'RATE_OR_QUOTA_LIMIT', 429],
+    [413, {}, 'REQUEST_TOO_LARGE', 413],
+    [503, {}, 'PROVIDER_UNAVAILABLE', 502],
+    [504, {}, 'PROVIDER_TIMEOUT', 504],
+  ];
+  for (const [status, detail, code, expected] of cases) {
+    let calls = 0;
+    await assert.rejects(() => server.reviewWithProvider(input, undefined, async () => {
+      calls++;
+      return Response.json({ error: { message: input.apiKey, ...detail } }, { status });
+    }), error => error.status === expected && error.message.includes(code) && error.message.includes(`HTTP ${status}`) && !error.message.includes(input.apiKey));
+    assert.equal(calls, 1);
+  }
+});
+
+test('non-JSON and malformed provider errors stay safe and retain their HTTP diagnosis', async () => {
+  for (const body of [input.apiKey, 'null', '{"error":null}', '{"error":{"message":42,"details":[null,42]}}']) {
+    await assert.rejects(() => server.reviewWithProvider(input, undefined, async () => new Response(body, { status: 400 })), error => error.message.includes('REQUEST_REJECTED (HTTP 400)') && !error.message.includes(input.apiKey));
+  }
+});
